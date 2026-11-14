@@ -30,7 +30,7 @@ export interface Config {
   stripeKeyParam?: string;
   stripeWebhookParam?: string;
   /**
-   * Whether uploads wait for a GuardDuty malware verdict. True unless MALWARE_SCAN is exactly "off",
+   * Whether uploads wait for a GuardDuty malware verdict. True unless MALWARE_SCAN is exactly "off" (or unset on dev),
    * so a missing or mistyped value can only ever keep scanning on
    */
   malwareScan?: boolean;
@@ -46,7 +46,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const devAuth = env.DEV_AUTH === "1";
   if (devAuth && onLambda) throw new Error("DEV_AUTH must never be set on Lambda");
   // Scanning is skipped only where Terraform says "off", and never in production
-  const malwareScan = env.MALWARE_SCAN?.trim().toLowerCase() !== "off";
+  // dev never has the GuardDuty scanner (infra/envs/dev), so an unset value there means off; anywhere else unset means on
+  const scanSetting = env.MALWARE_SCAN?.trim().toLowerCase() ?? (env.APP_ENV === "dev" ? "off" : "on");
+  const malwareScan = scanSetting !== "off";
   if (!malwareScan && env.APP_ENV === "prod") throw new Error("MALWARE_SCAN=off is not allowed in prod");
   // Operator emails compare case-insensitively
   return {
