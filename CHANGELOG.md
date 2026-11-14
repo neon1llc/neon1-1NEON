@@ -2,11 +2,7 @@
 
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
-## Unreleased
-
-- Dev can hold a copy of production's data: `node scripts/dev-data.mjs --yes` (admin profile) replaces dev's table and documents with production's, leaving out queued messages, sessions, and sign-in links. Because that copy holds real clients, dev now admits only neon1's own people, sends mail only to them, and creates no dev accounts for anyone else.
-
-## v0.11.0 - 2026-11-13
+## v0.11.0 - 2026-11-14
 
 ### Added
 - **A deposit share per option.** An option says how much is asked up front: the usual 50%, or what the client agreed (20%, or nothing). The proposal, the approval, and every deposit invoice follow it, including a second deposit draft made while the first is still a draft.
@@ -20,6 +16,7 @@
 - Moving a project back to Decide or before once an option is approved asks for a reason, and Next step says when the board is behind what's been done ("An option is approved: move to Build").
 
 ### Changed
+- Dev can hold a copy of production's data: `node scripts/dev-data.mjs --yes` (admin profile) replaces dev's table and documents with production's, leaving out queued messages, sessions, and sign-in links. Because that copy holds real clients, dev now admits only neon1's own people, sends mail only to them, and creates no dev accounts for anyone else.
 - One way in for newcomers: the sign-in page offers "New here? See how it works", the guided walkthrough, and the sample project and demo are offered from it.
 - The bakery's proposal says Instagram messages stay manual for now because automating them costs more than it saves for about six orders a night, not that they can't be read.
 - Pay says it opens Stripe's hosted payment page.
