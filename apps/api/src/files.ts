@@ -16,8 +16,9 @@ import { ConflictError, type WriteOp } from "./store/types.ts";
 const WATCH = "DOCWATCH";
 // Bytes not seen this long after the link was issued never arrived (links live five minutes)
 const ARRIVE_MS = 15 * 60_000;
-// A scan still running after this long is treated as stuck
-const SCAN_MS = 6 * 60 * 60_000;
+// A scan still running after this long is treated as stuck; files are at most 100 MB, which GuardDuty
+// scans in minutes, so half an hour surfaces a real problem without failing a slow but healthy scan
+const SCAN_MS = 30 * 60_000;
 
 
 /** The watch row for a new file, written with its record */
@@ -55,6 +56,14 @@ export async function settleFile(d: FileDeps, x: DocumentRecord, opts: { confirm
   if (verdict === "absent") return age > ARRIVE_MS ? finish(d, x, "failed", "missing") : x;
   // Couldn't ask; the next pass tries again
   if (verdict === "error") return x;
+  // No scan runs here (dev): the bytes only have to be there and the right size. The record says
+  // "skipped" so nobody mistakes it for a clean result
+  if (verdict === "unscanned") {
+    const got = await d.storage.inspect(x.key);
+    if (got.kind === "present") return got.size === x.size ? ready(d, x, "skipped") : finish(d, x, "failed", "size_mismatch", { scan: "skipped" });
+    if (got.kind === "absent") return age > ARRIVE_MS ? finish(d, x, "failed", "missing") : x;
+    return state === "receiving" && opts.confirmed ? save(d, x, { state: "checking" }) : x;
+  }
   if (verdict === "infected") return finish(d, x, "rejected", undefined, { scan: "infected" });
   if (verdict === "unsupported" || verdict === "failed") return finish(d, x, "failed", verdict === "unsupported" ? "scan_unsupported" : "scan_failed");
   if (verdict === "pending") {
@@ -73,9 +82,9 @@ export async function settleFile(d: FileDeps, x: DocumentRecord, opts: { confirm
 
 
 /** Ready: the record, the audit event people are notified from, and the item it answers, together */
-async function ready(d: FileDeps, x: DocumentRecord) {
+async function ready(d: FileDeps, x: DocumentRecord, scan: "clean" | "skipped" = "clean") {
   const ts = new Date().toISOString();
-  const next: DocumentRecord = { ...x, state: "ready", problem: undefined, scan: "clean", uploaded: true, version: x.version + 1, updatedAt: ts };
+  const next: DocumentRecord = { ...x, state: "ready", problem: undefined, scan, uploaded: true, version: x.version + 1, updatedAt: ts };
   const ops: WriteOp[] = [d.repo.docOp(next, { version: x.version }), d.repo.auditOp({ tenantId: x.tenantId, actorId: x.updatedBy, action: "doc.uploaded", target: x.id, summary: `Uploaded "${x.name}"` }), { delete: { PK: WATCH, SK: watchKey(x) } }];
   const item = x.projectId && x.itemId ? await d.repo.getItem(x.tenantId, x.projectId, x.itemId) : undefined;
   if (item && item.status !== "done") ops.push(d.repo.itemOp({ ...item, status: "done", completedAt: ts, version: item.version + 1, updatedAt: ts, updatedBy: x.updatedBy }, { version: item.version }));

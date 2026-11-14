@@ -565,7 +565,8 @@ export const DocumentRecord = z.object({
   contentType: z.string().max(120),
   size: z.number().int().nonnegative(),
   key: z.string().max(512),
-  scan: z.enum(["pending", "clean", "infected"]),
+  // "skipped" is written only where the environment runs no scan (dev); production never produces it
+  scan: z.enum(["pending", "clean", "infected", "skipped"]),
   needsApproval: z.boolean().default(false),
   // True once the file is ready; kept for older records and callers that only ask "is it there"
   uploaded: z.boolean().default(false),

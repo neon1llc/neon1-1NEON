@@ -27,6 +27,7 @@
 - A typed signature has to read as the signer's name.
 
 ### Fixed
+- On dev, where files aren't scanned, uploads are ready right away (marked "not scanned (test site)") instead of waiting on a scan that never runs. Anywhere scanning is on, a scan that hasn't finished after 30 minutes now fails the upload, where it used to wait six hours.
 - On iPhone browsers (DuckDuckGo included), the strips above the top bar and below the tab bar are solid, so nothing scrolls by under the browser's own bars.
 - An option panel no longer runs under the browser's top bar, out of reach of its Close button.
 - **Check invoices** under Next step goes to the invoices again when pressed a second time.

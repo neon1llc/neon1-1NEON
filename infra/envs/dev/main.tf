@@ -14,6 +14,9 @@ locals {
   auth_domain = "auth-dev.${var.domain}"
   boundary    = "neon1-boundary-1neon-dev"
   mail_from   = "1NEON dev <noreply@notify.${var.domain}>"
+
+  # No GuardDuty scan in dev (nothing there comes from a client); the bucket and the API must agree
+  malware_scan = false
 }
 
 
@@ -54,7 +57,7 @@ module "storage" {
   source         = "../../modules/storage"
   name           = "neon1-1neon-docs-dev"
   allowed_origin = local.public_url
-  malware_scan   = false
+  malware_scan   = local.malware_scan
   boundary       = local.boundary
 }
 
@@ -89,6 +92,7 @@ module "api" {
   table_arn             = module.data.arn
   table_name            = module.data.name
   docs_bucket           = module.storage.bucket
+  malware_scan          = local.malware_scan
   docs_bucket_arn       = module.storage.bucket_arn
   records_bucket        = module.records.bucket
   records_bucket_arn    = module.records.bucket_arn

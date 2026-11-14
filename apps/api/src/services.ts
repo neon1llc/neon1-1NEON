@@ -44,7 +44,8 @@ export interface Mailer {
 /** What storage reports for a key; `code` is the provider's error name, safe to log */
 export type Inspection = { kind: "present"; size: number } | { kind: "absent" } | { kind: "denied" } | { kind: "error"; code: string };
 /** The scan's verdict, plus "absent" (no object) and "error" (couldn't ask), which aren't verdicts */
-export type ScanVerdict = "pending" | "clean" | "infected" | "unsupported" | "failed" | "absent" | "error";
+// "unscanned" means this environment runs no scan at all (dev); it is not a clean verdict
+export type ScanVerdict = "pending" | "clean" | "infected" | "unsupported" | "failed" | "absent" | "error" | "unscanned";
 
 
 /** File storage: short-lived links for the browser to upload and download directly, and the scan result */
@@ -79,7 +80,8 @@ const LINK_SECONDS = 300;
 export class S3Storage implements Storage {
   // Region and credentials come from the Lambda environment
   private s3 = new S3Client({});
-  constructor(private bucket: string) {}
+  // `scanning` is false only where the bucket has no GuardDuty plan (dev); it defaults to waiting
+  constructor(private bucket: string, private scanning = true) {}
 
   // The declared size is signed into the link, so S3 refuses a body of any other length
   async putUrl(key: string, contentType: string, size: number) {
@@ -106,6 +108,8 @@ export class S3Storage implements Storage {
   // Tags aren't covered by the read deny, so the verdict can be read while the scan runs. GuardDuty
   // writes NO_THREATS_FOUND, THREATS_FOUND, UNSUPPORTED, ACCESS_DENIED, or FAILED
   async scan(key: string): Promise<ScanVerdict> {
+    // No scan plan on this bucket, so no tag will ever come: say so instead of waiting for one
+    if (!this.scanning) return "unscanned";
     try {
       const r = await this.s3.send(new GetObjectTaggingCommand({ Bucket: this.bucket, Key: key }));
       const v = r.TagSet?.find((t) => t.Key === "GuardDutyMalwareScanStatus")?.Value;
