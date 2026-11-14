@@ -5,9 +5,10 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "./app.ts";
+import { loadConfig } from "./config.ts";
 import { sweepFiles } from "./files.ts";
 import { seed } from "./seed.ts";
-import { MemoryDirectory, MemoryMailer, MemoryStorage, MemoryTexter } from "./services.ts";
+import { MemoryDirectory, MemoryMailer, MemoryStorage, MemoryTexter, S3Storage } from "./services.ts";
 import { MemoryTable } from "./store/memory.ts";
 import { Repo } from "./store/repo.ts";
 
@@ -167,8 +168,75 @@ describe("file states", () => {
     f.put();
     storage.verdicts.set(f.doc.key, "pending");
     await f.done();
-    later(7 * 60 * 60_000);
+    later(31 * 60_000);
     await sweep();
     expect(await repo.getDoc(s.acme.id, f.doc.projectId, f.doc.id)).toMatchObject({ state: "failed", problem: "timeout" });
+  });
+});
+
+
+// Where no scan runs (dev), a finished upload must not wait for a verdict that never comes
+describe("scanning switched off", () => {
+  it("makes a finished upload ready right away, recorded as skipped and downloadable", async () => {
+    const f = await start();
+    f.put();
+    storage.verdicts.set(f.doc.key, "unscanned");
+    expect((await f.done()).json).toMatchObject({ state: "ready", scan: "skipped", uploaded: true });
+    expect((await f.item()).status).toBe("done");
+    expect((await f.download()).status).toBe(200);
+  });
+
+  it("still checks the size, and gives bytes that never arrive time before failing", async () => {
+    const wrong = await start();
+    wrong.put(9);
+    storage.verdicts.set(wrong.doc.key, "unscanned");
+    expect((await wrong.done()).json).toMatchObject({ state: "failed", problem: "size_mismatch" });
+    const gone = await start();
+    storage.verdicts.set(gone.doc.key, "unscanned");
+    expect((await gone.done()).json).toMatchObject({ state: "receiving" });
+    later(16 * 60_000);
+    await sweep();
+    expect(await repo.getDoc(s.acme.id, gone.doc.projectId, gone.doc.id)).toMatchObject({ state: "failed", problem: "missing" });
+  });
+
+  it("settles a file left checking before the fix on the next sweep", async () => {
+    const f = await start();
+    f.put();
+    storage.verdicts.set(f.doc.key, "pending");
+    expect((await f.done()).json).toMatchObject({ state: "checking" });
+    storage.verdicts.set(f.doc.key, "unscanned");
+    await sweep();
+    expect(await repo.getDoc(s.acme.id, f.doc.projectId, f.doc.id)).toMatchObject({ state: "ready", scan: "skipped" });
+  });
+});
+
+
+// Scanning on is the default, so a missing setting can never skip it
+describe("scanning on or unset", () => {
+  it("keeps waiting for the verdict, and refuses the download until it is clean", async () => {
+    const f = await start();
+    f.put();
+    storage.verdicts.set(f.doc.key, "pending");
+    expect((await f.done()).json).toMatchObject({ state: "checking", scan: "pending" });
+    expect((await f.download()).status).toBe(409);
+    storage.verdicts.set(f.doc.key, "clean");
+    await sweep();
+    expect(await repo.getDoc(s.acme.id, f.doc.projectId, f.doc.id)).toMatchObject({ state: "ready", scan: "clean" });
+  });
+
+  it("reads MALWARE_SCAN as on unless it is exactly off, and never off in prod", () => {
+    expect(loadConfig({}).malwareScan).toBe(true);
+    expect(loadConfig({ MALWARE_SCAN: "on" }).malwareScan).toBe(true);
+    expect(loadConfig({ MALWARE_SCAN: "false" }).malwareScan).toBe(true);
+    expect(loadConfig({ MALWARE_SCAN: "off", APP_ENV: "dev" }).malwareScan).toBe(false);
+    expect(() => loadConfig({ MALWARE_SCAN: "off", APP_ENV: "prod" })).toThrow();
+  });
+
+  it("S3 storage only reports unscanned when told scanning is off", async () => {
+    expect(await new S3Storage("b", false).scan("k")).toBe("unscanned");
+    const on = new S3Storage("b");
+    // A bucket that answers with no tag yet is still running its scan
+    (on as unknown as { s3: { send: () => Promise<unknown> } }).s3 = { send: async () => ({ TagSet: [] }) };
+    expect(await on.scan("k")).toBe("pending");
   });
 });

@@ -74,6 +74,7 @@ module "api" {
   table_arn             = module.data.arn
   table_name            = module.data.name
   docs_bucket           = module.storage.bucket
+  malware_scan          = var.malware_scan
   docs_bucket_arn       = module.storage.bucket_arn
   records_bucket        = module.records.bucket
   records_bucket_arn    = module.records.bucket_arn
