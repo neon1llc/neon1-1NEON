@@ -230,6 +230,9 @@ describe("scanning on or unset", () => {
     expect(loadConfig({ MALWARE_SCAN: "false" }).malwareScan).toBe(true);
     expect(loadConfig({ MALWARE_SCAN: "off", APP_ENV: "dev" }).malwareScan).toBe(false);
     expect(() => loadConfig({ MALWARE_SCAN: "off", APP_ENV: "prod" })).toThrow();
+    expect(loadConfig({ APP_ENV: "dev" }).malwareScan).toBe(false);
+    expect(loadConfig({ APP_ENV: "prod" }).malwareScan).toBe(true);
+    expect(loadConfig({}).malwareScan).toBe(true);
   });
 
   it("S3 storage only reports unscanned when told scanning is off", async () => {
