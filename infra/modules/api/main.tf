@@ -10,6 +10,12 @@ variable "table_arn" { type = string }
 variable "table_name" { type = string }
 variable "docs_bucket_arn" { type = string }
 variable "docs_bucket" { type = string }
+# Whether the documents bucket is scanned; on unless an environment says otherwise, so a forgotten
+# argument can't switch scanning off. Must match the storage module's setting
+variable "malware_scan" {
+  type    = bool
+  default = true
+}
 variable "public_url" { type = string }
 variable "auth_domain" { type = string }
 variable "mail_from" { type = string }
@@ -267,6 +273,7 @@ resource "aws_lambda_function" "api" {
       APP_ENV                             = var.env
       TABLE_NAME                          = var.table_name
       DOCS_BUCKET                         = var.docs_bucket
+      MALWARE_SCAN                        = var.malware_scan ? "on" : "off"
       USER_POOL_ID                        = var.user_pool_id
       USER_POOL_CLIENT_ID                 = var.client_id
       AUTH_DOMAIN                         = var.auth_domain

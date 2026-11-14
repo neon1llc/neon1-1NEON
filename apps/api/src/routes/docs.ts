@@ -23,7 +23,7 @@ const FILE_PROBLEM: Record<FileProblem, string> = {
 
 /**
  * The one way to a file's bytes: a signed link, only once the file is ready and its malware scan is
- * clean. Anything else gets a check now, then a plain refusal (410 for good, 409 for "not yet"). The
+ * clean (or "skipped", which only an environment without scanning writes). Anything else gets a check now, then a plain refusal (410 for good, 409 for "not yet"). The
  * normal download and the admin's Trash export both come through here, so neither can skip the scan
  */
 export async function downloadLink(k: Pick<Kit, "d" | "repo">, x: DocumentRecord, view = false) {
@@ -32,7 +32,7 @@ export async function downloadLink(k: Pick<Kit, "d" | "repo">, x: DocumentRecord
   const state = fileState(cur);
   if (state === "rejected") fail(410, "infected", "This file was flagged by the malware scan and can't be downloaded.");
   if (state === "failed") fail(410, "file_failed", FILE_PROBLEM[cur.problem ?? "missing"]);
-  if (state !== "ready" || cur.scan !== "clean") fail(409, "scanning", "This file is still being checked. Try again in a minute.");
+  if (state !== "ready" || (cur.scan !== "clean" && cur.scan !== "skipped")) fail(409, "scanning", "This file is still being checked. Try again in a minute.");
   // `view` opens a viewable file in the browser; other types (and every plain request) download
   const inline = view && VIEWABLE.has(cur.contentType) ? cur.contentType : undefined;
   return { url: await d.storage.getUrl(cur.key, cur.name, inline), inline: Boolean(inline) };
