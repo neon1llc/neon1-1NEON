@@ -269,7 +269,7 @@ export function FileList({ docs, projectName, empty = "No files yet." }: { docs:
           <div className="meta">
             {/* A ready file's name opens it, like other titles; others are plain text until they're ready */}
             {fileState(d) === "ready" ? <button type="button" className="t item-open" onClick={() => void view(d)} title={VIEWABLE.has(d.contentType) ? "Open in a new tab" : "Download"}>{d.name}</button> : <span className="t">{d.name}</span>}
-            <span className="s">{[projectName?.(d.projectId), size(d.size), ago(d.createdAt), STATE_NOTE[fileState(d)]].filter(Boolean).join(" · ")}</span>
+            <span className="s">{[projectName?.(d.projectId), size(d.size), ago(d.createdAt), STATE_NOTE[fileState(d)], d.scan === "skipped" && fileState(d) === "ready" ? "not scanned (test site)" : ""].filter(Boolean).join(" · ")}</span>
             {(d.state === "failed" || d.state === "rejected") && <span className="s warn-text">Not available: {fileProblem(d)}</span>}
           </div>
           <span className="acts">

@@ -32,7 +32,7 @@ const repo = new Repo(new DynamoTable(cfg.table));
 const mailer = guardMailer(cfg, new SesMailer(cfg.mailFrom));
 // Texts only once the toll-free number is set up
 const texter = cfg.smsFrom ? new AwsTexter(cfg.smsFrom) : undefined;
-const storage = new S3Storage(cfg.docsBucket);
+const storage = new S3Storage(cfg.docsBucket, cfg.malwareScan !== false);
 
 // Stripe's keys stay in SSM (SecureString), read once at cold start; never in the environment or the repo.
 // Without both parameters, invoices are still issued and paid by check, Zelle, or wire
