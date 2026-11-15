@@ -1,12 +1,17 @@
 {
   "name": "1neon",
   "private": true,
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "1 portal. Needs. Execute. Observe. Normalize.",
   "license": "MIT",
   "type": "module",
-  "engines": { "node": ">=22" },
-  "workspaces": ["packages/*", "apps/*"],
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
     "dev": "npm run dev --workspace @1neon/api & npm run dev --workspace @1neon/web",
     "build": "npm run build --workspaces --if-present",
