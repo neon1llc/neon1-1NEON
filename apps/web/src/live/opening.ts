@@ -107,7 +107,8 @@ export async function walkTo(s: Stage, path: string) {
 export function opening(id: string, caption: string, thought: string, path?: string): Section {
   return {
     id,
-    title: "Sign in",
+    // She signs in and lands on Home, so the chapter says both
+    title: "Sign in to Home",
     run: async (s) => {
       await s.say(caption);
       await s.think(thought);
