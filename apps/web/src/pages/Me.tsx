@@ -258,7 +258,7 @@ export function MePage() {
         {/* Two-step verification: any one of these confirms it's you before admin actions */}
         <div className="card small security" data-tour="passkey" id="security">
           <b>Two-step verification</b>
-          <span className="muted">Inviting people and changing access or settings ask you to confirm. Any one works. Add a second as a backup.</span>
+          <span className="muted">Any one works. Add a second as a backup.</span>
           <ul className="factors">
             <li>
               <span><b>Passkey</b><br /><span className="muted">Your face, fingerprint, or device PIN. Works on iPhone, Android, Mac, and Windows.</span></span>
@@ -294,7 +294,7 @@ export function MePage() {
         {/* The tutorial: replay the welcome tour, or read the FAQs */}
         <div className="card small" style={{ display: "grid", gap: 8, justifyItems: "start" }}>
           <b>Tutorial</b>
-          <span className="muted">A 1-minute tour of where things are. Each page also has its own guide under ?.</span>
+          <span className="muted">Each page also has its own guide under ?.</span>
           <div className="actions">
             <button className="btn btn-ghost" type="button" onClick={help.welcomeTour}>Replay the tour</button>
             <Link className="btn btn-ghost" to="/faqs">FAQs</Link>

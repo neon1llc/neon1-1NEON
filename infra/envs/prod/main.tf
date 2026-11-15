@@ -137,6 +137,7 @@ module "auth" {
 module "observability" {
   source           = "../../modules/observability"
   name             = local.name
+  env              = "prod"
   alert_email      = var.alert_email
   api_function     = module.api.api_function
   trigger_function = module.api.trigger_function

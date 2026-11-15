@@ -2,17 +2,24 @@
 
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
-## Unreleased
+## v0.14.0 - 2026-11-15
 
 ### Added
-- Sign-up asks where the business can be seen: its website or a public page (Google, Yelp, LinkedIn), or the city and state it's based in. One is required. Potentials shows them, any admin can change them in Settings without confirming it's them, and Home asks an organization's own admins for them until one is added (clients invited before this included). The demo's and live playback's sample organizations have places, so nothing changes in the walkthroughs.
+- **Free-account sign-up opens in production** with the real Cloudflare Turnstile keys (`signup = true`).
+- Sign-up asks where the business can be seen: its website or a public page (Google, Yelp, LinkedIn), or the city and state it's based in. One is required. Potentials shows them, any admin can change them in Settings without confirming it's them, and Home asks an organization's own admins for them until one is added (clients invited before this included). The demo's and live playback's sample organizations have places.
 - The sign-up form links the Knowledge Center's "Free 1NEON accounts" guide.
+- Each release's changelog entry is published as its GitHub release.
 
 ### Changed
 - Sign-up and the new account's welcome line invite people to write down what their project needs, without advertising file uploads (still allowed within the limits).
-- The operator page for prospects is now called Potentials (menu, search, and page title). On a phone its four actions sit two by two (Promote and Suspend, then Keep and Delete), and "Promote to client" is now "Promote".
-- The sign-up route's own throttle (1 a second, burst 5) is back. It needs neon1-aws-infrastructure's ApiLogDelivery permission applied first.
-- Production sign-up is switched on (`signup = true`) with the real Cloudflare Turnstile site key. The secret was put in SSM by hand.
+- The operator page for prospects is now called Potentials. On a phone its four actions sit two by two, and "Promote to client" is now "Promote".
+- The sign-up route's own throttle (1 a second, burst 5) is back, now that the deploy role may set up API log delivery (neon1-aws-infrastructure).
+- Cut wording that repeats a table, list, or linked page.
+- Legal pages and Neo's 1NEON guide come from neon1-corpus v0.45.0 (terms 1.5 and privacy 3.2, with free accounts and the website-or-place field).
+
+### Fixed
+- Production's outbox alarms no longer go off for dev. Both environments sent their outbox numbers to the same CloudWatch metric, so dev's stuck test emails set off the production alarms three times on 2026-11-15. The numbers now carry an `Env` label, and the production alarms watch `Env=prod` only.
+- Notifications to @neon1.tech addresses (the operators) are allowed to send. SES refused them because it also checks the recipient's identity when it's verified in the account, and the API's role only covered notify.neon1.tech.
 
 ## v0.13.0 - 2026-11-15
 

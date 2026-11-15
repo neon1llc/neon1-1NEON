@@ -44,7 +44,6 @@ export function Insights() {
   return (
     <>
       <h1 className="page-title">Insights</h1>
-      <p className="lead">How work is going across {org.name}, made from what's already here.</p>
       <Stale reads={[q]} />
       {gate([q]) ?? (d && (
         <>

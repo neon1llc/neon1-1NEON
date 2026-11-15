@@ -179,10 +179,12 @@ data "aws_iam_policy_document" "api" {
       resources = [statement.value]
     }
   }
+  # Mail from notify.neon1.tech. SES also checks the recipient's identity when it's verified in this
+  # account, so sends to @neon1.tech (the operators) need neon1.tech and its address identities too
   statement {
     sid       = "Mail"
     actions   = ["ses:SendEmail"]
-    resources = [var.ses_identity_arn, "arn:aws:ses:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:configuration-set/${var.ses_configuration_set}"]
+    resources = [var.ses_identity_arn, "arn:aws:ses:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:identity/neon1.tech", "arn:aws:ses:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:identity/*@neon1.tech", "arn:aws:ses:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:configuration-set/${var.ses_configuration_set}"]
   }
   # Neo: one model through one cross-region inference profile, which routes to the model in any US region
   dynamic "statement" {
