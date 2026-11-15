@@ -26,7 +26,9 @@ const INVITE_STATE = { queued: "email on its way", sent: "email sent", failed: "
 
 // The member table for everyone; invites and access changes for admins
 export function People() {
-  const { org, canAdmin } = useOrg();
+  const { org, canAdmin: admin, prospect } = useOrg();
+  // A new account can't invite people or change access; that opens once neon1 and it are working together
+  const canAdmin = admin && !prospect;
   const me = useSession();
   const members = useMembers(org.id);
   const refresh = useRefresh(org.id);

@@ -21,7 +21,7 @@ type AgreementResponse = { edition: string; text: string; hash: string; signed?:
 
 /** The agreement, its signature, and Sign for a client admin */
 export function AgreementPage() {
-  const { org, access } = useOrg();
+  const { org, access, prospect } = useOrg();
   const me = useSession();
   const toast = useToast();
   const refresh = useRefresh(org.id);
@@ -39,7 +39,7 @@ export function AgreementPage() {
   const wait = gate([q]);
   if (wait || !q.data) return wait;
   const a = q.data;
-  const maySign = access === "admin" && !me.operator && a.required && !a.signed;
+  const maySign = access === "admin" && !prospect && !me.operator && a.required && !a.signed;
   const submit = async () => {
     setBusy(true);
     try {

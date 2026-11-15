@@ -13,6 +13,7 @@ import { api, BASE_PATH, devUser, LIVE, pickPerson } from "../lib/api.ts";
 import { menuOf, NOTIFY_GROUPS } from "@1neon/domain";
 import { problem } from "../lib/hooks.ts";
 import { passkeyCreation } from "../lib/passkey.ts";
+import { useProspectEverywhere } from "../components/Prospect.tsx";
 import { useHelp } from "../components/Help.tsx";
 import { askToConfirm, TotpSetup } from "../components/Confirm.tsx";
 
@@ -55,6 +56,8 @@ export function MePage() {
   useEffect(() => () => applyTheme(savedTheme.current), []);
   // The phone check: a code is texted, then typed here
   const [code, setCode] = useState<string | undefined>(undefined);
+  // A new account has no texts: no number to add, no text notices, no text codes
+  const noTexts = useProspectEverywhere(me) === true;
   const sms = me.sms?.state ?? "unavailable";
   // A saved change to the number or consent matters before a code makes sense
   const smsDirty = draft.phone !== me.user.phone || draft.smsConsent !== Boolean(me.user.smsConsentAt);
@@ -152,7 +155,7 @@ export function MePage() {
       <form className="form" onSubmit={(e) => { e.preventDefault(); void save(); }}>
         <div><label htmlFor="nm">Name</label><input id="nm" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} maxLength={80} autoComplete="name" /></div>
         <div><label htmlFor="tt">Title</label><input id="tt" value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} maxLength={80} autoComplete="organization-title" /></div>
-        <div><label htmlFor="ph">Phone (only you see it)</label><input id="ph" type="tel" value={draft.phone} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} maxLength={32} autoComplete="tel" /></div>
+        {!noTexts && <div><label htmlFor="ph">Phone (only you see it)</label><input id="ph" type="tel" value={draft.phone} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} maxLength={32} autoComplete="tel" /></div>}
         {/* Theme previews immediately; Save keeps it with the account */}
         <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
           <legend style={{ marginBottom: 8 }}>Theme</legend>
@@ -199,7 +202,7 @@ export function MePage() {
             </tbody>
           </table>
           {/* Texts sit apart from email: every box here starts unticked, as carriers require */}
-          <fieldset className="notify-texts" id="texts">
+          {!noTexts && <fieldset className="notify-texts" id="texts">
             <legend>Text messages</legend>
             {/* Texts need a mobile number and a clear yes, worded the way carriers require */}
             {draft.phone.trim() ? (
@@ -242,7 +245,7 @@ export function MePage() {
                 );
               })}
             </ul>
-          </fieldset>
+          </fieldset>}
         </div>
         {/* Save covers everything above; it opens only when something changed */}
         <div className="actions">
@@ -269,6 +272,7 @@ export function MePage() {
                 ? <button className="btn btn-ghost btn-sm" type="button" onClick={() => void removeTotp()}>Remove</button>
                 : <button className="btn btn-ghost btn-sm" type="button" onClick={() => setTotpOpen(true)}>Set up</button>}
             </li>
+            {!noTexts && <>
             {/* Text codes go only to the number proved under Notifications, and only once texting is live */}
             <li>
               <span><b>Text message</b><br /><span className="muted">
@@ -281,6 +285,7 @@ export function MePage() {
                 ? <button className="btn btn-ghost btn-sm" type="button" onClick={() => void textFactor(false)}>Turn off</button>
                 : <button className="btn btn-ghost btn-sm" type="button" disabled={sms !== "ready"} onClick={() => void textFactor(true)}>Turn on</button>}
             </li>
+            </>}
           </ul>
           <span className="muted">
             {me.strongSession ? "This session is confirmed. Admin actions are open." : me.factors?.any ? <>To use admin actions, <button type="button" className="link" onClick={askToConfirm}>confirm it's you</button>.</> : "Add one of these to use admin actions."}
