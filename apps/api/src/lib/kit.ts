@@ -6,7 +6,7 @@ import { canNameDecider, deciderIds, isOwnOrg, fileState, type Project } from "@
 import type { Context, Hono } from "hono";
 import type { CognitoAuth } from "../auth.ts";
 import type { Config } from "../config.ts";
-import type { Directory, Mailer, Storage, Texter } from "../services.ts";
+import type { Directory, HumanCheck, Mailer, Storage, Texter } from "../services.ts";
 import type { Repo } from "../store/repo.ts";
 import type { NeoModel } from "../neo/agent.ts";
 import type { NeoBudget } from "../routes/neo.ts";
@@ -34,6 +34,8 @@ export interface Deps {
   payments?: Payments;
   // Optional: locked, write-once copies of signed and issued records (S3 Object Lock in production)
   records?: Records;
+  // Optional: the bot check on the sign-up form (Cloudflare Turnstile). Deployed without it, sign-up stays shut
+  humanCheck?: HumanCheck;
 }
 
 
