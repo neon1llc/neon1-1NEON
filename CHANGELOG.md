@@ -2,6 +2,13 @@
 
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
+## Unreleased
+
+### Changed
+- Sign-up and the new account's welcome line invite people to write down what their project needs, without advertising file uploads (still allowed within the limits).
+- Prospects page on a phone: the four actions sit two by two (Promote and Suspend, then Keep and Delete), and "Promote to client" is now "Promote".
+- The sign-up route's own throttle (1 a second, burst 5) is back. It needs neon1-aws-infrastructure's ApiLogDelivery permission applied first.
+
 ## v0.13.0 - 2026-11-15
 
 ### Added

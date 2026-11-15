@@ -1564,3 +1564,7 @@ ul.md-says { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; 
 .prospect-facts dt { font: 11px var(--mono); color: var(--muted); }
 .prospect-facts dd { margin: 0; }
 @media (max-width: 520px) { .prospect-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* The four actions: one row where they fit; on a phone two by two (Promote, Suspend / Keep, Delete),
+   each half the card wide, so the card stays short */
+.prospect-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 520px) { .prospect-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); } .prospect-actions .btn { width: 100%; } }
