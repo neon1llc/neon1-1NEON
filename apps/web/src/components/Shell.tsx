@@ -79,6 +79,9 @@ let arriving = document.documentElement.classList.contains("from-site");
 /** Top-level gate: sign-in, error, first-visit redirect, then the app */
 // Whether this browser was last signed in or out, for the background shown while the session loads
 const LAST_KEY = "1neon.last";
+// Whether sign-up was open at this browser's last look, so the sign-in draws the right wording at once
+const SIGNUP_KEY = "1neon.signup";
+const SIGNUP_SEEN = () => { const v = prefs.get(SIGNUP_KEY); return v === "open" ? true : v === "closed" ? false : undefined; };
 // Remember me also keeps the email on this device, filled in next time; unticked, it's forgotten.
 // Not in the demo or a walkthrough: there each sign-in types its own fictional email into an empty box
 const EMAIL_KEY = "1neon.email";
@@ -104,6 +107,8 @@ export function Root() {
 /** The app under Root: the session check, then sign-in or the signed-in pages */
 function App() {
   const me = useMe();
+  // Whether this visit has shown sign-in (see below)
+  const shownSignIn = useRef(false);
   const loc = useLocation();
   // Which location is on screen, for the check that keeps the page with the address (lib/motion.ts)
   useLayoutEffect(() => drew(loc.key), [loc.key]);
@@ -126,6 +131,11 @@ function App() {
     const state = me.data ? "in" : me.error instanceof HttpError && me.error.status === 401 ? "out" : undefined;
     if (state) prefs.set(LAST_KEY, state);
   }, [me.data, me.error]);
+  // Signed out on this visit: a later check (the tab regaining focus, a refresh of the session) keeps the
+  // same sign-in on screen while it runs, so the form, what's typed, and the wordmark never start over
+  if (me.error instanceof HttpError && me.error.status === 401) shownSignIn.current = true;
+  else if (me.data) shownSignIn.current = false;
+  if (me.isPending && shownSignIn.current) return <SignIn />;
   if (me.isPending) {
     // Mid sign-in (iOS often reloads the tab after a trip to the mail app): go straight back to the
     // code step while the session check runs; it hands over if the person turns out signed in
@@ -251,11 +261,17 @@ function SignIn() {
   const [signingUp, setSigningUp] = useState(() => !IN_DEMO && !saved && new URLSearchParams(location.search).get("signup") === "1");
   // Whether sign-up is open, so the invitation note and the "New here?" link show only when it is.
   // Asked once by the real portal; while closed (production until neon1 opens it) neither shows
-  const [signupOpen, setSignupOpen] = useState(false);
+  // The last answer is kept in this browser and used at once, so the page doesn't draw the closed
+  // wording and then switch; with no answer yet (a first visit) that wording waits, hidden, for it
+  const [signupOpen, setSignupOpen] = useState<boolean | undefined>(() => (IN_DEMO || PICKER ? false : SIGNUP_SEEN()));
   useEffect(() => {
     if (IN_DEMO || PICKER) return;
     let live = true;
-    api<{ open: boolean }>("/auth/signup").then((r) => live && setSignupOpen(r.open === true), () => undefined);
+    api<{ open: boolean }>("/auth/signup").then((r) => {
+      if (!live) return;
+      setSignupOpen(r.open === true);
+      prefs.set(SIGNUP_KEY, r.open === true ? "open" : "closed");
+    }, () => live && setSignupOpen((v) => v ?? false));
     return () => { live = false; };
   }, []);
   const [busy, setBusy] = useState(false);
@@ -358,7 +374,7 @@ function SignIn() {
         ) : (
           <>
             <h2 className="signin-h">Client portal</h2>
-            <p className="signin-lead">{signupOpen ? "For neon1 clients, by invitation. New here? Start a free account below and tell me what you need." : "For neon1 clients, by invitation."}</p>
+            <p className="signin-lead" style={signupOpen === undefined ? { visibility: "hidden" } : undefined}>{signupOpen ? "For neon1 clients, by invitation. New here? Start a free account below and tell me what you need." : "For neon1 clients, by invitation."}</p>
           </>
         )}
         {problem === "not_invited" && <p className="notice" role="alert">That email hasn't been invited yet. Ask your organization's admin, or neon1.</p>}
