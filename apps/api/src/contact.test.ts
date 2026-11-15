@@ -30,10 +30,15 @@ describe("contact form", () => {
   });
   it("names every topic picked and the visitor's own, or says none was picked", async () => {
     await send({ ...good, topic: undefined, topics: ["cloud", "security"], other: "Printer setup" });
-    expect(mailer.sent[0]!.text).toContain("About: Cloud and AI engineering, Security awareness and readiness, Printer setup");
+    expect(mailer.sent[0]!.text).toContain("About: Cloud, Security awareness and readiness, Printer setup");
     await send({ ...good, topic: undefined });
     expect(mailer.sent[1]!.text).toContain("About: Not said");
     expect((await send({ ...good, topics: ["nope"] })).status).toBe(400);
+    // The site's current topics, all at once, and an older key a cached page still sends
+    await send({ ...good, topic: undefined, topics: ["workflows", "cloud", "ai", "networks", "devices", "software", "security"], other: "" });
+    expect(mailer.sent.at(-1)!.text).toContain("Business workflows, Cloud, AI, Networks, Devices and IoT, Software, Security awareness and readiness");
+    expect((await send({ ...good, topic: undefined, topics: ["business", "spaces"] })).status).toBe(200);
+    expect((await send({ ...good, topics: ["workflows", "cloud", "ai", "networks", "devices", "software", "security", "business", "spaces", "other"] })).status).toBe(400);
   });
   it("says how they found neon1 when picked, and refuses an answer not on the list", async () => {
     await send({ ...good, found: "linkedin" });

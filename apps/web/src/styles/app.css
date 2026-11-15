@@ -1181,11 +1181,11 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 @media (max-width: 560px) { .cal-form .row2, .cal-form .row3 { grid-template-columns: minmax(0, 1fr); } }
 /* Folds: the label, its count, and an arrow beside it; open, the arrow turns to point down. Where the
    browser can, the content eases open and shut */
-.ag-group.fold > summary { display: flex; align-items: center; gap: 6px; width: fit-content; list-style: none; cursor: pointer; padding: 4px 0; user-select: none; -webkit-user-select: none; }
+.ag-group.fold > summary { display: flex; align-items: baseline; gap: 6px; width: fit-content; list-style: none; cursor: pointer; padding: 4px 0; user-select: none; -webkit-user-select: none; }
 .ag-group.fold > summary::-webkit-details-marker { display: none; }
 .ag-group.fold > summary h3 { margin: 0; }
 .ag-group.fold > summary h3 small { margin-left: 4px; font: 11px var(--mono); color: var(--muted); }
-.ag-group.fold .arr { display: inline-block; font: 13px var(--mono); color: var(--muted); transition: transform var(--t-slow, .42s) var(--ease, ease); }
+.ag-group.fold .arr { color: var(--muted); transition: transform var(--t-open) var(--ease-open); }
 .ag-group.fold[open] > summary .arr { transform: rotate(-90deg); }
 .ag-group.fold > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 4px; }
 .ag-group.fold .fold-body { padding-top: 2px; }
@@ -1196,7 +1196,7 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 .agenda { gap: 6px; }
 :root { interpolate-size: allow-keywords; }
 /* The arrow turns in exactly the time the group takes to open */
-.ag-group.fold::details-content { height: 0; overflow: clip; transition: height var(--t-slow, .42s) var(--ease, ease), content-visibility var(--t-slow, .42s) allow-discrete; }
+.ag-group.fold::details-content { height: 0; overflow: clip; transition: height var(--t-open) var(--ease-open), content-visibility var(--t-open) allow-discrete; }
 .ag-group.fold[open]::details-content { height: auto; }
 @media (prefers-reduced-motion: reduce) { .ag-group.fold::details-content { transition: none; } .ag-group.fold .arr { transition: none; } }
 
@@ -1651,10 +1651,18 @@ a.out:hover .out-arrow, a.out:focus-visible .out-arrow { transform: translate(2p
 
 
 /* --- Motion -----------------------------------------------------------------------------------------
-   One timing for every change, the same as neon1.tech's (shared/neon1.css): quick for small things (a menu, a message),
-   a move for things that arrive (a dialog, a revealed field), and a page for whole screens. All of it
-   is off with reduced motion, from the device or the profile's "Reduced" (html[data-motion]) */
-:root { --ease: cubic-bezier(.28, .11, .32, 1); --t-fast: .16s; --t-base: .26s; --t-slow: .42s; interpolate-size: allow-keywords; }
+   One timing for every change, defined once in shared/neon1.css (neon1.tech's, loaded before this file):
+   --t-fast for small things (a menu, a message), --t-base for things that arrive (a dialog, a revealed
+   field, a dropdown), --t-slow for whole screens, and --t-open with --ease-open for folds. The copies here
+   are only a fallback with no weight (:where), so the shared values always win. All of it is off with
+   reduced motion, from the device or the profile's "Reduced" (html[data-motion="off"]) */
+:where(:root) { --ease: cubic-bezier(.28, .11, .32, 1); --t-fast: .16s; --t-base: .3s; --t-slow: .45s; --t-open: .6s; --ease-open: cubic-bezier(.25, .8, .25, 1); }
+:root { interpolate-size: allow-keywords; }
+/* The drawn left arrow, as shared/neon1.css draws it (fallback with no weight): .arr beside lowercase,
+   .arr-mixed beside sentence case */
+:where(.arr) { --arr-xc: .2575em; display: inline-block; position: relative; top: calc(.375em - var(--arr-xc)); width: .95em; height: .75em; background: currentColor; flex: none;
+  clip-path: polygon(0 50%, 31% 12%, 40% 20%, 24% 43%, 100% 43%, 100% 57%, 24% 57%, 40% 80%, 31% 88%); }
+:where(.arr-mixed) { --arr-xc: .35em; }
 @keyframes pop { from { opacity: 0; transform: translateY(4px) scale(.98); } }
 @keyframes fade-in { from { opacity: 0; } }
 @keyframes sheet-in { from { transform: translateX(24px); opacity: 0; } }
@@ -1677,7 +1685,7 @@ dialog.palette[open] { animation-duration: var(--t-fast); }
    organization's name, "I go by one name") ease in where they appear */
 .field-error, .notice, .signup-form :is(.f-kindOther, .f-org, .f-foundOther, .one-name), .face-form .field-error { animation: rise var(--t-base) var(--ease) backwards; }
 /* Questions and folds open to their height instead of jumping */
-details.faq::details-content { height: 0; overflow: clip; transition: height var(--t-slow) var(--ease), content-visibility var(--t-slow) allow-discrete; }
+details.faq::details-content { height: 0; overflow: clip; transition: height var(--t-open) var(--ease-open), content-visibility var(--t-open) allow-discrete; }
 details.faq[open]::details-content { height: auto; }
 /* A cross-fade between sign-in steps, and between sign-in and sign-up (lib/motion.ts fade) */
 html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new(root) { animation-duration: var(--t-base); animation-timing-function: var(--ease); }
@@ -1687,7 +1695,8 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
    stays, and the browser's own list opens */
 @supports (appearance: base-select) {
   select { appearance: base-select; background-image: none; padding-right: 14px; display: inline-flex; align-items: center; gap: 12px; }
-  select::picker-icon { content: "\2190"; font: 700 15px/1 var(--sans); color: var(--accent); margin-left: auto; margin-right: 2px; transition: rotate var(--t-base) var(--ease); }
+  /* The same drawn arrow as .arr, centered on the line beside sentence-case choices */
+  select::picker-icon { content: ""; width: .95em; height: .75em; font: 15px var(--sans); background: var(--accent); clip-path: polygon(0 50%, 31% 12%, 40% 20%, 24% 43%, 100% 43%, 100% 57%, 24% 57%, 40% 80%, 31% 88%); align-self: center; margin-left: auto; margin-right: 2px; transition: rotate var(--t-base) var(--ease); }
   select:open::picker-icon { rotate: -90deg; }
   ::picker(select) { appearance: base-select; border: 1px solid var(--line-strong); border-radius: var(--r-sm); background: var(--panel); color: var(--text); box-shadow: 0 12px 32px rgba(0, 0, 0, .16); padding: 4px; margin-top: 4px; max-height: min(50vh, 360px); }
   /* The list unrolls in the same time the arrow takes to turn, so both finish together */
@@ -1698,7 +1707,7 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
   select option:is(:hover, :focus-visible) { background: var(--accent-soft); outline: none; }
   select.unpicked selectedcontent, select.unpicked > button { color: inherit; }
   /* The dark sign-in screen: the neon arrow, a dark list */
-  .signin select::picker-icon { color: var(--neon, #00FF41); }
+  .signin select::picker-icon { background: var(--neon, #00FF41); }
   .signin ::picker(select) { background: #0D0208; color: #D6F5DC; border-color: rgba(0, 255, 65, .3); }
   .signin select option:is(:hover, :focus-visible) { background: rgba(0, 255, 65, .12); }
   .signin select option:checked { color: #00FF41; }

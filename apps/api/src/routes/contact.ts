@@ -19,10 +19,16 @@ export const COUNTER_KEEP_S = 24 * 60 * 60;
 // What each topic is called in the email: the site's four services, plus "something else" (kept so
 // an older page still sends). A visitor may pick any number, or none, and name their own in `other`
 export const TOPICS = {
-  business: "Business workflows and technology",
-  cloud: "Cloud and AI engineering",
-  spaces: "Networks, devices, and spaces",
+  workflows: "Business workflows",
+  cloud: "Cloud",
+  ai: "AI",
+  networks: "Networks",
+  devices: "Devices and IoT",
+  software: "Software",
   security: "Security awareness and readiness",
+  // Older keys a cached page may still send
+  business: "Business workflows and technology",
+  spaces: "Networks, devices, and spaces",
   other: "Something else",
 } as const;
 
@@ -32,10 +38,10 @@ const Message = z.object({
   name: z.string().trim().max(100),
   email: z.string().trim().max(200),
   company: z.string().trim().max(120).optional().default(""),
-  topics: z.array(TopicKey).max(5).optional().default([]),
+  topics: z.array(TopicKey).max(9).optional().default([]),
   // The older one-topic form, still accepted
   topic: TopicKey.optional(),
-  // Their own words for what it's about, when none of the four fits
+  // Their own words for what it's about, when none of the topics fits
   other: z.string().trim().max(120).optional().default(""),
   today: z.string().trim().max(3000),
   better: z.string().trim().max(1500).optional().default(""),

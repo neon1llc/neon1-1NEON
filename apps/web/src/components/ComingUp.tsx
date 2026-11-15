@@ -165,7 +165,7 @@ function nextIn(r: CalEvent, today: string) {
 function Fold({ name, count, open, late, children }: { name: string; count: number; open?: boolean; late?: boolean; children: ReactNode }) {
   return (
     <details className={`ag-group fold${late ? " late" : ""}`} open={open}>
-      <summary><h3>{name} <small>{count}</small></h3><span className="arr" aria-hidden="true">←</span></summary>
+      <summary><h3>{name} <small>{count}</small></h3><span className="arr arr-mixed" aria-hidden="true" /></summary>
       <div className="fold-body">{children}</div>
     </details>
   );
