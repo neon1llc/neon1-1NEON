@@ -53,7 +53,7 @@ async function prospect(email = form.email) {
 
 describe("the sign-up form", () => {
   it("says whether it's open, with the terms edition", async () => {
-    const r = await (await app.request("/1NEON/api/auth/signup")).json();
+    const r = await (await app.request("/1NEON/api/auth/signup")).json() as unknown;
     expect(r).toMatchObject({ open: true, terms: expect.any(String) });
   });
 
@@ -190,7 +190,7 @@ describe("the prospect, once the code is proved", () => {
 describe("neon1's review queue", () => {
   it("lists prospects for neon1 only", async () => {
     await prospect();
-    const r = await (await as(OP, "/prospects")).json();
+    const r = (await (await as(OP, "/prospects")).json()) as { prospects: unknown[] };
     expect(r.prospects).toHaveLength(1);
     expect(r.prospects[0]).toMatchObject({ name: "Kim Dental", people: [{ email: form.email }] });
     expect((await as(form.email, "/prospects")).status).toBe(403);
@@ -251,22 +251,34 @@ describe("tidying up", () => {
     expect(await repo.table.get(SIGNUP_PK, form.email)).toBeUndefined();
   });
 
-  it("checks in at 30 and 60 quiet days, gives final notice at 90, and deletes 14 days later", async () => {
+  it("checks in at 7 and 14 quiet days, gives final notice at 21, and deletes on day 30", async () => {
     const { tid } = await prospect();
     const day = 24 * 3600 * 1000;
     const since = Date.parse((await repo.getTenant(tid))!.prospect!.since);
     const pass = (days: number) => sweepQuietProspects({ repo, d: { mailer, storage, directory } as never, cfg }, new Date(since + days * day));
-    const toDana = () => mailer.sent.filter((m) => m.to === form.email).length;
-    expect(await pass(10)).toMatchObject({ nudged: 0 });
-    expect(await pass(31)).toMatchObject({ nudged: 1 });
-    expect(toDana()).toBe(1);
-    expect(await pass(31)).toMatchObject({ skipped: true });
-    expect(await pass(61)).toMatchObject({ nudged: 1 });
-    expect(await pass(91)).toMatchObject({ warned: 1 });
-    expect(await pass(100)).toMatchObject({ deleted: 0 });
-    expect(await pass(106)).toMatchObject({ deleted: 1 });
+    const toDana = () => mailer.sent.filter((m) => m.to === form.email);
+    expect(await pass(3)).toMatchObject({ nudged: 0 });
+    expect(await pass(7.1)).toMatchObject({ nudged: 1 });
+    expect(toDana()).toHaveLength(1);
+    expect(toDana()[0]!.replyTo).toBe("hello@neon1.tech");
+    expect(await pass(7.2)).toMatchObject({ skipped: true });
+    expect(await pass(14.1)).toMatchObject({ nudged: 1 });
+    expect(await pass(21.1)).toMatchObject({ warned: 1 });
+    expect(toDana()[2]!.text).toContain("sign up again");
+    expect(await pass(25)).toMatchObject({ deleted: 0 });
+    expect(await pass(30.2)).toMatchObject({ deleted: 1 });
     expect(await repo.getTenant(tid)).toBeUndefined();
-    expect(toDana()).toBe(3);
+    expect(toDana()).toHaveLength(3);
+  });
+
+  it("sends nothing and deletes nothing while neon1 keeps a prospect", async () => {
+    const { tid } = await prospect();
+    const day = 24 * 3600 * 1000;
+    const since = Date.parse((await repo.getTenant(tid))!.prospect!.since);
+    expect((await as(OP, `/prospects/${tid}/hold`, "POST", {})).status).toBe(200);
+    for (const d of [8, 15, 22, 40]) await sweepQuietProspects({ repo, d: { mailer, storage, directory } as never, cfg }, new Date(since + d * day));
+    expect(await repo.getTenant(tid)).toBeTruthy();
+    expect(mailer.sent.filter((m) => m.to === form.email)).toHaveLength(0);
   });
 
   it("starts the clock again after a real change", async () => {
@@ -274,11 +286,11 @@ describe("tidying up", () => {
     const day = 24 * 3600 * 1000;
     const since = Date.parse((await repo.getTenant(tid))!.prospect!.since);
     const pass = (days: number) => sweepQuietProspects({ repo, d: { mailer, storage, directory } as never, cfg }, new Date(since + days * day));
-    await pass(91);
+    await pass(21.1);
     expect((await repo.getTenant(tid))!.prospect!.warnedAt).toBeTruthy();
-    // A change the prospect makes, recorded as if it happened on day 95
-    await repo.table.write([{ put: { PK: `T#${tid}`, SK: "ACTIVE", at: new Date(since + 95 * day).toISOString() }, guard: { always: true } }]);
-    expect(await pass(106)).toMatchObject({ deleted: 0 });
+    // A change the prospect makes, recorded as if it happened on day 25
+    await repo.table.write([{ put: { PK: `T#${tid}`, SK: "ACTIVE", at: new Date(since + 25 * day).toISOString() }, guard: { always: true } }]);
+    expect(await pass(30.2)).toMatchObject({ deleted: 0 });
     expect((await repo.getTenant(tid))!.prospect!.warnedAt).toBeUndefined();
   });
 

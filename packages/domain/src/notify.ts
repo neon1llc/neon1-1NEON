@@ -44,8 +44,9 @@ export const RECEIPTS = new Set(["decision.approved", "decision.changed", "agree
  * where neon1 is its own client, the billing that a client would hear about as well */
 export const actorHears = (action: string, ownOrg: boolean) => RECEIPTS.has(action) || (ownOrg && groupOf(action).id === "billing");
 
-/** Actions only neon1 hears about: its own working drafts, which a client sees once issued */
-export const neon1Only = (action: string) => action === "invoice.drafted";
+/** Actions only neon1 hears about: its own working drafts, which a client sees once issued, and its
+ * handling of prospects (sign-up, keeping, suspending), apart from a promotion to client */
+export const neon1Only = (action: string) => action === "invoice.drafted" || (action.startsWith("prospect.") && action !== "prospect.promoted");
 
 
 /**

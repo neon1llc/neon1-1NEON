@@ -31,11 +31,11 @@ export const PROSPECT_LIMITS = {
  * real change (a project, item, comment, file, or event; signing in alone doesn't count). Friendly
  * check-ins go out at each PROSPECT_NUDGE_DAYS, a final notice at PROSPECT_FINAL_DAYS, and the
  * organization and its files are deleted PROSPECT_GRACE_DAYS after the final notice. Any real change
- * starts the clock again. Clients are never deleted
+ * starts the clock again, and neon1 can hold a prospect it's talking to elsewhere. Clients are never deleted
  */
-export const PROSPECT_NUDGE_DAYS = [30, 60] as const;
-export const PROSPECT_FINAL_DAYS = 90;
-export const PROSPECT_GRACE_DAYS = 14;
+export const PROSPECT_NUDGE_DAYS = [7, 14] as const;
+export const PROSPECT_FINAL_DAYS = 21;
+export const PROSPECT_GRACE_DAYS = 9;
 
 
 /** Which quiet-prospect email is due, given quiet days and how many have gone out (`sent`):

@@ -63,23 +63,23 @@ export async function purgeProspect(k: Pick<Kit, "repo" | "d" | "cfg">, tid: str
 }
 
 
-// What each quiet-prospect email says: two friendly check-ins, then the final notice
-function quietEmail(t: Tenant, portal: string, step: "nudge" | "final", when: string) {
+// What each quiet-prospect email says: two kind check-ins, then the final notice. Replies reach Pradeep
+function quietEmail(t: Tenant, portal: string, step: "nudge" | "final", when: string, signup: string) {
   if (step === "nudge") {
     return {
-      subject: `Your 1NEON space for ${t.name} is still here`,
-      preheader: "Add to it any time, or reply to talk it through.",
-      heading: "Still thinking it over?",
-      paras: [`Your space for ${t.name} on ${link("1NEON", portal)} is still here, and I'm glad to look at anything you add.`, "If it would help to talk it through, reply to this email and we'll find a time."],
-      text: `Your space for ${t.name} on 1NEON is still here, and I'm glad to look at anything you add: ${portal}\n\nIf it would help to talk it through, reply to this email and we'll find a time.`,
+      subject: `How are things going with ${t.name}?`,
+      preheader: "Add or update your needs any time, or reply to talk it through.",
+      heading: "Checking in",
+      paras: [`I wanted to check in on ${t.name}. If your needs have changed, update them on ${link("1NEON", portal)} and I'll take a look.`, "If it's easier to talk, reply to this email and we'll find a time."],
+      text: `I wanted to check in on ${t.name}. If your needs have changed, update them on 1NEON and I'll take a look: ${portal}\n\nIf it's easier to talk, reply to this email and we'll find a time.`,
     };
   }
   return {
     subject: `Your 1NEON space for ${t.name} closes on ${when}`,
     preheader: `Add or change anything before ${when} to keep it.`,
     heading: "Keep your 1NEON space?",
-    paras: [`Nothing has changed in ${t.name} on ${link("1NEON", portal)} for three months. To keep it, add or change anything there before ${when}.`, `Otherwise ${t.name}, its projects, and its files will be deleted on ${when}. If you'd rather keep them another way, reply to this email.`],
-    text: `Nothing has changed in ${t.name} on 1NEON for three months. To keep it, add or change anything there before ${when}: ${portal}\n\nOtherwise ${t.name}, its projects, and its files will be deleted on ${when}. If you'd rather keep them another way, reply to this email.`,
+    paras: [`Nothing has changed in ${t.name} on ${link("1NEON", portal)} for three weeks. To keep it, add or change anything there before ${when}.`, `Otherwise ${t.name}, its projects, and its files will be deleted on ${when}. You can ${link("sign up again", signup)} any time and start fresh, or reply to this email to talk.`],
+    text: `Nothing has changed in ${t.name} on 1NEON for three weeks. To keep it, add or change anything there before ${when}: ${portal}\n\nOtherwise ${t.name}, its projects, and its files will be deleted on ${when}. You can sign up again any time and start fresh (${signup}), or reply to this email to talk.`,
   };
 }
 
@@ -105,6 +105,8 @@ export async function sweepQuietProspects(k: Pick<Kit, "repo" | "d" | "cfg">, at
       t = next;
     }
     const q = t.prospect!;
+    // Held by neon1, or suspended: no emails and no deletion
+    if (q.heldAt || q.suspendedAt) continue;
     const step = quietStep((at.getTime() - Date.parse(last)) / DAY_MS, q.notices ?? 0, q.warnedAt ? (at.getTime() - Date.parse(q.warnedAt)) / DAY_MS : undefined);
     if (!step) continue;
     if (step === "delete") {
@@ -114,7 +116,7 @@ export async function sweepQuietProspects(k: Pick<Kit, "repo" | "d" | "cfg">, at
     }
     const portal = `${cfg.publicUrl}/1NEON/`;
     const when = new Date(at.getTime() + PROSPECT_GRACE_DAYS * DAY_MS).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "America/New_York" });
-    const mail = quietEmail(t, portal, step, when);
+    const mail = quietEmail(t, portal, step, when, `${portal}?signup=1`);
     const html = branded({ label: "your 1NEON space", preheader: mail.preheader, heading: mail.heading, body: mail.paras.map((x, i) => `<p style="margin:${i ? "14px" : "0"} 0 0">${x}</p>`).join(""), button: { label: "Open 1NEON", url: portal }, at });
     // Replies reach Pradeep, so a check-in can turn into a conversation
     for (const m of await repo.listMembers(t.id)) {
@@ -181,6 +183,21 @@ export function prospectRoutes(app: App, k: Kit) {
     const t = await prospect(c);
     const next: Tenant = { ...t, prospect: { ...t.prospect!, suspendedAt: undefined }, version: t.version + 1, updatedAt: now(), updatedBy: who(c).user.id };
     return c.json(await save(c, t, next, "prospect.resumed", `${t.name} was resumed`));
+  });
+
+  // Keep: neon1 is talking with them elsewhere, so no quiet-prospect emails or deletion until released
+  app.post("/prospects/:tid/hold", async (c) => {
+    const t = await prospect(c);
+    const next: Tenant = { ...t, prospect: { ...t.prospect!, heldAt: now(), notices: undefined, noticeAt: undefined, warnedAt: undefined }, version: t.version + 1, updatedAt: now(), updatedBy: who(c).user.id };
+    return c.json(await save(c, t, next, "prospect.held", `${t.name} is kept: no reminders or deletion`));
+  });
+
+  app.post("/prospects/:tid/release", async (c) => {
+    const t = await prospect(c);
+    const next: Tenant = { ...t, prospect: { ...t.prospect!, heldAt: undefined }, version: t.version + 1, updatedAt: now(), updatedBy: who(c).user.id };
+    // The clock restarts from now, so releasing never triggers an email straight away
+    await repo.table.write([{ put: { PK: `T#${t.id}`, SK: "ACTIVE", at: now() }, guard: { always: true } }]);
+    return c.json(await save(c, t, next, "prospect.released", `${t.name} is no longer kept`));
   });
 
   // Delete a prospect for good (spam, or at their request). The name must be typed to confirm
