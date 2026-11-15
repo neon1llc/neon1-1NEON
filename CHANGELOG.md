@@ -2,6 +2,12 @@
 
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
+## Unreleased
+
+### Fixed
+- Production's outbox alarms no longer go off for dev. Both environments sent their outbox numbers to the same CloudWatch metric, so dev's stuck test emails set off the production alarms three times on 2026-11-15. The numbers now carry an `Env` label, and the production alarms watch `Env=prod` only.
+- Notifications to @neon1.tech addresses (the operators) are allowed to send. SES refused them because it also checks the recipient's identity when it's verified in the account, and the API's role only covered notify.neon1.tech. Needs the matching boundary change in neon1-aws-infrastructure applied first.
+
 ## v0.13.0 - 2026-11-15
 
 ### Added
