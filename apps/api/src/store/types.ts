@@ -34,8 +34,9 @@ export interface TableStore {
   queryIndex(index: "GSI1" | "GSI2", pk: string, prefix?: string): Promise<Row[]>;
   /** Writes are all-or-nothing; a failed guard throws ConflictError with the current row */
   write(ops: WriteOp[]): Promise<void>;
-  /** Atomically add `by` (default 1) to a counter row and return the new value */
-  increment(pk: string, sk: string, by?: number): Promise<number>;
+  /** Atomically add `by` (default 1) to a counter row and return the new value. With `expiresAt` (epoch
+   *  seconds), a new row gets that ttl, and later increments keep it, so the row expires from its first count */
+  increment(pk: string, sk: string, by?: number, expiresAt?: number): Promise<number>;
 }
 
 
