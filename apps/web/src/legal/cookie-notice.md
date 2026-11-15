@@ -1,6 +1,6 @@
 # Cookies and browser storage
 
-*Last updated November 15, 2026.* This update makes the notice part of the [privacy and data policy](https://neon1.tech/1NEON/privacy), says sign-in with Google is turned off today, and adds `1neon.email`, which keeps the email you signed in with when you tick Remember me. There's no new tracking.
+*Last updated November 15, 2026.* This update adds `1neon.signup`, which keeps whether free-account sign-up was open so the sign-in page draws the right wording at once, and the note that remembers an admin's **Not now** on Home. There's no new tracking.
 
 This notice is part of the [privacy and data policy](https://neon1.tech/1NEON/privacy) and lists, in detail, every cookie and item neon1 saves in your browser. Neither neon1.tech nor the 1NEON portal uses analytics, advertising, or tracking of any kind.
 
@@ -35,6 +35,8 @@ The portal also saves, on your device only:
 | `1neon.last` (local storage) | Whether you were last signed in, so a reload starts on the right background | Until you clear it |
 | `1neon.email` (local storage) | With Remember me ticked, the email you signed in with, so it's filled in next time. Unticked, it's cleared | Until you sign in with Remember me unticked, or clear it |
 | `1neon.lastOrg` (local storage) | The organization you last had open, so pages outside one (your profile, the FAQs) keep its menu | Until you clear it |
+| `1neon.signup` (local storage) | Whether free-account sign-up was open when you last opened sign-in, so the page shows the right wording at once | Until you clear it |
+| `1neon.face-ask.` and an organization's ID (local storage) | Admins only: that you chose **Not now** when Home asked where to see your business, so it stops asking in this browser | Until you clear it |
 | `1neon.signin` (session storage) | Your email and the sign-in step in progress, so a reload mid sign-in returns to the code step. The code itself is never saved | 5 minutes, or until the tab closes |
 | `neon1.rain` (local storage) | The same rain settings as the website, on the sign-in screen | Until you clear it |
 | `1neon.projects.view`, `1neon.projects.view.sort` (local storage) | Whether you last looked at projects as a list or a timeline, and how you sorted them | Until you clear it |
