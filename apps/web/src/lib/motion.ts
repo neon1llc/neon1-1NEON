@@ -10,14 +10,53 @@ import { flushSync } from "react-dom";
 export type Way = "next" | "back";
 
 
+// --- Less motion -----------------------------------------------------------------------------------
+// Motion is off when the device asks for less (prefers-reduced-motion) or the person chose "Reduced" on
+// their profile. That choice is kept in this browser and marks the page (html[data-motion="off"]),
+// which the stylesheet reads to turn every animation and transition off, the same as the device setting
+
+const MOTION_KEY = "1neon.motion";
+const device = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+/** The device asks for less motion, so the profile's choice can't turn it back on */
+export const deviceLessMotion = device;
+/** The person's own choice on this browser */
+export function chosenLessMotion(): boolean {
+  try { return localStorage.getItem(MOTION_KEY) === "reduce"; } catch { return false; }
+}
+/** Should anything move right now? */
+export const lessMotion = () => device() || chosenLessMotion();
+/** Mark the page with the person's choice; called at startup and whenever it changes */
+export function applyMotion() {
+  if (chosenLessMotion()) document.documentElement.dataset.motion = "off";
+  else delete document.documentElement.dataset.motion;
+}
+/** Change the choice, kept in this browser */
+export function setLessMotion(on: boolean) {
+  try { if (on) localStorage.setItem(MOTION_KEY, "reduce"); else localStorage.removeItem(MOTION_KEY); } catch { /* storage blocked: this page only */ }
+  if (on) document.documentElement.dataset.motion = "off";
+  else delete document.documentElement.dataset.motion;
+}
+
+
 // Browsers without view transitions, and people who asked for less motion, get instant changes
 type VT = { finished: Promise<void>; ready?: Promise<void>; updateCallbackDone?: Promise<void> };
 type Doc = Document & { startViewTransition?: (cb: () => void) => VT };
 const start = (): ((cb: () => void) => VT) | undefined => {
   const d = document as Doc;
-  if (!d.startViewTransition || matchMedia("(prefers-reduced-motion: reduce)").matches) return undefined;
+  if (!d.startViewTransition || lessMotion()) return undefined;
   return d.startViewTransition.bind(d);
 };
+
+/** Cross-fade one state into the next (sign-in to sign-up, one sign-in step to the next) with the same
+ * timing as everything else; instant where there's no support or less motion is asked for */
+export function fade(change: () => void) {
+  const begin = start();
+  if (!begin) return change();
+  document.documentElement.dataset.fade = "";
+  const t = begin(() => flushSync(change));
+  const done = () => delete document.documentElement.dataset.fade;
+  t.finished.then(done, done);
+}
 
 /** Whether a change can slide right now: links that ask the router for a transition check first, and
  * navigate plainly otherwise (no support, less motion asked for, or a walkthrough setting up out of sight) */

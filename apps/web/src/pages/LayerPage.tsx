@@ -9,6 +9,7 @@ import { gate, Stale } from "../components/Reads.tsx";
 import { useOrg, useTopBar } from "../components/Shell.tsx";
 import { Empty, inStageFor, Health, LAYERS, layerFromSlug, layerName, layerSlug, Rings } from "../components/ui.tsx";
 import { useProjects } from "../lib/hooks.ts";
+import { lessMotion } from "../lib/motion.ts";
 
 
 // What each layer holds, shown under its title
@@ -42,7 +43,7 @@ export function LayerPage() {
     if (!ready || !loc.hash.startsWith("#stage-")) return;
     const el = document.getElementById(loc.hash.slice(1));
     if (!el) return;
-    el.scrollIntoView({ block: "start", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    el.scrollIntoView({ block: "start", behavior: lessMotion() ? "auto" : "smooth" });
     el.classList.add("is-target");
     const t = window.setTimeout(() => el.classList.remove("is-target"), 2400);
     return () => window.clearTimeout(t);

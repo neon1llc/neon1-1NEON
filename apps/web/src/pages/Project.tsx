@@ -21,7 +21,7 @@ import { firstYear, money, parseCost, type Recurring } from "../lib/cost.ts";
 import { handoverSummary } from "../lib/handover.ts";
 import { numberProblem, optionalNumber } from "../lib/measures.ts";
 import { problem, useMembers, useProject, useProjects, useRefresh, useSubmit } from "../lib/hooks.ts";
-import { aimBetween, canSlide } from "../lib/motion.ts";
+import { aimBetween, canSlide, lessMotion } from "../lib/motion.ts";
 import type { EditMarker } from "../lib/types.ts";
 
 
@@ -719,7 +719,7 @@ function LayerTab({ layer, project, items, docs, edits }: { layer: Layer; projec
     if (!hash) return;
     const el = document.getElementById(hash.slice(1));
     if (!el) return;
-    el.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: el.offsetHeight > innerHeight * 0.6 ? "start" : "center" });
+    el.scrollIntoView({ behavior: lessMotion() ? "auto" : "smooth", block: el.offsetHeight > innerHeight * 0.6 ? "start" : "center" });
     el.classList.add("flash");
     const t = setTimeout(() => el.classList.remove("flash"), 2200);
     return () => clearTimeout(t);
