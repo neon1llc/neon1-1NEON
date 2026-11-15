@@ -6,6 +6,7 @@
 
 ### Changed
 - Sign-up and the new account's welcome line invite people to write down what their project needs, without advertising file uploads (still allowed within the limits).
+- Prospects page on a phone: the four actions sit two by two (Promote and Suspend, then Keep and Delete), and "Promote to client" is now "Promote".
 - The sign-up route's own throttle (1 a second, burst 5) is back. It needs neon1-aws-infrastructure's ApiLogDelivery permission applied first.
 
 ## v0.13.0 - 2026-11-15

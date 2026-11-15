@@ -97,8 +97,8 @@ export function Prospects() {
               <div><dt>Projects</dt><dd>{p.projects}</dd></div>
               <div><dt>Files</dt><dd>{p.files}</dd></div>
             </dl>
-            <div className="actions stack-sm">
-              <button className="btn btn-primary btn-sm" disabled={pending} onClick={() => void promote(p)}>Promote to client</button>
+            <div className="prospect-actions">
+              <button className="btn btn-primary btn-sm" disabled={pending} onClick={() => void promote(p)} title="Promote to client">Promote</button>
               {p.prospect.suspendedAt
                 ? <button className="btn btn-ghost btn-sm" disabled={pending} onClick={() => void act(`${p.name} is resumed`, () => post(p, "resume"))}>Resume</button>
                 : <button className="btn btn-ghost btn-sm" disabled={pending} onClick={() => void suspend(p)}>Suspend</button>}
