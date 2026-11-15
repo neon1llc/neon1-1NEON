@@ -39,4 +39,4 @@ Changes move through neon1's [release levels](https://github.com/neon1llc/neon1-
 
 ## License
 
-The code is MIT licensed (see `LICENSE`). The license covers the code only: the neon1 and 1NEON names, logos, and other brand marks are not licensed, so please don't use them in a way that suggests your work comes from neon1 LLC. Third-party packages keep their own licenses.
+The code is MIT licensed (see `LICENSE`). The license covers the code only: the neon1 and 1NEON names, logos, and other brand marks are not licensed, so please don't use them in a way that suggests your work comes from neon1 LLC. Third-party packages keep their own licenses. `NOTICE` credits the bundled place and mailbox-domain lists.

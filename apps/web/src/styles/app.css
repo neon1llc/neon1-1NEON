@@ -1635,6 +1635,9 @@ a.out:hover .out-arrow, a.out:focus-visible .out-arrow { transform: translate(2p
 .face-form { display: grid; gap: 8px; max-width: 520px; }
 .face-form > * { margin: 0; }
 .face-form .field-label { display: block; font: 12px var(--mono); color: var(--muted); }
+.face-form .face-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .8fr); gap: 10px; }
+.face-form .face-pair > div { display: grid; gap: 8px; min-width: 0; }
+.face-form .face-pair select { width: 100%; }
 .face-form .actions { margin-top: 6px; }
 .field-error { color: #B45309; }
 @media (max-width: 520px) { .prospect-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
