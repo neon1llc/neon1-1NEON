@@ -43,7 +43,7 @@ export function usePay(path: string): [(inv: Pick<Item, "id">) => Promise<void>,
 }
 
 // Said once a payment page hands the person back, real or stand-in
-const PAID_NOTE = "Thank you. A card payment shows as paid in a moment. A bank payment shows as started, then as paid once it clears in a few business days.";
+const PAID_NOTE = "Card payments show as paid in a moment. Bank payments show as started, then paid once they clear in a few business days.";
 
 
 // --- The demo's stand-in for the payment page ---------------------------------------------------
@@ -73,14 +73,14 @@ function DemoCheckout({ session, onClose, onPaid }: { session?: DemoSession; onC
     <Dialog open={Boolean(session)} onClose={onClose} label="A stand-in for the payment page">
       <div className="demo-pay">
         <h2>A stand-in for the payment page</h2>
-        <p className="small muted">This is a demo, so no money moves. In 1NEON, Pay opens Stripe's hosted payment page, and 1NEON never sees bank or card details.</p>
+        <p className="small muted">Demo only, so no money moves. Pay opens Stripe's payment page. 1NEON never sees bank or card details.</p>
         <p>{session ? <>Pay <b>{money(session.amountCents)}</b> on {session.invoiceNumber}:</> : null}</p>
         <div className="actions">
           <button type="button" className="btn btn-primary" onClick={() => void go("bank_started")}>Pay from a bank account</button>
           <button type="button" className="btn btn-ghost" onClick={() => void go("card")}>Pay by card</button>
           <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
         </div>
-        <p className="small muted">A bank payment (ACH) shows as started, then as paid once the bank clears it in a few business days. A card shows as paid at once.</p>
+        <p className="small muted">A bank payment (ACH) shows as started, then paid once it clears in a few business days. A card shows as paid at once.</p>
       </div>
     </Dialog>
   );
@@ -502,7 +502,7 @@ function NewInvoice({ open, onClose, path, items, issued }: { open: boolean; onC
             </select>
           </>
         )}
-        <p className="small muted">{suggest(type).length ? "Filled in from the approved option or the receipts. Change any amount or wording, or add a line." : "Add each line with what it's for and the amount."}</p>
+        <p className="small muted">{suggest(type).length ? "Filled in from the approved option or receipts. Edit or add lines." : "Add each line with what it's for and the amount."}</p>
         <fieldset className="inv-lines">
           <legend>Lines</legend>
           {lines.map((l, i) => (
