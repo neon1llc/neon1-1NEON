@@ -65,7 +65,7 @@ describe("identity", () => {
     expect(dana.json.orgs.map((o: { name: string }) => o.name)).toEqual(["Acme Dental"]);
     const op = await call(OP, "GET", "/me");
     expect(op.json.operator).toBe(true);
-    expect(op.json.orgs).toHaveLength(3);
+    expect(op.json.orgs).toHaveLength(4);
   });
 
   it("marks an invited member joined on first visit", async () => {
@@ -154,7 +154,7 @@ describe("All clients view", () => {
     expect((await call("raj@acmedental.example", "GET", "/all/projects")).status).toBe(403);
     const all = await call(OP, "GET", "/all/projects");
     expect(all.status).toBe(200);
-    expect(new Set(all.json.projects.map((p: { tenantId: string }) => p.tenantId)).size).toBe(3);
+    expect(new Set(all.json.projects.map((p: { tenantId: string }) => p.tenantId)).size).toBe(3) // clients only; prospects have their own page;
     const write = await call(OP, "POST", "/all/projects", { name: "nope" });
     expect(write.status).toBe(403);
     expect(write.json.error).toBe("read_only");
