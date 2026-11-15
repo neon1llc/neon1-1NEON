@@ -1,8 +1,8 @@
 # Cookies and browser storage
 
-*Last updated November 13, 2026.* This update adds one item the guided walkthrough saves in your tab, so its Exit returns you to the answer you opened it from.
+*Last updated November 15, 2026.* This update makes the notice part of the [privacy and data policy](https://neon1.tech/1NEON/privacy), and says sign-in with Google is turned off today. Nothing new is saved, and there's no new tracking.
 
-Neither neon1.tech nor the 1NEON portal uses analytics, advertising, or tracking of any kind.
+This notice is part of the [privacy and data policy](https://neon1.tech/1NEON/privacy) and lists, in detail, every cookie and item neon1 saves in your browser. Neither neon1.tech nor the 1NEON portal uses analytics, advertising, or tracking of any kind.
 
 ## neon1.tech
 
@@ -23,7 +23,7 @@ The portal uses only the cookies it needs to sign you in and keep you signed in:
 | `__Secure-1neon_rt` | Renews your sign-in without asking again | Up to 30 days, or until you sign out. Without "remember me", until you close the browser |
 | `__Secure-1neon_step` | Holds a sign-in in progress between steps | 5 minutes |
 | `__Secure-1neon_rm` | Remembers your "remember me" choice during sign-in | 5 minutes |
-| `__Secure-1neon_flow` | Protects sign-in with Google | 10 minutes |
+| `__Secure-1neon_flow` | Protects sign-in with Google, which is turned off today, so it isn't set | 10 minutes |
 | Sign-in service cookies on auth.neon1.tech | Protect the sign-in step (Amazon Cognito) | Your sign-in session |
 
 These cookies are strictly necessary, can only be read by the portal's own server, are never used for advertising or analytics, and are never shared. Because of that, the portal doesn't show a cookie consent banner. If you block them, you won't be able to sign in.
@@ -42,7 +42,7 @@ The portal also saves, on your device only:
 
 Your other preferences, such as your theme, are saved with your account.
 
-The interactive demo (neon1.tech/1NEON/demo) and the guided walkthrough (neon1.tech/1NEON/live) run entirely in your browser and send nothing to me. The interactive demo keeps your changes where your browser allows it; if it doesn't, the demo still works and lasts until you close or reload the tab. The guided walkthrough starts from fresh fictional data on every load and never saves its data.
+The interactive demo (neon1.tech/1NEON/demo) and the guided walkthrough (neon1.tech/1NEON/live) run entirely in your browser. Once their pages and files have loaded from neon1.tech, which is how any page reaches you, they make no further calls: nothing you do in them is sent to me or to anyone else, and they use no analytics, fonts, or media from other sites. The interactive demo keeps your changes where your browser allows it; if it doesn't, the demo still works and lasts until you close or reload the tab. The guided walkthrough starts from fresh fictional data on every load and never saves its data.
 
 | Saved item | What it's for | How long it lasts |
 |---|---|---|
