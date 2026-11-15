@@ -249,6 +249,15 @@ function SignIn() {
   // Sign-up instead of sign-in, opened from the link below the form, or by ?signup=1 (the quiet-prospect
   // email's way back). The real portal only: the demo has no accounts to make
   const [signingUp, setSigningUp] = useState(() => !IN_DEMO && !saved && new URLSearchParams(location.search).get("signup") === "1");
+  // Whether sign-up is open, so the invitation note and the "New here?" link show only when it is.
+  // Asked once by the real portal; while closed (production until neon1 opens it) neither shows
+  const [signupOpen, setSignupOpen] = useState(false);
+  useEffect(() => {
+    if (IN_DEMO || PICKER) return;
+    let live = true;
+    api<{ open: boolean }>("/auth/signup").then((r) => live && setSignupOpen(r.open === true), () => undefined);
+    return () => { live = false; };
+  }, []);
   const [busy, setBusy] = useState(false);
   // The last call got no answer, so it may or may not have gone through
   const [unsure, setUnsure] = useState(false);
@@ -348,7 +357,7 @@ function SignIn() {
         ) : (
           <>
             <h2 className="signin-h">Client portal</h2>
-            <p className="signin-lead">For neon1 clients, by invitation, or start your own free account below.</p>
+            <p className="signin-lead">{signupOpen ? "For neon1 clients, by invitation, or start your own free account below." : "For neon1 clients, by invitation."}</p>
           </>
         )}
         {problem === "not_invited" && <p className="notice" role="alert">That email hasn't been invited yet. Ask your organization's admin, or neon1.</p>}
@@ -408,7 +417,7 @@ function SignIn() {
         )}
         {at.step !== "email" && <p className="fine"><button className="linkish" onClick={restart}>Use a different email</button></p>}
         {/* Not a client yet: start in 1NEON on your own, as a new account */}
-        {!IN_DEMO && !signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
+        {!IN_DEMO && signupOpen && !signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
           <p className="fine"><button className="linkish" onClick={() => setSigningUp(true)}>New here? Start in 1NEON</button></p>
         )}
         {/* The three policies on one line of their own */}
