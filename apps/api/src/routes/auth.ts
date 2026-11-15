@@ -18,7 +18,7 @@ export function authRoutes(app: App, k: Kit) {
   /** After any sign-in: invite check, link the Cognito identity, refresh strong sign-in */
   async function admit(r: Verified | undefined): Promise<"ok" | "failed" | "not_invited"> {
     if (!r || !r.emailVerified) return "failed";
-    // Dev runs on a copy of production's data: only neon1's own people may sign in there
+    // Dev is a private test site on sample data: only neon1's own people may sign in there
     if (isDev(cfg) && !neon1Only(cfg, r.email)) return "not_invited";
     // Invite only: a verified email must already belong to an invited person
     const uid = await repo.userIdForEmail(r.email);

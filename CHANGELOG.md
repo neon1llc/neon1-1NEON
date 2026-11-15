@@ -5,6 +5,7 @@
 ## Unreleased
 
 ### Changed
+- **Dev runs on made-up data, never a copy of production's.** `apps/api/src/dev-sample.ts` empties dev and fills it with fictional organizations, people, projects, invoices, payment records, and one harmless file; the production-to-dev copy (`scripts/dev-data.mjs`) is gone. Dev still admits and mails only neon1's own people. For payments, dev takes Stripe test-mode keys only, so checkout, bank transfers, and webhooks can be tried end to end with test numbers; a live key on dev turns online payment off.
 - **The board says what's open and what's finished.** A closed project shows "Closed" and the day it closed instead of its last health, so finished work never reads "On track". All clients counts each organization's projects as open and closed (it used to call every one "active"), and its introduction says it shows open and closed projects, archived ones left out. The project list and a project's page do the same.
 - Cards and the project list say time in a stage in words ("4 days in Build", "new today"), not "4d".
 
