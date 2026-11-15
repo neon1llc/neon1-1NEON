@@ -16,6 +16,7 @@
 - The contact route takes neon1.tech's new topics (Business workflows, Cloud, AI, Networks, Devices and IoT, Software, Security awareness and readiness), up to 9 at once, and still accepts the older keys a cached page may send.
 - Folds and dropdowns use neon1.tech's drawn left arrow and its timing from shared/neon1.css: folds open over 0.6s with the arrow turning in the same time, dropdowns over 0.3s.
 - A dropdown's list opens above its box only when there's no room below, with its arrow turned up to match, and is held to the room on that side so the browser never flips it against the arrow (the same rule as neon1.tech's).
+- A required field's asterisk has one shape with neon1.tech's (shared/neon1.css) and is green everywhere in 1NEON: the accent in the app, the neon on sign-in and sign-up.
 - **Motion** on the profile: **Smooth** or **Reduced**, kept in this browser. Reduced turns every animation off at once, as a device that asks for less motion already does.
 - Required fields carry a green asterisk instead of "optional" labels, on sign-up and on neon1.tech's contact form.
 

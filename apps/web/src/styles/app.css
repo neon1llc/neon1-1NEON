@@ -993,7 +993,11 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 @media (max-width: 640px) { .metric-draft { grid-template-columns: 1fr 1fr 1fr; } .metric-draft .mt { grid-column: 1 / -1; } }
 
 /* Required fields: a small superscript asterisk after the label, keyed once on the form */
-.req { color: var(--red); margin-left: 2px; font-size: .8em; }
+/* A required field's asterisk: its shape is shared with neon1.tech (.req in shared/neon1.css); 1NEON colors
+   it green, in the accent, and the neon on the dark sign-in screen */
+:root { --req-color: var(--accent); }
+.signin { --req-color: var(--neon, #00FF41); }
+:where(.req) { margin-left: 3px; font: 700 1em/0 var(--sans); vertical-align: baseline; color: var(--req-color, currentColor); }
 /* Overview: the reminder to finish a project's basics, with its action at the end */
 .notice.finish { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; }
 
@@ -1578,7 +1582,6 @@ ul.md-says { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; 
 .signin .signup-form .su-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .8fr); gap: 10px; }
 .signin .signup-form .su-pair .f { display: grid; gap: 8px; min-width: 0; }
 /* A required field's green asterisk, after its label */
-.signin .signup-form .req { margin-left: 4px; color: var(--neon); font-weight: 700; }
 /* "I go by one name", under the name once a last name was asked for */
 .signin .signup-form label.one-name { font-size: 12px; margin-top: -2px; }
 /* Sign-up, wide: a tablet or desktop sets what's needed (left) beside what's optional (right), past a
