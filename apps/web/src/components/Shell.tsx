@@ -352,12 +352,12 @@ function SignIn() {
           // Sign-up: who it's for and what happens next, in place of the invitation note
           <>
             <h2 className="signin-h">Start in 1NEON</h2>
-            <p className="signin-lead">A free account for your projects' needs and files. I'll look them over and reply.</p>
+            <p className="signin-lead">Free. Add your project's needs and files, and I'll reply with what I'd do. No call needed to start.</p>
           </>
         ) : (
           <>
             <h2 className="signin-h">Client portal</h2>
-            <p className="signin-lead">{signupOpen ? "For neon1 clients, by invitation, or start your own free account below." : "For neon1 clients, by invitation."}</p>
+            <p className="signin-lead">{signupOpen ? "For neon1 clients, by invitation. New here? Start a free account below and tell me what you need." : "For neon1 clients, by invitation."}</p>
           </>
         )}
         {problem === "not_invited" && <p className="notice" role="alert">That email hasn't been invited yet. Ask your organization's admin, or neon1.</p>}
@@ -418,7 +418,7 @@ function SignIn() {
         {at.step !== "email" && <p className="fine"><button className="linkish" onClick={restart}>Use a different email</button></p>}
         {/* Not a client yet: start in 1NEON on your own, as a new account */}
         {!IN_DEMO && signupOpen && !signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
-          <p className="fine"><button className="linkish" onClick={() => setSigningUp(true)}>New here? Start in 1NEON</button></p>
+          <p className="fine"><button className="linkish" onClick={() => setSigningUp(true)}>New here? Start a free account</button></p>
         )}
         {/* The three policies on one line of their own */}
         <p className="fine legal-links">
