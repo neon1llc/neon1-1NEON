@@ -2,6 +2,7 @@
 // organization, and the read-only All clients view.
 
 
+import { checkFace } from "../lib/vet.ts";
 import { CreateTenantInput, DEFAULT_STAGES, can, formatClientId, isProspect, newId, slugify, type Tenant } from "@1neon/domain";
 import { body, check, fail, now, who } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
@@ -9,13 +10,14 @@ import { ConflictError } from "../store/types.ts";
 
 
 export function orgRoutes(app: App, k: Kit) {
-  const { repo } = k;
+  const { repo, d } = k;
 
   // Create an organization with the default stages and the next client ID
   app.post("/orgs", async (c) => {
     const { actor, user } = who(c);
     check(can(actor, "manage_orgs", undefined));
     const input = await body(c, CreateTenantInput);
+    input.place = await checkFace(d.vetting, input.place, input.link);
     const n = await repo.nextClientNumber();
     const t = now();
     const tenant: Tenant = {

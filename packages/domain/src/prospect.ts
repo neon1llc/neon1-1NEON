@@ -6,6 +6,7 @@
 
 
 import type { Tenant } from "./model.ts";
+import { DESCRIBES, type Describes } from "./forms.ts";
 
 
 /** The portal terms edition shown at sign-up and recorded with it: the terms' "Last updated" date.
@@ -28,6 +29,19 @@ export const FOUND_VIA = {
   other: "Somewhere else",
 } as const;
 export type FoundVia = keyof typeof FOUND_VIA;
+
+
+/** How a prospect found neon1, in words: the list's label, or their own words for "Somewhere else" */
+export function foundLabel(p: { found?: string; foundOther?: string }): string {
+  if (p.found === "other" && p.foundOther) return p.foundOther;
+  return FOUND_VIA[p.found as FoundVia] ?? p.found ?? "";
+}
+
+/** Who a prospect said they are, in words: the list's label, or their own words for "Something else" */
+export function describesLabel(p: { kind?: string; kindOther?: string }): string {
+  if (p.kind === "other" && p.kindOther) return p.kindOther;
+  return DESCRIBES[p.kind as Describes] ?? p.kind ?? "";
+}
 export const FOUND_KEYS = Object.keys(FOUND_VIA) as [FoundVia, ...FoundVia[]];
 
 

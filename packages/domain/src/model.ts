@@ -101,6 +101,11 @@ export const Tenant = z.object({
       from: z.string().max(64).optional(),
       // How they found neon1, if they said (prospect.ts FOUND_VIA)
       found: z.string().max(20).optional(),
+      // Their words for "Somewhere else"
+      foundOther: z.string().max(80).optional(),
+      // "Which describes you best?" (forms.ts DESCRIBES), and their words for "Something else"
+      kind: z.string().max(20).optional(),
+      kindOther: z.string().max(80).optional(),
       suspendedAt: isoDate.optional(),
       // Quiet-prospect emails (prospect.ts quietStep): check-ins sent since the last real change, and when
       // the final notice went out. A real change by the prospect clears both

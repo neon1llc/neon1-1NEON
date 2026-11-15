@@ -42,6 +42,14 @@ describe("contact form", () => {
     expect(mailer.sent[1]!.text).not.toContain("Found neon1");
     expect((await send({ ...good, found: "billboard" })).status).toBe(400);
   });
+  it("answers field by field, with a light name check and their words for Somewhere else", async () => {
+    const r = await send({ ...good, email: "dana@", name: "asdf", found: "other" });
+    expect(r.status).toBe(400);
+    const b = (await r.json()) as { current: { fields: Record<string, string> } };
+    expect(Object.keys(b.current.fields).sort()).toEqual(["email", "foundOther", "name"]);
+    expect((await send({ ...good, name: "Madonna", found: "other", foundOther: "A podcast" })).status).toBe(200);
+    expect(mailer.sent[0]!.text).toContain("Found neon1 through: A podcast");
+  });
   it("escapes what people type", async () => {
     await send({ ...good, today: "<script>x</script>" });
     expect(mailer.sent[0]!.html).not.toContain("<script>");

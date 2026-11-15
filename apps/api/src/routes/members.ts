@@ -2,6 +2,7 @@
 // through the outbox with the membership), resends, and access changes.
 
 
+import { emailProblem, textProblem } from "../lib/vet.ts";
 import { InviteInput, UpdateMemberInput, changeRecord, newId, type Member, type Tenant, type User } from "@1neon/domain";
 import { actorId, body, defined, fail, need, now, who } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
@@ -41,6 +42,16 @@ export function memberRoutes(app: App, k: Kit) {
     const t = c.get("tenant");
     const { people } = await body(c, InviteInput);
     const inviter = who(c).user;
+    // Every new address gets the sign-up form's email check first (a real mail domain, not a throwaway),
+    // so no invite goes to a mailbox that can't get it; nobody is invited until all pass
+    const problems = await Promise.all(people.map(async (p) => {
+      if (await repo.userIdForEmail(p.email)) return undefined;
+      const x = await emailProblem(d.vetting, p.email);
+      return x ? `${p.email}: ${x}` : undefined;
+    }));
+    const named = people.map((p) => (p.name ? textProblem(p.name, `${p.email}'s name`) : undefined));
+    const first = [...problems, ...named].find(Boolean);
+    if (first) fail(400, "check_fields", first);
     const out: Member[] = [];
     for (const p of people) {
       let uid = await repo.userIdForEmail(p.email);
