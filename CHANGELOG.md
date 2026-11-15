@@ -7,6 +7,12 @@
 ### Fixed
 - On an iPhone, the walkthrough's view of the portal drew its top bar partway down the page, over the cards, with an empty band above the page title. The bar now sits right under the walkthrough's narration, as it does elsewhere. The interactive demo (/1NEON/demo) had the same gap under its notice bar, now gone too. The walkthrough check now fails if the bar drifts from under the narration.
 - The first chapter of a walkthrough says "Sign in to Home" instead of "Sign in", since it shows Home too.
+- On a phone, a walkthrough scrolls a row that runs past the screen's edge (a project's tabs) to bring what Maria taps next into view, instead of her cursor drifting off screen to reach Execute.
+
+### Changed
+- **The demo's payment page looks like a real checkout.** Pay in the demo and the walkthroughs opens a stand-in laid out like a hosted payment page: who's paid and how much, the email, card details (with a one-tap test card) or a bank and an account, then Pay, a moment of processing, and a receipt with the way back. It still says it's a demo, and no money moves. The walkthroughs pay the deposit and the final invoice through it.
+- Password managers recognize the sign-in's email field, so they offer the saved email and passkeys.
+- **Remember me keeps the email filled in.** Ticked, the email you signed in with is saved on this device (`1neon.email`, listed in the cookie and storage notice) and filled in next time; unticked, it's cleared.
 
 ## v0.12.0 - 2026-11-15
 

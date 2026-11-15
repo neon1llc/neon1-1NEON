@@ -1380,8 +1380,53 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 /* A bank transfer on its way sits under the balance, muted: shown, but not yet counted */
 .inv-lines tfoot tr.inv-clearing th, .inv-lines tfoot tr.inv-clearing td { color: var(--muted); font-style: italic; }
 /* The demo's stand-in payment page, and the row where a visitor plays the bank */
-.demo-pay { max-width: 460px; }
-.demo-pay .actions { flex-wrap: wrap; }
+/* --- The demo's stand-in payment page (Billing.tsx DemoCheckout) ---
+   Laid out as a hosted checkout: the amount on a quiet panel at the left, the form at the right; one
+   column on a phone, the amount on top. Plain white and neutral, so it reads as a payment page and
+   not as part of the portal, with a ribbon that says it's a demo */
+dialog.demo-checkout { max-width: 880px; width: calc(100% - 32px); background: #fff; color: #1a1f36; }
+dialog.demo-checkout .dlg { padding: 0; }
+.dc-ribbon { margin: 0; padding: 8px 16px; background: #fff4d6; color: #5c4400; font: 12px var(--mono); text-align: center; border-bottom: 1px solid #f0dca0; }
+.dc-grid { display: grid; grid-template-columns: 1fr 1.15fr; min-height: 460px; }
+.dc-summary { padding: 28px 32px; background: #f6f8fa; border-right: 1px solid #e3e8ee; }
+.dc-back { display: inline-block; margin-bottom: 18px; color: #4f566b; font-size: 13px; }
+.dc-merchant { display: flex; align-items: center; gap: 10px; margin: 0 0 22px; font-weight: 600; }
+.dc-mark { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 6px; background: #0d0208; color: #6cffa8; font: 600 12px var(--mono); }
+.dc-label { margin: 0; color: #4f566b; font-size: 14px; }
+.dc-amount { margin: 2px 0 6px; font-size: 34px; font-weight: 600; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.dc-pay { padding: 28px 32px; }
+.dc-pay form { display: grid; gap: 6px; }
+.dc-pay label, .dc-h { margin: 10px 0 0; font-size: 13px; font-weight: 500; color: #30313d; }
+.dc-pay input { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid #d5dbe1; border-radius: 6px; background: #fff; color: #1a1f36; font: 15px var(--sans); }
+.dc-pay input:focus { outline: 2px solid #7a9cff; outline-offset: 0; border-color: #7a9cff; }
+.dc-pay input[readonly] { background: #f6f8fa; color: #4f566b; }
+.dc-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.dc-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.dc-methods button, .dc-choice { padding: 11px 12px; border: 1px solid #d5dbe1; border-radius: 6px; background: #fff; color: #30313d; font: 14px var(--sans); text-align: left; cursor: pointer; }
+.dc-methods button.on, .dc-choice.on { border-color: #1a1f36; box-shadow: 0 0 0 1px #1a1f36; }
+.dc-methods button:hover, .dc-choice:hover, .dc-methods button.vhover, .dc-choice.vhover { background: #f6f8fa; }
+.dc-card, .dc-bank { display: grid; gap: 6px; }
+.dc-list { display: grid; gap: 8px; }
+.dc-test { justify-self: start; margin-top: 4px; }
+.dc-submit { margin-top: 14px; width: 100%; justify-content: center; padding: 12px; font-size: 15px; }
+.dc-fine { text-align: center; }
+.dc-wait, .dc-done { display: grid; justify-items: center; align-content: center; gap: 12px; min-height: 340px; text-align: center; }
+.dc-spin { width: 34px; height: 34px; border-radius: 50%; border: 3px solid #e3e8ee; border-top-color: #1a1f36; animation: dc-spin .8s linear infinite; }
+@keyframes dc-spin { to { transform: rotate(360deg); } }
+.dc-tick { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: #1f8a4c; color: #fff; font-size: 24px; }
+.dc-done h2 { margin: 0; font-size: 22px; }
+@media (prefers-reduced-motion: reduce) { .dc-spin { animation-duration: 2.4s; } }
+/* A phone: one column, the amount on top, the dialog filling the screen */
+@media (max-width: 700px) {
+  dialog.demo-checkout { width: 100%; max-width: 100%; height: 100%; max-height: 100%; margin: 0; border-radius: 0; }
+  .dc-grid { grid-template-columns: 1fr; min-height: 0; }
+  .dc-summary { padding: 12px 20px 14px; border-right: 0; border-bottom: 1px solid #e3e8ee; }
+  .dc-back { margin-bottom: 10px; }
+  .dc-merchant { margin-bottom: 6px; }
+  .dc-amount { margin: 0 0 2px; font-size: 26px; }
+  .dc-summary .muted { margin: 0; }
+  .dc-pay { padding: 18px 20px 28px; }
+}
 .demo-bank { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .invoice-row .warn-text { color: var(--red); }
 
