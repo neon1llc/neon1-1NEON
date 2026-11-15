@@ -2,6 +2,11 @@
 
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
+## Unreleased
+
+### Changed
+- Every release to production also merges main into `dev` and rebuilds the dev backend in the same run, beside the production release, so dev never falls behind and a dev failure shows on the deploy run.
+
 ## v0.14.0 - 2026-11-15
 
 ### Added

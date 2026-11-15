@@ -1,5 +1,6 @@
 # .github/workflows/dev.yml - Ship a branch to the 1NEON dev backend behind dev.neon1.tech/1NEON. Pushes to
-# the dev branch ship on their own; any other branch ships with a manual run. Dev has its own pool, table,
+# the dev branch ship on their own; any other branch ships with a manual run. dev-sync.yml calls it on every
+# release to production to rebuild dev from the new main, whatever files changed. Dev has its own pool, table,
 # and buckets (infra/envs/dev), so nothing here reaches production or client data. Builds and typechecks
 # only; the full tests and walkthroughs stay on the way to main (deploy.yml). Never tagged.
 
@@ -10,11 +11,19 @@ on:
     branches: [dev]
     paths: ["apps/**", "packages/**", "package.json", "package-lock.json", "tsconfig.base.json", ".github/workflows/dev.yml"]
   workflow_dispatch:
+  # A call from dev-sync.yml, which has just merged main into dev; no paths filter applies
+  workflow_call:
+    inputs:
+      ref:
+        description: The branch to build
+        type: string
+        default: dev
 
 permissions:
   contents: read
 
-# One dev backend, so one ship at a time; a newer one replaces a queued one
+# One dev backend, so one ship at a time; a newer one replaces a queued one. The group is fixed, so a call
+# shares it with a push to dev and never with the caller's own groups
 concurrency:
   group: dev-1neon
   cancel-in-progress: false
@@ -32,8 +41,10 @@ jobs:
       contents: read
       id-token: write
     steps:
+      # A call names the branch to build; a push or manual run builds the one it ran on
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ inputs.ref }}
           persist-credentials: false
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -84,4 +95,4 @@ jobs:
 
       - name: Where to look
         run: |
-          echo "### On dev: https://dev.neon1.tech/1NEON/ (${GITHUB_SHA::7})" >> "$GITHUB_STEP_SUMMARY"
+          echo "### On dev: https://dev.neon1.tech/1NEON/ ($(git rev-parse --short=7 HEAD))" >> "$GITHUB_STEP_SUMMARY"
