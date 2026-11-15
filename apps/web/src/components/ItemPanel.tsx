@@ -323,7 +323,7 @@ export function ItemPanel({ item, label, path, open, onClose }: { item: Item; la
       ) : item.body ? <p className="pre">{item.body}</p> : null}
       {/* An option's terms and scores, and a measure's unit and range, edit here too */}
       {canWrite && <KindFields kind={item.kind} f={draft.f} onChange={(f) => setDraft({ ...draft, f })} />}
-      {item.status === "approved" && <p className="small muted">Approved, so its terms are part of the decision's record and can't change. A different plan is a new option.</p>}
+      {item.status === "approved" && <p className="small muted">Approved, so its terms are locked in the decision record. A different plan is a new option.</p>}
       {(canWrite || mayDelete) && (
         <div className="actions">
           {canWrite && <button className="btn btn-primary" disabled={!dirty || !draft.title.trim() || saving || (base.kind === "metric" && Boolean(numberProblem(draft.f.baseline ?? "") || numberProblem(draft.f.target ?? "")))} onClick={() => void save(base.version)}>{saving ? "Saving…" : "Save"}</button>}

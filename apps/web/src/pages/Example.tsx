@@ -30,7 +30,7 @@ const STORY: Record<Layer, { lead: string; cards: Card[] }> = {
     ],
   },
   execution: {
-    lead: "The work, as it happens, with updates you can read in a minute and every hour listed.",
+    lead: "The work as it happens, with short updates and every hour listed.",
     cards: [
       { title: "Work", lines: [], list: [
         ...[TASKS.form, TASKS.reading, TASKS.summary, TASKS.safety, TASKS.dryRun].map((text) => ({ text, state: "done" as const })),
@@ -67,7 +67,7 @@ const STORY: Record<Layer, { lead: string; cards: Card[] }> = {
         { text: "Every account in the bakery's own name, a sign-in for each person in place of the shared password, and neon1's access removed", state: "done" },
         { text: "The last step checked and accepted by the owner, with a signature", state: "done" },
       ] },
-      { title: "Care", lines: ["Optional and monthly: a check that the numbers still hold, and small changes as the bakery grows. The bakery can also run it without neon1."] },
+      { title: "Care", lines: ["Optional and monthly: a check that the numbers hold, plus small changes as the bakery grows. The bakery can also run it without neon1."] },
     ],
   },
 };
@@ -90,7 +90,7 @@ export function Example() {
       <main className="content example-body" id="main">
         <p className="eyebrow">Sample project · every name, number, and file is made up</p>
         <h1 className="page-title">Maple Street Bakery: orders without retyping</h1>
-        <p className="lead">A neighborhood bakery with a team of eight takes orders by email, voicemail, and Instagram, then retypes them into a spreadsheet each night. Follow it through the four layers.</p>
+        <p className="lead">A neighborhood bakery takes orders by email, voicemail, and Instagram, then retypes them into a spreadsheet each night. Follow it through the four layers.</p>
         {/* Contents: jump to a layer */}
         <nav className="tabs" aria-label="Layers">
           {LAYERS.map((l) => <a key={l} href={`#${l}`}><LayerBadge layer={l} /><span className="tab-name">{layerName(l)}<small className="sub"><span className="sr">, </span>{layerHint(l)}</small></span></a>)}
