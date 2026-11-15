@@ -11,6 +11,7 @@
 - A free account's website and city are optional at sign-up, so people who'd rather stay private can still start. A link that's given must still be a real web address. Settings can clear both, and Home's ask for them has **Not now**, remembered per organization in that browser.
 - Sign-in no longer blinks from the invitation-only wording to the free-account wording on load, refresh, or coming back to the tab: the last answer about sign-up is kept in the browser (`1neon.signup`), a first visit waits for it, and a session check while sign-in is showing keeps the same screen instead of drawing it again.
 - On a tablet or desktop (760px wide and up), sign-up sets who you are beside where to see the business, in two columns, so the form fits without scrolling. Narrower screens, phones included, keep the single column.
+- Every release to production also merges main into `dev` and rebuilds the dev backend in the same run, beside the production release, so dev never falls behind and a dev failure shows on the deploy run.
 
 ## v0.14.0 - 2026-11-15
 

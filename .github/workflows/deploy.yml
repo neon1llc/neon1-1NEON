@@ -2,6 +2,8 @@
 # Nothing touches AWS until the secret scan, app checks, walkthrough check, Terraform checks, and production build have all passed on this
 # commit. Off until AWS_DEPLOY_ROLE_ARN is set; Terraform also needs AWS_TERRAFORM_ROLE_ARN or an explicit skip
 # (see infra/README.md).
+# The same gates also let the dev job merge main into dev and rebuild the dev backend, beside the release job,
+# so dev never falls behind production and a dev failure shows red on this run.
 
 name: deploy
 
@@ -21,7 +23,7 @@ on:
         type: boolean
         default: false
 
-# Read-only by default; the release job adds the OIDC token it needs
+# Read-only by default; the release and dev jobs add what they need
 permissions:
   contents: read
 
@@ -136,6 +138,19 @@ jobs:
           path: walkthrough-failure-*.png
           if-no-files-found: ignore
           retention-days: 14
+
+  # ---- Dev: the same gates, in parallel with the release ----
+
+  # Merges main into dev and rebuilds the dev backend (dev-sync.yml, then dev.yml), so dev never falls behind
+  # production. It has its own concurrency groups, apart from release-prod, and a push to main or a manual run
+  # on main is the only way in. The called workflows need contents to push dev and an OIDC token for the dev role
+  dev:
+    needs: [secrets, gate, walkthroughs]
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    uses: ./.github/workflows/dev-sync.yml
+    permissions:
+      contents: write
+      id-token: write
 
   # ---- Release: one job, so one lock covers Terraform and the app together ----
 
