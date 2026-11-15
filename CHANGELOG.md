@@ -2,37 +2,25 @@
 
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
-## Unreleased
+## v0.15.0 - 2026-11-15
 
 ### Added
-- **Next step** on a free account's Home: **Ask for an assessment** or **Ask for a call**, with an optional note. Each emails neon1 with the person as Reply-To, is recorded, and Home shows when each was last asked for; up to 4 a day per organization.
-- "How did you find neon1?" is an optional dropdown on sign-up and on neon1.tech's contact form (one shared list). neon1 sees the answer on Potentials and in the email.
-- **Contact neon1** in the menu for every account, free accounts included: a page with email, call or text, a booked call, and the hours I answer. A new account's note on Home, the help sheet, and the command palette link to it.
-- Strong form checks, shared by sign-up, the contact form, Settings' place and link, and invites. An email must be a full address whose domain takes mail (DNS) and isn't a temporary-mailbox service (a bundled public list). A name needs a first and last name unless "I go by one name" is ticked. A website must answer from the server, which refuses private addresses and rechecks each redirect. A city must be a populated place in its state (GeoNames, bundled), and the proper spelling is kept; a state alone is fine, a city alone isn't. Junk ("asdf", "xxxxx", no letters) and a short list of slurs are refused, whole words only, so real names aren't caught. A check that can't decide lets the person through.
-- Each problem shows under its own field, in amber, which reads as a warning on both the dark sign-in screen and light pages without clashing with the neon. Every field's message comes back at once, and a retry after a typo doesn't count against the sign-up limits.
-- Minimum lengths, so a stray key or two doesn't pass: a name needs 2 letters (Li, Ng), an organization's name 2 characters (3M, HP), any other answer in a person's own words 3, and a contact message 10. Empty or spaces-only required fields are refused too. Each says so under its field, on sign-up, the contact form, and invites.
-- Motion, with one timing shared with neon1.tech (quick, base, and slow steps on one easing curve): dialogs rise in, sheets slide from their edge, menus and the bell's list open with a quick rise, the toast lifts in, fields settle their border, an error or a revealed field ("In your words", "Where?", the organization's name) eases in, FAQs and folds open to their height with the arrow turning in the same time, and sign-in steps and sign-in to sign-up cross-fade.
-- Dropdowns have more room around their arrow. In Chrome and Edge, the arrow is neon1's left arrow that turns down as the list unrolls, the same as "send me your use case" on neon1.tech; the list itself is styled to match, and stays a native select for the keyboard and screen readers. Other browsers keep a plain arrow and their own list.
-- The contact route takes neon1.tech's new topics (Business workflows, Cloud, AI, Networks, Devices and IoT, Software, Security awareness and readiness), up to 9 at once, and still accepts the older keys a cached page may send.
-- Folds and dropdowns use neon1.tech's drawn left arrow and its timing from shared/neon1.css: folds open over 0.6s with the arrow turning in the same time, dropdowns over 0.3s.
-- A dropdown's list opens above its box only when there's no room below, with its arrow turned up to match, and is held to the room on that side so the browser never flips it against the arrow (the same rule as neon1.tech's).
-- A required field's asterisk has one shape with neon1.tech's (shared/neon1.css) and is green everywhere in 1NEON: the accent in the app, the neon on sign-in and sign-up.
-- Arriving from neon1.tech, the browser's page cross-fade is skipped, since the site already fades to its rain and the sign-in fades in: one fade, not two.
-- **Motion** on the profile: **Smooth** or **Reduced**, kept in this browser. Reduced turns every animation off at once, as a device that asks for less motion already does.
-- Required fields carry a green asterisk instead of "optional" labels, on sign-up and on neon1.tech's contact form.
+- **Next step** on a free account's Home: ask neon1 for an assessment or a call, with an optional note.
+- **Contact neon1** in the menu for every account: email, call or text, a booked call, and hours.
+- "How did you find neon1?" on sign-up and the site's contact form, shown on Potentials.
+- **Motion** on the profile: **Smooth** or **Reduced**, kept in this browser.
 
 ### Changed
-- A free account's website and city are optional at sign-up, so people who'd rather stay private can still start. A link that's given must still be a real web address. Settings can clear both, and Home's ask for them has **Not now**, remembered per organization in that browser.
-- Sign-in no longer blinks from the invitation-only wording to the free-account wording on load, refresh, or coming back to the tab: the last answer about sign-up is kept in the browser (`1neon.signup`), a first visit waits for it, and a session check while sign-in is showing keeps the same screen instead of drawing it again.
-- The walkthrough's pretend inbox matches real mail: the sender is 1NEON <noreply@notify.neon1.tech> (shared with the API, and a test holds it to the Terraform sender), and the neon1 mark shows, from the site's own copy since the page may only load its own images.
-- A sign-up test no longer fails in the evening (US Eastern): its same-day second sweep could fall on the next UTC day.
-- On a tablet or desktop (760px wide and up), sign-up sets who you are beside where to see the business, in two columns, so the form fits without scrolling. Narrower screens, phones included, keep the single column.
-- Every release to production also merges main into `dev` and rebuilds the dev backend in the same run, beside the production release, so dev never falls behind and a dev failure shows on the deploy run.
-- Wording describes what the portal does instead of what Pradeep does: the sign-up intro ("write down what your project needs, then ask for an assessment or a call from your account"), "You'll get a code by email to finish", the free-account note on Home, and the quiet-account email.
-- Wide sign-up has three fields a side with a faint line between the needed and optional columns, and the terms checkbox sits level with the note under the optional fields. The checkbox and its words share one center line.
-- "Start a free account" draws the form at once: the sign-in screen's own answer about sign-up is handed to the form, instead of the form showing "One moment…" while it asks again.
-- Sign-up asks "Which describes you best?" (individual, a business by size, technical team, nonprofit, school or public agency, or something else in your words) in place of "Organization / Area". Everyone but an individual names their organization. "Somewhere else" on "How did you find neon1?" asks where. City and state are two half-width fields, here and in Settings.
-- Sign-in code emails say "Your 1NEON sign-in code" in the subject and "Your 1NEON sign-in code is 12345678" first in the body, the wording mail apps like Gmail look for to offer a one-tap copy.
+- Sign-up asks "Which describes you best?" in place of "Organization / Area"; individuals give no organization name. Website and city are optional, with city and state as separate fields.
+- Stronger form checks on sign-up, the contact form, Settings, and invites: a real mail domain that isn't a temporary mailbox, a first and last name, a website that answers, a real city in its state, minimum lengths, and no junk. Each problem shows under its own field.
+- Required fields carry a green asterisk instead of "optional" labels.
+- Smooth motion on one timing shared with neon1.tech: dialogs, menus, messages, folds, and sign-in steps ease in. Reduced motion turns it all off.
+- Dropdowns have more room for their arrow; in Chrome and Edge, neon1's arrow turns toward where the list opens.
+- Sign-in code emails start with "Your 1NEON sign-in code is …", so mail apps can offer one-tap copy.
+- Sign-up fits on a wide screen in two columns, opens without a blink, and its wording says what the portal does.
+- The contact route takes neon1.tech's new topics.
+- Each production release also brings dev up to date.
+- Legal pages and Neo's guide from neon1-corpus v0.46.0.
 
 ## v0.14.0 - 2026-11-15
 
