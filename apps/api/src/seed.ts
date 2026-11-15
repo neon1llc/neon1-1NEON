@@ -1,8 +1,8 @@
-// apps/api/src/seed.ts - Demo data for local development and screenshots: neon1 itself plus two
-// sample clients.
+// apps/api/src/seed.ts - Demo data for local development and screenshots: neon1 itself, two sample
+// clients, and one prospect that signed itself up.
 
 
-import { AGREEMENT_EDITION, AGREEMENT_TEXT, CalEvent, InvoiceFields, alignPrice, assessed, canonical, depositLines, finalLines, invoiceNumber, invoiceTotal, DEFAULT_STAGES, Item, formatClientId, newId, rankBetween, sha256Hex, signature, type Member, type Project, type Tenant, type User } from "@1neon/domain";
+import { AGREEMENT_EDITION, AGREEMENT_TEXT, CalEvent, InvoiceFields, alignPrice, assessed, canonical, depositLines, finalLines, invoiceNumber, invoiceTotal, DEFAULT_STAGES, Item, formatClientId, formatProspectId, PORTAL_TERMS_EDITION, newId, rankBetween, sha256Hex, signature, type Member, type Project, type Tenant, type User } from "@1neon/domain";
 import type { Repo } from "./store/repo.ts";
 import { issueProposal } from "./proposals.ts";
 
@@ -140,5 +140,16 @@ export async function seed(repo: Repo, operatorEmail = "pradeep@neon1.tech") {
   await cal(acme, { title: "Office closed for staff training", kind: "office", date: day(15).slice(0, 10) });
   await cal(acme, { title: "Monthly check-in call", kind: "care", date: day(9).slice(0, 10), time: "16:00", repeat: "monthly", projectId: backup.id });
 
-  return { pradeep, dana, raj, lee, neon1, acme, harbor };
+  // A prospect that signed itself up from the site (prospect.ts): Sam at a bakery, one project of needs,
+  // with neon1 in it as every prospect organization has. It has a prospect number, not a client ID
+  const sam = user("sam@kimbakery.example", "Sam Kim", "");
+  await repo.createUser(sam);
+  const bakery: Tenant = { id: newId("t"), slug: "kim-bakery-3f9a1c", clientId: formatProspectId(1), name: "Kim Bakery", status: "active", stages: DEFAULT_STAGES, prospect: { since: day(-3), terms: PORTAL_TERMS_EDITION }, version: 1, createdAt: day(-3), updatedAt: day(-3), updatedBy: sam.id };
+  await repo.createTenant(bakery);
+  await member(bakery, sam, "admin");
+  await member(bakery, pradeep, "admin");
+  const orders = await project(bakery, "NEED-1", "Online orders land in one place", "intake", "not_started", "Orders come by phone, email, and two delivery apps, and get copied onto paper.", [], 1);
+  await item(orders, "request", "Orders from the delivery apps in one list");
+
+  return { pradeep, dana, raj, lee, neon1, acme, harbor, bakery, sam };
 }

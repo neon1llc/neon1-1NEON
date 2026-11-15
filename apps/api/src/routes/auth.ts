@@ -9,6 +9,7 @@ import { assurance } from "../lib/assurance.ts";
 import { body, fail } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
 import { isDev, neon1Only } from "../dev-guard.ts";
+import { claimSignup } from "./signup.ts";
 
 
 export function authRoutes(app: App, k: Kit) {
@@ -20,8 +21,9 @@ export function authRoutes(app: App, k: Kit) {
     if (!r || !r.emailVerified) return "failed";
     // Dev is a private test site on sample data: only neon1's own people may sign in there
     if (isDev(cfg) && !neon1Only(cfg, r.email)) return "not_invited";
-    // Invite only: a verified email must already belong to an invited person
-    const uid = await repo.userIdForEmail(r.email);
+    // A verified email must already belong to an invited person, or have a sign-up waiting, which the
+    // code just proved: then the prospect is made now (signup.ts)
+    const uid = (await repo.userIdForEmail(r.email)) ?? (await claimSignup(k, r.email));
     if (!uid) return "not_invited";
     // Remember which Cognito identity (email code, passkey, or Google) maps to this person
     await repo.linkSubject(r.sub, uid);

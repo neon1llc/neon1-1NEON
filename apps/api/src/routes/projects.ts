@@ -6,6 +6,7 @@ import { CreateProjectInput, assessed, isQuickFix, Item, MoveProjectInput, Updat
 import { z } from "zod";
 import { MAX_TRANSACTION, actorId, body, byRank, defined, fail, need, now, who } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
+import { projectQuota } from "../lib/guards.ts";
 import { ConflictError } from "../store/types.ts";
 
 
@@ -31,6 +32,8 @@ export function projectRoutes(app: App, k: Kit) {
     };
     const earlier = await replay();
     if (earlier) return c.json(earlier, 201);
+    // A prospect keeps a few live projects (lib/guards.ts)
+    await projectQuota(k, c);
     await activeMembers(t.id, input.people.map((p) => p.userId));
     const named = await deciderChange(c, [], input.people);
     const tpl = templateById(input.template);

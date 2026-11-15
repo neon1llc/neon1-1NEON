@@ -2,7 +2,7 @@
 // camera or files, a browser's file picker, or a drop onto the page.
 
 
-import { fileState, proposalRef, revisions, VIEWABLE, type DocumentRecord, type FileState, type Item, type Layer } from "@1neon/domain";
+import { fileState, PROSPECT_ACCEPT, proposalRef, revisions, VIEWABLE, type DocumentRecord, type FileState, type Item, type Layer } from "@1neon/domain";
 import { proposalRefOf } from "../lib/docx.ts";
 import { useRef, useState, type ReactNode } from "react";
 import { api, HttpError, openable, send } from "../lib/api.ts";
@@ -165,11 +165,13 @@ function UploadStatus({ busy, left, retry, cancel }: Pick<ReturnType<typeof useU
 export function UploadButton({ target, label = "Upload files", className = "btn btn-ghost", onDone }: { target: FileTarget; label?: string; className?: string; onDone?: () => void }) {
   const input = useRef<HTMLInputElement>(null);
   const up = useUpload(target, onDone);
+  // A new account adds documents and pictures only, so the picker offers just those
+  const { prospect } = useOrg();
   return (
     <>
       <button type="button" className={className} disabled={up.busy} onClick={() => input.current?.click()}>{up.busy ? "Uploading…" : label}</button>
       <UploadStatus {...up} />
-      <input ref={input} type="file" multiple hidden onChange={(e) => { void up.run([...(e.target.files ?? [])]); e.target.value = ""; }} />
+      <input ref={input} type="file" multiple hidden accept={prospect ? PROSPECT_ACCEPT : undefined} onChange={(e) => { void up.run([...(e.target.files ?? [])]); e.target.value = ""; }} />
     </>
   );
 }
@@ -180,6 +182,8 @@ export function DropZone({ target, children }: { target: FileTarget; children?: 
   const input = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
   const up = useUpload(target);
+  // A new account adds documents and pictures only, so the picker offers just those
+  const { prospect } = useOrg();
   const { busy, run } = up;
   return (
     <>
@@ -198,7 +202,7 @@ export function DropZone({ target, children }: { target: FileTarget; children?: 
     >
       <b>{busy ? "Uploading…" : matchMedia("(pointer: fine)").matches ? "Drop files here, or click to choose" : "Tap to choose files"}</b>
       {children}
-      <input ref={input} type="file" multiple hidden onChange={(e) => { void run([...(e.target.files ?? [])]); e.target.value = ""; }} />
+      <input ref={input} type="file" multiple hidden accept={prospect ? PROSPECT_ACCEPT : undefined} onChange={(e) => { void run([...(e.target.files ?? [])]); e.target.value = ""; }} />
     </div>
     {/* Outside the drop area, so its Cancel and Retry aren't buttons inside a button */}
     <UploadStatus {...up} />

@@ -2,7 +2,7 @@
 // its workflow stages, the workspace landing, Coming up, Insights, and the audit trail.
 
 
-import { InvoiceFields, RECORD_KINDS, Stage, canApprove, dollars, failedOn, invoiceState, payableOn, changeRecord, occurrences, stageChanges, dateIn, isClosed, isOwnOrg, metricReached, mondayOf, plusDays, todayIn, type Tenant } from "@1neon/domain";
+import { InvoiceFields, RECORD_KINDS, Stage, canApprove, dollars, failedOn, invoiceState, payableOn, changeRecord, occurrences, stageChanges, dateIn, isClosed, isOwnOrg, metricReached, mondayOf, neon1Only, plusDays, todayIn, type Tenant } from "@1neon/domain";
 import { z } from "zod";
 import { actorId, body, fail, need, now, who } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
@@ -141,7 +141,8 @@ export function workspaceRoutes(app: App, k: Kit) {
       away,
       // What people did: sign-ins aren't doing anything, so the feed leaves them out (the
       // notification for them still goes to whoever asked for it). Each row names who did it
-      activity: activity.filter((a) => a.action !== "member.signedin").map((a) => ({ ...a, by: names.get(a.actorId) ?? (a.actorId === "system" ? "" : "neon1") })),
+      // neon1's own records (drafts, how it handles a prospect) stay neon1's
+      activity: activity.filter((a) => a.action !== "member.signedin" && (who(c).actor.operator || !neon1Only(a.action))).map((a) => ({ ...a, by: names.get(a.actorId) ?? (a.actorId === "system" ? "" : "neon1") })),
     });
   });
 
@@ -247,6 +248,7 @@ export function workspaceRoutes(app: App, k: Kit) {
   // The audit trail, newest first
   app.get("/t/:tid/activity", async (c) => {
     need(c, "read");
-    return c.json(await repo.listAudit(c.get("tenant").id, 100));
+    const op = who(c).actor.operator;
+    return c.json((await repo.listAudit(c.get("tenant").id, 100)).filter((a) => op || !neon1Only(a.action)));
   });
 }
