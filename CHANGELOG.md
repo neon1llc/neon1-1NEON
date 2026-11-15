@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+### Added
+- **Sign-up for prospects.** Visitors can make their own 1NEON account from the site and add their projects' needs and files before any call. The emailed code proves the address before anything is saved. A new account is a limited prospect: at most 3 projects, 50 items in a project, and 10 files (documents and pictures only, 10 MB each, 50 MB in all, malware scanned), and no inviting, signing, approvals, proposals, billing, Neo, or texts. neon1 joins each prospect's organization, so Pradeep hears about every sign-up, project, and file.
+- Sign-up guards: an invisible Cloudflare Turnstile check, a hidden field, a minimum fill time, limits per address, per email, and per day, an API Gateway throttle on the sign-up route, and a switch that pauses sign-up. Unconfirmed sign-ups lose their sign-in account after a day. Sign-up stays off in production (`signup = false`) until the real Turnstile keys are in.
+- Prospects page for neon1: who signed up, when, last change, projects, and files, with Promote to client (the next N1 client ID, limits lifted), Keep, Suspend, Resume, and Delete.
+- Quiet prospects: kind check-ins after 7 and 14 days without a change, a final notice at 21 days, and deletion of the organization and its files on day 30, unless neon1 keeps it. Any real change restarts the clock. Clients are never deleted.
+- Change limits for everyone (300 an hour, 2,000 a day per person; prospects 60 and 300), so no one account can run away with the portal.
+
 ### Fixed
 - On an iPhone, the walkthrough's view of the portal drew its top bar partway down the page, over the cards, with an empty band above the page title. The bar now sits right under the walkthrough's narration, as it does elsewhere. The interactive demo (/1NEON/demo) had the same gap under its notice bar, now gone too. The walkthrough check now fails if the bar drifts from under the narration.
 - The first chapter of a walkthrough says "Sign in to Home" instead of "Sign in", since it shows Home too.
