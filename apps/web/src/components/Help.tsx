@@ -42,10 +42,10 @@ export const GUIDES: Record<PageKey, Guide> = {
   home: {
     title: "Home",
     purpose: "Your starting point: what needs you, and what changed lately.",
-    howto: ["Work through Needs you, top to bottom.", "The calendar shows a whole month: step with the arrows, and choose a day to see it or add leave, an office event, a meeting, or a care plan date.", "Insights in the menu has charts of how work is going."],
+    howto: ["Work through Needs you, top to bottom.", "A whole month. Use the arrows to move, and choose a day to see it or add leave, an office event, a meeting, or a care plan date.", "Insights in the menu has charts of how work is going."],
     tour: [
       { at: "needs-you", title: "Needs you", text: "Things waiting on you: approvals, tasks, and files to send. Open one to act on it." },
-      { at: "coming-up", title: "Calendar", text: "The month at a glance: work due, milestones, targets, and your own events. Choose a day to see it or add to it. Below, Past, Overdue, Upcoming, and Repeated fold open and shut." },
+      { at: "coming-up", title: "Calendar", text: "The month at a glance: work due, milestones, targets, and your events. Choose a day to see or add. Past, Overdue, Upcoming, and Repeated fold open below." },
       { at: "glance", title: "Projects at a glance", text: "Each project's stage, health, how much work is done, what's late, and what's next." },
       { at: "get-started", title: "Get started", text: "A short setup checklist. It disappears once everything is done." },
       { at: "activity", title: "Recent activity", text: "What people did lately, newest first, with exactly what each edit changed." },
@@ -125,8 +125,8 @@ export const GUIDES: Record<PageKey, Guide> = {
   me: {
     title: "Your profile",
     purpose: "Your name, look, notifications, two-step verification, and the tutorial.",
-    howto: ["Choose what reaches you by email or text under Notifications.", "Add a passkey, an authenticator app, or text codes, so you can confirm it's you for admin actions.", "Replay the tutorial whenever you like."],
-    tour: [{ at: "passkey", title: "Two-step verification", text: "Add a passkey, an authenticator app, or text codes. Admins need one to manage people and settings." }],
+    howto: ["Choose what reaches you by email or text under Notifications.", "Add a passkey, authenticator app, or text codes to confirm admin actions.", "Replay the tutorial whenever you like."],
+    tour: [{ at: "passkey", title: "Two-step verification", text: "Add a passkey, authenticator app, or text codes. Admins need one to manage people and settings." }],
   },
   all: {
     title: "All clients",

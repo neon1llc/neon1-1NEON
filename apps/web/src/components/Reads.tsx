@@ -44,11 +44,11 @@ function words(error: unknown): { title: string; text: string } {
     case "unavailable":
       return { title: "Not available", text: "This isn't here, or you don't have access to it." };
     case "busy":
-      return { title: "1NEON is busy", text: "Too much at once just now. Wait a moment, then try again." };
+      return { title: "1NEON is busy", text: "Too many requests. Wait a moment, then try again." };
     default:
       return offline(error)
         ? { title: "Couldn't reach 1NEON", text: "Check your connection, then try again." }
-        : { title: "Something went wrong", text: "This didn't load properly. Try again in a moment." };
+        : { title: "Something went wrong", text: "This didn't load. Try again." };
   }
 }
 

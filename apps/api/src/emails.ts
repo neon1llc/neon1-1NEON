@@ -8,15 +8,15 @@ import { branded, esc, link, sentAt } from "./mail.ts";
 export function inviteEmail(opts: { orgName: string; inviter: string; url: string; at?: Date }) {
   const at = opts.at ?? new Date();
   const subject = `You're invited to ${opts.orgName} on 1NEON`;
-  const about = "1NEON keeps your projects with neon1 in one place: what you need, the work, how it's measured, and how it becomes the normal way you work.";
+  const about = "1NEON keeps your projects with neon1 in one place: what you need, the work, the results, and how it becomes routine.";
   const text = [
     `${opts.inviter} invited you to ${opts.orgName} on 1NEON, the neon1 project portal.`,
     "",
     about,
     "",
-    `Join here (sign in with a code sent to this email): ${opts.url}`,
+    `Join (sign in with a code sent to this email): ${opts.url}`,
     "",
-    "If you weren't expecting this, you can ignore it.",
+    "Ignore this if you weren't expecting it.",
     "",
     "neon1 · 1 is glad to be of service.",
     sentAt(at),
@@ -27,7 +27,7 @@ export function inviteEmail(opts: { orgName: string; inviter: string; url: strin
     heading: `You're invited to ${opts.orgName}`,
     body: `<p style="margin:0 0 12px">${esc(opts.inviter)} invited you to <b>${esc(opts.orgName)}</b> on ${link("1NEON", "https://neon1.tech/1NEON/")}.</p><p style="margin:0;color:#56665c">${esc(about)}</p>`,
     button: { label: `Join ${opts.orgName}`, url: opts.url },
-    note: "You'll sign in with a code sent to this email. If you weren't expecting this, you can ignore it.",
+    note: "You'll sign in with a code sent to this email. Ignore this if you weren't expecting it.",
     at,
   });
   return { subject, text, html };
@@ -47,7 +47,7 @@ export function signInCodeEmail(opts: { code: string; portal: string; at?: Date 
     // The code also comes as a link that finishes sign-in; it rides in the fragment, which browsers
     // never send to a server, and only works where sign-in started
     button: { label: "Sign in with this code", url: `${opts.portal}#code=${opts.code}` },
-    note: "The link works in the browser where you asked for the code. Either way, the code works for a few minutes. If you didn't ask for it, you can ignore this email.",
+    note: "The link works in the browser where you asked for the code. Either way, the code works for a few minutes. Ignore this email if you didn't ask for it.",
     at: opts.at,
   });
   return { subject, text: `Your 1NEON sign-in code is ${opts.code}. It works for a few minutes.`, html };
@@ -60,9 +60,9 @@ export function passkeyEmail(opts: { url: string; what?: string; at?: Date }) {
   const what = opts.what ?? "A passkey";
   const subject = `${what} was added to your 1NEON account`;
   const text = [
-    `${what} was just added to your 1NEON account. You can now use it to confirm it's you for admin actions.`,
+    `${what} was just added to your 1NEON account. You can now use it to confirm admin actions.`,
     "",
-    `If this wasn't you, reply to this email right away. Your profile: ${opts.url}`,
+    `If this wasn't you, reply to this email now. Your profile: ${opts.url}`,
     "",
     "neon1 · 1 is glad to be of service.",
     sentAt(at),
@@ -71,9 +71,9 @@ export function passkeyEmail(opts: { url: string; what?: string; at?: Date }) {
     label: "a sign-in method was added",
     preheader: `${what} was just added to your account.`,
     heading: `${what} was added`,
-    body: `<p style="margin:0">${what} was just added to your 1NEON account. You can now use it to confirm it's you for admin actions.</p>`,
+    body: `<p style="margin:0">${what} was just added to your 1NEON account. You can now use it to confirm admin actions.</p>`,
     button: { label: "Open your profile", url: opts.url },
-    note: "If this wasn't you, reply to this email right away.",
+    note: "If this wasn't you, reply to this email now.",
     at,
   });
   return { subject, text, html };
@@ -84,11 +84,11 @@ export function passkeyEmail(opts: { url: string; what?: string; at?: Date }) {
 export function factorRemovedEmail(opts: { url: string; what: string; how: "removed" | "replaced"; at?: Date }) {
   const at = opts.at ?? new Date();
   const subject = `${opts.what} was ${opts.how} on your 1NEON account`;
-  const after = opts.how === "replaced" ? "Codes from the old one no longer work." : "It can no longer be used to confirm it's you.";
+  const after = opts.how === "replaced" ? "Codes from the old one no longer work." : "It can no longer confirm admin actions.";
   const text = [
-    `${opts.what} was just ${opts.how} on your 1NEON account. ${after} Other signed-in sessions will need to confirm it's you again before admin actions.`,
+    `${opts.what} was just ${opts.how} on your 1NEON account. ${after} Other sessions must confirm again before admin actions.`,
     "",
-    `If this wasn't you, reply to this email right away. Your profile: ${opts.url}`,
+    `If this wasn't you, reply to this email now. Your profile: ${opts.url}`,
     "",
     "neon1 · 1 is glad to be of service.",
     sentAt(at),
@@ -97,9 +97,9 @@ export function factorRemovedEmail(opts: { url: string; what: string; how: "remo
     label: "a sign-in method changed",
     preheader: `${opts.what} was just ${opts.how}.`,
     heading: `${opts.what} was ${opts.how}`,
-    body: `<p style="margin:0">${esc(opts.what)} was just ${opts.how} on your 1NEON account. ${esc(after)} Other signed-in sessions will need to confirm it's you again before admin actions.</p>`,
+    body: `<p style="margin:0">${esc(opts.what)} was just ${opts.how} on your 1NEON account. ${esc(after)} Other sessions must confirm again before admin actions.</p>`,
     button: { label: "Open your profile", url: opts.url },
-    note: "If this wasn't you, reply to this email right away.",
+    note: "If this wasn't you, reply to this email now.",
     at,
   });
   return { subject, text, html };

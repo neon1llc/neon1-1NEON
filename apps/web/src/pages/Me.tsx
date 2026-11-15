@@ -181,7 +181,7 @@ export function MePage() {
         {/* Notifications: every kind shows under the bell; choose which also email you */}
         <div className="card small notify" id="notifications">
           <b>Notifications</b>
-          <span className="muted">Everything shows under the bell. Choose what also reaches you by email or text. Important ones email you to start.</span>
+          <span className="muted">Everything shows under the bell. Choose what also reaches you by email or text. Important ones email you by default.</span>
           <table className="notify-table">
             <thead><tr><th scope="col">When</th><th scope="col">Email</th></tr></thead>
             <tbody>
@@ -255,7 +255,7 @@ export function MePage() {
         {/* Two-step verification: any one of these confirms it's you before admin actions */}
         <div className="card small security" data-tour="passkey" id="security">
           <b>Two-step verification</b>
-          <span className="muted">Inviting people, changing access, and changing settings ask you to confirm it's you. Any one of these works; a second is a backup if you lose the first.</span>
+          <span className="muted">Inviting people and changing access or settings ask you to confirm. Any one works. Add a second as a backup.</span>
           <ul className="factors">
             <li>
               <span><b>Passkey</b><br /><span className="muted">Your face, fingerprint, or device PIN. Works on iPhone, Android, Mac, and Windows.</span></span>

@@ -108,7 +108,7 @@ describe("email", () => {
     expect(mail.html).toContain('href="https://neon1.tech/1NEON/"');
     expect(mail.html).toContain('href="https://neon1.tech/"');
     expect(mail.html).toMatch(/1 is glad to be of service\.<\/div><div style="white-space:nowrap[^"]*">Sent .+ UTC<\/div>/);
-    expect(mail.text).toContain("how it becomes the normal way you work");
+    expect(mail.text).toContain("how it becomes routine");
   });
 
   it("puts the sign-in code in one selectable piece under a plain subject", () => {

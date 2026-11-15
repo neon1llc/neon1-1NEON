@@ -1,6 +1,6 @@
 # Route intent map
 
-What each route under neon1.tech/1NEON is for, and what it asks of search engines. `apps/web/src/lib/head.ts` applies this map (title, description, robots, canonical) on every navigation, and `head.test.ts` checks it route by route. Indexing tags are a search hint only: authentication in the API is what keeps account data private.
+What each route under neon1.tech/1NEON is for, and what it asks of search engines. `apps/web/src/lib/head.ts` applies this map (title, description, robots, canonical) on every navigation, and `head.test.ts` checks it. Indexing tags are a hint only. API authentication keeps account data private.
 
 | Route | Who it's for | Indexing | Canonical |
 |---|---|---|---|
@@ -15,9 +15,9 @@ What each route under neon1.tech/1NEON is for, and what it asks of search engine
 
 Notes:
 
-- `noindex` pages stay crawlable (nothing in robots.txt blocks them), so a crawler can see the tag.
-- Nothing points at the site's home page as a catch-all canonical.
-- The tags are set from code after the app loads, so search engines that render JavaScript see them. Every route still serves the same `index.html`, whose raw HTML carries only the generic title and description. Putting route-specific tags into the raw HTML needs a pre-rendered page or an edge rewrite for `/1NEON/example` and `/1NEON/faqs`, which belongs with the hosting setup in neon1-site.
-- Keep the FAQ copy in `apps/web/src/help/faqs.md` and `neon1-corpus/corpus/faq/1neon-help.md` word for word (links aside), since the portal page names the knowledge page as canonical. Anchors use the same rule in both places (`lib/faq.ts` `slug`).
-- The policy pages carry the same text as their knowledge-center copies, so those are canonical, as with the FAQs. Search engines then rank the site's page and stop showing a portal screen for a search on neon1.
-- No inline scripts are added for any of this, so the content security policy is unchanged.
+- `noindex` pages stay crawlable (robots.txt doesn't block them), so crawlers can see the tag.
+- Nothing uses the site's home page as a catch-all canonical.
+- Code sets the tags after the app loads, so search engines that render JavaScript see them. Every route serves the same `index.html`, whose raw HTML has only the generic title and description. Route-specific tags in the raw HTML need a pre-rendered page or an edge rewrite for `/1NEON/example` and `/1NEON/faqs`, which belongs in neon1-site's hosting setup.
+- Keep `apps/web/src/help/faqs.md` and `neon1-corpus/corpus/faq/1neon-help.md` word for word (links aside), since the knowledge page is canonical. Anchors use the same rule in both (`lib/faq.ts` `slug`).
+- The policy pages match their knowledge-center copies, which are canonical. Search engines then rank the site's page instead of a portal screen.
+- No inline scripts are added, so the content security policy is unchanged.

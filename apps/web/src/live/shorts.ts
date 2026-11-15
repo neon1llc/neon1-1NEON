@@ -122,7 +122,7 @@ const invite: Show = {
       id: "invite-code",
       title: "Sign in with a code",
       run: async (s) => {
-        await s.say("Her email is filled in from the link; 1NEON emails her a code");
+        await s.say("Her email is filled in from the link, and 1NEON emails her a code");
         await s.think("My email's already there. Continue.");
         await s.click({ sel: "form button", text: "Continue" }, 1000);
         await s.think("It sent me a code. Let me check my email.");
@@ -136,7 +136,7 @@ const invite: Show = {
         } finally {
           await mail.close();
         }
-        await s.say("She types the code; no password, ever");
+        await s.say("She types the code. No password, ever");
         await s.think("Back to 1NEON. I'll type it in.");
         await s.type("#code", code, 400);
         await s.click({ sel: "form button", text: "Sign in" }, 1600);
@@ -198,7 +198,7 @@ const passkey: Show = {
         await profile(s, "#security");
         await s.think("A passkey uses my fingerprint. Add.");
         await s.click({ sel: "#security li button", text: "Add" }, 900);
-        await s.say("Her computer asks for her fingerprint; the passkey stays on the device");
+        await s.say("Her computer asks for her fingerprint, and the passkey stays on the device");
         await s.think("My laptop wants my fingerprint. Continue.");
         await s.click(".live-sheet .sh-yes", 1400);
         await s.think("Added. It's on now.");
