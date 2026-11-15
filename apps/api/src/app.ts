@@ -18,6 +18,9 @@ import { REASONS, fail, who, type Env } from "./lib/http.ts";
 import { kit, type Deps } from "./lib/kit.ts";
 import { installOutbox } from "./lib/transactions.ts";
 import { authRoutes } from "./routes/auth.ts";
+import { signupRoutes } from "./routes/signup.ts";
+import { prospectRoutes } from "./routes/prospects.ts";
+import { accountGuard, prospectGuard } from "./lib/guards.ts";
 import { commentRoutes } from "./routes/comments.ts";
 import { contactRoutes } from "./routes/contact.ts";
 import { devFileRoutes, docRoutes } from "./routes/docs.ts";
@@ -92,6 +95,9 @@ export function createApp(d: Deps) {
   // --- Sign-in (Cognito) -------------------------------------------------
   authRoutes(app, k);
 
+  // --- Sign-up for prospects, public, checked, and rate limited ----------
+  signupRoutes(app, k);
+
   // --- The contact form on neon1.tech, public and rate limited -----------
   contactRoutes(app, k);
 
@@ -129,6 +135,9 @@ export function createApp(d: Deps) {
     return user && { user, jti: ident.jti };
   }
 
+  // Everyone's change counter, and no costly requests (Neo, texts) from prospect-only accounts
+  app.use("*", accountGuard(k));
+
   // --- The signed-in person: profile, number check, and second steps -------
   meRoutes(app, k);
   factorRoutes(app, k);
@@ -138,11 +147,16 @@ export function createApp(d: Deps) {
 
   // --- Operator: organizations and the All clients view --------------------
   orgRoutes(app, k);
+  // --- Operator: prospects who signed themselves up, and the sign-up switch --
+  prospectRoutes(app, k);
 
   // --- Inside one organization ---------------------------------------------
 
   app.use("/t/:tid/*", loadTenant);
   app.use("/t/:tid", loadTenant);
+  // A prospect's own people: the allowlist, a tighter change counter, and nothing while suspended
+  app.use("/t/:tid/*", prospectGuard(k));
+  app.use("/t/:tid", prospectGuard(k));
 
   /** Resolve :tid and the caller's access, or answer 404 for non-members (the operator may enter any) */
   async function loadTenant(c: Context<Env>, next: () => Promise<void>) {

@@ -36,6 +36,11 @@ export interface Config {
   malwareScan?: boolean;
   /** The Object Lock bucket for locked copies of signed and issued records */
   recordsBucket?: string;
+  /** Whether people may sign themselves up as prospects. Only SIGNUP=on opens it; anything else keeps it shut */
+  signup?: boolean;
+  /** Cloudflare Turnstile: the public site key the sign-up form shows, and the SSM SecureString holding the secret */
+  turnstileSiteKey?: string;
+  turnstileSecretParam?: string;
 }
 
 
@@ -69,6 +74,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     stripeKeyParam: env.STRIPE_KEY_PARAM || undefined,
     stripeWebhookParam: env.STRIPE_WEBHOOK_PARAM || undefined,
     recordsBucket: env.RECORDS_BUCKET || undefined,
+    signup: env.SIGNUP?.trim().toLowerCase() === "on",
+    turnstileSiteKey: env.TURNSTILE_SITE_KEY || undefined,
+    turnstileSecretParam: env.TURNSTILE_SECRET_PARAM || undefined,
     neoMonthlyUsd: Number(env.NEO_MONTHLY_USD) > 0 ? Math.min(Number(env.NEO_MONTHLY_USD), 50) : 8,
   };
 }

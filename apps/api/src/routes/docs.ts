@@ -7,6 +7,7 @@ import type { Context } from "hono";
 import { settleFile, unwatchOp, watchOp } from "../files.ts";
 import { actorId, body, fail, need, now, type Env } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
+import { fileQuota } from "../lib/guards.ts";
 import { MemoryStorage } from "../local.ts";
 import { keys } from "../store/repo.ts";
 
@@ -93,6 +94,8 @@ export function docRoutes(app: App, k: Kit) {
     need(c, "comment");
     const t = c.get("tenant");
     const input = await body(c, CreateDocInput);
+    // A prospect adds only documents and pictures, within a count and size (lib/guards.ts)
+    await fileQuota(k, c, input);
     if (input.projectId) {
       const p = await repo.getProject(t.id, input.projectId);
       if (!p || p.deletedAt) fail(404, "not_found", "That project doesn't exist.");

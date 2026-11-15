@@ -78,7 +78,8 @@ export type Stage = z.infer<typeof Stage>;
 export const Tenant = z.object({
   id: id,
   slug: z.string().regex(/^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/),
-  clientId: z.string().regex(/^N1-\d{4}$/),
+  // N1-0001 for a client; NP-0001 for a prospect who signed themselves up and isn't a client yet
+  clientId: z.string().regex(/^(N1|NP)-\d{4}$/),
   name: z.string().trim().min(1).max(80),
   status: z.enum(["active", "archived"]),
   stages: z.array(Stage).min(1).max(20),
@@ -86,6 +87,22 @@ export const Tenant = z.object({
   timeZone: z.string().max(64).optional(),
   // Every signature of neon1's service agreement, oldest first; the latest at the current edition counts
   agreements: z.array(Signature).max(50).optional(),
+  // Set while this organization is a prospect that signed itself up (prospect.ts has its limits).
+  // Promotion to a client removes it; suspension keeps it and shuts its members out
+  prospect: z
+    .object({
+      since: isoDate,
+      // The portal terms edition accepted at sign-up, and the hashed address it came from
+      terms: z.string().max(20),
+      from: z.string().max(64).optional(),
+      suspendedAt: isoDate.optional(),
+      // Quiet-prospect emails (prospect.ts quietStep): check-ins sent since the last real change, and when
+      // the final notice went out. A real change by the prospect clears both
+      notices: z.number().int().min(0).max(20).optional(),
+      noticeAt: isoDate.optional(),
+      warnedAt: isoDate.optional(),
+    })
+    .optional(),
   ...versioned,
 });
 export type Tenant = z.infer<typeof Tenant>;
