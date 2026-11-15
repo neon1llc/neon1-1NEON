@@ -2,9 +2,13 @@
 // workspace, and the account-level check for things that never open for it (Neo, texts).
 
 
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { Link } from "react-router";
+import { api } from "../lib/api.ts";
+import { problem } from "../lib/hooks.ts";
 import { read } from "../lib/reads.ts";
+import { dateLabel, useToast } from "./ui.tsx";
 import { BOOK_A_CALL, prospectEverywhere } from "../lib/prospect.ts";
 import type { Me, OrgResponse } from "../lib/types.ts";
 
@@ -22,11 +26,59 @@ export function useProspectEverywhere(me: Me): boolean | undefined {
 }
 
 
-/** The note on a new account's workspace: what to do here, and a way to talk sooner */
+/** The note on a new account's workspace: what this account is for */
 export function ProspectNote() {
   return (
     <p className="notice prospect-note" role="note">
-      <span>You're set up as a new account. Add your projects' needs here, and I'll take a look and get back to you. Want to talk sooner? <a className="out" href={BOOK_A_CALL} target="_blank" rel="noopener noreferrer">Book a call<span className="out-arrow" aria-hidden="true">↗</span></a>, or <Link to="/contact">email, call, or text</Link>.</span>
+      <span>You're set up as a free account. Write down what your projects need, then ask for an assessment or a call under Next step. Other ways to reach neon1 are on <Link to="/contact">Contact</Link>, or <a className="out" href={BOOK_A_CALL} target="_blank" rel="noopener noreferrer">book a call<span className="out-arrow" aria-hidden="true">↗</span></a>.</span>
     </p>
+  );
+}
+
+
+// When each kind was last asked for, by kind
+type Asked = Partial<Record<"assessment" | "call", { at: string }>>;
+
+
+/** Next step, on Home: ask neon1 for an assessment of what's written down, or for a call. Each sends neon1
+ * an email (routes/requests.ts) and then says when it was asked */
+export function NextStep({ orgId }: { orgId: string }) {
+  const qc = useQueryClient();
+  const toast = useToast();
+  const asked = useQuery({ queryKey: ["requests", orgId], queryFn: () => read<Asked>(`/t/${orgId}/requests`, {}) });
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState<"" | "assessment" | "call">("");
+  const [error, setError] = useState("");
+  const ask = async (kind: "assessment" | "call") => {
+    setBusy(kind);
+    setError("");
+    try {
+      await api(`/t/${orgId}/requests`, { method: "POST", body: { kind, note } });
+      setNote("");
+      await qc.invalidateQueries({ queryKey: ["requests", orgId] });
+      toast(kind === "call" ? "Call requested. You'll get a reply by email." : "Assessment requested. You'll get a reply by email.");
+    } catch (e) {
+      setError(problem(e));
+    }
+    setBusy("");
+  };
+  const when = (kind: "assessment" | "call") => asked.data?.[kind]?.at;
+  return (
+    <section className="card next-step-ask" aria-labelledby="next-step-h">
+      <h2 className="section-h" id="next-step-h">Next step</h2>
+      <p className="muted small">An assessment is an approach and the first questions to settle, based on the needs written here. A call is a free 15 minutes to talk it through.</p>
+      {error && <p className="notice" role="alert">{error}</p>}
+      <label className="field-label" htmlFor="ask-note">Anything to look at first, or good times to talk <span className="muted">(optional)</span></label>
+      <textarea id="ask-note" rows={2} maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)} />
+      <div className="actions">
+        <button type="button" className="btn btn-primary btn-sm" disabled={Boolean(busy)} onClick={() => void ask("assessment")}>{busy === "assessment" ? "Sending…" : "Ask for an assessment"}</button>
+        <button type="button" className="btn btn-sm" disabled={Boolean(busy)} onClick={() => void ask("call")}>{busy === "call" ? "Sending…" : "Ask for a call"}</button>
+      </div>
+      {(when("assessment") || when("call")) && (
+        <p className="muted small" role="status">
+          {[when("assessment") && `Assessment asked for ${dateLabel(when("assessment"))}`, when("call") && `Call asked for ${dateLabel(when("call"))}`].filter(Boolean).join(" · ")}. The reply comes by email.
+        </p>
+      )}
+    </section>
   );
 }

@@ -4,6 +4,7 @@
 // session, so the API's "Confirm it's you" answer opens that dialog as it does for other admin actions.
 
 
+import { FOUND_VIA, type FoundVia } from "@1neon/domain";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router";
@@ -94,6 +95,7 @@ export function Prospects() {
             <p className="small muted prospect-people">{p.people.length ? p.people.map((x) => `${x.name || x.email} (${x.email})`).join(", ") : "No one has joined."}</p>
             <dl className="prospect-facts small">
               <div className="wide"><dt>Where</dt><dd><FaceFacts place={p.place} link={p.link} /></dd></div>
+              {p.prospect.found && <div className="wide"><dt>Found neon1 through</dt><dd>{FOUND_VIA[p.prospect.found as FoundVia] ?? p.prospect.found}</dd></div>}
               <div><dt>Signed up</dt><dd>{dateLabel(p.prospect.since.slice(0, 10))}</dd></div>
               <div><dt>Last active</dt><dd>{p.lastActive ? ago(p.lastActive) : "never"}</dd></div>
               <div><dt>Projects</dt><dd>{p.projects}</dd></div>

@@ -3,7 +3,7 @@
 // project updates, and recent activity with what each edit changed.
 
 
-import { ProspectNote } from "../components/Prospect.tsx";
+import { NextStep, ProspectNote } from "../components/Prospect.tsx";
 import { KIND_LAYER, type ItemKind } from "@1neon/domain";
 import { useQuery } from "@tanstack/react-query";
 import { Check, CircleCheck, FileUp, ListTodo, PenLine, Receipt } from "lucide-react";
@@ -71,6 +71,8 @@ export function WorkspacePage() {
     <>
       <h1 className="page-title">{first ? `Hi, ${first}` : "Home"}</h1>
       {prospect && <ProspectNote />}
+      {/* Asking neon1 for an assessment or a call: every account that can write, never neon1 itself */}
+      {canWrite && !me.operator && <NextStep orgId={org.id} />}
       {/* An organization with neither a place nor a link: its own admins (not neon1) are asked here until one is added or they say "Not now" */}
       {admin && !me.operator && !org.place && !org.link && !faceSkipped && <FaceForm ask onDone={() => setFaceSkipped(true)} />}
       <p className="lead">{ws.data && !blocked ? (n ? `${n} ${n === 1 ? "thing needs" : "things need"} you.` : "Nothing needs you right now.") : " "}</p>

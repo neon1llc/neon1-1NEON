@@ -2,6 +2,7 @@
 // message to neon1, with the sender as Reply-To. It mails only neon1's own inbox, never the address a
 // visitor types, so it can't be used to send mail to anyone else. A hidden field catches simple bots,
 // and counters cap messages per sender each hour and in total each day. The counters expire after a day.
+import { FOUND_KEYS, FOUND_VIA } from "@1neon/domain";
 import { z } from "zod";
 import { body, fail } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
@@ -38,6 +39,8 @@ const Message = z.object({
   today: z.string().trim().min(1).max(3000),
   better: z.string().trim().max(1500).optional().default(""),
   timing: z.string().trim().max(200).optional().default(""),
+  // "How did you find neon1?": optional, the same list as sign-up (FOUND_VIA)
+  found: z.enum(FOUND_KEYS).optional(),
   // Hidden from people; a bot that fills every field fills this one too
   website: z.string().max(200).optional().default(""),
 });
@@ -69,6 +72,7 @@ export function contactRoutes(app: App, k: Kit) {
       ["About", topic], ["What happens today", m.today],
       ...(m.better ? [["What would be better", m.better] as [string, string]] : []),
       ...(m.timing ? [["Timing", m.timing] as [string, string]] : []),
+      ...(m.found ? [["Found neon1 through", FOUND_VIA[m.found]] as [string, string]] : []),
     ];
     const text = rows.map(([k2, v]) => `${k2}: ${v}`).join("\n\n");
     const html = branded({

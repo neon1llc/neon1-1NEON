@@ -29,6 +29,7 @@ import { SignUp } from "./SignUp.tsx";
 import { gate, Stale, type Read } from "./Reads.tsx";
 import { Avatar, Icon, initials, LayerBadge, LAYERS, layerHint, layerName, layerSlug, Rings, useAsk } from "./ui.tsx";
 import { prefs } from "../lib/prefs.ts";
+import type { SignUpInfo } from "../lib/signup.ts";
 
 
 // --- Session -----------------------------------------------------------------
@@ -264,11 +265,15 @@ function SignIn() {
   // The last answer is kept in this browser and used at once, so the page doesn't draw the closed
   // wording and then switch; with no answer yet (a first visit) that wording waits, hidden, for it
   const [signupOpen, setSignupOpen] = useState<boolean | undefined>(() => (IN_DEMO || PICKER ? false : SIGNUP_SEEN()));
+  // The whole answer (with Turnstile's site key) is kept too and handed to the form, so "Start a free
+  // account" draws the form at once instead of "One moment…" while it asks again
+  const [signupInfo, setSignupInfo] = useState<SignUpInfo | undefined>(undefined);
   useEffect(() => {
     if (IN_DEMO || PICKER) return;
     let live = true;
-    api<{ open: boolean }>("/auth/signup").then((r) => {
+    api<SignUpInfo>("/auth/signup").then((r) => {
       if (!live) return;
+      setSignupInfo(r);
       setSignupOpen(r.open === true);
       prefs.set(SIGNUP_KEY, r.open === true ? "open" : "closed");
     }, () => live && setSignupOpen((v) => v ?? false));
@@ -369,12 +374,12 @@ function SignIn() {
           // Sign-up: who it's for and what happens next, in place of the invitation note
           <>
             <h2 className="signin-h">Start in 1NEON</h2>
-            <p className="signin-lead">Free. Write down what your project needs, and I'll reply with what I'd do. No call needed to start.</p>
+            <p className="signin-lead">Free. Write down what your project needs, then ask for an assessment or a call from your account.</p>
           </>
         ) : (
           <>
             <h2 className="signin-h">Client portal</h2>
-            <p className="signin-lead" style={signupOpen === undefined ? { visibility: "hidden" } : undefined}>{signupOpen ? "For neon1 clients, by invitation. New here? Start a free account below and tell me what you need." : "For neon1 clients, by invitation."}</p>
+            <p className="signin-lead" style={signupOpen === undefined ? { visibility: "hidden" } : undefined}>{signupOpen ? "For neon1 clients, by invitation. New here? Start a free account below." : "For neon1 clients, by invitation."}</p>
           </>
         )}
         {problem === "not_invited" && <p className="notice" role="alert">That email hasn't been invited yet. Ask your organization's admin, or neon1.</p>}
@@ -392,7 +397,7 @@ function SignIn() {
         )}
         {/* Step 1: the email */}
         {!PICKER && signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
-          <SignUp email={email} remember={remember} onStep={signedUp} onBack={() => setSigningUp(false)} local={pickPerson} />
+          <SignUp info={signupInfo} email={email} remember={remember} onStep={signedUp} onBack={() => setSigningUp(false)} local={pickPerson} />
         )}
         {!PICKER && !signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
           <form className="stack" name="signin" onSubmit={(e) => { e.preventDefault(); keepEmail(email.trim(), remember); void send({ op: "start", email: email.trim(), remember }); }}>

@@ -89,6 +89,16 @@ describe("the sign-up form", () => {
     expect((await claimSignup({ repo, cfg }, "c@example.com"))).toBeTruthy();
   });
 
+  it("keeps how they found neon1, if they said, and refuses an answer not on the list", async () => {
+    expect((await signup({ ...form, email: "f@example.com", found: "billboard" }, "198.51.100.11")).status).toBe(400);
+    expect((await signup({ ...form, email: "f@example.com", found: "linkedin" }, "198.51.100.11")).status).toBe(200);
+    const uid = await claimSignup({ repo, cfg }, "f@example.com");
+    const tenant = (await repo.getTenant((await repo.membershipsOf(uid!))[0]!.tenantId))!;
+    expect(tenant.prospect?.found).toBe("linkedin");
+    const { tenant: plain } = await prospect("g@example.com");
+    expect(plain.prospect?.found).toBeUndefined();
+  });
+
   it("lets the prospect's admin change the place and link without confirming it's them", async () => {
     const { tid, tenant } = await prospect("e@example.com");
     const put = (b: unknown) => as("e@example.com", `/t/${tid}/profile`, "PUT", b);
@@ -323,5 +333,29 @@ describe("tidying up", () => {
     expect(await repo.table.get(`T#${tid}`, "ACTIVE")).toBeUndefined();
     await as(form.email, `/t/${tid}/projects`, "POST", { name: "Need" });
     expect(await repo.table.get(`T#${tid}`, "ACTIVE")).toBeTruthy();
+  });
+});
+
+
+describe("asking neon1 for an assessment or a call", () => {
+  it("emails neon1 with the person as Reply-To, records it, and remembers when", async () => {
+    const { tid } = await prospect("r@example.com");
+    const r = await as("r@example.com", `/t/${tid}/requests`, "POST", { kind: "assessment", note: "The intake form first" });
+    expect(r.status).toBe(200);
+    const mail = mailer.sent.find((m) => m.to === "hello@neon1.tech")!;
+    expect(mail.subject).toContain("asked for an assessment");
+    expect(mail.replyTo).toBe("r@example.com");
+    expect(mail.text).toContain("The intake form first");
+    const seen = await (await as("r@example.com", `/t/${tid}/requests`)).json() as Record<string, { at: string }>;
+    expect(seen.assessment?.at).toBeTruthy();
+    expect(seen.call).toBeUndefined();
+    expect((await as("r@example.com", `/t/${tid}/requests`, "POST", { kind: "nonsense" })).status).toBe(400);
+  });
+
+  it("caps requests per organization each day", async () => {
+    const { tid } = await prospect("cap@example.com");
+    const ask = () => as("cap@example.com", `/t/${tid}/requests`, "POST", { kind: "call" });
+    for (let i = 0; i < 4; i++) expect((await ask()).status).toBe(200);
+    expect((await ask()).status).toBe(429);
   });
 });

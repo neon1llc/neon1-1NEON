@@ -99,6 +99,8 @@ export const Tenant = z.object({
       // The portal terms edition accepted at sign-up, and the hashed address it came from
       terms: z.string().max(20),
       from: z.string().max(64).optional(),
+      // How they found neon1, if they said (prospect.ts FOUND_VIA)
+      found: z.string().max(20).optional(),
       suspendedAt: isoDate.optional(),
       // Quiet-prospect emails (prospect.ts quietStep): check-ins sent since the last real change, and when
       // the final notice went out. A real change by the prospect clears both
