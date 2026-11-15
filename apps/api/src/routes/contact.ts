@@ -1,7 +1,7 @@
 // apps/api/src/routes/contact.ts - The contact form on neon1.tech: one public route that emails the
 // message to neon1, with the sender as Reply-To. It mails only neon1's own inbox, never the address a
 // visitor types, so it can't be used to send mail to anyone else. A hidden field catches simple bots,
-// and counters cap messages per sender each hour and in total each day.
+// and counters cap messages per sender each hour and in total each day. The counters expire after a day.
 import { z } from "zod";
 import { body, fail } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
@@ -11,6 +11,8 @@ import { esc, branded } from "../mail.ts";
 export const CONTACT_TO = "hello@neon1.tech";
 export const PER_SENDER_HOURLY = 5;
 export const DAILY = 50;
+// Both counters expire a day after their first count; they only need to outlive the hour or day they cap
+export const COUNTER_KEEP_S = 24 * 60 * 60;
 
 // What each topic is called in the email: the site's four services, plus "something else" (kept so
 // an older page still sends). A visitor may pick any number, or none, and name their own in `other`
@@ -55,8 +57,9 @@ export function contactRoutes(app: App, k: Kit) {
     const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ip)));
     const who = [...digest.slice(0, 12)].map((b) => b.toString(16).padStart(2, "0")).join("");
     const hour = new Date().toISOString().slice(0, 13);
-    if ((await repo.table.increment("COUNTER", `CONTACT#${who}#${hour}`)) > PER_SENDER_HOURLY) fail(429, "too_many", "That's a lot of messages in an hour. Email hello@neon1.tech instead.");
-    if ((await repo.table.increment("COUNTER", `CONTACT#${hour.slice(0, 10)}`)) > DAILY) fail(429, "busy", "The form is paused for today. Email hello@neon1.tech instead.");
+    const expiresAt = Math.floor(Date.now() / 1000) + COUNTER_KEEP_S;
+    if ((await repo.table.increment("COUNTER", `CONTACT#${who}#${hour}`, 1, expiresAt)) > PER_SENDER_HOURLY) fail(429, "too_many", "That's a lot of messages in an hour. Email hello@neon1.tech instead.");
+    if ((await repo.table.increment("COUNTER", `CONTACT#${hour.slice(0, 10)}`, 1, expiresAt)) > DAILY) fail(429, "busy", "The form is paused for today. Email hello@neon1.tech instead.");
 
     // Every picked topic by name, then their own words; "Not said" when they picked nothing
     const keys = [...new Set([...m.topics, ...(m.topic ? [m.topic] : [])])].filter((t) => t !== "other");
