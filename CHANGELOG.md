@@ -2,7 +2,7 @@
 
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
-## Unreleased
+## v0.13.0 - 2026-11-15
 
 ### Added
 - **Sign-up for prospects.** Visitors can make their own 1NEON account from the site and add their projects' needs and files before any call. The emailed code proves the address before anything is saved. A new account is a limited prospect: at most 3 projects, 50 items in a project, and 10 files (documents and pictures only, 10 MB each, 50 MB in all, malware scanned), and no inviting, signing, approvals, proposals, billing, Neo, or texts. neon1 joins each prospect's organization, so Pradeep hears about every sign-up, project, and file.
@@ -21,6 +21,7 @@
 - Password managers recognize the sign-in's email field, so they offer the saved email and passkeys.
 - **Remember me keeps the email filled in.** Ticked, the email you signed in with is saved on this device (`1neon.email`, listed in the cookie and storage notice) and filled in next time; unticked, it's cleared.
 - Shorter, plainer wording in the README, docs, errors, emails, and walkthrough captions.
+- The terms (1.4), the privacy and data policy (3.1), and the cookie and storage notice come from neon1-corpus v0.44.0.
 
 ## v0.12.0 - 2026-11-15
 
