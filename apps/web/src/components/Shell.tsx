@@ -352,7 +352,7 @@ function SignIn() {
           // Sign-up: who it's for and what happens next, in place of the invitation note
           <>
             <h2 className="signin-h">Start in 1NEON</h2>
-            <p className="signin-lead">Free. Add your project's needs and files, and I'll reply with what I'd do. No call needed to start.</p>
+            <p className="signin-lead">Free. Write down what your project needs, and I'll reply with what I'd do. No call needed to start.</p>
           </>
         ) : (
           <>
