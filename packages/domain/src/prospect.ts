@@ -13,6 +13,24 @@ import type { Tenant } from "./model.ts";
 export const PORTAL_TERMS_EDITION = "2026-11-15";
 
 
+/** "How did you find us?" on the sign-up form: optional, one answer. Ordered by where people most
+ * likely come from (search and LinkedIn first), then the rest, with "other" last. Stored on the prospect
+ * and shown only to neon1 */
+export const FOUND_VIA = {
+  google: "Google search",
+  linkedin: "LinkedIn",
+  referral: "A referral or word of mouth",
+  maps: "Google Maps or Business Profile",
+  github: "GitHub",
+  upwork: "Upwork",
+  blog: "The neon1 blog",
+  ai: "An AI assistant",
+  other: "Somewhere else",
+} as const;
+export type FoundVia = keyof typeof FOUND_VIA;
+export const FOUND_KEYS = Object.keys(FOUND_VIA) as [FoundVia, ...FoundVia[]];
+
+
 /** The limits on a prospect organization's own people */
 export const PROSPECT_LIMITS = {
   // Live projects (trashed ones don't count)
@@ -107,6 +125,8 @@ const ALLOWED: [method: string, path: RegExp][] = [
   ["POST", /^\/docs\/[^/]+\/done$/],
   ["DELETE", /^\/docs\/[^/]+$/],
   ["POST", /^\/notifications\/seen$/],
+  // Asking neon1 for an assessment or a call: the point of a free account
+  ["POST", /^\/requests$/],
 ];
 
 

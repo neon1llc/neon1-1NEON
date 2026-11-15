@@ -5,6 +5,8 @@
 ## Unreleased
 
 ### Added
+- **Next step** on a free account's Home: **Ask for an assessment** or **Ask for a call**, with an optional note. Each emails neon1 with the person as Reply-To, is recorded, and Home shows when each was last asked for; up to 4 a day per organization.
+- "How did you find neon1?" is an optional dropdown on sign-up and on neon1.tech's contact form (one shared list). neon1 sees the answer on Potentials and in the email.
 - **Contact neon1** in the menu for every account, free accounts included: a page with email, call or text, a booked call, and the hours I answer. A new account's note on Home, the help sheet, and the command palette link to it.
 
 ### Changed
@@ -14,6 +16,9 @@
 - A sign-up test no longer fails in the evening (US Eastern): its same-day second sweep could fall on the next UTC day.
 - On a tablet or desktop (760px wide and up), sign-up sets who you are beside where to see the business, in two columns, so the form fits without scrolling. Narrower screens, phones included, keep the single column.
 - Every release to production also merges main into `dev` and rebuilds the dev backend in the same run, beside the production release, so dev never falls behind and a dev failure shows on the deploy run.
+- Wording describes what the portal does instead of what Pradeep does: the sign-up intro ("write down what your project needs, then ask for an assessment or a call from your account"), "You'll get a code by email to finish", the free-account note on Home, and the quiet-account email.
+- Wide sign-up has three fields a side with a faint line between the needed and optional columns, and the terms checkbox sits level with the note under the optional fields. The checkbox and its words share one center line.
+- "Start a free account" draws the form at once: the sign-in screen's own answer about sign-up is handed to the form, instead of the form showing "One moment…" while it asks again.
 
 ## v0.14.0 - 2026-11-15
 

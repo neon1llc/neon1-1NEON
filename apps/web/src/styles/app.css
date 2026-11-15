@@ -1552,7 +1552,13 @@ ul.md-says { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; 
 /* Sign-up and prospects */
 /* The sign-up form's hidden field sits far off-screen: out of sight and reach for people, still filled by bots that fill every field */
 .hp { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
-.signin label.agree { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: #A3C2AA; }
+/* The box and its words on one center line: the words' line box is exactly the box's height */
+.signin label.agree { display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 15px; color: #A3C2AA; cursor: pointer; }
+.signin label.agree > span { display: block; }
+.signin .signup-form select { width: 100%; }
+/* The line between the needed and optional columns: the same faint neon as the rule above the links
+   under sign-in. Only a wide screen has two columns, so only it shows */
+.signin .signup-form .col-rule { display: none; }
 .signin label.agree a { color: #D6F5DC; }
 .signin .check:empty { display: none; }
 /* "Where can I see your business?": the two fields as one group, spaced like the rest of the form */
@@ -1562,21 +1568,28 @@ ul.md-says { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; 
 .signin .signup-form .f > * { margin: 0; }
 .signin .signup-form .face-hint { margin: -4px 0 0; }
 /* Sign-up, wide: a tablet or desktop sets who you are (left) beside where to see the business (right),
-   so the whole form shows without scrolling. Narrower than this, phones included, it stays the single
+   so the whole form shows without scrolling: three fields a side, a faint line between, and the terms
+   level with the note on the optional side. Narrower than this, phones included, it stays the single
    column that scrolls. The fields read left-aligned in columns; the rest spans both */
 @media (min-width: 760px) {
   .signin .panel.signing-up { width: min(820px, calc(100% - 48px)); padding-top: 24px; padding-bottom: 24px; }
   .signin .panel.signing-up .word { margin-bottom: 10px; }
   .signin .panel.signing-up .signin-lead { margin-bottom: 14px; }
   .signin .signup-form { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 24px;
-    grid-template-areas: "email link" "name place" "org hint"; text-align: left; }
+    grid-template-areas: "email link" "name place" "org found" "terms hint"; text-align: left; }
   .signin .signup-form input:not([type="checkbox"]) { text-align: left; }
   .signin .signup-form .f-email { grid-area: email; }
   .signin .signup-form .f-name { grid-area: name; }
   .signin .signup-form .f-org { grid-area: org; }
   .signin .signup-form .f-link { grid-area: link; }
   .signin .signup-form .f-place { grid-area: place; }
-  .signin .signup-form .face-hint { grid-area: hint; align-self: start; margin-top: 4px; }
+  .signin .signup-form .f-found { grid-area: found; }
+  .signin .signup-form label.agree { grid-area: terms; align-self: center; }
+  /* The hint sits level with the terms, in the optional column */
+  .signin .signup-form .face-hint { grid-area: hint; align-self: center; margin: 0; line-height: 15px; }
+  /* Spans every field row and the terms row, centered in the gap between the columns */
+  .signin .signup-form .col-rule { display: block; grid-column: 2; grid-row: 1 / 5; justify-self: start; width: 0; margin-left: -12.5px;
+    border-left: 1px solid rgba(0, 255, 65, .16); pointer-events: none; }
   .signin .signup-form .full { grid-column: 1 / -1; text-align: center; }
   .signin .signup-form .btn-primary.full { justify-self: center; width: min(360px, 100%); }
 }

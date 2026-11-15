@@ -61,6 +61,8 @@ describe("sign-up form", () => {
   });
   it("sends trimmed values with the check, hidden field, and time", () => {
     expect(signUpBody(ok, { check: "tok", website: "", elapsed: 5000, remember: true })).toEqual({ email: "a@b.co", name: "Ana", org: "Acme", place: "Queens, NY", link: "", terms: true, check: "tok", website: "", elapsed: 5000, remember: true });
+    expect(signUpBody({ ...ok, found: "google" }, { check: "", website: "", elapsed: 1, remember: false })).toMatchObject({ found: "google" });
+    expect(signUpBody(ok, { check: "", website: "", elapsed: 1, remember: false })).not.toHaveProperty("found");
   });
   it("asks Turnstile for the invisible widget for sign-up", () => {
     const o = widgetOptions("key", { callback: () => undefined, expired: () => undefined, error: () => undefined });

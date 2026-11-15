@@ -70,8 +70,8 @@ function quietEmail(t: Tenant, portal: string, step: "nudge" | "final", when: st
       subject: `How are things going with ${t.name}?`,
       preheader: "Add or update your needs any time, or reply to talk it through.",
       heading: "Checking in",
-      paras: [`I wanted to check in on ${t.name}. If your needs have changed, update them on ${link("1NEON", portal)} and I'll take a look.`, "If it's easier to talk, reply to this email and we'll find a time."],
-      text: `I wanted to check in on ${t.name}. If your needs have changed, update them on 1NEON and I'll take a look: ${portal}\n\nIf it's easier to talk, reply to this email and we'll find a time.`,
+      paras: [`I wanted to check in on ${t.name}. If your needs have changed, update them on ${link("1NEON", portal)}, then ask for an assessment or a call from Next step on Home.`, "If it's easier to talk, reply to this email and we'll find a time."],
+      text: `I wanted to check in on ${t.name}. If your needs have changed, update them on 1NEON, then ask for an assessment or a call from Next step on Home: ${portal}\n\nIf it's easier to talk, reply to this email and we'll find a time.`,
     };
   }
   return {

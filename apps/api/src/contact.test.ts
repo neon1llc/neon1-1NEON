@@ -35,6 +35,13 @@ describe("contact form", () => {
     expect(mailer.sent[1]!.text).toContain("About: Not said");
     expect((await send({ ...good, topics: ["nope"] })).status).toBe(400);
   });
+  it("says how they found neon1 when picked, and refuses an answer not on the list", async () => {
+    await send({ ...good, found: "linkedin" });
+    expect(mailer.sent[0]!.text).toContain("Found neon1 through: LinkedIn");
+    await send(good);
+    expect(mailer.sent[1]!.text).not.toContain("Found neon1");
+    expect((await send({ ...good, found: "billboard" })).status).toBe(400);
+  });
   it("escapes what people type", async () => {
     await send({ ...good, today: "<script>x</script>" });
     expect(mailer.sent[0]!.html).not.toContain("<script>");

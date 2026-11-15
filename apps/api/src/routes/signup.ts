@@ -6,7 +6,7 @@
 // The answer never says whether an email already has an account.
 
 
-import { DEFAULT_STAGES, PORTAL_TERMS_EDITION, PublicFace, formatProspectId, newId, slugify, type Member, type Tenant, type User } from "@1neon/domain";
+import { DEFAULT_STAGES, FOUND_KEYS, FOUND_VIA, PORTAL_TERMS_EDITION, PublicFace, formatProspectId, newId, slugify, type FoundVia, type Member, type Tenant, type User } from "@1neon/domain";
 import type { Context } from "hono";
 import { z } from "zod";
 import { isDev, neon1Only } from "../dev-guard.ts";
@@ -57,6 +57,8 @@ const SignUpBody = z.object({
   // How long the form was open, in milliseconds, as the page measured it
   elapsed: z.number().int().nonnegative().max(7 * 24 * 3600 * 1000).default(0),
   remember: z.boolean().default(true),
+  // "How did you find us?": optional, one of FOUND_VIA's keys
+  found: z.enum(FOUND_KEYS).optional(),
 }).and(PublicFace);
 
 
@@ -126,7 +128,7 @@ export function signupRoutes(app: App, k: Kit) {
       // sign-in account (only then may the sweep remove it). It expires on its own after three days
       await repo.table.write([{
         put: {
-          PK: SIGNUP_PK, SK: b.email, email: b.email, name: b.name, org: b.org, place: b.place, link: b.link, terms: PORTAL_TERMS_EDITION, from: who,
+          PK: SIGNUP_PK, SK: b.email, email: b.email, name: b.name, org: b.org, place: b.place, link: b.link, found: b.found, terms: PORTAL_TERMS_EDITION, from: who,
           made: made || Boolean(before?.made), at: new Date().toISOString(), ttl: Math.floor(Date.now() / 1000) + 3 * 24 * 3600,
         },
         guard: { always: true },
@@ -169,7 +171,7 @@ export async function claimSignup(k: Pick<Kit, "repo" | "cfg">, email: string): 
     ...(pending.link ? { link: String(pending.link).slice(0, 200) } : {}),
     status: "active",
     stages: DEFAULT_STAGES,
-    prospect: { since: ts, terms: String(pending.terms ?? PORTAL_TERMS_EDITION).slice(0, 20), from: pending.from ? String(pending.from).slice(0, 64) : undefined },
+    prospect: { since: ts, terms: String(pending.terms ?? PORTAL_TERMS_EDITION).slice(0, 20), from: pending.from ? String(pending.from).slice(0, 64) : undefined, ...(typeof pending.found === "string" && pending.found in FOUND_VIA ? { found: pending.found } : {}) },
     version: 1,
     createdAt: ts,
     updatedAt: ts,
@@ -197,7 +199,7 @@ export async function claimSignup(k: Pick<Kit, "repo" | "cfg">, email: string): 
   if (opId && opEmail) ops.push(repo.memberOp(member(opId, opEmail, (await repo.getUser(opId))?.name ?? "neon1"), { create: true }));
   ops.push(
     repo.membershipRevOp(tenant.id, 0),
-    repo.auditOp({ tenantId: tenant.id, actorId: uid, action: "prospect.signedup", target: tenant.id, summary: `${name || email} (${email}) signed up as ${orgName} (${tenant.clientId})${[tenant.place, tenant.link].filter(Boolean).map((x) => `, ${x}`).join("")}` }),
+    repo.auditOp({ tenantId: tenant.id, actorId: uid, action: "prospect.signedup", target: tenant.id, summary: `${name || email} (${email}) signed up as ${orgName} (${tenant.clientId})${[tenant.place, tenant.link, tenant.prospect?.found && `found via ${FOUND_VIA[tenant.prospect.found as FoundVia]}`].filter(Boolean).map((x) => `, ${x}`).join("")}` }),
     { delete: { PK: SIGNUP_PK, SK: email } },
   );
   await repo.table.write(ops);
