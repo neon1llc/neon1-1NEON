@@ -65,9 +65,10 @@ export class MemoryTable implements TableStore {
     }
   }
 
-  // Atomic counter; a missing row starts at zero
-  async increment(pk: string, sk: string, by = 1) {
-    const r = this.rows.get(k(pk, sk)) ?? { PK: pk, SK: sk, n: 0 };
+  // Atomic counter; a missing or expired row starts at zero, and an expiring one keeps its first ttl
+  async increment(pk: string, sk: string, by = 1, expiresAt?: number) {
+    const found = this.rows.get(k(pk, sk));
+    const r = found && !this.expired(found) ? found : { PK: pk, SK: sk, n: 0, ...(expiresAt === undefined ? {} : { ttl: expiresAt }) };
     const n = Number(r.n ?? 0) + by;
     this.rows.set(k(pk, sk), { ...r, n });
     return n;
