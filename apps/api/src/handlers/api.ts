@@ -122,18 +122,20 @@ export const handler = async (event: Parameters<typeof http>[0] | { source?: str
     // One line per pass in CloudWatch's embedded metric format: counts and queue age only, never
     // addresses or bodies. Written to stdout directly, because the JSON log wrapper would hide the
     // metric directive inside its message field
-    process.stdout.write(`${JSON.stringify({ ...outboxMetrics(result), files, signups, quiet })}\n`);
+    process.stdout.write(`${JSON.stringify({ ...outboxMetrics(result, cfg.env), files, signups, quiet })}\n`);
     return { ...result, files, signups, quiet };
   }
   return http(event as Parameters<typeof http>[0], context);
 };
 
 
-/** A pass's counts as embedded metrics: the oldest message's age and how many gave up this pass */
-function outboxMetrics(r: Awaited<ReturnType<typeof drainOutbox>>) {
+/** A pass's counts as embedded metrics: the oldest message's age and how many gave up this pass.
+ *  Labelled with the environment (Env), so production's alarms never see dev's queue */
+function outboxMetrics(r: Awaited<ReturnType<typeof drainOutbox>>, env: string) {
   return {
-    _aws: { Timestamp: Date.now(), CloudWatchMetrics: [{ Namespace: "1NEON", Dimensions: [[]], Metrics: [{ Name: "OutboxOldestAgeSec", Unit: "Seconds" }, { Name: "OutboxFailed", Unit: "Count" }] }] },
+    _aws: { Timestamp: Date.now(), CloudWatchMetrics: [{ Namespace: "1NEON", Dimensions: [["Env"]], Metrics: [{ Name: "OutboxOldestAgeSec", Unit: "Seconds" }, { Name: "OutboxFailed", Unit: "Count" }] }] },
     message: "outbox",
+    Env: env,
     OutboxOldestAgeSec: r.oldestAgeSec,
     OutboxFailed: r.failed,
     deferred: r.deferred,

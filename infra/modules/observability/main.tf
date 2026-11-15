@@ -9,6 +9,11 @@ variable "api_function" { type = string }
 variable "trigger_function" { type = string }
 variable "api_id" { type = string }
 variable "table_name" { type = string }
+# Which environment's outbox numbers to watch (the API labels them Env=dev or Env=prod)
+variable "env" {
+  type    = string
+  default = "prod"
+}
 variable "monthly_budget_usd" {
   type    = number
   default = 10
@@ -63,15 +68,16 @@ locals {
       dims      = { TableName = var.table_name }
       what      = "DynamoDB throttled writes."
     }
-    # The outbox worker reports these each minute; silence means the worker itself stopped
+    # The outbox worker reports these each minute, labelled by environment; silence means this
+    # environment's worker itself stopped
     outbox-age = {
       namespace = "1NEON", metric = "OutboxOldestAgeSec", stat = "Maximum", threshold = 900, missing = "breaching"
-      dims      = {}
+      dims      = { Env = var.env }
       what      = "A notification or invitation has waited over 15 minutes, or the outbox worker isn't running."
     }
     outbox-failed = {
       namespace = "1NEON", metric = "OutboxFailed", stat = "Sum", threshold = 1
-      dims      = {}
+      dims      = { Env = var.env }
       what      = "A notification or invitation gave up after its retries. The failed row stays in the OUTBOX partition for 30 days."
     }
   }
