@@ -44,7 +44,7 @@ export function MarkupReview({ doc, rev, all, path, onClose }: { doc: DocumentRe
     let live = true;
     void (async () => {
       try {
-        if (!/\.docx$/i.test(doc.name) && !/wordprocessingml/.test(doc.contentType)) throw new Error("Only Word files (.docx) can be compared. Open the file to read it; Google Docs and Pages save as .docx with File, then Download.");
+        if (!/\.docx$/i.test(doc.name) && !/wordprocessingml/.test(doc.contentType)) throw new Error("Only Word files (.docx) can be compared. Open the file to read it. Google Docs and Pages export .docx from File, then Download.");
         const { url } = await api<{ url: string }>(`/t/${org.id}/docs/${doc.id}/download?p=${doc.projectId}`);
         const data = await (await fetch(await openable(url))).arrayBuffer();
         const edited = await docxParagraphs(data);
@@ -134,7 +134,7 @@ export function MarkupReview({ doc, rev, all, path, onClose }: { doc: DocumentRe
       {state && "manual" in state && state.manual.length > 0 && (
         <section className="md-opt">
           <h3>{state.updates.length ? "Also changed, to answer by hand" : "Changes to answer by hand"}</h3>
-          <p className="small muted">These don't map to one field of an option: a price worked out from hours, a table, the general terms, or new requests. Edit the project or the options to match, or reply in a comment, then issue r{rev.p.rev + 1}.</p>
+          <p className="small muted">These don't map to one option field: an hours-based price, a table, the general terms, or new requests. Edit the project or options to match, or reply in a comment, then issue r{rev.p.rev + 1}.</p>
           <ul className="md-says">{state.manual.map((c, i) => <li key={i}><b className="small">{c.opt ? `${c.opt}, ` : ""}{c.kind === "added" ? "added" : c.kind === "removed" ? "removed" : "changed"}</b><Diff c={c} /></li>)}</ul>
         </section>
       )}

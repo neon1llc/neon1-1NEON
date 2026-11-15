@@ -123,7 +123,7 @@ export async function api<T>(path: string, init: { method?: string; body?: unkno
   try {
     data = text ? JSON.parse(text) : undefined;
   } catch {
-    data = r.ok ? undefined : { error: "http", message: "The server didn't answer properly. Please try again." };
+    data = r.ok ? undefined : { error: "http", message: "The server's answer was invalid. Try again." };
   }
   // A 401 anywhere but the session check itself means the sign-in ended: Root checks again and shows sign-in
   if (r.status === 401 && path !== "/me" && !path.startsWith("/auth/")) dispatchEvent(new CustomEvent("1neon:signed-out"));

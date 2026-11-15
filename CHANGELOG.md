@@ -13,6 +13,7 @@
 - **The demo's payment page looks like a real checkout.** Pay in the demo and the walkthroughs opens a stand-in laid out like a hosted payment page: who's paid and how much, the email, card details (with a one-tap test card) or a bank and an account, then Pay, a moment of processing, and a receipt with the way back. It still says it's a demo, and no money moves. The walkthroughs pay the deposit and the final invoice through it.
 - Password managers recognize the sign-in's email field, so they offer the saved email and passkeys.
 - **Remember me keeps the email filled in.** Ticked, the email you signed in with is saved on this device (`1neon.email`, listed in the cookie and storage notice) and filled in next time; unticked, it's cleared.
+- Shorter, plainer wording in the README, docs, errors, emails, and walkthrough captions.
 
 ## v0.12.0 - 2026-11-15
 

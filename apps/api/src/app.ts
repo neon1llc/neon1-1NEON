@@ -64,11 +64,11 @@ export function createApp(d: Deps) {
     if (err instanceof StoreBusyError || BUSY_ERRORS.has((err as Error).name)) {
       console.error(JSON.stringify({ level: "warn", message: "store busy", reason: err instanceof StoreBusyError ? err.reason : (err as Error).name }));
       c.header("retry-after", "2");
-      return c.json({ error: "busy", message: "1NEON is busy for a moment. Nothing was saved; please try again." }, 503);
+      return c.json({ error: "busy", message: "1NEON is busy. Nothing was saved. Try again." }, 503);
     }
     // Anything else is logged in full for us and shown to people as a plain apology
     console.error(JSON.stringify({ level: "error", message: String(err), stack: (err as Error).stack }));
-    return c.json({ error: "server_error", message: "Something went wrong on our side. Please try again." }, 500);
+    return c.json({ error: "server_error", message: "Something went wrong on our side. Try again." }, 500);
   });
 
   // Local dev only: the in-memory file store's upload and download links (S3 links in production)
@@ -99,7 +99,7 @@ export function createApp(d: Deps) {
 
   app.use("*", async (c, next) => {
     const found = await resolveUser(c);
-    if (!found) fail(401, "signed_out", "Please sign in.");
+    if (!found) fail(401, "signed_out", "Sign in to continue.");
     const { user, jti } = found;
     // The operator role comes from configuration, never from the database, so no data edit can grant it
     const operator = cfg.operatorEmails.includes(user.email);

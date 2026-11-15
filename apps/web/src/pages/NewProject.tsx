@@ -111,7 +111,7 @@ export function NewProject() {
       // Every answer ends the busy state; the answers stay on the form either way
       const lost = e instanceof Unconfirmed;
       setUnsure(lost);
-      setError(lost ? "We couldn't confirm whether this finished. Your answers are kept. Check again looks for the project and won't make a second one." : problem(e));
+      setError(lost ? "We couldn't confirm this finished. Your answers are kept. Check again looks for the project without making a second one." : problem(e));
       setBusy(false);
     }
   };
@@ -141,7 +141,7 @@ export function NewProject() {
         {/* Step 1: template */}
         {step === 0 && (
           <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
-            <legend className="muted small" style={{ marginBottom: 10 }}>Start from a template. It adds the usual questions, checks, and measures, and you can change all of them.</legend>
+            <legend className="muted small" style={{ marginBottom: 10 }}>Start from a template. It adds the usual questions, checks, and measures, all editable.</legend>
             <div className="options">
               {TEMPLATES.map((x) => (
                 <label key={x.id} className={`card option${template === x.id ? " rec" : ""}`} style={{ cursor: "pointer", padding: 16 }}>
@@ -169,7 +169,7 @@ export function NewProject() {
         {/* Step 3: measures */}
         {step === 2 && (
           <>
-            <p className="muted small" style={{ margin: 0 }}>How will we know it worked? Add a measure with where it is now and where it should be. You can add readings later.</p>
+            <p className="muted small" style={{ margin: 0 }}>How will we know it worked? Add a measure with where it is now and where it should be. Readings can come later.</p>
             {metrics.map((m, i) => {
               // Change one field of this measure
               const set = (patch: Partial<MetricDraft>) => setMetrics(metrics.map((x, j) => (j === i ? { ...x, ...patch } : x)));
