@@ -345,3 +345,6 @@ dialog.live-modal { box-shadow: 0 24px 64px rgba(0, 0, 0, .25), 0 0 0 100vmax rg
 @media (hover: none) and (pointer: coarse) {
   .live-veil, .live-card-back { bottom: calc(-1 * var(--under, 0px)); padding-bottom: calc(16px + var(--under, 0px)); }
 }
+
+/* The stand-in payment page on a phone fills the screen below the narration, not past the bottom */
+@media (max-width: 700px) { dialog.demo-checkout.live-modal { height: auto; max-height: none; } }

@@ -63,24 +63,144 @@ export async function demoPaymentEvent(s: DemoSession, what: "card" | "bank_star
   await send("/1NEON/api/billing/stripe", { method: "POST", headers: { "stripe-signature": "demo" }, body: JSON.stringify(event) });
 }
 
-/** The stand-in page: it says plainly what it is, and lets the visitor choose how the payment goes */
+// The stand-in's made-up banks and accounts, so the bank path looks like the real one (pick a bank,
+// then an account) without a real bank's name on it
+const DEMO_BANKS = [
+  { name: "Sample Community Bank", accounts: [{ label: "Business checking", last4: "6789" }, { label: "Business savings", last4: "4321" }] },
+  { name: "Sample Credit Union", accounts: [{ label: "Checking", last4: "1180" }] },
+];
+// Stripe's own published test card, offered with one tap so nobody types a real card into a demo
+const TEST_CARD = { number: "4242 4242 4242 4242", expiry: "12 / 34", cvc: "123", zip: "12207" };
+
+/** Digits only, grouped in fours as a card is printed */
+const cardDigits = (v: string) => v.replace(/\D/g, "").slice(0, 16).replace(/(\d{4})(?=\d)/g, "$1 ");
+/** MM / YY as it's typed */
+const expiryDigits = (v: string) => { const d = v.replace(/\D/g, "").slice(0, 4); return d.length > 2 ? `${d.slice(0, 2)} / ${d.slice(2)}` : d; };
+/** What's wrong with the card fields, if anything, in the words a payment page would use */
+function cardProblem(c: { number: string; expiry: string; cvc: string; name: string; zip: string }): string | undefined {
+  if (c.number.replace(/\D/g, "").length < 15) return "Your card number is incomplete.";
+  const [mm, yy] = c.expiry.split("/").map((x) => Number(x.trim()));
+  if (!mm || mm > 12 || yy === undefined || Number.isNaN(yy) || c.expiry.replace(/\D/g, "").length < 4) return "Your card's expiration date is incomplete.";
+  const now = new Date();
+  if (2000 + yy < now.getFullYear() || (2000 + yy === now.getFullYear() && mm < now.getMonth() + 1)) return "Your card's expiration date is in the past.";
+  if (!/^\d{3,4}$/.test(c.cvc)) return "Your card's security code is incomplete.";
+  if (c.name.trim().length < 2) return "Enter the name on the card.";
+  if (!/^\d{5}$/.test(c.zip)) return "Your ZIP code is incomplete.";
+  return undefined;
+}
+
+/**
+ * The stand-in payment page, laid out as a hosted checkout is: who's being paid and how much on one
+ * side; email, card or bank, and Pay on the other; a moment of processing; then a receipt with the
+ * way back. It says plainly that it's a demo and no money moves, and carries no payment company's logo
+ */
 function DemoCheckout({ session, onClose, onPaid }: { session?: DemoSession; onClose: () => void; onPaid: () => void }) {
-  const go = async (what: "card" | "bank_started") => {
-    await demoPaymentEvent(session!, what);
-    onPaid();
+  const me = useSession();
+  type Stage = "form" | "processing" | "done";
+  const [stage, setStage] = useState<Stage>("form");
+  const [method, setMethod] = useState<"card" | "bank">("card");
+  const [card, setCard] = useState({ number: "", expiry: "", cvc: "", name: me.user.name ?? "", zip: "" });
+  const [bank, setBank] = useState<number>();
+  const [account, setAccount] = useState<number>();
+  const [tried, setTried] = useState(false);
+  // A new session starts on a clean page
+  useEffect(() => { setStage("form"); setMethod("card"); setCard({ number: "", expiry: "", cvc: "", name: me.user.name ?? "", zip: "" }); setBank(undefined); setAccount(undefined); setTried(false); }, [session?.id, me.user.name]);
+  if (!session) return <Dialog open={false} onClose={onClose} label="Payment page">{null}</Dialog>;
+  const amount = money(session.amountCents);
+  const wrong = method === "card" ? cardProblem(card) : account === undefined ? "Choose the account to pay from." : undefined;
+
+  // Pay: a short processing beat (as a real page takes), the payment event the in-browser API hears, then the receipt
+  const pay = async () => {
+    setTried(true);
+    if (wrong) return;
+    setStage("processing");
+    await new Promise((ok) => setTimeout(ok, 1100));
+    await demoPaymentEvent(session, method === "card" ? "card" : "bank_started");
+    setStage("done");
   };
+  const picked = bank === undefined ? undefined : DEMO_BANKS[bank];
+  const chosen = picked && account !== undefined ? picked.accounts[account] : undefined;
+
   return (
-    <Dialog open={Boolean(session)} onClose={onClose} label="A stand-in for the payment page">
-      <div className="demo-pay">
-        <h2>A stand-in for the payment page</h2>
-        <p className="small muted">This is a demo, so no money moves. In 1NEON, Pay opens Stripe's hosted payment page, and 1NEON never sees bank or card details.</p>
-        <p>{session ? <>Pay <b>{money(session.amountCents)}</b> on {session.invoiceNumber}:</> : null}</p>
-        <div className="actions">
-          <button type="button" className="btn btn-primary" onClick={() => void go("bank_started")}>Pay from a bank account</button>
-          <button type="button" className="btn btn-ghost" onClick={() => void go("card")}>Pay by card</button>
-          <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
-        </div>
-        <p className="small muted">A bank payment (ACH) shows as started, then as paid once the bank clears it in a few business days. A card shows as paid at once.</p>
+    <Dialog open onClose={stage === "processing" ? () => undefined : stage === "done" ? onPaid : onClose} label="Payment page" className="demo-checkout">
+      <p className="dc-ribbon">Demo: a stand-in for the payment page. No money moves.</p>
+      <div className="dc-grid">
+        {/* Who's being paid, for what, and how much */}
+        <section className="dc-summary" aria-label="What you're paying">
+          {stage === "form" && <button type="button" className="dc-back linkish" onClick={onClose}>← Back to 1NEON</button>}
+          <p className="dc-merchant"><span className="dc-mark" aria-hidden="true">n1</span> neon1</p>
+          <p className="dc-label">Pay neon1</p>
+          <p className="dc-amount">{amount}</p>
+          <p className="small muted">Invoice {session.invoiceNumber}</p>
+        </section>
+
+        {/* The payment side: the form, then processing, then the receipt */}
+        <section className="dc-pay" aria-live="polite">
+          {stage === "form" && (
+            <form onSubmit={(e) => { e.preventDefault(); void pay(); }} noValidate>
+              <label htmlFor="dc-email">Email</label>
+              <input id="dc-email" type="email" value={me.user.email ?? ""} readOnly />
+
+              <p className="dc-h">Payment method</p>
+              <div className="dc-methods" role="tablist" aria-label="Payment method">
+                <button type="button" role="tab" aria-selected={method === "card"} className={method === "card" ? "on" : ""} onClick={() => setMethod("card")}>Card</button>
+                <button type="button" role="tab" aria-selected={method === "bank"} className={method === "bank" ? "on" : ""} onClick={() => setMethod("bank")}>US bank account</button>
+              </div>
+
+              {method === "card" ? (
+                <div className="dc-card">
+                  <label htmlFor="dc-number">Card information</label>
+                  <input id="dc-number" inputMode="numeric" autoComplete="off" placeholder="1234 1234 1234 1234" value={card.number} onChange={(e) => setCard({ ...card, number: cardDigits(e.target.value) })} />
+                  <div className="dc-row">
+                    <input aria-label="Expiration (MM / YY)" inputMode="numeric" autoComplete="off" placeholder="MM / YY" value={card.expiry} onChange={(e) => setCard({ ...card, expiry: expiryDigits(e.target.value) })} />
+                    <input aria-label="Security code (CVC)" inputMode="numeric" autoComplete="off" placeholder="CVC" value={card.cvc} onChange={(e) => setCard({ ...card, cvc: e.target.value.replace(/\D/g, "").slice(0, 4) })} />
+                  </div>
+                  <label htmlFor="dc-name">Name on card</label>
+                  <input id="dc-name" autoComplete="off" value={card.name} onChange={(e) => setCard({ ...card, name: e.target.value })} />
+                  <label htmlFor="dc-zip">ZIP</label>
+                  <input id="dc-zip" inputMode="numeric" autoComplete="off" placeholder="12345" value={card.zip} onChange={(e) => setCard({ ...card, zip: e.target.value.replace(/\D/g, "").slice(0, 5) })} />
+                  <button type="button" className="linkish small dc-test" onClick={() => setCard({ ...card, ...TEST_CARD })}>Fill in a test card</button>
+                </div>
+              ) : (
+                <div className="dc-bank">
+                  {/* First the bank, then one of its accounts, as a bank sign-in would list them */}
+                  <p className="small muted">{picked ? `Accounts at ${picked.name}` : "Choose your bank"}</p>
+                  {!picked ? (
+                    <div className="dc-list">
+                      {DEMO_BANKS.map((b, i) => <button key={b.name} type="button" className="dc-choice" onClick={() => { setBank(i); setAccount(undefined); }}>{b.name}</button>)}
+                    </div>
+                  ) : (
+                    <div className="dc-list">
+                      {picked.accounts.map((a, i) => (
+                        <button key={a.last4} type="button" className={`dc-choice${account === i ? " on" : ""}`} aria-pressed={account === i} onClick={() => setAccount(i)}>{a.label} ••{a.last4}</button>
+                      ))}
+                      <button type="button" className="linkish small" onClick={() => { setBank(undefined); setAccount(undefined); }}>Choose another bank</button>
+                    </div>
+                  )}
+                  <p className="small muted">By paying, you authorize neon1 to debit this account once for {amount}. A bank payment takes a few business days to clear.</p>
+                </div>
+              )}
+
+              {tried && wrong && <p className="small warn-text" role="alert">{wrong}</p>}
+              <button type="submit" className="btn btn-primary dc-submit">Pay {amount}</button>
+              <p className="small muted dc-fine">In 1NEON this is Stripe's own page, and 1NEON never sees card or bank details.</p>
+            </form>
+          )}
+
+          {stage === "processing" && <div className="dc-wait"><span className="dc-spin" aria-hidden="true" /><p>Processing…</p></div>}
+
+          {stage === "done" && (
+            <div className="dc-done">
+              <span className="dc-tick" aria-hidden="true">✓</span>
+              {method === "card" ? (
+                <><h2>Paid {amount}</h2><p className="small muted">Card ending {card.number.replace(/\D/g, "").slice(-4)}. A receipt goes to {me.user.email}.</p></>
+              ) : (
+                <><h2>Payment started</h2><p className="small muted">{amount} from {chosen ? `${chosen.label} ••${chosen.last4}` : "your bank account"}. Your bank usually clears it in a few business days; the invoice shows it on its way until then.</p></>
+              )}
+              <button type="button" className="btn btn-primary" onClick={onPaid}>Return to 1NEON</button>
+            </div>
+          )}
+        </section>
       </div>
     </Dialog>
   );
