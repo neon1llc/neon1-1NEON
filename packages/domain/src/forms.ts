@@ -99,6 +99,7 @@ export function nameProblem(name: string, oneName = false): string | undefined {
   if (!t) return "Enter your name.";
   if (/[@/\\:]|https?|www\./i.test(t) || /\d/.test(t)) return "Enter your name without numbers, links, or email addresses.";
   if (!/^[\p{L}\p{M}][\p{L}\p{M}' .’-]*$/u.test(t)) return "Use letters, spaces, apostrophes, hyphens, or periods.";
+  if ((t.match(/\p{L}/gu) ?? []).length < MIN_TEXT) return `Enter at least ${MIN_TEXT} letters of your name.`;
   if (looksLikeJunk(t) || offensive(t)) return "Enter your real name.";
   const parts = t.split(" ").filter((w) => /\p{L}/u.test(w));
   if (parts.length < 2 && !oneName) return "Enter your first and last name.";
@@ -142,11 +143,33 @@ export function offensive(text: string): boolean {
 }
 
 
+// The fewest characters a typed answer may have. Names of people and organizations can be two (Li, Ng,
+// 3M, HP); any other answer in a person's own words needs three, so a stray key or two doesn't pass
+export const MIN_TEXT = 2;
+export const MIN_ANSWER = 3;
+// A contact message says what's going on, so it needs a sentence's worth
+export const MIN_MESSAGE = 10;
+
+
 /** One check for any free text a person types into a form (an organization's name, an "other" answer):
- * not junk and not offensive. Returns what to tell them, or undefined when it's fine */
-export function textProblem(text: string, what = "this"): string | undefined {
-  if (!text.trim()) return undefined;
+ * at least three characters (two for a name, by `min`), not junk, and not offensive. Empty is left to the caller, which knows whether
+ * the field is required. Returns what to tell them, or undefined when it's fine */
+export function textProblem(text: string, what = "this", min = MIN_ANSWER): string | undefined {
+  const t = text.trim().replace(/\s+/g, " ");
+  if (!t) return undefined;
+  if (t.length < min) return `Enter at least ${min} characters for ${what}.`;
   if (offensive(text)) return `Please reword ${what}.`;
   if (looksLikeJunk(text)) return `Enter a real answer for ${what}.`;
+  return undefined;
+}
+
+
+/** A contact message: required, and long enough to say something. Returns what to tell them, or
+ * undefined when it's fine */
+export function messageProblem(text: string): string | undefined {
+  const t = text.trim().replace(/\s+/g, " ");
+  if (!t) return "Say what's going on.";
+  if (t.length < MIN_MESSAGE) return `Tell me a little more, at least ${MIN_MESSAGE} characters.`;
+  if (looksLikeJunk(t)) return "Describe what's going on in a few words.";
   return undefined;
 }

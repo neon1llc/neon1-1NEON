@@ -6,7 +6,7 @@
 // The answer never says whether an email already has an account.
 
 
-import { DEFAULT_STAGES, DESCRIBES, DESCRIBES_KEYS, FOUND_KEYS, FOUND_VIA, PORTAL_TERMS_EDITION, PublicFace, describesLabel, foundLabel, formatProspectId, newId, slugify, type Member, type Tenant, type User } from "@1neon/domain";
+import { DEFAULT_STAGES, DESCRIBES, DESCRIBES_KEYS, FOUND_KEYS, FOUND_VIA, PORTAL_TERMS_EDITION, PublicFace, describesLabel, foundLabel, formatProspectId, MIN_TEXT, newId, slugify, type Member, type Tenant, type User } from "@1neon/domain";
 import { emailProblem, failFields, linkProblem, nameProblem, placeCheck, textProblem, type FieldProblems } from "../lib/vet.ts";
 import type { Vetting } from "../vetting/types.ts";
 import type { Context } from "hono";
@@ -84,7 +84,7 @@ async function checkSignUp(v: Vetting | undefined, b: z.infer<typeof SignUpBody>
   else if (b.kind === "other") { const t = textProblem(b.kindOther, "what describes you"); if (t) problems.kindOther = t; }
   if (b.kind !== "individual") {
     if (!b.org) problems.org = "Enter your organization's name.";
-    else { const t = textProblem(b.org, "your organization's name"); if (t) problems.org = t; }
+    else { const t = textProblem(b.org, "your organization's name", MIN_TEXT); if (t) problems.org = t; }
   }
   if (link) problems.link = link;
   if ("problem" in place) problems.place = place.problem;

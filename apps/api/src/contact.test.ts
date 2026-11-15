@@ -50,6 +50,14 @@ describe("contact form", () => {
     expect((await send({ ...good, name: "Madonna", found: "other", foundOther: "A podcast" })).status).toBe(200);
     expect(mailer.sent[0]!.text).toContain("Found neon1 through: A podcast");
   });
+  it("refuses an empty or too-short message, name, or answer, each by its field", async () => {
+    const r = await send({ ...good, today: "hi", name: "L", company: "x", found: "other", foundOther: "ab" });
+    expect(r.status).toBe(400);
+    const b = (await r.json()) as { current: { fields: Record<string, string> } };
+    expect(b.current.fields).toMatchObject({ today: expect.stringMatching(/at least 10/), name: expect.stringMatching(/at least 2/), company: expect.stringMatching(/at least 2/), foundOther: expect.stringMatching(/at least 3/) });
+    expect((await send({ ...good, today: "   " })).status).toBe(400);
+    expect((await send({ ...good, name: "Li", company: "3M" })).status).toBe(200);
+  });
   it("escapes what people type", async () => {
     await send({ ...good, today: "<script>x</script>" });
     expect(mailer.sent[0]!.html).not.toContain("<script>");
