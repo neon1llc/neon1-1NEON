@@ -76,6 +76,11 @@ let arriving = document.documentElement.classList.contains("from-site");
 /** Top-level gate: sign-in, error, first-visit redirect, then the app */
 // Whether this browser was last signed in or out, for the background shown while the session loads
 const LAST_KEY = "1neon.last";
+// Remember me also keeps the email on this device, filled in next time; unticked, it's forgotten.
+// Not in the demo or a walkthrough: there each sign-in types its own fictional email into an empty box
+const EMAIL_KEY = "1neon.email";
+const keepEmail = (email: string, remember: boolean) => { if (!IN_DEMO) prefs.set(EMAIL_KEY, remember ? email : ""); };
+const keptEmail = () => (IN_DEMO ? "" : prefs.get(EMAIL_KEY) ?? "");
 const lastSeen = () => {
   return prefs.get(LAST_KEY);
 };
@@ -224,7 +229,8 @@ function SignIn() {
   // A step saved before a reload comes back if it's still answerable
   const [saved] = useState(() => loadStep(session()));
   // Invite links carry the email, so it's filled in already
-  const [email, setEmail] = useState(() => saved?.email ?? new URLSearchParams(location.search).get("email") ?? "");
+  // ...or, with Remember me, the email this device signed in with last
+  const [email, setEmail] = useState(() => saved?.email ?? new URLSearchParams(location.search).get("email") ?? keptEmail());
   // ...including a link followed while this page is already open
   const { search } = useLocation();
   useEffect(() => {
@@ -232,7 +238,8 @@ function SignIn() {
     if (e) setEmail(e);
   }, [search]);
   const [code, setCode] = useState("");
-  // Remember me: keep the sign-in for 30 days; unchecked, it ends when the browser closes
+  // Remember me: keep the sign-in for 30 days and the email filled in; unchecked, the sign-in ends
+  // when the browser closes and the email is forgotten
   const [remember, setRemember] = useState(true);
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
   const [at, setAt] = useState<Step>(() => (saved ? { step: saved.step, methods: saved.methods } : { step: "email" }));
@@ -337,12 +344,13 @@ function SignIn() {
         )}
         {/* Step 1: the email */}
         {!PICKER && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
-          <form className="stack" onSubmit={(e) => { e.preventDefault(); void send({ op: "start", email: email.trim(), remember }); }}>
+          <form className="stack" name="signin" onSubmit={(e) => { e.preventDefault(); keepEmail(email.trim(), remember); void send({ op: "start", email: email.trim(), remember }); }}>
             {/* A label that stays on screen, so it survives autofill and typed text (the placeholder doesn't) */}
             <label className="field-label" htmlFor="email">Email address</label>
             {/* Remember me opens under the email once it looks like a real address */}
             <div className={`email-row${emailOk ? " ok" : ""}`}>
-              <input id="email" type="email" required autoComplete="email webauthn" placeholder="you@company.com" aria-describedby="email-next" value={email} onChange={(e) => setEmail(e.target.value)} />
+              {/* "username" is what password managers look for to offer a saved sign-in (passkeys included, through "webauthn") */}
+              <input id="email" name="username" type="email" required autoComplete="username webauthn" placeholder="you@company.com" aria-describedby="email-next" value={email} onChange={(e) => setEmail(e.target.value)} />
               <label className="remember" aria-hidden={!emailOk}>
                 <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} tabIndex={emailOk ? 0 : -1} />
                 remember me

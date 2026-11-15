@@ -461,7 +461,7 @@ export class Player {
           `One part of a longer story, on its own: “${sec.title}”. Maria owns a fictional bakery, and Pradeep at neon1 is helping her stop retyping orders every night.`,
           "The story up to this point is set up first, out of sight, which takes a few seconds. Then she signs in and does this one thing.",
         ] },
-        sections: [{ id: `${sec.id}-in`, title: "Sign in", run: (st) => opening(`${sec.id}-in`, "Maria opens 1NEON and signs in", sec.why!, this.prepPath).run(st) }, sec],
+        sections: [{ id: `${sec.id}-in`, title: "Sign in to Home", run: (st) => opening(`${sec.id}-in`, "Maria opens 1NEON and signs in", sec.why!, this.prepPath).run(st) }, sec],
         end: `That was “${sec.title}”.`,
         recap: "It's one chapter of the full story, which plays every step of a project from the first sign-in to ongoing care.",
       };
@@ -910,6 +910,18 @@ export class Player {
       if (r0.top < top || r0.bottom > innerHeight - 70) {
         el.scrollIntoView({ block: "center", behavior: how() });
         await pause(560);
+      }
+      // Sideways too: something past the edge of a row that scrolls on its own (a project's tabs on a
+      // phone) is scrolled into view first, as a thumb would swipe the row, so the cursor never wanders off screen
+      for (let box = el.parentElement; box && box !== document.body; box = box.parentElement) {
+        if (box.scrollWidth <= box.clientWidth + 1 || !/auto|scroll/.test(getComputedStyle(box).overflowX)) continue;
+        const rb = box.getBoundingClientRect(), re = el.getBoundingClientRect();
+        const left = Math.max(rb.left, 0) + 12, right = Math.min(rb.right, innerWidth) - 12;
+        if (re.left >= left && re.right <= right) break;
+        // Center it in the row, so the tabs on both sides of it still show
+        box.scrollBy({ left: re.left + re.width / 2 - (rb.left + rb.width / 2), behavior: how() });
+        await pause(520);
+        break;
       }
       // Aim where the element is now; if the layout moved while gliding (a resize, a rotation, a menu
       // sliding in), aim again at where it went, so the cursor always lands on it
