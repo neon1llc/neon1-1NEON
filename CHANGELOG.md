@@ -15,6 +15,7 @@
 - Dropdowns have more room around their arrow. In Chrome and Edge, the arrow is neon1's left arrow that turns down as the list unrolls, the same as "send me your use case" on neon1.tech; the list itself is styled to match, and stays a native select for the keyboard and screen readers. Other browsers keep a plain arrow and their own list.
 - The contact route takes neon1.tech's new topics (Business workflows, Cloud, AI, Networks, Devices and IoT, Software, Security awareness and readiness), up to 9 at once, and still accepts the older keys a cached page may send.
 - Folds and dropdowns use neon1.tech's drawn left arrow and its timing from shared/neon1.css: folds open over 0.6s with the arrow turning in the same time, dropdowns over 0.3s.
+- A dropdown's list opens above its box only when there's no room below, with its arrow turned up to match, and is held to the room on that side so the browser never flips it against the arrow (the same rule as neon1.tech's).
 - **Motion** on the profile: **Smooth** or **Reduced**, kept in this browser. Reduced turns every animation off at once, as a device that asks for less motion already does.
 - Required fields carry a green asterisk instead of "optional" labels, on sign-up and on neon1.tech's contact form.
 
