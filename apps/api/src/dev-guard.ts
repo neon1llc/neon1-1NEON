@@ -1,5 +1,5 @@
-// apps/api/src/dev-guard.ts - dev.neon1.tech/1NEON runs on a copy of production's data, so it holds
-// real clients' names and addresses. In dev, only neon1 itself is reachable: sign-in admits only
+// apps/api/src/dev-guard.ts - dev.neon1.tech/1NEON runs on made-up sample data (dev-sample.ts) and is
+// still kept to neon1's own people, so a test can never reach anyone else. In dev, only neon1 itself is reachable: sign-in admits only
 // operators, mail goes only to operators and neon1.tech addresses, and no Cognito account is ever
 // created for anyone else (the dev pool holds neon1 admins only). Elsewhere these are pass-throughs.
 
