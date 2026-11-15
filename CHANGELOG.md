@@ -15,6 +15,7 @@
 - The operator page for prospects is now called Potentials. On a phone its four actions sit two by two, and "Promote to client" is now "Promote".
 - The sign-up route's own throttle (1 a second, burst 5) is back, now that the deploy role may set up API log delivery (neon1-aws-infrastructure).
 - Cut wording that repeats a table, list, or linked page.
+- Legal pages and Neo's 1NEON guide come from neon1-corpus v0.45.0 (terms 1.5 and privacy 3.2, with free accounts and the website-or-place field).
 
 ### Fixed
 - Production's outbox alarms no longer go off for dev. Both environments sent their outbox numbers to the same CloudWatch metric, so dev's stuck test emails set off the production alarms three times on 2026-11-15. The numbers now carry an `Env` label, and the production alarms watch `Env=prod` only.
