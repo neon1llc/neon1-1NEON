@@ -37,14 +37,14 @@ export async function liveSeed(repo: Repo, mailer: MemoryMailer): Promise<LiveSe
   // An invitee has no name yet, so the welcome asks for it the first time she signs in
   const maria = { ...user(MARIA, "Maria Lopez", "Owner", invite), ...(invite ? { name: "" } : {}) };
   for (const u of [pradeep, maria]) await repo.createUser(u);
-  // An organization with the default stages
-  const org = async (name: string, slug: string): Promise<Tenant> => {
-    const t: Tenant = { id: newId("t"), slug, clientId: formatClientId(await repo.nextClientNumber()), name, status: "active", stages: DEFAULT_STAGES, version: 1, createdAt: t0, updatedAt: t0, updatedBy: pradeep.id };
+  // An organization with the default stages and where it's based (so Home doesn't stop to ask for it)
+  const org = async (name: string, slug: string, place: string): Promise<Tenant> => {
+    const t: Tenant = { id: newId("t"), slug, clientId: formatClientId(await repo.nextClientNumber()), name, place, status: "active", stages: DEFAULT_STAGES, version: 1, createdAt: t0, updatedAt: t0, updatedBy: pradeep.id };
     await repo.createTenant(t);
     return t;
   };
-  const neon1 = await org("neon1", "neon1");
-  const bakery = await org("Maple Street Bakery", "maple-street");
+  const neon1 = await org("neon1", "neon1", "Albany, NY");
+  const bakery = await org("Maple Street Bakery", "maple-street", "Saratoga Springs, NY");
   // Both of them are in the bakery; Maria is its admin (invited, not yet joined, in the invite demo)
   const member = async (t: Tenant, u: User, access: Member["access"], joined = true) => {
     const seen = joined ? new Date().toISOString() : undefined;

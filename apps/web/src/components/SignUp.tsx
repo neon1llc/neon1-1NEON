@@ -7,7 +7,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { api, HttpError, Unconfirmed } from "../lib/api.ts";
-import { elapsedSince, signUpBody, signUpReady, type SignUpInfo } from "../lib/signup.ts";
+import { elapsedSince, linkOk, signUpBody, signUpReady, type SignUpInfo } from "../lib/signup.ts";
 import { loadTurnstile, widgetOptions } from "../lib/turnstile.ts";
 import type { Step } from "./Shell.tsx";
 
@@ -20,6 +20,9 @@ export function SignUp({ email: start, remember, onStep, onBack, local }: { emai
   const [email, setEmail] = useState(start);
   const [name, setName] = useState("");
   const [org, setOrg] = useState("");
+  // Where the business is based, and its website or a public page: at least one, so Pradeep can see who it is
+  const [place, setPlace] = useState("");
+  const [link, setLink] = useState("");
   const [terms, setTerms] = useState(false);
   // The hidden field. A person never sees it, so anything in it came from a script
   const [website, setWebsite] = useState("");
@@ -68,12 +71,12 @@ export function SignUp({ email: start, remember, onStep, onBack, local }: { emai
     };
   }, [siteKey]);
 
-  const ready = signUpReady({ email, name, org, terms });
+  const ready = signUpReady({ email, name, org, place, link, terms });
   const send = async (check: string) => {
     setBusy(true);
     setError("");
     try {
-      const r = await api<Step>("/auth/signup", { method: "POST", body: signUpBody({ email, name, org, terms }, { check, website, elapsed: elapsedSince(shownAt.current), remember }) });
+      const r = await api<Step>("/auth/signup", { method: "POST", body: signUpBody({ email, name, org, place, link, terms }, { check, website, elapsed: elapsedSince(shownAt.current), remember }) });
       // A local build sends no email, so there's no code to wait for
       if (local) setError("This local build sends no email, so there's no code. Sign in as a demo person below.");
       else onStep(r, email.trim());
@@ -119,6 +122,16 @@ export function SignUp({ email: start, remember, onStep, onBack, local }: { emai
       <input id="su-name" name="name" required maxLength={80} autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} />
       <label className="field-label" htmlFor="su-org">Organization name</label>
       <input id="su-org" name="org" required maxLength={80} autoComplete="organization" value={org} onChange={(e) => setOrg(e.target.value)} />
+      {/* Either one is enough; both help. The hint says why it's asked */}
+      <fieldset className="face">
+        <legend className="field-label">Where can I see your business?</legend>
+        <p className="fine" id="su-face-hint">Your website or a public page (Google, Yelp, LinkedIn), or where you're based. One is enough.</p>
+        <label className="field-label" htmlFor="su-link">Website or public page</label>
+        <input id="su-link" name="url" inputMode="url" maxLength={200} autoComplete="url" placeholder="yourbusiness.com" aria-describedby="su-face-hint" aria-invalid={!linkOk(link)} value={link} onChange={(e) => setLink(e.target.value)} />
+        {!linkOk(link) && <p className="fine field-error" role="status">Enter a web address, like yourbusiness.com.</p>}
+        <label className="field-label" htmlFor="su-place">City and state</label>
+        <input id="su-place" name="place" maxLength={80} autoComplete="address-level2" placeholder="Albany, NY" aria-describedby="su-face-hint" value={place} onChange={(e) => setPlace(e.target.value)} />
+      </fieldset>
       {/* Off-screen, not display:none, since some bots skip hidden fields; people and screen readers never reach it */}
       <div className="hp" aria-hidden="true">
         <input name="website" type="text" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
@@ -131,7 +144,7 @@ export function SignUp({ email: start, remember, onStep, onBack, local }: { emai
       {/* Turnstile draws here only if Cloudflare needs the person to do something */}
       <div ref={box} className="check" />
       <button className="btn btn-primary" type="submit" disabled={!ready || busy || waiting}>{busy || waiting ? "One moment…" : "Create account"}</button>
-      <p className="fine next-hint">I'll email you a code to finish. No password.</p>
+      <p className="fine next-hint">I'll email you a code to finish. No password. <a href="/knowledge/guides/free-accounts/" target="_blank" rel="noopener">How free accounts work</a></p>
       <p className="fine"><button className="linkish" type="button" onClick={onBack}>Back to sign-in</button></p>
     </form>
   );

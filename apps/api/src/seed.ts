@@ -29,15 +29,16 @@ export async function seed(repo: Repo, operatorEmail = "pradeep@neon1.tech") {
   for (const u of [pradeep, dana, raj, lee]) await repo.createUser(u);
 
   // Organizations: neon1 itself (N1-0001) and two sample clients
-  const org = async (name: string, slug: string): Promise<Tenant> => {
+  // Each with where it's based (and neon1 with its real site), as sign-up and Settings ask for
+  const org = async (name: string, slug: string, face: Pick<Tenant, "place" | "link">): Promise<Tenant> => {
     const n = await repo.nextClientNumber();
-    const t: Tenant = { id: newId("t"), slug, clientId: formatClientId(n), name, status: "active", stages: DEFAULT_STAGES, version: 1, createdAt: t0, updatedAt: t0, updatedBy: pradeep.id };
+    const t: Tenant = { id: newId("t"), slug, clientId: formatClientId(n), name, ...face, status: "active", stages: DEFAULT_STAGES, version: 1, createdAt: t0, updatedAt: t0, updatedBy: pradeep.id };
     await repo.createTenant(t);
     return t;
   };
-  const neon1 = await org("neon1", "neon1");
-  const acme = await org("Acme Dental", "acme-dental");
-  const harbor = await org("Harbor Auto Group", "harbor-auto");
+  const neon1 = await org("neon1", "neon1", { place: "Albany, NY", link: "https://neon1.tech/" });
+  const acme = await org("Acme Dental", "acme-dental", { place: "Bayside, NY" });
+  const harbor = await org("Harbor Auto Group", "harbor-auto", { place: "Long Beach, NY" });
 
   // Memberships, including one still invited
   const member = async (t: Tenant, u: User, access: Member["access"], status: Member["status"] = "joined") => {
@@ -144,7 +145,7 @@ export async function seed(repo: Repo, operatorEmail = "pradeep@neon1.tech") {
   // with neon1 in it as every prospect organization has. It has a prospect number, not a client ID
   const sam = user("sam@kimbakery.example", "Sam Kim", "");
   await repo.createUser(sam);
-  const bakery: Tenant = { id: newId("t"), slug: "kim-bakery-3f9a1c", clientId: formatProspectId(1), name: "Kim Bakery", status: "active", stages: DEFAULT_STAGES, prospect: { since: day(-3), terms: PORTAL_TERMS_EDITION }, version: 1, createdAt: day(-3), updatedAt: day(-3), updatedBy: sam.id };
+  const bakery: Tenant = { id: newId("t"), slug: "kim-bakery-3f9a1c", clientId: formatProspectId(1), name: "Kim Bakery", place: "Flushing, NY", status: "active", stages: DEFAULT_STAGES, prospect: { since: day(-3), terms: PORTAL_TERMS_EDITION }, version: 1, createdAt: day(-3), updatedAt: day(-3), updatedBy: sam.id };
   await repo.createTenant(bakery);
   await member(bakery, sam, "admin");
   await member(bakery, pradeep, "admin");

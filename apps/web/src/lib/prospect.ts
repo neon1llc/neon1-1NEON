@@ -49,6 +49,9 @@ export interface ProspectRow {
   slug: string;
   name: string;
   clientId: string;
+  // Where they're based and their website or public page, as given at sign-up
+  place?: string;
+  link?: string;
   prospect: NonNullable<Tenant["prospect"]>;
   people: { name: string; email: string }[];
   projects: number;

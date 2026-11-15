@@ -4,10 +4,15 @@
 
 ## Unreleased
 
+### Added
+- Sign-up asks where the business can be seen: its website or a public page (Google, Yelp, LinkedIn), or the city and state it's based in. One is required. Potentials shows them, any admin can change them in Settings without confirming it's them, and Home asks an organization's own admins for them until one is added (clients invited before this included). The demo's and live playback's sample organizations have places, so nothing changes in the walkthroughs.
+- The sign-up form links the Knowledge Center's "Free 1NEON accounts" guide.
+
 ### Changed
 - Sign-up and the new account's welcome line invite people to write down what their project needs, without advertising file uploads (still allowed within the limits).
 - The operator page for prospects is now called Potentials (menu, search, and page title). On a phone its four actions sit two by two (Promote and Suspend, then Keep and Delete), and "Promote to client" is now "Promote".
 - The sign-up route's own throttle (1 a second, burst 5) is back. It needs neon1-aws-infrastructure's ApiLogDelivery permission applied first.
+- Production sign-up is switched on (`signup = true`) with the real Cloudflare Turnstile site key. The secret was put in SSM by hand.
 
 ## v0.13.0 - 2026-11-15
 

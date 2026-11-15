@@ -14,6 +14,7 @@ import { api } from "../lib/api.ts";
 import { problem, useSubmit } from "../lib/hooks.ts";
 import { prospectState, stateLabel, type ProspectRow, type ProspectsResponse } from "../lib/prospect.ts";
 import { read } from "../lib/reads.ts";
+import { FaceFacts } from "../components/OrgFace.tsx";
 
 
 // The list, refreshed every 30 seconds like the board beside it
@@ -92,6 +93,7 @@ export function Prospects() {
             </div>
             <p className="small muted prospect-people">{p.people.length ? p.people.map((x) => `${x.name || x.email} (${x.email})`).join(", ") : "No one has joined."}</p>
             <dl className="prospect-facts small">
+              <div className="wide"><dt>Where</dt><dd><FaceFacts place={p.place} link={p.link} /></dd></div>
               <div><dt>Signed up</dt><dd>{dateLabel(p.prospect.since.slice(0, 10))}</dd></div>
               <div><dt>Last active</dt><dd>{p.lastActive ? ago(p.lastActive) : "never"}</dd></div>
               <div><dt>Projects</dt><dd>{p.projects}</dd></div>

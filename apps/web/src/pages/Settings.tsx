@@ -4,6 +4,7 @@
 import type { Layer, Stage, Tenant } from "@1neon/domain";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
+import { FaceFacts, FaceForm } from "../components/OrgFace.tsx";
 import { useOrg, useTopBar } from "../components/Shell.tsx";
 import { LayerBadge, LAYERS, layerName, useToast } from "../components/ui.tsx";
 import { api } from "../lib/api.ts";
@@ -25,6 +26,8 @@ export function Settings() {
   const [stages, setStages] = useState<Stage[]>(org.stages);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  // The place-and-link form, opened from the details card (any admin, prospects too)
+  const [editFace, setEditFace] = useState(false);
   // The working copy as it is now, read when a save answers (AX-06)
   const stagesNow = useRef(stages);
   stagesNow.current = stages;
@@ -67,6 +70,9 @@ export function Settings() {
       <div className="card" style={{ display: "grid", gap: 6, maxWidth: 520 }}>
         <div><span className="muted small">Organization</span> <b>{org.name}</b></div>
         <div><span className="muted small">Client ID</span> <span className="mono">{org.clientId}</span></div>
+        {/* Where the business can be seen from outside; any admin may change it */}
+        <div><span className="muted small">Where</span> <FaceFacts place={org.place} link={org.link} />{admin && !editFace && <> <button className="linkish small" onClick={() => setEditFace(true)}>Change</button></>}</div>
+        {editFace && <FaceForm onDone={() => setEditFace(false)} />}
         {/* neon1's service agreement: who signed it, or a way to read and sign it */}
         <div hidden={prospect}><span className="muted small">Service agreement</span> {org.agreements?.length ? <>signed by {org.agreements.at(-1)!.typedName}, edition {org.agreements.at(-1)!.ref}. </> : "not signed yet. "}<Link to={`/o/${summary.slug}/agreement`}>{org.agreements?.length ? "Read it" : "Read and sign"}</Link></div>
         <div><span className="muted small">Address</span> <span className="mono">neon1.tech/1NEON/o/{org.slug}</span></div>

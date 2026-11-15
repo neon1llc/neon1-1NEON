@@ -9,10 +9,44 @@ import { QUICK_FIX_MAX_HOURS } from "./defaults.ts";
 
 
 // Organizations (operator only)
+/**
+ * A business's website or public page as typed ("kimbakery.com", "https://g.page/...") made into a full
+ * https address, or undefined when it isn't a web address with a real-looking host. Only http and https
+ * pass, so nothing typed here can become a script link
+ */
+export function normalizeLink(typed: string): string | undefined {
+  const t = typed.trim();
+  if (!t || /\s/.test(t)) return undefined;
+  let u: URL;
+  try {
+    u = new URL(/^[a-z][a-z0-9+.-]*:/i.test(t) ? t : `https://${t}`);
+  } catch {
+    return undefined;
+  }
+  if (u.protocol !== "https:" && u.protocol !== "http:") return undefined;
+  if (!/^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/i.test(u.hostname) || u.username || u.password) return undefined;
+  const out = u.toString();
+  return out.length <= 200 ? out : undefined;
+}
+
+// A city and state, as typed
+const Place = z.string().trim().max(80).default("");
+// A website or public page; "" for none, otherwise it must make a real address
+const Link = z.string().trim().max(200).default("").refine((v) => v === "" || normalizeLink(v) !== undefined, "Enter a web address, like yourbusiness.com.").transform((v) => (v ? normalizeLink(v)! : ""));
+
+/** Where neon1 can see an organization from outside: at least one of a place or a link */
+export const PublicFace = z.object({ place: Place, link: Link }).refine((f) => f.place.length > 0 || f.link.length > 0, { message: "Add where you're based or a link to your business.", path: ["place"] });
+
 export const CreateTenantInput = z.object({
   name: z.string().trim().min(1).max(80),
   slug: z.string().regex(/^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/).optional(),
+  // neon1 usually knows these when it makes a client's organization; the client's admin can add them later
+  place: Place,
+  link: Link,
 });
+
+/** An admin's edit of the organization's place and link (Settings) */
+export const OrgProfileInput = z.object({ version: z.number().int(), place: Place, link: Link }).refine((f) => f.place.length > 0 || f.link.length > 0, { message: "Add where you're based or a link to your business.", path: ["place"] });
 
 
 // People

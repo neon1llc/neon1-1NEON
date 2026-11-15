@@ -1552,6 +1552,11 @@ ul.md-says { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; 
 .signin label.agree { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: #A3C2AA; }
 .signin label.agree a { color: #D6F5DC; }
 .signin .check:empty { display: none; }
+/* "Where can I see your business?": the two fields as one group, spaced like the rest of the form */
+.signin fieldset.face { display: grid; gap: 8px; margin: 0; padding: 10px 12px 12px; border: 1px solid #1F3A25; border-radius: 10px; min-width: 0; }
+.signin fieldset.face legend { padding: 0 6px; }
+.signin fieldset.face > p { margin: 0; }
+.signin .field-error { color: #FFB86B; }
 /* The note on a new account's workspace stays calm: the notice look, in the accent instead of amber */
 .prospect-note { border-color: var(--line-strong); background: var(--accent-soft); }
 /* The operator's list: one card each, which stacks as it is on a phone */
@@ -1563,6 +1568,18 @@ ul.md-says { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; 
 .prospect-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0; }
 .prospect-facts dt { font: 11px var(--mono); color: var(--muted); }
 .prospect-facts dd { margin: 0; }
+.prospect-facts .wide { grid-column: 1 / -1; }
+.prospect-facts dd { overflow-wrap: anywhere; }
+/* A link that leaves neon1: the northeast arrow, nudged further northeast on hover */
+a.out .out-arrow { display: inline-block; margin-left: 2px; transition: transform .15s ease; }
+a.out:hover .out-arrow, a.out:focus-visible .out-arrow { transform: translate(2px, -2px); }
+@media (prefers-reduced-motion: reduce) { a.out .out-arrow { transition: none; } }
+/* The place-and-link form, in Settings and on Home */
+.face-form { display: grid; gap: 8px; max-width: 520px; }
+.face-form > * { margin: 0; }
+.face-form .field-label { display: block; font: 12px var(--mono); color: var(--muted); }
+.face-form .actions { margin-top: 6px; }
+.field-error { color: #B45309; }
 @media (max-width: 520px) { .prospect-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 /* The four actions: one row where they fit; on a phone two by two (Promote, Suspend / Keep, Delete),
    each half the card wide, so the card stays short */
