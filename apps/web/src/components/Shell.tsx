@@ -324,7 +324,7 @@ function SignIn() {
         )}
         {problem === "not_invited" && <p className="notice" role="alert">That email hasn't been invited yet. Ask your organization's admin, or neon1.</p>}
         {unsure && <p className="notice" role="alert">We couldn't confirm whether this finished. If a code arrives by email, you can still use it, or try again.</p>}
-        {problem === "failed" && <p className="notice" role="alert">{fromLink ? "That link only works in the browser where you asked for the code. Type the code there instead, or start again here." : "Sign-in didn't finish. Please try again."}</p>}
+        {problem === "failed" && <p className="notice" role="alert">{fromLink ? "That link works only in the browser where you asked for the code. Type the code there, or start again here." : "Sign-in didn't finish. Try again."}</p>}
         {/* The demo: no accounts, just pick who to be */}
         {PICKER && (
           <div className="dev demo-pick" aria-label="Demo people">

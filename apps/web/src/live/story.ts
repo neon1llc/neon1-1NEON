@@ -242,7 +242,7 @@ export const STORY: Section[] = [
       await s.waitFor("#notifications");
       await s.think("Everything shows under the bell. Which of these also email me?");
       await s.hover({ sel: "#notifications .notify-table tbody th", text: "Files" }, 700);
-      await s.say("Important changes email her already; she adds comments too");
+      await s.say("Important changes already email her. She adds comments");
       await s.think("The important ones are on already. I want comments too.");
       await s.click('input[aria-label="Email me: Comments"]', 500);
       await s.think("Hmm, match my device? Let me see.");
@@ -257,7 +257,7 @@ export const STORY: Section[] = [
       }
       await s.click({ sel: "button", text: /^Save$/ }, 1200);
       if (small) {
-        await s.say("The mini menu keeps every page one tap away, and the full menu opens over it");
+        await s.say("The mini menu keeps every page one tap away");
         await s.think("Hey, that's neat. The icons stay put on the left.");
         await s.click(".top .menu-btn", 900);
         await s.think("And the menu button opens the full menu with names.");
@@ -380,7 +380,7 @@ export const STORY: Section[] = [
     title: "neon1 listens",
     why: "Pradeep asked me for a few things. Let me sign in and see what's new.",
     run: async (s) => {
-      await s.say("Pradeep reads it all, calls her for twenty minutes, and writes down what he heard");
+      await s.say("Pradeep reads it, calls her for twenty minutes, and writes down what he heard");
       await s.others(async () => {
         await moveTo("intake");
         await moveTo("listen");
@@ -398,7 +398,7 @@ export const STORY: Section[] = [
       await s.think("I exported them this morning. Let me drag the zip in.");
       await dropFile(s, { sel: ".file-ask .chip, .file-ask button", text: "Upload" }, FILE_ASK.name, FILE_ASK.text, { layer: "needs", itemId: (items) => items.find((i) => i.kind === "file_request")?.id });
       await s.think("Done. That was quick.");
-      await s.say("What he learned on the call is written into the project, where she can correct it");
+      await s.say("What he learned goes into the project, where she can correct it");
       await s.think("He wrote down what I told him: the Instagram orders, Dee's 4am count, the shared password.");
       await s.hover({ sel: ".item", text: "What goes wrong today?" }, 1100);
       await s.think("And what we won't do yet. Instagram messages stay manual. Good to know now, not later.");
@@ -410,7 +410,7 @@ export const STORY: Section[] = [
     title: "Options arrive",
     why: "Pradeep said the options are ready. Let me sign in and see where it's at.",
     run: async (s) => {
-      await s.say("Pradeep writes three options, each with the hours behind its price and what it gets her");
+      await s.say("Pradeep writes three options, each with its hours and what it gets her");
       await s.others(async () => {
         await proposeOptions();
       }, 1200, "Pradeep proposed three options");
@@ -438,14 +438,14 @@ export const STORY: Section[] = [
       await s.hover({ sel: ".options article", text: "B. Solid setup" }, 900);
       await s.think("C takes payment online. Nice, but it would land after the holidays.");
       await s.hover({ sel: ".options article", text: "C. Fuller build" }, 900);
-      await s.say("Every price opens up: what kind of price it is, the hours behind it, and when she pays");
+      await s.say("Each price opens to show its type, its hours, and when she pays");
       await s.think(`${MONEY.range} is real money for us. What's in it?`);
       await s.click(".options article:nth-child(2) .basis summary", 900);
       await s.think(`Task by task, ${MONEY.expected} at ${MONEY.rate} an hour. I pay for the hours he works, and never more than ${MONEY.high} unless I agree first.`);
       await s.hover(".options article:nth-child(2) .basis-table", 1500);
       await s.think(`${MONEY.deposit} when I approve, the rest at handover. And an hour a night back for Sam and me: it pays for itself in a few months.`);
       await s.hover(".options article:nth-child(2) .basis-pay", 1300);
-      await s.say("The full proposal: what he learned, what's in and out, the hours, and what each side will do");
+      await s.say("The full proposal: what he learned, scope, hours, and who does what");
       await s.think("Let me read the whole proposal before I say yes.");
       await s.click({ sel: "a", text: "Read the proposal" }, 1200);
       await s.scroll(700, 1400);
@@ -465,7 +465,7 @@ export const STORY: Section[] = [
       await s.click({ sel: ".sign-card button", text: /^Sign for/ }, 1400);
       await s.think("Signed, and it kept a copy. Back to the options.");
       await s.click({ sel: "a.agreement-back", text: "Back to your options" }, 1200);
-      await s.say("She approves the recommended one, with a condition, and signs it");
+      await s.say("She approves the recommended option with a condition, and signs");
       await s.think("B it is. Pradeep recommends it too.");
       await s.click({ sel: ".options article:nth-child(2) button", text: "Approve this option" }, 700);
       await s.say("The approval restates exactly what she's accepting");
@@ -486,7 +486,7 @@ export const STORY: Section[] = [
     title: "Pay the deposit",
     why: "Pradeep's email says the deposit invoice is ready. Let me sign in and pay it.",
     run: async (s) => {
-      await s.say("Her option said half of the estimate's low end is due up front: Pradeep issues that invoice");
+      await s.say("Her option asks half the low estimate up front, so Pradeep issues that invoice");
       await s.others(issueDeposit, 900, "Pradeep issued the deposit invoice");
       await walkTo(s, `${base}/projects/${KEY}/execute`);
       await s.top();
@@ -498,16 +498,16 @@ export const STORY: Section[] = [
       await s.hover({ sel: ".invoice-row", text: "INV-" }, 900);
       await s.think("Let me see the invoice itself first.");
       await s.click({ sel: ".invoice-row a.title", text: "INV-" }, 1200);
-      await s.say("The invoice, on neon1's letterhead: its number, the lines, the due date, and how to pay");
+      await s.say("The invoice: number, lines, due date, and how to pay");
       await s.think(`Deposit on 0039-r1-B, half of the low end, ${MONEY.low}. It matches what I signed.`);
       await s.scroll(500, 1400);
       await s.think("Bank transfer is preferred. I'll do that.");
       await s.top();
-      await s.say("Pay opens Stripe's hosted payment page; 1NEON never sees her bank or card details");
+      await s.say("Pay opens Stripe's payment page. 1NEON never sees her bank or card details");
       await s.click({ sel: ".pp-tools button", text: /^Pay / }, 1200);
-      await s.say("No money moves in a walkthrough, so a stand-in page opens. She pays from the bakery's bank account");
+      await s.say("No money moves here, so a stand-in page opens. She pays from the bakery's bank account");
       await s.click({ sel: "dialog[open] button", text: "Pay from a bank account" }, 1200);
-      await s.say("Until the bank clears it, the invoice says it's on its way, and Pay is gone so nobody pays twice");
+      await s.say("Until the bank clears it, the invoice says it's on its way and Pay is gone");
       await s.think("Started today, and nothing more to pay. Good.");
       await s.hover(".pp-state", 1400);
       await s.others(depositPaid, 1200, "Her bank payment cleared");
@@ -549,7 +549,7 @@ export const STORY: Section[] = [
       await s.others(finishWork, 1200, "Pradeep finished four tasks");
       await s.think("Four of the five are done. Only the dry run is left.");
       await s.hover({ sel: ".item", text: TASKS.safety }, 900);
-      await s.say("Every hour he works is listed here as he logs it, against the estimate she approved");
+      await s.say("Each logged hour is listed against the estimate she approved");
       await s.think(`${MONEY.loggedAfterBuild} so far, of ${MONEY.hours}. Each one says what it was for.`);
       await s.hover("#hours .hours-at", 1300);
       await s.hover("#hours .hours-table", 1300);
@@ -560,7 +560,7 @@ export const STORY: Section[] = [
     title: "Measure it",
     why: "Is any of this actually saving us time? Let me sign in and check the numbers.",
     run: async (s) => {
-      await s.say("Pradeep replays a past week of real orders, then runs a week side by side and records the numbers");
+      await s.say("Pradeep replays a past week of orders, runs a week side by side, and records the numbers");
       await s.others(async () => {
         await moveTo("verify");
         await dryRun();
@@ -598,7 +598,7 @@ export const STORY: Section[] = [
     title: "Hand over",
     why: "Pradeep says it's ready to hand over. Let me sign in and go through it.",
     run: async (s) => {
-      await s.say("Pradeep hands over: a runbook, a walkthrough, and the accounts in her name");
+      await s.say("Pradeep hands over a runbook, a walkthrough, and the accounts in her name");
       await s.others(handOver, 900, "Pradeep uploaded the runbook");
       await s.think("A runbook, so we can handle things ourselves.");
       await s.go(`${base}/projects`, "Projects");
@@ -620,12 +620,12 @@ export const STORY: Section[] = [
       await s.say("Sam and Dee take the walkthrough on Friday; she marks the training done");
       await s.think("Sam ran Friday's orders on his own, and Dee had her bake sheet at 3:30.");
       await s.click(`input[aria-label="Done: ${TRAINING}"]`, 600);
-      await s.say("Pradeep retires the old spreadsheet and the shared password, and steps his own access down");
+      await s.say("Pradeep retires the old spreadsheet and shared password and steps his access down");
       await s.others(async () => {
         await patch((i) => i.title === "Older tools it replaces retired or merged, and leftovers cleaned up", { status: "done" });
         await patch((i) => i.title === "neon1 access reduced or removed", { status: "done" });
       }, 900, "Pradeep finished his two handover steps");
-      await s.say("With every step done, she accepts the whole handover with one signature");
+      await s.say("With every step done, she accepts the handover with one signature");
       await s.think("Sam's trained. That's the last one.");
       await s.click('input[aria-label="Done: The people who use it are trained on it"]', 700);
       await s.think("Every step is done. One signature for all of it.");
@@ -636,7 +636,7 @@ export const STORY: Section[] = [
       await s.click({ sel: ".handover-all button", text: /^Sign and accept the handover$/ }, 1000);
       await s.think("Each step now says I accepted it, and when.");
       await s.hover(".accepted-note", 900);
-      await s.say("Accepting the handover drafts the final invoice from the hours logged, for Pradeep to check and send");
+      await s.say("Accepting the handover drafts the final invoice from logged hours for Pradeep to check and send");
       await s.say("And adds ongoing care from a suggestion");
       await s.think("A monthly check-in makes sense for us.");
       await s.click({ sel: "button", text: "+ Add care item" }, 500);
@@ -649,7 +649,7 @@ export const STORY: Section[] = [
     title: "Pay the final invoice",
     why: "Pradeep's email says the final invoice is ready. Let me sign in and check it against the hours.",
     run: async (s) => {
-      await s.say("Pradeep issues the final invoice: the hours he logged, less her deposit");
+      await s.say("Pradeep issues the final invoice: logged hours, less her deposit");
       await s.others(issueFinal, 900, "Pradeep issued the final invoice");
       await walkTo(s, `${base}/projects/${KEY}/execute`);
       await s.top();

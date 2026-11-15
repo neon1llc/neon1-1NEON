@@ -179,7 +179,7 @@ function Plan({ plan }: { plan: NeoPlan }) {
       </ol>
       {phase === "offer" && (
         <>
-          {lasting && <p className="neo-warn">Some of these steps can't simply be edited back afterwards.</p>}
+          {lasting && <p className="neo-warn">Some of these steps can't be undone by editing.</p>}
           <div className="neo-acts">
             <span>Want me to do it?</span>
             <button type="button" className="n1chat-send" onClick={() => void run()}>Yes, do it</button>

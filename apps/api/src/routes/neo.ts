@@ -82,7 +82,7 @@ export function neoRoutes(app: App, k: Kit) {
     }).catch((e: Error) => {
       // A model or network error: logged by class name only, never the conversation
       console.error(JSON.stringify({ level: "error", message: "neo failed", error: e.name, status: (e as { status?: number }).status }));
-      fail(503, "neo_unavailable", "Neo couldn't answer just now. Please try again in a moment.");
+      fail(503, "neo_unavailable", "Neo couldn't answer. Try again.");
     });
 
     // One line per question: sizes, rounds, time, and cost only, never what was asked or answered
