@@ -61,17 +61,17 @@ describe("prospect state", () => {
 
 
 describe("quietStep", () => {
-  it("checks in at 30 and 60 quiet days, gives final notice at 90, deletes 14 days later", async () => {
+  it("checks in at 7 and 14 quiet days, gives final notice at 21, deletes on day 30", async () => {
     const { quietStep } = await import("./prospect.ts");
-    expect(quietStep(10, 0)).toBeUndefined();
-    expect(quietStep(30, 0)).toBe("nudge");
-    expect(quietStep(45, 1)).toBeUndefined();
-    expect(quietStep(60, 1)).toBe("nudge");
-    expect(quietStep(70, 2)).toBeUndefined();
-    expect(quietStep(90, 2)).toBe("final");
-    expect(quietStep(95, 2, 5)).toBeUndefined();
-    expect(quietStep(104, 2, 14)).toBe("delete");
-    // A pass missed for weeks still sends one email at a time, never a burst
-    expect(quietStep(65, 0)).toBe("nudge");
+    expect(quietStep(3, 0)).toBeUndefined();
+    expect(quietStep(7, 0)).toBe("nudge");
+    expect(quietStep(10, 1)).toBeUndefined();
+    expect(quietStep(14, 1)).toBe("nudge");
+    expect(quietStep(18, 2)).toBeUndefined();
+    expect(quietStep(21, 2)).toBe("final");
+    expect(quietStep(25, 2, 4)).toBeUndefined();
+    expect(quietStep(30, 2, 9)).toBe("delete");
+    // A pass missed for days still sends one email at a time, never a burst
+    expect(quietStep(16, 0)).toBe("nudge");
   });
 });

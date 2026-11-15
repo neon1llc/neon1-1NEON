@@ -100,6 +100,8 @@ export const Tenant = z.object({
       // the final notice went out. A real change by the prospect clears both
       notices: z.number().int().min(0).max(20).optional(),
       noticeAt: isoDate.optional(),
+      // neon1 is talking with this prospect elsewhere: no quiet-prospect emails or deletion while set
+      heldAt: isoDate.optional(),
       warnedAt: isoDate.optional(),
     })
     .optional(),
