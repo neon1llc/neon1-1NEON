@@ -158,7 +158,7 @@ export function prospectRoutes(app: App, k: Kit) {
       const people = members.filter((m) => !k.cfg.operatorEmails.includes(m.email.toLowerCase())).map((m) => ({ name: m.name, email: m.email }));
       const live = projects.filter((p) => !p.deletedAt);
       const files = (await Promise.all([repo.listDocs(t.id, undefined), ...live.map((p) => repo.listDocs(t.id, p.id))])).flat().length;
-      return { id: t.id, slug: t.slug, name: t.name, clientId: t.clientId, prospect: t.prospect, people, projects: live.length, files, lastActive: await lastActive(k, t) };
+      return { id: t.id, slug: t.slug, name: t.name, clientId: t.clientId, place: t.place, link: t.link, prospect: t.prospect, people, projects: live.length, files, lastActive: await lastActive(k, t) };
     }));
     const pending = (await repo.table.query(SIGNUP_PK)).length;
     return c.json({ prospects: rows.sort((a, b) => b.prospect!.since.localeCompare(a.prospect!.since)), signup: { open: await signupOpen(k), configured: Boolean(k.cfg.signup), paused: Boolean((await repo.table.get(SIGNUP_SWITCH.PK, SIGNUP_SWITCH.SK))?.paused), pending } });

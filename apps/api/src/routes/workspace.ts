@@ -2,7 +2,7 @@
 // its workflow stages, the workspace landing, Coming up, Insights, and the audit trail.
 
 
-import { InvoiceFields, RECORD_KINDS, Stage, canApprove, dollars, failedOn, invoiceState, payableOn, changeRecord, occurrences, stageChanges, dateIn, isClosed, isOwnOrg, metricReached, mondayOf, neon1Only, plusDays, todayIn, type Tenant } from "@1neon/domain";
+import { InvoiceFields, OrgProfileInput, RECORD_KINDS, Stage, canApprove, dollars, failedOn, invoiceState, payableOn, changeRecord, occurrences, stageChanges, dateIn, isClosed, isOwnOrg, metricReached, mondayOf, neon1Only, plusDays, todayIn, type Tenant } from "@1neon/domain";
 import { z } from "zod";
 import { actorId, body, fail, need, now, who } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
@@ -20,6 +20,25 @@ export function workspaceRoutes(app: App, k: Kit) {
   app.get("/t/:tid", (c) => {
     need(c, "read");
     return c.json({ org: c.get("tenant"), access: who(c).actor.operator ? "admin" : c.get("access") });
+  });
+
+  // Where the organization is based and its website or public page: admins (prospects too, since it's
+  // theirs to keep right). Public facts, so no "confirm it's you" step, unlike the other settings. At least
+  // one stays filled; an empty one is removed from the record
+  app.put("/t/:tid/profile", async (c) => {
+    need(c, "write");
+    if (!who(c).actor.operator && c.get("access") !== "admin") fail(403, "forbidden", "Only an admin of this organization can change this.");
+    const input = await body(c, OrgProfileInput);
+    const t = c.get("tenant");
+    const { place: _p, link: _l, ...rest } = t;
+    const next: Tenant = { ...rest, ...(input.place ? { place: input.place } : {}), ...(input.link ? { link: input.link } : {}), version: t.version + 1, updatedAt: now(), updatedBy: actorId(c) };
+    await repo.saveTenant(next, input.version);
+    const record = changeRecord("Updated where the organization is", [
+      ...(t.place !== next.place ? [`Place: ${next.place || "removed"}`] : []),
+      ...(t.link !== next.link ? [`Link: ${next.link || "removed"}`] : []),
+    ]);
+    if (record) await repo.table.write([repo.auditOp({ tenantId: t.id, actorId: actorId(c), action: "org.profile", target: t.id, ...record })]);
+    return c.json(next);
   });
 
   // Workflow stages: admins only, and never remove a stage that still holds a project
