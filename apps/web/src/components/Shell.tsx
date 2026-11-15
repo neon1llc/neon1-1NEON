@@ -10,7 +10,7 @@ import { api, DEMO as IN_DEMO, LIVE as IN_LIVE, devUser, HttpError, pickPerson, 
 import { failureOf, read } from "../lib/reads.ts";
 import { passkeyAssertion } from "../lib/passkey.ts";
 import { SIGN_IN_METHODS } from "../lib/methods.ts";
-import { drew } from "../lib/motion.ts";
+import { drew, fade, lessMotion } from "../lib/motion.ts";
 import { REWIND } from "../lib/nav.ts";
 import { usePersisting } from "../lib/persist.ts";
 import { cleanCode, clearStep, loadStep, saveStep, session } from "../lib/signin.ts";
@@ -210,7 +210,7 @@ function Wordmark() {
   };
   // One unprompted spell-out shortly after load, skipped for reduced motion
   useEffect(() => {
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (lessMotion()) return;
     const start = window.setTimeout(() => show(4600), 900);
     return () => { clearTimeout(start); clearTimeout(timer.current); };
   }, []);
@@ -302,7 +302,8 @@ function SignIn() {
       if (r.step === "choose" || r.step === "code" || r.step === "totp") saveStep(session(), { email: email.trim(), step: r.step, methods: r.methods });
       else clearStep(session());
       if (r.step === "done") await qc.invalidateQueries();
-      else setAt(r);
+      // Each step cross-fades into the next (lib/motion.ts), or switches at once with less motion
+      else fade(() => setAt(r));
     } catch (e) {
       // No answer within the deadline: stay on this step with the email kept, and check the session
       // (a safe read), which hands over to the app if the sign-in did finish. Nothing is resent
@@ -330,7 +331,7 @@ function SignIn() {
   // A fresh code was asked for, so the line above the box says so
   const [resent, setResent] = useState(false);
   // Start over with another email, forgetting the saved step
-  const restart = () => { clearStep(session()); setAt({ step: "email" }); setCode(""); setResent(false); setSigningUp(false); };
+  const restart = () => { clearStep(session()); fade(() => { setAt({ step: "email" }); setCode(""); setResent(false); setSigningUp(false); }); };
   // Sign-up answered like the first sign-in step: carry on at the emailed code, in the same state machine
   const signedUp = (r: Step, mail: string) => {
     keepEmail(mail, remember);
@@ -338,8 +339,7 @@ function SignIn() {
     setCode("");
     setResent(false);
     if (r.step === "choose" || r.step === "code" || r.step === "totp") saveStep(session(), { email: mail, step: r.step, methods: r.methods });
-    setAt(r);
-    setSigningUp(false);
+    fade(() => { setAt(r); setSigningUp(false); });
   };
   // Fade in only on the first sign-in screen after arriving from the site, not on a later return to it
   const [arrive] = useState(() => arriving);
@@ -397,7 +397,7 @@ function SignIn() {
         )}
         {/* Step 1: the email */}
         {!PICKER && signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
-          <SignUp info={signupInfo} email={email} remember={remember} onStep={signedUp} onBack={() => setSigningUp(false)} local={pickPerson} />
+          <SignUp info={signupInfo} email={email} remember={remember} onStep={signedUp} onBack={() => fade(() => setSigningUp(false))} local={pickPerson} />
         )}
         {!PICKER && !signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
           <form className="stack" name="signin" onSubmit={(e) => { e.preventDefault(); keepEmail(email.trim(), remember); void send({ op: "start", email: email.trim(), remember }); }}>
@@ -440,7 +440,7 @@ function SignIn() {
         {at.step !== "email" && <p className="fine"><button className="linkish" onClick={restart}>Use a different email</button></p>}
         {/* Not a client yet: start in 1NEON on your own, as a new account */}
         {!IN_DEMO && signupOpen && !signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
-          <p className="fine"><button className="linkish" onClick={() => setSigningUp(true)}>New here? Start a free account</button></p>
+          <p className="fine"><button className="linkish" onClick={() => fade(() => setSigningUp(true))}>New here? Start a free account</button></p>
         )}
         {/* The three policies on one line of their own */}
         <p className="fine legal-links">

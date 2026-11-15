@@ -11,6 +11,7 @@ import { Link, useLocation } from "react-router";
 import { api } from "../lib/api.ts";
 import type { Me } from "../lib/types.ts";
 import { Dialog } from "./ui.tsx";
+import { lessMotion } from "../lib/motion.ts";
 
 
 // --- What each page is for --------------------------------------------------------
@@ -206,8 +207,8 @@ export function runTour(steps: Step[], onDone?: () => void) {
     stagePadding: 6,
     stageRadius: 10,
     // With reduced motion the spotlight jumps instead of gliding, and the page doesn't smooth-scroll (AP-07)
-    animate: !matchMedia("(prefers-reduced-motion: reduce)").matches,
-    smoothScroll: !matchMedia("(prefers-reduced-motion: reduce)").matches,
+    animate: !lessMotion(),
+    smoothScroll: !lessMotion(),
     onDestroyed: () => {
       const was = current;
       current = undefined;

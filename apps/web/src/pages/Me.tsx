@@ -1,4 +1,5 @@
 // apps/web/src/pages/Me.tsx - Your profile: name, title, phone, theme, menu, and notices (saved together),
+// motion (this browser's, at once),
 // then two-step verification, the tutorial, and signing out (each takes effect right away).
 
 
@@ -16,6 +17,7 @@ import { passkeyCreation } from "../lib/passkey.ts";
 import { useProspectEverywhere } from "../components/Prospect.tsx";
 import { useHelp } from "../components/Help.tsx";
 import { askToConfirm, TotpSetup } from "../components/Confirm.tsx";
+import { chosenLessMotion, deviceLessMotion, setLessMotion } from "../lib/motion.ts";
 
 
 // What the profile says under the text consent for each state
@@ -47,6 +49,9 @@ export function MePage() {
   // Edits stay local until Save
   const [draft, setDraft] = useState({ name: me.user.name, title: me.user.title, phone: me.user.phone, theme: me.user.theme, menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) });
   const [busy, setBusy] = useState(false);
+  // Motion is this browser's choice, not the account's, so it changes at once and isn't part of Save
+  const deviceLess = deviceLessMotion();
+  const [less, setLess] = useState(() => deviceLess || chosenLessMotion());
   // Anything that differs from what's saved; Save waits for a change
   const saved = { name: me.user.name, title: me.user.title, phone: me.user.phone, theme: me.user.theme, menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) };
   const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
@@ -167,6 +172,20 @@ export function MePage() {
               </label>
             ))}
           </div>
+        </fieldset>
+        {/* Motion: smooth by default; Reduced turns every animation off in this browser at once, and a device
+            that asks for less motion keeps it reduced (lib/motion.ts) */}
+        <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
+          <legend style={{ marginBottom: 8 }}>Motion</legend>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {(["smooth", "reduced"] as const).map((m) => (
+              <label key={m} className={`chip${(m === "reduced") === less ? " on" : ""}`} style={{ cursor: deviceLess ? "default" : "pointer" }}>
+                <input type="radio" name="motion" className="sr" disabled={deviceLess} checked={(m === "reduced") === less} onChange={() => { setLessMotion(m === "reduced"); setLess(m === "reduced"); }} />
+                {m === "smooth" ? "Smooth" : "Reduced"}
+              </label>
+            ))}
+          </div>
+          <p className="small muted" style={{ marginTop: 6 }}>{deviceLess ? "Your device asks for less motion, so 1NEON keeps it reduced." : "Applies right away, in this browser."}</p>
         </fieldset>
         {/* Menu: default opens it from the menu buttons; mini also keeps a slim icon menu on screen */}
         <fieldset style={{ border: 0, padding: 0, margin: 0 }}>

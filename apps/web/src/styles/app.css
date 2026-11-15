@@ -69,9 +69,11 @@ input, textarea, select { font: 16px var(--sans); color: var(--text); background
 textarea { min-height: 96px; resize: vertical; }
 /* Dropdowns: as wide as their choices (not the whole row), with a small chevron drawn in the text's
    own color right after the words, so it suits both themes and never floats far off to the side */
-select { appearance: none; -webkit-appearance: none; width: auto; max-width: 100%; padding-right: 32px; cursor: pointer; text-overflow: ellipsis;
-  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
-  background-position: calc(100% - 17px) calc(50% + 1px), calc(100% - 12px) calc(50% + 1px); background-size: 5px 5px; background-repeat: no-repeat; }
+/* A dropdown's arrow sits well inside its box (room on both sides), in the accent. Browsers that can style
+   the open list get neon1's own arrow instead (Motion, at the end of this file) */
+select { appearance: none; -webkit-appearance: none; width: auto; max-width: 100%; padding-right: 44px; cursor: pointer; text-overflow: ellipsis;
+  background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%), linear-gradient(135deg, var(--accent) 50%, transparent 50%);
+  background-position: calc(100% - 23px) calc(50% + 1px), calc(100% - 18px) calc(50% + 1px); background-size: 5px 5px; background-repeat: no-repeat; }
 select:disabled { cursor: default; opacity: .7; }
 /* Placeholders at the muted color, which passes contrast in both themes */
 ::placeholder { color: var(--muted); opacity: 1; }
@@ -608,7 +610,7 @@ button.link { border: 0; background: none; padding: 0; color: var(--accent); tex
 .pcard { position: relative; }
 .pcard .name::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
 .pcard .move { position: relative; z-index: 1; display: inline-block; margin-top: 8px; }
-.pcard .move select { min-height: 28px; padding: 2px 26px 2px 10px; font: 12px var(--mono); border-radius: 99px; color: var(--muted); background-color: transparent; background-position: calc(100% - 15px) calc(50% + 1px), calc(100% - 10px) calc(50% + 1px); }
+.pcard .move select { min-height: 28px; padding: 2px 26px 2px 10px; font: 12px var(--mono); border-radius: 99px; color: var(--muted); background-color: transparent; background-position: calc(100% - 17px) calc(50% + 1px), calc(100% - 12px) calc(50% + 1px); padding-right: 30px; }
 @media (max-width: 640px) {
   .board { scroll-snap-type: x mandatory; }
   .board .col { scroll-snap-align: start; flex-basis: 82vw; }
@@ -1183,7 +1185,7 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 .ag-group.fold > summary::-webkit-details-marker { display: none; }
 .ag-group.fold > summary h3 { margin: 0; }
 .ag-group.fold > summary h3 small { margin-left: 4px; font: 11px var(--mono); color: var(--muted); }
-.ag-group.fold .arr { display: inline-block; font: 13px var(--mono); color: var(--muted); transition: transform .2s ease; }
+.ag-group.fold .arr { display: inline-block; font: 13px var(--mono); color: var(--muted); transition: transform var(--t-slow, .42s) var(--ease, ease); }
 .ag-group.fold[open] > summary .arr { transform: rotate(-90deg); }
 .ag-group.fold > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 4px; }
 .ag-group.fold .fold-body { padding-top: 2px; }
@@ -1193,7 +1195,8 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 .ag-group .linkish:hover { color: var(--accent); text-decoration: underline; }
 .agenda { gap: 6px; }
 :root { interpolate-size: allow-keywords; }
-.ag-group.fold::details-content { height: 0; overflow: clip; transition: height .28s ease, content-visibility .28s allow-discrete; }
+/* The arrow turns in exactly the time the group takes to open */
+.ag-group.fold::details-content { height: 0; overflow: clip; transition: height var(--t-slow, .42s) var(--ease, ease), content-visibility var(--t-slow, .42s) allow-discrete; }
 .ag-group.fold[open]::details-content { height: auto; }
 @media (prefers-reduced-motion: reduce) { .ag-group.fold::details-content { transition: none; } .ag-group.fold .arr { transition: none; } }
 
@@ -1645,3 +1648,68 @@ a.out:hover .out-arrow, a.out:focus-visible .out-arrow { transform: translate(2p
    each half the card wide, so the card stays short */
 .prospect-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 @media (max-width: 520px) { .prospect-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); } .prospect-actions .btn { width: 100%; } }
+
+
+/* --- Motion -----------------------------------------------------------------------------------------
+   One timing for every change, the same as neon1.tech's (shared/neon1.css): quick for small things (a menu, a message),
+   a move for things that arrive (a dialog, a revealed field), and a page for whole screens. All of it
+   is off with reduced motion, from the device or the profile's "Reduced" (html[data-motion]) */
+:root { --ease: cubic-bezier(.28, .11, .32, 1); --t-fast: .16s; --t-base: .26s; --t-slow: .42s; interpolate-size: allow-keywords; }
+@keyframes pop { from { opacity: 0; transform: translateY(4px) scale(.98); } }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes sheet-in { from { transform: translateX(24px); opacity: 0; } }
+@keyframes sheet-up { from { transform: translateY(24px); opacity: 0; } }
+@keyframes unroll { from { opacity: 0; clip-path: inset(0 0 100% 0 round var(--r-sm)); } to { opacity: 1; clip-path: inset(0 0 0 0 round var(--r-sm)); } }
+@keyframes toast-in { from { opacity: 0; translate: 0 8px; } }
+
+/* Fields settle their border and glow instead of snapping */
+input, textarea, select, .chip { transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease); }
+/* Dialogs rise in, sheets slide in from their edge, the backdrop fades */
+dialog[open] { animation: pop var(--t-base) var(--ease); }
+dialog[open]::backdrop { animation: fade-in var(--t-base) var(--ease); }
+dialog.sheet[open] { animation: sheet-in var(--t-base) var(--ease); }
+@media (max-width: 640px) { dialog.sheet[open] { animation-name: sheet-up; } }
+dialog.palette[open] { animation-duration: var(--t-fast); }
+/* Menus, row menus, and the bell's list open with a quick rise; the toast lifts in */
+.menu, .row-menu-list, .bell-list { animation: pop var(--t-fast) var(--ease) both; transform-origin: top; }
+.toast { animation: toast-in var(--t-base) var(--ease); }
+/* A field's message, a form's notice, and a field a choice reveals ("In your words", "Where?", the
+   organization's name, "I go by one name") ease in where they appear */
+.field-error, .notice, .signup-form :is(.f-kindOther, .f-org, .f-foundOther, .one-name), .face-form .field-error { animation: rise var(--t-base) var(--ease) backwards; }
+/* Questions and folds open to their height instead of jumping */
+details.faq::details-content { height: 0; overflow: clip; transition: height var(--t-slow) var(--ease), content-visibility var(--t-slow) allow-discrete; }
+details.faq[open]::details-content { height: auto; }
+/* A cross-fade between sign-in steps, and between sign-in and sign-up (lib/motion.ts fade) */
+html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new(root) { animation-duration: var(--t-base); animation-timing-function: var(--ease); }
+
+/* neon1's dropdown arrow, where the browser lets a page style the open list: the arrow points left, like
+   "send me your use case" on neon1.tech, and turns down as the list opens. Elsewhere the plain arrow above
+   stays, and the browser's own list opens */
+@supports (appearance: base-select) {
+  select { appearance: base-select; background-image: none; padding-right: 14px; display: inline-flex; align-items: center; gap: 12px; }
+  select::picker-icon { content: "\2190"; font: 700 15px/1 var(--sans); color: var(--accent); margin-left: auto; margin-right: 2px; transition: rotate var(--t-base) var(--ease); }
+  select:open::picker-icon { rotate: -90deg; }
+  ::picker(select) { appearance: base-select; border: 1px solid var(--line-strong); border-radius: var(--r-sm); background: var(--panel); color: var(--text); box-shadow: 0 12px 32px rgba(0, 0, 0, .16); padding: 4px; margin-top: 4px; max-height: min(50vh, 360px); }
+  /* The list unrolls in the same time the arrow takes to turn, so both finish together */
+  select:open::picker(select) { animation: unroll var(--t-base) var(--ease); }
+  select option { padding: 8px 12px; border-radius: 6px; min-height: 0; }
+  select option::checkmark { display: none; }
+  select option:checked { color: var(--accent); font-weight: 600; }
+  select option:is(:hover, :focus-visible) { background: var(--accent-soft); outline: none; }
+  select.unpicked selectedcontent, select.unpicked > button { color: inherit; }
+  /* The dark sign-in screen: the neon arrow, a dark list */
+  .signin select::picker-icon { color: var(--neon, #00FF41); }
+  .signin ::picker(select) { background: #0D0208; color: #D6F5DC; border-color: rgba(0, 255, 65, .3); }
+  .signin select option:is(:hover, :focus-visible) { background: rgba(0, 255, 65, .12); }
+  .signin select option:checked { color: #00FF41; }
+  /* The board card's small stage menu keeps its compact size */
+  .pcard .move select { padding-right: 10px; gap: 6px; }
+  .pcard .move select::picker-icon { font-size: 12px; }
+}
+
+/* The profile's "Reduced" motion turns everything off, the same as the device setting */
+:root[data-motion="off"] *, :root[data-motion="off"] *::before, :root[data-motion="off"] *::after, :root[data-motion="off"] ::backdrop { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+:root[data-motion="off"]::view-transition-group(*), :root[data-motion="off"]::view-transition-old(*), :root[data-motion="off"]::view-transition-new(*) { animation: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  ::backdrop, select::picker-icon { animation: none !important; transition: none !important; }
+}

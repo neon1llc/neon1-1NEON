@@ -13,6 +13,7 @@ import { keepAwake } from "./awake.ts";
 import { opening } from "./opening.ts";
 import { SHORTS } from "./shorts.ts";
 import { PLAY, PROJECT, remember } from "./where.ts";
+import { lessMotion } from "../lib/motion.ts";
 
 
 /** One major section of a show */
@@ -78,7 +79,7 @@ const frame = () => new Promise((r) => requestAnimationFrame(() => r(undefined))
 // Smooth start and stop for every movement
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 // Reduced motion: the cursor still shows where things happen, but it steps instead of gliding
-const calm = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+const calm = () => lessMotion();
 
 
 /** Is this element on screen and not hidden? Anything inert doesn't count, a person couldn't click
