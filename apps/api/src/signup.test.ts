@@ -283,7 +283,8 @@ describe("tidying up", () => {
     expect(await pass(7.1)).toMatchObject({ nudged: 1 });
     expect(toDana()).toHaveLength(1);
     expect(toDana()[0]!.replyTo).toBe("hello@neon1.tech");
-    expect(await pass(7.2)).toMatchObject({ skipped: true });
+    // A second pass the same UTC day is skipped (the same moment, so the test never straddles midnight)
+    expect(await pass(7.1)).toMatchObject({ skipped: true });
     expect(await pass(14.1)).toMatchObject({ nudged: 1 });
     expect(await pass(21.1)).toMatchObject({ warned: 1 });
     expect(toDana()[2]!.text).toContain("sign up again");
