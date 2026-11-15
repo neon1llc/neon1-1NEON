@@ -406,13 +406,10 @@ resource "aws_apigatewayv2_stage" "default" {
     throttling_burst_limit = 100
   }
 
-  # Sign-up across everyone: a request a second, a few at once. The app's own counters cap it per
-  # address, per email, and per day on top of this
-  route_settings {
-    route_key              = aws_apigatewayv2_route.signup.route_key
-    throttling_rate_limit  = 1
-    throttling_burst_limit = 5
-  }
+  # The sign-up route's own throttle (1 a second, burst 5) waits for the deploy role to be allowed
+  # logs:CreateLogDelivery: any change to this stage re-checks its access-log permissions, and the
+  # 0.13.0 deploy stopped there. Sign-up is closed on prod; the app's counters cap it per address,
+  # per email, and per day. Put the route_settings block back before turning sign-up on
 
   # Request ID, caller, route, status, latency, and integration errors; no bodies or cookies
   access_log_settings {

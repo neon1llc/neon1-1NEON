@@ -22,6 +22,7 @@
 - **Remember me keeps the email filled in.** Ticked, the email you signed in with is saved on this device (`1neon.email`, listed in the cookie and storage notice) and filled in next time; unticked, it's cleared.
 - Shorter, plainer wording in the README, docs, errors, emails, and walkthrough captions.
 - The terms (1.4), the privacy and data policy (3.1), and the cookie and storage notice come from neon1-corpus v0.44.0.
+- The sign-up route's own API throttle is left out for now (the deploy role can't change the API stage yet). Sign-up stays closed on prod, and the app's own limits still apply.
 
 ## v0.12.0 - 2026-11-15
 
