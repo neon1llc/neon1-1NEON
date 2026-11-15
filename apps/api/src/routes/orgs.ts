@@ -2,7 +2,7 @@
 // organization, and the read-only All clients view.
 
 
-import { CreateTenantInput, DEFAULT_STAGES, can, formatClientId, newId, slugify, type Tenant } from "@1neon/domain";
+import { CreateTenantInput, DEFAULT_STAGES, can, formatClientId, isProspect, newId, slugify, type Tenant } from "@1neon/domain";
 import { body, check, fail, now, who } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
 import { ConflictError } from "../store/types.ts";
@@ -43,7 +43,8 @@ export function orgRoutes(app: App, k: Kit) {
   // All clients: every active project across organizations, read only
   app.get("/all/projects", async (c) => {
     check(can(who(c).actor, "read", undefined, "all"));
-    const [tenants, projects] = await Promise.all([repo.listTenants(), repo.listAllProjects()]);
+    // Clients only: prospects that signed themselves up are on the Prospects page instead
+    const [tenants, projects] = await Promise.all([repo.listTenants().then((ts) => ts.filter((t) => !isProspect(t))), repo.listAllProjects()]);
     const byId = new Map(tenants.map((t) => [t.id, t]));
     return c.json({
       orgs: tenants.map((t) => ({ id: t.id, slug: t.slug, name: t.name, clientId: t.clientId, stages: t.stages })),
