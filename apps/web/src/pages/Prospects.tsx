@@ -14,6 +14,7 @@ import { api } from "../lib/api.ts";
 import { problem, useSubmit } from "../lib/hooks.ts";
 import { prospectState, stateLabel, type ProspectRow, type ProspectsResponse } from "../lib/prospect.ts";
 import { read } from "../lib/reads.ts";
+import { FaceFacts } from "../components/OrgFace.tsx";
 
 
 // The list, refreshed every 30 seconds like the board beside it
@@ -28,7 +29,7 @@ export function Prospects() {
   // The prospect being deleted and the name typed so far
   const [doomed, setDoomed] = useState<ProspectRow>();
   const [typed, setTyped] = useState("");
-  useTopBar(<span>Prospects</span>, []);
+  useTopBar(<span>Potentials</span>, []);
   const wait = gate([q]);
   const data = wait ? undefined : q.data;
 
@@ -61,7 +62,7 @@ export function Prospects() {
   const s = data?.signup;
   return (
     <>
-      <h1 className="page-title">Prospects</h1>
+      <h1 className="page-title">Potentials</h1>
       <p className="lead">People who signed themselves up. They stay limited until you promote them.</p>
       <Stale reads={[q]} />
       {wait}
@@ -80,7 +81,7 @@ export function Prospects() {
             : <button className="btn btn-ghost btn-sm" disabled={pending} onClick={() => void setSignup(true)}>Pause</button>)}
         </div>
       )}
-      {data && data.prospects.length === 0 && <Empty text="No prospects yet." />}
+      {data && data.prospects.length === 0 && <Empty text="No potentials yet." />}
       {data?.prospects.map((p) => {
         const state = prospectState(p.prospect);
         return (
@@ -92,13 +93,14 @@ export function Prospects() {
             </div>
             <p className="small muted prospect-people">{p.people.length ? p.people.map((x) => `${x.name || x.email} (${x.email})`).join(", ") : "No one has joined."}</p>
             <dl className="prospect-facts small">
+              <div className="wide"><dt>Where</dt><dd><FaceFacts place={p.place} link={p.link} /></dd></div>
               <div><dt>Signed up</dt><dd>{dateLabel(p.prospect.since.slice(0, 10))}</dd></div>
               <div><dt>Last active</dt><dd>{p.lastActive ? ago(p.lastActive) : "never"}</dd></div>
               <div><dt>Projects</dt><dd>{p.projects}</dd></div>
               <div><dt>Files</dt><dd>{p.files}</dd></div>
             </dl>
-            <div className="actions stack-sm">
-              <button className="btn btn-primary btn-sm" disabled={pending} onClick={() => void promote(p)}>Promote to client</button>
+            <div className="prospect-actions">
+              <button className="btn btn-primary btn-sm" disabled={pending} onClick={() => void promote(p)} title="Promote to client">Promote</button>
               {p.prospect.suspendedAt
                 ? <button className="btn btn-ghost btn-sm" disabled={pending} onClick={() => void act(`${p.name} is resumed`, () => post(p, "resume"))}>Resume</button>
                 : <button className="btn btn-ghost btn-sm" disabled={pending} onClick={() => void suspend(p)}>Suspend</button>}
@@ -112,7 +114,7 @@ export function Prospects() {
         );
       })}
       {/* Delete is for good, so the organization's name is typed first */}
-      <Dialog open={Boolean(doomed)} onClose={() => setDoomed(undefined)} label="Delete prospect" className="ask">
+      <Dialog open={Boolean(doomed)} onClose={() => setDoomed(undefined)} label="Delete potential" className="ask">
         <h2>Delete {doomed?.name}?</h2>
         <p className="muted small">This removes the organization, its projects, and its files for good. Type its name to confirm.</p>
         <form onSubmit={(e) => { e.preventDefault(); const p = doomed; if (p && typed.trim() === p.name) { setDoomed(undefined); void act(`${p.name} is deleted`, () => post(p, "delete")); } }}>

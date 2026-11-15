@@ -35,7 +35,7 @@ beforeEach(async () => {
   await repo.createUser(op);
 });
 
-const form = { email: "dana@example.com", name: "Dana Kim", org: "Kim Dental", terms: true, elapsed: 8000 };
+const form = { email: "dana@example.com", name: "Dana Kim", org: "Kim Dental", link: "kimdental.com", terms: true, elapsed: 8000 };
 const signup = (b: unknown, ip = "203.0.113.7") =>
   app.request("/1NEON/api/auth/signup", { method: "POST", headers: { "content-type": "application/json", "x-1neon": "1", "x-forwarded-for": ip }, body: JSON.stringify(b) });
 const as = (email: string, path: string, method = "GET", b?: unknown) =>
@@ -76,6 +76,28 @@ describe("the sign-up form", () => {
 
   it("needs the terms accepted", async () => {
     expect((await signup({ ...form, terms: false })).status).toBe(400);
+  });
+
+  it("needs where the business is based or a link to it, and keeps them on the organization", async () => {
+    expect((await signup({ ...form, link: "" })).status).toBe(400);
+    expect((await signup({ ...form, link: "javascript:alert(1)" })).status).toBe(400);
+    expect((await signup({ ...form, link: "", place: "Queens, NY" })).status).toBe(200);
+    const { tenant } = await prospect("b@example.com");
+    expect(tenant).toMatchObject({ link: "https://kimdental.com/" });
+    const p2 = await signup({ ...form, email: "c@example.com", link: "", place: "Queens, NY" }, "198.51.100.9");
+    expect(p2.status).toBe(200);
+    expect((await claimSignup({ repo, cfg }, "c@example.com"))).toBeTruthy();
+  });
+
+  it("lets the prospect's admin change the place and link without confirming it's them", async () => {
+    const { tid, tenant } = await prospect("e@example.com");
+    const put = (b: unknown) => as("e@example.com", `/t/${tid}/profile`, "PUT", b);
+    expect((await put({ version: tenant.version, place: "", link: "" })).status).toBe(400);
+    const r = await put({ version: tenant.version, place: "Bayside, NY", link: "" });
+    expect(r.status).toBe(200);
+    const after = (await repo.getTenant(tid))!;
+    expect(after.place).toBe("Bayside, NY");
+    expect(after.link).toBeUndefined();
   });
 
   it("caps sign-ups per address, per email, and per day", async () => {

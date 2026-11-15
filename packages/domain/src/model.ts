@@ -85,6 +85,10 @@ export const Tenant = z.object({
   stages: z.array(Stage).min(1).max(20),
   // IANA time zone for calendar wording such as "this month"; missing means America/New_York
   timeZone: z.string().max(64).optional(),
+  // Where neon1 can see the business from outside: a city and state, and its website or a public page
+  // (Google, Yelp, LinkedIn). Sign-up needs at least one; an admin can fill them in any time in Settings
+  place: z.string().trim().max(80).optional(),
+  link: z.string().trim().max(200).optional(),
   // Every signature of neon1's service agreement, oldest first; the latest at the current edition counts
   agreements: z.array(Signature).max(50).optional(),
   // Set while this organization is a prospect that signed itself up (prospect.ts has its limits).

@@ -352,7 +352,7 @@ function SignIn() {
           // Sign-up: who it's for and what happens next, in place of the invitation note
           <>
             <h2 className="signin-h">Start in 1NEON</h2>
-            <p className="signin-lead">Free. Add your project's needs and files, and I'll reply with what I'd do. No call needed to start.</p>
+            <p className="signin-lead">Free. Write down what your project needs, and I'll reply with what I'd do. No call needed to start.</p>
           </>
         ) : (
           <>
@@ -741,7 +741,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
           ) : all ? (
             <>
               <Item to="/all/workflow" icon={<Icon name="workflow" />} label="Board" />
-              <Item to="/all/prospects" icon={<Icon name="people" />} label="Prospects" />
+              <Item to="/all/prospects" icon={<Icon name="people" />} label="Potentials" />
             </>
           ) : null}
         </ul>
@@ -756,7 +756,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
         </NavLink>
       </aside>
       <div className="main" inert={open}>
-        {/* All clients is read only; say so on every screen of it, except Prospects, which has neon1's actions */}
+        {/* All clients is read only; say so on every screen of it, except Potentials, which has neon1's actions */}
         {all && !loc.pathname.endsWith("/all/prospects") && (
           <div className="readonly-bar" role="status">
             <strong>All clients · read only.</strong> Open a client to make changes.
@@ -870,7 +870,7 @@ function OrgChooser({ current, all }: { current?: OrgSummary; all?: boolean }) {
               <Link to="/all/workflow" aria-current={all ? "true" : undefined} onClick={() => setOpen(false)}>
                 All clients <small>read only</small>
               </Link>
-              <Link to="/all/prospects" onClick={() => setOpen(false)}>Prospects</Link>
+              <Link to="/all/prospects" onClick={() => setOpen(false)}>Potentials</Link>
               <hr />
             </>
           )}

@@ -81,7 +81,7 @@ export function Palette({ me, org, prospect, open, setOpen, onHelp, onTour }: { 
             )}
             <Command.Item onSelect={go(() => nav("/me"))}>Your profile</Command.Item>
             {me.operator && <Command.Item onSelect={go(() => nav("/all/workflow"))}>All clients</Command.Item>}
-            {me.operator && <Command.Item onSelect={go(() => nav("/all/prospects"))}>Prospects</Command.Item>}
+            {me.operator && <Command.Item onSelect={go(() => nav("/all/prospects"))}>Potentials</Command.Item>}
             {me.orgs.filter((o) => o.id !== org?.id).map((o) => (
               <Command.Item key={o.id} value={`switch ${o.name} ${o.clientId}`} onSelect={go(() => nav(`/o/${o.slug}/workspace`))}>Switch to {o.name}</Command.Item>
             ))}

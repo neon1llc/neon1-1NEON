@@ -91,6 +91,9 @@ module "api" {
   texts_live            = var.texts_live
   neo_model             = var.neo_model
   neo_monthly_usd       = var.neo_monthly_usd
+  # Prospect sign-up with Cloudflare's invisible Turnstile; the secret is in SSM, put in by hand
+  signup             = true
+  turnstile_site_key = "0x4AAAAAAGCHPE2pRvBUzJiO"
 }
 
 
