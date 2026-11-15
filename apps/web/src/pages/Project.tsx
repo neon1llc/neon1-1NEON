@@ -156,7 +156,7 @@ export function ProjectPage() {
  * or hiding stages keeps it right: Decide and Closed keep their roles under any name or place
  */
 function NextStep({ project: p, items, stage, base }: { project: Project; items: Item[]; stage?: Stage; base: string }) {
-  const { org, access, canWrite } = useOrg();
+  const { org, access, canWrite, prospect } = useOrg();
   const me = useSession();
   const toast = useToast();
   const refresh = useRefresh(org.id);
@@ -274,7 +274,7 @@ function NextStep({ project: p, items, stage, base }: { project: Project; items:
   } else if (unissued && me.operator && canWrite) {
     text = <>Issue the proposal{cur ? `'s next revision, r${cur.p.rev + 1},` : ""} so the client can approve an option.</>;
     action = { to: `${base}/needs#options`, label: cur ? `Issue r${cur.p.rev + 1}` : "Issue the proposal" };
-  } else if (quick && proposed.length && canApprove(actor, access, p.people, isOwnOrg(org.slug)).ok) {
+  } else if (quick && proposed.length && !prospect && canApprove(actor, access, p.people, isOwnOrg(org.slug)).ok) {
     // The client approves one quote: its price, and that nothing is paid until the fix is accepted
     const q = OptionFields.parse(ready[0]?.fields ?? proposed[0]!.fields);
     if (ready.length && fresh) text = <>Approve the quote: <b>{proposed[0]!.title}</b>{q.cost ? `, ${q.cost}` : ""}. Nothing is paid up front; neon1 invoices once it's fixed and you've accepted it.</>;
@@ -284,7 +284,7 @@ function NextStep({ project: p, items, stage, base }: { project: Project; items:
   } else if (quick && proposed.length) {
     text = <>Waiting on {deciders.length ? deciders.join(" or ") : "an admin of the client"} to approve the quote.</>;
     action = { to: `${base}/needs#options`, label: "See the quote" };
-  } else if (proposed.length && canApprove(actor, access, p.people, isOwnOrg(org.slug)).ok) {
+  } else if (proposed.length && !prospect && canApprove(actor, access, p.people, isOwnOrg(org.slug)).ok) {
     if (ready.length && fresh) text = <>Choose an option: {ready.length} {ready.length === 1 ? "is" : "are"} ready for your approval in Proposal {proposalRef(cur!.p.number, cur!.p.rev)}.</>;
     else if (cur && !fresh) text = <>The prices in Proposal {proposalRef(cur.p.number, cur.p.rev)} are due a price check. Ask neon1 to refresh them, then choose.</>;
     else text = <>neon1 is preparing the proposal. You can read the options now and approve one once it's issued.</>;
@@ -295,7 +295,7 @@ function NextStep({ project: p, items, stage, base }: { project: Project; items:
   } else if (files.length && !me.operator) {
     text = <>Send {files.length} {files.length === 1 ? "file" : "files"} so the work can go on.</>;
     action = { to: `${base}/needs#files`, label: "Upload" };
-  } else if (handover.length && unsigned.length && handover.every((i) => i.status === "done") && !me.operator && canApprove(actor, access, p.people, isOwnOrg(org.slug)).ok) {
+  } else if (handover.length && unsigned.length && handover.every((i) => i.status === "done") && !me.operator && !prospect && canApprove(actor, access, p.people, isOwnOrg(org.slug)).ok) {
     // Every handover step is done: the decision maker's one signature accepts them
     text = quick ? <>neon1 says it's fixed. Check that it works, then accept it with one signature.</> : <>Every handover step is done. Check them, then accept the handover with one signature.</>;
     action = { to: `${base}/normalize`, label: quick ? "Check and accept" : "Review and accept" };
@@ -705,7 +705,7 @@ function MetricCard({ item, path, onReading }: { item: Item; path: string; onRea
 
 /** One layer's items, grouped by kind, with add forms for people who can write */
 function LayerTab({ layer, project, items, docs, edits }: { layer: Layer; project: Project; items: Item[]; docs: DocumentRecord[]; edits: EditMarker[] }) {
-  const { org, canWrite } = useOrg();
+  const { org, canWrite, prospect } = useOrg();
   const me = useSession();
   const toast = useToast();
   const refresh = useRefresh(org.id);
@@ -791,8 +791,9 @@ function LayerTab({ layer, project, items, docs, edits }: { layer: Layer; projec
       })}
       {/* Execute ends with the money: hours logged against an estimate, then the project's invoices
           (Pay for the client, drafts and payments for neon1) */}
-      {layer === "execution" && <Hours items={items} path={path} />}
-      {layer === "execution" && <Invoices items={items} path={path} project={project} />}
+      {/* A new account has no hours or invoices: those open once neon1 and it are working together */}
+      {layer === "execution" && !prospect && <Hours items={items} path={path} />}
+      {layer === "execution" && !prospect && <Invoices items={items} path={path} project={project} />}
       {/* Every file filed under this layer of the project; anyone in the organization can add one */}
       <section className="kind-group">
         <h2 className="section-h">Files <small>{docs.filter((d) => d.uploaded && d.layer === layer).length}</small></h2>
@@ -1181,12 +1182,12 @@ function ProposalStrip({ all, docs, path, project, decider }: { all: Item[]; doc
 
 /** Options side by side: draft, shared for approval, approved; approving one from the issued revision records a decision */
 function Options({ items, all, docs, path, project }: { items: Item[]; all: Item[]; docs: DocumentRecord[]; path: string; project: Project }) {
-  const { org, access, canWrite } = useOrg();
+  const { org, access, canWrite, prospect } = useOrg();
   const me = useSession();
   const members = useMembers(org.id);
   const names = new Map(members.data?.map((m) => [m.userId, m.name || m.email]) ?? []);
   // Only the named decision maker (or, with none named, a client admin) sees Approve
-  const decider = canApprove({ userId: me.user.id, operator: me.operator, strongSession: false }, access, project.people, isOwnOrg(org.slug)).ok;
+  const decider = !prospect && canApprove({ userId: me.user.id, operator: me.operator, strongSession: false }, access, project.people, isOwnOrg(org.slug)).ok;
   const deciders = project.people.filter((x) => x.role === "decision_maker").map((x) => names.get(x.userId) ?? "the decision maker");
   const toast = useToast();
   const refresh = useRefresh(org.id);
@@ -1596,14 +1597,14 @@ function QuoteForm({ path, cur, option }: { path: string; cur?: ReturnType<typeo
  * and its receipt. Bought or installed without a receipt is flagged, not blocked
  */
 function PurchaseRow({ item, path, project, receipts, onStatus }: { item: Item; path: string; project: Project; receipts: DocumentRecord[]; onStatus: (status: string) => void }) {
-  const { org, access, canWrite } = useOrg();
+  const { org, access, canWrite, prospect } = useOrg();
   const me = useSession();
   const toast = useToast();
   const refresh = useRefresh(org.id);
   const [open, setOpen] = useState(false);
   const [initials, setInitials] = useState("");
   const f = PurchaseFields.parse(item.fields);
-  const decider = canApprove({ userId: me.user.id, operator: me.operator, strongSession: false }, access, project.people, isOwnOrg(org.slug)).ok;
+  const decider = !prospect && canApprove({ userId: me.user.id, operator: me.operator, strongSession: false }, access, project.people, isOwnOrg(org.slug)).ok;
   const ready = receipts.filter((d) => d.uploaded);
   const needsReceipt = (item.status === "bought" || item.status === "done") && !receipts.length;
   const waitsOnAgreement = f.buyer === "neon1" && !f.agreed;
@@ -1656,7 +1657,7 @@ function PurchaseRow({ item, path, project, receipts, onStatus }: { item: Item; 
 
 /** Under a handover step: who accepted it and when, or Accept for the decision maker */
 function Accept({ item, path, project }: { item: Item; path: string; project: Project }) {
-  const { org, access } = useOrg();
+  const { org, access, prospect } = useOrg();
   const me = useSession();
   const toast = useToast();
   const refresh = useRefresh(org.id);
@@ -1666,7 +1667,7 @@ function Accept({ item, path, project }: { item: Item; path: string; project: Pr
   const f = HandoffFields.safeParse(item.fields);
   const accepted = f.success ? f.data.accepted : undefined;
   if (accepted) return <p className="accepted-note">Accepted by {accepted.name}, {dateLabel(accepted.at.slice(0, 10))}{accepted.note ? `: ${accepted.note}` : ""}{accepted.signature ? `, signed "${accepted.signature.typedName}"` : ""}</p>;
-  const decider = canApprove({ userId: me.user.id, operator: me.operator, strongSession: false }, access, project.people, isOwnOrg(org.slug)).ok;
+  const decider = !prospect && canApprove({ userId: me.user.id, operator: me.operator, strongSession: false }, access, project.people, isOwnOrg(org.slug)).ok;
   // A step already ticked waits for the one signature under the list; this accepts a step that isn't
   // done yet, on its own, which also marks it done
   if (!decider || item.status === "done") return null;
@@ -1698,7 +1699,7 @@ function Accept({ item, path, project }: { item: Item; path: string; project: Pr
  * them all (each step keeps its own signed record). Until then it says how many steps are left
  */
 function AcceptHandover({ steps, path, project }: { steps: Item[]; path: string; project: Project }) {
-  const { org, access } = useOrg();
+  const { org, access, prospect } = useOrg();
   const me = useSession();
   const toast = useToast();
   const refresh = useRefresh(org.id);
@@ -1708,7 +1709,7 @@ function AcceptHandover({ steps, path, project }: { steps: Item[]; path: string;
   const [sign, setSign] = useState<SignValue>({ typedName: "", consent: false });
   const waiting = steps.filter((i) => !i.fields.accepted);
   const left = steps.filter((i) => i.status !== "done").length;
-  const decider = canApprove({ userId: me.user.id, operator: me.operator, strongSession: false }, access, project.people, isOwnOrg(org.slug)).ok;
+  const decider = !prospect && canApprove({ userId: me.user.id, operator: me.operator, strongSession: false }, access, project.people, isOwnOrg(org.slug)).ok;
   if (!steps.length || !waiting.length) return steps.length ? <p className="accepted-note handover-all">The handover is accepted: every step is signed for.</p> : null;
   if (!decider) return null;
   // A quick fix's one step is the fix itself, and accepting it says so in those words

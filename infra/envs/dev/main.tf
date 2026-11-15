@@ -109,6 +109,9 @@ module "api" {
   texts_live            = false
   neo_model             = var.neo_model
   neo_monthly_usd       = 2
+  # Prospect sign-up, tried here first with Cloudflare's invisible always-pass test key
+  signup             = true
+  turnstile_site_key = "1x00000000000000000000BB"
 }
 
 

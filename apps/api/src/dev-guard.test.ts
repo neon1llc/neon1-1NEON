@@ -27,7 +27,7 @@ describe("dev guard", () => {
   it("creates dev accounts for neon1 only", async () => {
     const inner = new MemoryDirectory();
     const made: string[] = [];
-    inner.ensureUser = async (e: string) => { made.push(e); };
+    inner.ensureUser = async (e: string) => { made.push(e); return true; };
     const d = guardDirectory(dev, inner);
     await d.ensureUser("client@example.com");
     await d.ensureUser("pradeep@neon1.tech");

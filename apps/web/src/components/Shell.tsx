@@ -15,6 +15,7 @@ import { REWIND } from "../lib/nav.ts";
 import { usePersisting } from "../lib/persist.ts";
 import { cleanCode, clearStep, loadStep, saveStep, session } from "../lib/signin.ts";
 import type { Me, OrgResponse, OrgSummary } from "../lib/types.ts";
+import { limitedProspect, prospectEverywhere } from "../lib/prospect.ts";
 import { Bell } from "./Bell.tsx";
 import { Offline } from "./Glitch.tsx";
 import { Rain } from "./Rain.tsx";
@@ -22,7 +23,9 @@ import { FileText as FileIcon, Folder as FolderIcon, Home as HomeIcon, Kanban as
 import { ConfirmDialog } from "./Confirm.tsx";
 import { HelpProvider, useHelp } from "./Help.tsx";
 import { Neo } from "./Neo.tsx";
+import { useProspectEverywhere } from "./Prospect.tsx";
 import { Palette } from "./Palette.tsx";
+import { SignUp } from "./SignUp.tsx";
 import { gate, Stale, type Read } from "./Reads.tsx";
 import { Avatar, Icon, initials, LayerBadge, LAYERS, layerHint, layerName, layerSlug, Rings, useAsk } from "./ui.tsx";
 import { prefs } from "../lib/prefs.ts";
@@ -171,7 +174,7 @@ const PICKER = IN_DEMO && !IN_LIVE;
 
 
 // What the API answers at each sign-in step
-type Step = { step: "email" | "choose" | "code" | "totp" | "passkey" | "done" | "failed" | "not_invited"; methods?: ("code" | "passkey")[]; options?: unknown; wrong?: boolean };
+export type Step = { step: "email" | "choose" | "code" | "totp" | "passkey" | "done" | "failed" | "not_invited"; methods?: ("code" | "passkey")[]; options?: unknown; wrong?: boolean };
 
 
 // The wordmark's letters, each with the rest of the word it stands for
@@ -243,6 +246,18 @@ function SignIn() {
   const [remember, setRemember] = useState(true);
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
   const [at, setAt] = useState<Step>(() => (saved ? { step: saved.step, methods: saved.methods } : { step: "email" }));
+  // Sign-up instead of sign-in, opened from the link below the form, or by ?signup=1 (the quiet-prospect
+  // email's way back). The real portal only: the demo has no accounts to make
+  const [signingUp, setSigningUp] = useState(() => !IN_DEMO && !saved && new URLSearchParams(location.search).get("signup") === "1");
+  // Whether sign-up is open, so the invitation note and the "New here?" link show only when it is.
+  // Asked once by the real portal; while closed (production until neon1 opens it) neither shows
+  const [signupOpen, setSignupOpen] = useState(false);
+  useEffect(() => {
+    if (IN_DEMO || PICKER) return;
+    let live = true;
+    api<{ open: boolean }>("/auth/signup").then((r) => live && setSignupOpen(r.open === true), () => undefined);
+    return () => { live = false; };
+  }, []);
   const [busy, setBusy] = useState(false);
   // The last call got no answer, so it may or may not have gone through
   const [unsure, setUnsure] = useState(false);
@@ -294,7 +309,17 @@ function SignIn() {
   // A fresh code was asked for, so the line above the box says so
   const [resent, setResent] = useState(false);
   // Start over with another email, forgetting the saved step
-  const restart = () => { clearStep(session()); setAt({ step: "email" }); setCode(""); setResent(false); };
+  const restart = () => { clearStep(session()); setAt({ step: "email" }); setCode(""); setResent(false); setSigningUp(false); };
+  // Sign-up answered like the first sign-in step: carry on at the emailed code, in the same state machine
+  const signedUp = (r: Step, mail: string) => {
+    keepEmail(mail, remember);
+    setEmail(mail);
+    setCode("");
+    setResent(false);
+    if (r.step === "choose" || r.step === "code" || r.step === "totp") saveStep(session(), { email: mail, step: r.step, methods: r.methods });
+    setAt(r);
+    setSigningUp(false);
+  };
   // Fade in only on the first sign-in screen after arriving from the site, not on a later return to it
   const [arrive] = useState(() => arriving);
   useEffect(() => { arriving = false; }, []);
@@ -323,10 +348,16 @@ function SignIn() {
             <h2 className="signin-h">Interactive demo</h2>
             <p className="signin-lead">A working copy of 1NEON with made-up clients. Everything you do stays in this browser.</p>
           </>
+        ) : signingUp ? (
+          // Sign-up: who it's for and what happens next, in place of the invitation note
+          <>
+            <h2 className="signin-h">Start in 1NEON</h2>
+            <p className="signin-lead">A free account for your projects' needs and files. I'll look them over and reply.</p>
+          </>
         ) : (
           <>
             <h2 className="signin-h">Client portal</h2>
-            <p className="signin-lead">For neon1 clients. Access is by invitation.</p>
+            <p className="signin-lead">{signupOpen ? "For neon1 clients, by invitation, or start your own free account below." : "For neon1 clients, by invitation."}</p>
           </>
         )}
         {problem === "not_invited" && <p className="notice" role="alert">That email hasn't been invited yet. Ask your organization's admin, or neon1.</p>}
@@ -343,7 +374,10 @@ function SignIn() {
           </div>
         )}
         {/* Step 1: the email */}
-        {!PICKER && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
+        {!PICKER && signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
+          <SignUp email={email} remember={remember} onStep={signedUp} onBack={() => setSigningUp(false)} local={pickPerson} />
+        )}
+        {!PICKER && !signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
           <form className="stack" name="signin" onSubmit={(e) => { e.preventDefault(); keepEmail(email.trim(), remember); void send({ op: "start", email: email.trim(), remember }); }}>
             {/* A label that stays on screen, so it survives autofill and typed text (the placeholder doesn't) */}
             <label className="field-label" htmlFor="email">Email address</label>
@@ -382,6 +416,10 @@ function SignIn() {
           </form>
         )}
         {at.step !== "email" && <p className="fine"><button className="linkish" onClick={restart}>Use a different email</button></p>}
+        {/* Not a client yet: start in 1NEON on your own, as a new account */}
+        {!IN_DEMO && signupOpen && !signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
+          <p className="fine"><button className="linkish" onClick={() => setSigningUp(true)}>New here? Start in 1NEON</button></p>
+        )}
         {/* The three policies on one line of their own */}
         <p className="fine legal-links">
           <Link to="/faqs">FAQs</Link> · <Link to="/cookies">Cookies</Link> · <Link to="/privacy">Privacy</Link> · <Link to="/terms">Terms</Link>
@@ -396,7 +434,7 @@ function SignIn() {
         )}
         {!IN_DEMO && (
           <nav className="signin-more" aria-label="Without an account">
-            <a href="/1NEON/live">New here? See how it works</a>
+            <a href="/1NEON/live">Or see how it works</a>
           </nav>
         )}
         {/* Local builds also offer the demo people under the real form */}
@@ -422,6 +460,8 @@ interface OrgCtxValue extends OrgResponse {
   summary: OrgSummary;
   canWrite: boolean;
   canAdmin: boolean;
+  // A new account's own person: the API refuses what's hidden for them (packages/domain/src/prospect.ts)
+  prospect: boolean;
 }
 // Organization context for everything inside OrgLayout
 const OrgCtx = createContext<OrgCtxValue | null>(null);
@@ -447,7 +487,7 @@ export function OrgLayout() {
   const wait = gate([org]);
   if (wait || !org.data) return <Frame org={summary}>{wait}</Frame>;
   const access = org.data.access;
-  const value: OrgCtxValue = { ...org.data, summary, canWrite: access !== "viewer", canAdmin: access === "admin" };
+  const value: OrgCtxValue = { ...org.data, summary, canWrite: access !== "viewer", canAdmin: access === "admin", prospect: limitedProspect(org.data.org, me.operator) };
   return (
     <OrgCtx.Provider value={value}>
       <Frame org={summary} reads={[org]}>
@@ -589,6 +629,10 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
   // The person's choice: default opens the full menu from a button; mini also keeps the icon rail
   // on screen at every size. Either way the full menu opens over the page from the menu buttons
   const mini = menuOf(me.user.menu) === "mini";
+  // A new account never gets Neo; until that's known it stays away
+  const newAccount = useProspectEverywhere(me);
+  // The organization in view, when this frame is inside one, for hiding what a new account can't do
+  const inOrg = useContext(OrgCtx);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState(false);
   const [top, setTop] = useState<ReactNode>(null);
@@ -695,7 +739,10 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
               <Item to={`${base}/settings`} icon={<Icon name="settings" />} label="Settings" />
             </>
           ) : all ? (
-            <Item to="/all/workflow" icon={<Icon name="workflow" />} label="Board" />
+            <>
+              <Item to="/all/workflow" icon={<Icon name="workflow" />} label="Board" />
+              <Item to="/all/prospects" icon={<Icon name="people" />} label="Prospects" />
+            </>
           ) : null}
         </ul>
         {/* Back to the neon1.tech site, outside the app's routes, then the signed-in person */}
@@ -709,8 +756,8 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
         </NavLink>
       </aside>
       <div className="main" inert={open}>
-        {/* All clients is read only; say so on every screen of it */}
-        {all && (
+        {/* All clients is read only; say so on every screen of it, except Prospects, which has neon1's actions */}
+        {all && !loc.pathname.endsWith("/all/prospects") && (
           <div className="readonly-bar" role="status">
             <strong>All clients · read only.</strong> Open a client to make changes.
           </div>
@@ -751,10 +798,10 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
         )}
         <button type="button" className="menu-btn" onClick={() => setOpen(!open)} aria-expanded={open}><MenuIcon size={20} aria-hidden="true" /><span>Menu</span></button>
       </nav>
-      <Palette me={me} org={org} open={search} setOpen={setSearch} onHelp={help.open} onTour={help.welcomeTour} />
+      <Palette me={me} org={org} prospect={inOrg?.prospect} open={search} setOpen={setSearch} onHelp={help.open} onTour={help.welcomeTour} />
       <ConfirmDialog me={me} />
       {/* Neo for signed-in people, where a model is wired; elsewhere the public Neo stays */}
-      {me.neo && !IN_DEMO && <Neo />}
+      {me.neo && !IN_DEMO && newAccount === false && <Neo />}
     </div>
   );
 }
@@ -823,6 +870,7 @@ function OrgChooser({ current, all }: { current?: OrgSummary; all?: boolean }) {
               <Link to="/all/workflow" aria-current={all ? "true" : undefined} onClick={() => setOpen(false)}>
                 All clients <small>read only</small>
               </Link>
+              <Link to="/all/prospects" onClick={() => setOpen(false)}>Prospects</Link>
               <hr />
             </>
           )}
