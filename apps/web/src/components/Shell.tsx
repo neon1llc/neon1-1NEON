@@ -76,9 +76,11 @@ let arriving = document.documentElement.classList.contains("from-site");
 /** Top-level gate: sign-in, error, first-visit redirect, then the app */
 // Whether this browser was last signed in or out, for the background shown while the session loads
 const LAST_KEY = "1neon.last";
-// Remember me also keeps the email on this device, filled in next time; unticked, it's forgotten
+// Remember me also keeps the email on this device, filled in next time; unticked, it's forgotten.
+// Not in the demo or a walkthrough: there each sign-in types its own fictional email into an empty box
 const EMAIL_KEY = "1neon.email";
-const keepEmail = (email: string, remember: boolean) => prefs.set(EMAIL_KEY, remember ? email : "");
+const keepEmail = (email: string, remember: boolean) => { if (!IN_DEMO) prefs.set(EMAIL_KEY, remember ? email : ""); };
+const keptEmail = () => (IN_DEMO ? "" : prefs.get(EMAIL_KEY) ?? "");
 const lastSeen = () => {
   return prefs.get(LAST_KEY);
 };
@@ -228,7 +230,7 @@ function SignIn() {
   const [saved] = useState(() => loadStep(session()));
   // Invite links carry the email, so it's filled in already
   // ...or, with Remember me, the email this device signed in with last
-  const [email, setEmail] = useState(() => saved?.email ?? new URLSearchParams(location.search).get("email") ?? prefs.get(EMAIL_KEY) ?? "");
+  const [email, setEmail] = useState(() => saved?.email ?? new URLSearchParams(location.search).get("email") ?? keptEmail());
   // ...including a link followed while this page is already open
   const { search } = useLocation();
   useEffect(() => {
