@@ -2,7 +2,7 @@
 
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
-## Unreleased
+## v0.12.0 - 2026-11-15
 
 ### Changed
 - **The privacy and data policy, the cookie and storage notice, and the terms come from neon1-corpus.** `node scripts/legal.mjs <ref>` copies them at a pinned corpus ref, so /1NEON/privacy, /1NEON/cookies, and /1NEON/terms match the Knowledge Center word for word. The privacy page becomes the privacy and data policy (edition 3.0): the contact form, Stripe payments, upload scanning, signatures, log periods, a retention table, the test environment on generated data only, downloads, deletion, client systems, and incidents. The terms catch up with the corpus (Download everything, the business address).
