@@ -28,7 +28,7 @@ export function Prospects() {
   // The prospect being deleted and the name typed so far
   const [doomed, setDoomed] = useState<ProspectRow>();
   const [typed, setTyped] = useState("");
-  useTopBar(<span>Prospects</span>, []);
+  useTopBar(<span>Potentials</span>, []);
   const wait = gate([q]);
   const data = wait ? undefined : q.data;
 
@@ -61,7 +61,7 @@ export function Prospects() {
   const s = data?.signup;
   return (
     <>
-      <h1 className="page-title">Prospects</h1>
+      <h1 className="page-title">Potentials</h1>
       <p className="lead">People who signed themselves up. They stay limited until you promote them.</p>
       <Stale reads={[q]} />
       {wait}
@@ -80,7 +80,7 @@ export function Prospects() {
             : <button className="btn btn-ghost btn-sm" disabled={pending} onClick={() => void setSignup(true)}>Pause</button>)}
         </div>
       )}
-      {data && data.prospects.length === 0 && <Empty text="No prospects yet." />}
+      {data && data.prospects.length === 0 && <Empty text="No potentials yet." />}
       {data?.prospects.map((p) => {
         const state = prospectState(p.prospect);
         return (
@@ -112,7 +112,7 @@ export function Prospects() {
         );
       })}
       {/* Delete is for good, so the organization's name is typed first */}
-      <Dialog open={Boolean(doomed)} onClose={() => setDoomed(undefined)} label="Delete prospect" className="ask">
+      <Dialog open={Boolean(doomed)} onClose={() => setDoomed(undefined)} label="Delete potential" className="ask">
         <h2>Delete {doomed?.name}?</h2>
         <p className="muted small">This removes the organization, its projects, and its files for good. Type its name to confirm.</p>
         <form onSubmit={(e) => { e.preventDefault(); const p = doomed; if (p && typed.trim() === p.name) { setDoomed(undefined); void act(`${p.name} is deleted`, () => post(p, "delete")); } }}>
