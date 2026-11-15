@@ -25,11 +25,14 @@ export async function handler(event: PreSignUpTriggerEvent | CustomMessageTrigge
 
 // The wording for each kind of code Cognito sends; {####} is where Cognito puts the code. Subjects
 // carry no code: Cognito documents the placeholder for the message body only
-const CODES: Record<string, { subject: string; label: string; heading: string; lead: string }> = {
-  CustomMessage_Authentication: { subject: "Your portal sign-in code", label: "your sign-in code", heading: "Your sign-in code", lead: `Use this code to sign in to ${link("1NEON", PORTAL)}.` },
-  CustomMessage_ForgotPassword: { subject: "Your 1NEON reset code", label: "your reset code", heading: "Your reset code", lead: "Enter this code to choose a new password." },
-  CustomMessage_UpdateUserAttribute: { subject: "Confirm your new email for 1NEON", label: "confirm your email", heading: "Confirm your new email", lead: `Enter this code in ${link("1NEON", PORTAL)} to confirm this address.` },
-  CustomMessage_VerifyUserAttribute: { subject: "Confirm your email for 1NEON", label: "confirm your email", heading: "Confirm your email", lead: `Enter this code in ${link("1NEON", PORTAL)} to confirm this address.` },
+// carry no code: Cognito documents the placeholder for the message body only. `says` is the plain
+// sentence that names the code ("Your 1NEON reset code is 123456"), which mail apps that offer to copy a
+// code look for
+const CODES: Record<string, { subject: string; label: string; heading: string; says: string; lead: string }> = {
+  CustomMessage_Authentication: { subject: "Your 1NEON sign-in code", label: "your sign-in code", heading: "Your sign-in code", says: "Your 1NEON sign-in code is", lead: `Use it to sign in to ${link("1NEON", PORTAL)}.` },
+  CustomMessage_ForgotPassword: { subject: "Your 1NEON reset code", label: "your reset code", heading: "Your reset code", says: "Your 1NEON reset code is", lead: "Enter it to choose a new password." },
+  CustomMessage_UpdateUserAttribute: { subject: "Confirm your new email for 1NEON", label: "confirm your email", heading: "Confirm your new email", says: "Your 1NEON confirmation code is", lead: `Enter it in ${link("1NEON", PORTAL)} to confirm this address.` },
+  CustomMessage_VerifyUserAttribute: { subject: "Confirm your email for 1NEON", label: "confirm your email", heading: "Confirm your email", says: "Your 1NEON confirmation code is", lead: `Enter it in ${link("1NEON", PORTAL)} to confirm this address.` },
 };
 
 
@@ -47,9 +50,9 @@ export function message(event: CustomMessageTriggerEvent, at = new Date()) {
   event.response.emailSubject = kind.subject;
   event.response.emailMessage = branded({
     label: kind.label,
-    preheader: `${kind.heading}: it works for a few minutes.`,
+    preheader: `${kind.says} ${event.request.codeParameter}. It works for a few minutes.`,
     heading: kind.heading,
-    body: `<p style="margin:0">${kind.lead}</p>`,
+    body: `<p style="margin:0">${kind.says} <b>${event.request.codeParameter}</b>. ${kind.lead}</p>`,
     code: event.request.codeParameter,
     note: "It works for a few minutes. If you didn't ask for it, you can ignore this email.",
     at,
