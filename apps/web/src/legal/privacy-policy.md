@@ -21,7 +21,7 @@ There are no accounts, analytics, or tracking on neon1.tech. Like any website, t
 
 ### The contact form and email
 
-When you send the contact form, your name, email address, organization, and message are emailed to my inbox (hello@neon1.tech) through Amazon's email service, with your address set as the one I reply to. The form doesn't save your message anywhere else. To stop floods of messages, it counts how many arrive from each sender using a one-way code made from the IP address, not the address itself. The counter holds only that code and a count.
+When you send the contact form, your name, email address, organization, and message are emailed to my inbox (hello@neon1.tech) through Amazon's email service, with your address set as the one I reply to. The form doesn't save your message anywhere else. To stop floods of messages, it counts how many arrive from each sender using a one-way code made from the IP address, not the address itself. The counter holds only that code and a count, and is deleted a day after its first count.
 
 Emails you send me, through the form or directly, are kept in my business email (Google Workspace) as correspondence, for as long as they're useful for our work together or the law requires. You can ask me to delete them.
 
@@ -118,6 +118,7 @@ Your projects and files are never deleted on a schedule. The table lists everyth
 | Records that an email or text was delivered, or failed | 30 days |
 | Portal server logs (request time, route, IP address, status, and errors, never what you sent) | 90 days |
 | Neo's logs (timing, length, and errors, never the text) | 14 days |
+| Contact form counters | A day after their first count |
 | Neo's question fingerprints | Ten minutes |
 | Emails and contact form messages | As correspondence, while useful for our work or required by law, or until you ask me to delete them |
 | Information copied from your systems for a project | Deleted when the project ends, unless you ask me to keep it |
