@@ -11,7 +11,8 @@ import privacy from "../legal/privacy-policy.md?raw";
 import terms from "../legal/terms-of-use.md?raw";
 
 
-// The source of each page lives in src/legal as Markdown, so edits stay reviewable as text
+// Privacy, terms, and cookies are copies of neon1-corpus policies, written by scripts/legal.mjs: edit
+// the corpus, then refresh them here, so the portal and the Knowledge Center never disagree
 // The service agreement comes from the domain package, so the page and what clients sign are one text
 const DOCS = { privacy, terms, cookies, agreement: AGREEMENT_TEXT } as const;
 
