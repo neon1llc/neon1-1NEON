@@ -269,7 +269,7 @@ function NextStep({ project: p, items, stage, base }: { project: Project; items:
     move = catchUp.to;
   } else if (quick && me.operator && canWrite && !approved && (unissued || !proposed.length)) {
     // A quick fix is quoted and issued in one step, from the quote form under Needs
-    text = cur ? <>The quote changed since {proposalRef(cur.p.number, cur.p.rev)}. Issue it again so the client approves the new price.</> : <>Write the price for this fix and issue the quote, so the client can approve it with one signature.</>;
+    text = cur ? <>The quote changed since {proposalRef(cur.p.number, cur.p.rev)}. Issue it again so the client approves the new price.</> : <>Write the price and issue the quote. The client approves with one signature.</>;
     action = { to: `${base}/needs#quote`, label: "Quote and issue" };
   } else if (unissued && me.operator && canWrite) {
     text = <>Issue the proposal{cur ? `'s next revision, r${cur.p.rev + 1},` : ""} so the client can approve an option.</>;
@@ -618,7 +618,7 @@ function PeopleDialog({ open, onClose, people, version, onSave }: { open: boolea
   return (
     <Dialog open={open} onClose={onClose} label="People on this project">
       <h2>People on this project</h2>
-      {dirty && version > base.version && <p className="notice newer" role="status">Someone changed this project while you were editing. Your list is kept; Save asks which to keep.</p>}
+      {dirty && version > base.version && <p className="notice newer" role="status">Someone changed this project while you edited. Your list is kept. Save asks which to keep.</p>}
       {!mayName && <p className="small muted">Only an admin of this organization can name or change the decision maker.</p>}
       <div className="people-edit">
         {draft.map((d, i) => {
@@ -1079,7 +1079,7 @@ function DecisionCard({ d, names, superseded }: { d: Item; names?: Map<string, s
           <PriceBasis terms={f.terms as Priced} />
         </div>
       ) : (
-        <p className="small muted" style={{ margin: "6px 0 0" }}>This decision was recorded before 1NEON kept a copy of the approved terms, so only the option and version are on record.</p>
+        <p className="small muted" style={{ margin: "6px 0 0" }}>Recorded before 1NEON kept approved terms, so only the option and version are on record.</p>
       )}
       {f.reason && <p className="small" style={{ margin: "6px 0 0" }}><b>Why it changed:</b> {f.reason}</p>}
       {d.body && <p className="small" style={{ margin: "6px 0 0" }}>Conditions: {d.body}</p>}
@@ -1151,7 +1151,7 @@ function ProposalStrip({ all, docs, path, project, decider }: { all: Item[]; doc
         </>
       ) : (
         quick
-          ? <div><b>Quote</b> <span className="small muted">not issued yet. {mayIssue ? "Write the price below, then Quote and issue. It freezes a numbered copy the client approves from." : "neon1 issues the quote, then you approve it here."}</span></div>
+          ? <div><b>Quote</b> <span className="small muted">not issued yet. {mayIssue ? "Write the price, then Quote and issue. That freezes a numbered copy for the client to approve." : "neon1 issues the quote, then you approve it here."}</span></div>
           : <div><b>Proposal draft</b> <span className="small muted">not issued yet. {mayIssue ? "Issuing freezes a numbered copy the client approves from." : "Options can be read now and approved once neon1 issues it."}</span></div>
       )}
       {/* Edited copies the client (or neon1) filed against a revision, each comparable with it */}
@@ -1167,7 +1167,7 @@ function ProposalStrip({ all, docs, path, project, decider }: { all: Item[]; doc
       </div>
       <Dialog open={issuing} onClose={() => setIssuing(false)} label="Issue the proposal">
         <h2>{cur ? `Issue revision ${cur.p.rev + 1}?` : "Issue the proposal?"}</h2>
-        <p className="small muted">This freezes a copy of the proposal as it is now, with an ID on every option, and tells the client. Prices are marked checked today and due a recheck in 30 days. Earlier revisions stay readable.</p>
+        <p className="small muted">This freezes the proposal as it is now, gives every option an ID, and tells the client. Prices are marked checked today and due a recheck in 30 days. Earlier revisions stay readable.</p>
         <label htmlFor="iss-note">What changed (optional)</label>
         <textarea id="iss-note" rows={2} value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} placeholder={cur ? "e.g. prices rechecked; option B adds a scanner" : "e.g. first issue"} />
         <div className="actions">
@@ -1248,7 +1248,7 @@ function Options({ items, all, docs, path, project }: { items: Item[]; all: Item
     const f = OptionFields.parse(o.fields);
     try {
       const copy = await api<Item>(`${path}/items`, { method: "POST", body: { kind: "option", title: o.title.endsWith("(revised)") ? o.title : `${o.title} (revised)`.slice(0, 160), body: o.body, status: "draft", fields: { ...f, recommended: f.recommended, revises: o.id } } });
-      toast("Revised copy made. Change its terms, share it, then issue the next revision for the client to approve.");
+      toast("Revision started. Edit the terms, share it, then issue the next revision for approval.");
       refresh();
       setOpenId(copy.id);
     } catch (e) {
@@ -1417,7 +1417,7 @@ function Options({ items, all, docs, path, project }: { items: Item[]; all: Item
               <li>{change.invoiced > 0 ? `${dollars(change.invoiced)} already invoiced for it counts toward this option. Nothing is billed twice.` : "Nothing has been invoiced for it yet."}</li>
               {change.price?.kind === "estimate" && change.hours > 0 && <li>{hoursText(change.hours)} already logged count toward this option's hours, and its high end still caps the total.</li>}
               {change.price && <li>{change.deposit > 0 ? `Deposit asked now: ${dollars(change.deposit)}${change.invoiced > 0 ? ", the difference" : ""}.` : "No new deposit: what was already invoiced covers it."}</li>}
-              {change.over && <li>What's been invoiced is more than this option can cost, so the difference comes back to you as a credit at handover.</li>}
+              {change.over && <li>Invoiced so far is more than this option costs. The difference comes back as a credit at handover.</li>}
               <li>Work already done stays on record. neon1 goes through the earlier option's open tasks and purchases with you before removing any.</li>
             </ul>
           </div>
@@ -1714,7 +1714,7 @@ function AcceptHandover({ steps, path, project }: { steps: Item[]; path: string;
   if (!decider) return null;
   // A quick fix's one step is the fix itself, and accepting it says so in those words
   const quick = isQuickFix(project);
-  if (left) return <p className="small muted handover-all">{quick ? "When neon1 marks it fixed, you can check it and accept it here with one signature." : <>When all {steps.length} steps are done, you can accept the handover with one signature. {left} to go.</>}</p>;
+  if (left) return <p className="small muted handover-all">{quick ? "When neon1 marks it fixed, check it and accept it here with one signature." : <>When all {steps.length} steps are done, you can accept the handover with one signature. {left} to go.</>}</p>;
   const accept = async () => {
     setBusy(true);
     try {

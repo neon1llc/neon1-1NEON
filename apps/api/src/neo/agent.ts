@@ -171,7 +171,7 @@ export async function runNeo(r: NeoRun): Promise<NeoReply & { rounds: number }> 
     messages.push({ role: "assistant", content: res.content }, { role: "user", content: results });
   }
   // Out of rounds or time: whatever Neo said last, plus what it offered
-  return { reply: clean(text) || (plan || tour ? "Here's what I'd do." : "That took longer than it should. Please ask again, maybe in fewer words."), tour, plan, rounds: max };
+  return { reply: clean(text) || (plan || tour ? "Here's what I'd do." : "That took too long. Ask again in fewer words."), tour, plan, rounds: max };
 }
 
 /** One tool call: a read, or a tour or plan checked against its schema */

@@ -61,7 +61,7 @@ export function AgreementPage() {
       ) : !a.required ? (
         <p className="notice small" role="status">neon1's own organization doesn't sign its own agreement.</p>
       ) : maySign ? (
-        <p className="notice small" role="status">Please read the agreement, then sign it at the bottom. You sign it once for {org.name}, and it covers every project.</p>
+        <p className="notice small" role="status">Read the agreement, then sign at the bottom. You sign once for {org.name}, and it covers every project.</p>
       ) : (
         <p className="notice small" role="status">Waiting for an admin of {org.name} to sign.</p>
       )}

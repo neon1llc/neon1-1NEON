@@ -179,7 +179,7 @@ function Plan({ plan }: { plan: NeoPlan }) {
       </ol>
       {phase === "offer" && (
         <>
-          {lasting && <p className="neo-warn">Some of these steps can't simply be edited back afterwards.</p>}
+          {lasting && <p className="neo-warn">Some of these steps can't be undone by editing.</p>}
           <div className="neo-acts">
             <span>Want me to do it?</span>
             <button type="button" className="n1chat-send" onClick={() => void run()}>Yes, do it</button>
@@ -273,7 +273,7 @@ export function Neo() {
       </div>
       <div ref={log} className="n1chat-log" role="log" aria-live="polite">
         <div className="n1chat-msg n1chat-bot">
-          <p>Hi, I'm Neo, 1NEON's automated assistant. Ask about anything in 1NEON. I can point you to it, show you around, or offer to do it with you.</p>
+          <p>I'm Neo, 1NEON's automated assistant. Ask about anything here. I can point you to it, show you around, or offer to do it with you.</p>
         </div>
         {!msgs.length && (
           <div className="n1chat-chips">

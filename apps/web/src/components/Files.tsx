@@ -257,7 +257,7 @@ export function FileList({ docs, projectName, empty = "No files yet." }: { docs:
   };
   // Deleting asks first; admins need strong sign-in for others' files
   const remove = async (d: DocumentRecord) => {
-    if (!(await ask({ title: `Delete ${d.name}?`, body: "It's deleted for everyone in this organization and can't be downloaded again. The activity log keeps a note that it was deleted.", yes: "Delete", danger: true }))) return;
+    if (!(await ask({ title: `Delete ${d.name}?`, body: "It's deleted for everyone in this organization and can't be downloaded again. The activity log notes the deletion.", yes: "Delete", danger: true }))) return;
     try {
       await api(`/t/${org.id}/docs/${d.id}${q(d)}`, { method: "DELETE" });
     } catch (e) {
