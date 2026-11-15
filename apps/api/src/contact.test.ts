@@ -2,16 +2,18 @@
 // field, validates input, and caps messages per sender each hour.
 import { beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "./app.ts";
-import { CONTACT_TO, PER_SENDER_HOURLY } from "./routes/contact.ts";
+import { CONTACT_TO, COUNTER_KEEP_S, PER_SENDER_HOURLY } from "./routes/contact.ts";
 import { MemoryDirectory, MemoryMailer, MemoryStorage } from "./services.ts";
 import { MemoryTable } from "./store/memory.ts";
 import { Repo } from "./store/repo.ts";
 
 let app: ReturnType<typeof createApp>;
 let mailer: MemoryMailer;
+let table: MemoryTable;
 beforeEach(() => {
   mailer = new MemoryMailer();
-  app = createApp({ cfg: { env: "local", publicUrl: "https://neon1.tech", operatorEmails: [], devAuth: true }, repo: new Repo(new MemoryTable()), directory: new MemoryDirectory(), mailer, storage: new MemoryStorage() });
+  table = new MemoryTable();
+  app = createApp({ cfg: { env: "local", publicUrl: "https://neon1.tech", operatorEmails: [], devAuth: true }, repo: new Repo(table), directory: new MemoryDirectory(), mailer, storage: new MemoryStorage() });
 });
 
 const good = { name: "Dana Kim", email: "dana@example.com", topic: "business", today: "We retype orders from email every Friday." };
@@ -50,6 +52,20 @@ describe("contact form", () => {
     for (let i = 0; i < PER_SENDER_HOURLY; i++) expect((await send(good)).status).toBe(200);
     expect((await send(good)).status).toBe(429);
     expect((await send(good, "198.51.100.9")).status).toBe(200);
+  });
+  it("keeps its counters for a day after their first count, then lets them expire", async () => {
+    const before = Math.floor(Date.now() / 1000);
+    expect((await send(good)).status).toBe(200);
+    const counters = await table.query("COUNTER", "CONTACT#");
+    expect(counters).toHaveLength(2);
+    for (const c of counters) {
+      expect(c.ttl).toBeGreaterThanOrEqual(before + COUNTER_KEEP_S);
+      expect(c.ttl).toBeLessThanOrEqual(before + COUNTER_KEEP_S + 5);
+    }
+    // A second message keeps the first count's expiry
+    const first = counters.map((c) => c.ttl);
+    expect((await send(good)).status).toBe(200);
+    expect((await table.query("COUNTER", "CONTACT#")).map((c) => c.ttl)).toEqual(first);
   });
   it("needs the custom header, like every other change", async () => {
     const r = await app.request("/1NEON/api/contact", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(good) });

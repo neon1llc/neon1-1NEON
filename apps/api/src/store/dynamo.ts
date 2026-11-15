@@ -134,13 +134,15 @@ export class DynamoTable implements TableStore {
   }
 
   /** Counters for client IDs and project keys; ADD is atomic, so two creates never share a number */
-  async increment(pk: string, sk: string, by = 1) {
+  // An expiring counter sets ttl only when it's new (if_not_exists), so it expires from its first count
+  async increment(pk: string, sk: string, by = 1, expiresAt?: number) {
     const r = await this.doc.send(
       new UpdateCommand({
         TableName: this.table,
         Key: { PK: pk, SK: sk },
-        UpdateExpression: "ADD n :one",
-        ExpressionAttributeValues: { ":one": by },
+        UpdateExpression: expiresAt === undefined ? "ADD n :one" : "ADD n :one SET #ttl = if_not_exists(#ttl, :ttl)",
+        ExpressionAttributeValues: expiresAt === undefined ? { ":one": by } : { ":one": by, ":ttl": expiresAt },
+        ...(expiresAt === undefined ? {} : { ExpressionAttributeNames: { "#ttl": "ttl" } }),
         ReturnValues: "UPDATED_NEW",
       }),
     );

@@ -6,6 +6,7 @@
 
 ### Changed
 - **The privacy and data policy, the cookie and storage notice, and the terms come from neon1-corpus.** `node scripts/legal.mjs <ref>` copies them at a pinned corpus ref, so /1NEON/privacy, /1NEON/cookies, and /1NEON/terms match the Knowledge Center word for word. The privacy page becomes the privacy and data policy (edition 3.0): the contact form, Stripe payments, upload scanning, signatures, log periods, a retention table, the test environment on generated data only, downloads, deletion, client systems, and incidents. The terms catch up with the corpus (Download everything, the business address).
+- **Contact form counters expire.** The per-sender hourly and daily counters behind the neon1.tech contact form's limits now expire a day after their first count (DynamoDB TTL), instead of staying in the table.
 
 ## v0.11.0 - 2026-11-14
 
