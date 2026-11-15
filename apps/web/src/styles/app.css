@@ -1544,3 +1544,23 @@ ul.md-says { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; 
 
 /* Revised terms on their option card: what they change from the approved option */
 .notice.revised-terms { display: block; margin: 0 0 10px; padding: 8px 12px; }
+
+
+/* Sign-up and prospects */
+/* The sign-up form's hidden field sits far off-screen: out of sight and reach for people, still filled by bots that fill every field */
+.hp { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+.signin label.agree { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: #A3C2AA; }
+.signin label.agree a { color: #D6F5DC; }
+.signin .check:empty { display: none; }
+/* The note on a new account's workspace stays calm: the notice look, in the accent instead of amber */
+.prospect-note { border-color: var(--line-strong); background: var(--accent-soft); }
+/* The operator's list: one card each, which stacks as it is on a phone */
+.signup-switch { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-bottom: 18px; }
+.prospect { margin-bottom: 14px; display: grid; gap: 10px; }
+.prospect-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
+.prospect-head h2 { margin: 0; font-size: 17px; overflow-wrap: anywhere; }
+.prospect-people { margin: 0; overflow-wrap: anywhere; }
+.prospect-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.prospect-facts dt { font: 11px var(--mono); color: var(--muted); }
+.prospect-facts dd { margin: 0; }
+@media (max-width: 520px) { .prospect-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
