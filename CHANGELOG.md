@@ -2,6 +2,11 @@
 
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
+## Unreleased
+
+### Changed
+- **Contact form counters expire.** The per-sender hourly and daily counters behind the neon1.tech contact form's limits now expire a day after their first count (DynamoDB TTL), instead of staying in the table.
+
 ## v0.11.0 - 2026-11-14
 
 ### Added
