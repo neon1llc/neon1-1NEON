@@ -4,9 +4,22 @@
 
 ## Unreleased
 
+### Added
+- **Sign-up for prospects.** Visitors can make their own 1NEON account from the site and add their projects' needs and files before any call. The emailed code proves the address before anything is saved. A new account is a limited prospect: at most 3 projects, 50 items in a project, and 10 files (documents and pictures only, 10 MB each, 50 MB in all, malware scanned), and no inviting, signing, approvals, proposals, billing, Neo, or texts. neon1 joins each prospect's organization, so Pradeep hears about every sign-up, project, and file.
+- Sign-up guards: an invisible Cloudflare Turnstile check, a hidden field, a minimum fill time, limits per address, per email, and per day, an API Gateway throttle on the sign-up route, and a switch that pauses sign-up. Unconfirmed sign-ups lose their sign-in account after a day. Sign-up stays off in production (`signup = false`) until the real Turnstile keys are in.
+- Prospects page for neon1: who signed up, when, last change, projects, and files, with Promote to client (the next N1 client ID, limits lifted), Keep, Suspend, Resume, and Delete.
+- Quiet prospects: kind check-ins after 7 and 14 days without a change, a final notice at 21 days, and deletion of the organization and its files on day 30, unless neon1 keeps it. Any real change restarts the clock. Clients are never deleted.
+- Change limits for everyone (300 an hour, 2,000 a day per person; prospects 60 and 300), so no one account can run away with the portal.
+
 ### Fixed
 - On an iPhone, the walkthrough's view of the portal drew its top bar partway down the page, over the cards, with an empty band above the page title. The bar now sits right under the walkthrough's narration, as it does elsewhere. The interactive demo (/1NEON/demo) had the same gap under its notice bar, now gone too. The walkthrough check now fails if the bar drifts from under the narration.
 - The first chapter of a walkthrough says "Sign in to Home" instead of "Sign in", since it shows Home too.
+- On a phone, a walkthrough scrolls a row that runs past the screen's edge (a project's tabs) to bring what Maria taps next into view, instead of her cursor drifting off screen to reach Execute.
+
+### Changed
+- **The demo's payment page looks like a real checkout.** Pay in the demo and the walkthroughs opens a stand-in laid out like a hosted payment page: who's paid and how much, the email, card details (with a one-tap test card) or a bank and an account, then Pay, a moment of processing, and a receipt with the way back. It still says it's a demo, and no money moves. The walkthroughs pay the deposit and the final invoice through it.
+- Password managers recognize the sign-in's email field, so they offer the saved email and passkeys.
+- **Remember me keeps the email filled in.** Ticked, the email you signed in with is saved on this device (`1neon.email`, listed in the cookie and storage notice) and filled in next time; unticked, it's cleared.
 
 ## v0.12.0 - 2026-11-15
 

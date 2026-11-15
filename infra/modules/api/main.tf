@@ -46,6 +46,17 @@ variable "neo_monthly_usd" {
 }
 # Where locked copies of signed and billing records go
 variable "records_bucket" { type = string }
+# Prospect sign-up (apps/api/src/routes/signup.ts): off unless turned on here, and shut anyway until the
+# Turnstile secret below holds a real value
+variable "signup" {
+  type    = bool
+  default = false
+}
+variable "turnstile_site_key" {
+  description = "Cloudflare Turnstile site key for the sign-up form (public)."
+  type        = string
+  default     = ""
+}
 
 # The permission ceiling on both function roles (neon1-aws-infrastructure github/); dev has its own
 variable "boundary" {
@@ -141,7 +152,7 @@ data "aws_iam_policy_document" "api" {
   statement {
     sid       = "StripeKeys"
     actions   = ["ssm:GetParameters"]
-    resources = [aws_ssm_parameter.stripe_key.arn, aws_ssm_parameter.stripe_webhook.arn]
+    resources = [aws_ssm_parameter.stripe_key.arn, aws_ssm_parameter.stripe_webhook.arn, aws_ssm_parameter.turnstile_secret.arn]
   }
   # SecureString decryption, only through SSM
   statement {
@@ -238,6 +249,17 @@ resource "aws_ssm_parameter" "stripe_webhook" {
 }
 
 
+# Cloudflare Turnstile's secret for the sign-up form. Same pattern: a placeholder here, the real value put in
+# by hand. Dev starts with Cloudflare's published test secret (it passes every check and protects nothing)
+resource "aws_ssm_parameter" "turnstile_secret" {
+  name        = "/1neon/${var.env}/turnstile/secret-key"
+  description = "Cloudflare Turnstile secret key for the 1NEON sign-up form"
+  type        = "SecureString"
+  value       = var.env == "dev" ? "1x0000000000000000000000000000000AA" : "unset"
+  lifecycle { ignore_changes = [value] }
+}
+
+
 # --- Functions ---
 
 
@@ -286,6 +308,9 @@ resource "aws_lambda_function" "api" {
       RECORDS_BUCKET                      = var.records_bucket
       STRIPE_KEY_PARAM                    = aws_ssm_parameter.stripe_key.name
       STRIPE_WEBHOOK_PARAM                = aws_ssm_parameter.stripe_webhook.name
+      SIGNUP                              = var.signup ? "on" : "off"
+      TURNSTILE_SITE_KEY                  = var.turnstile_site_key
+      TURNSTILE_SECRET_PARAM              = aws_ssm_parameter.turnstile_secret.name
       NODE_OPTIONS                        = "--enable-source-maps"
       AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
     }
@@ -354,6 +379,13 @@ resource "aws_apigatewayv2_route" "api" {
   target    = "integrations/${aws_apigatewayv2_integration.api.id}"
 }
 
+# The public sign-up form gets its own route, so it can have a much lower throttle than the rest
+resource "aws_apigatewayv2_route" "signup" {
+  api_id    = aws_apigatewayv2_api.main.id
+  route_key = "POST /1NEON/api/auth/signup"
+  target    = "integrations/${aws_apigatewayv2_integration.api.id}"
+}
+
 
 # One JSON line per request, for incident review
 resource "aws_cloudwatch_log_group" "access" {
@@ -372,6 +404,14 @@ resource "aws_apigatewayv2_stage" "default" {
   default_route_settings {
     throttling_rate_limit  = 50
     throttling_burst_limit = 100
+  }
+
+  # Sign-up across everyone: a request a second, a few at once. The app's own counters cap it per
+  # address, per email, and per day on top of this
+  route_settings {
+    route_key              = aws_apigatewayv2_route.signup.route_key
+    throttling_rate_limit  = 1
+    throttling_burst_limit = 5
   }
 
   # Request ID, caller, route, status, latency, and integration errors; no bodies or cookies

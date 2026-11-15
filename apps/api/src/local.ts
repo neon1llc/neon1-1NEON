@@ -39,7 +39,13 @@ export class MemoryDirectory implements Directory {
   readonly users = new Set<string>();
   // Record the invitee instead of calling Cognito
   async ensureUser(email: string) {
+    const made = !this.users.has(email);
     this.users.add(email);
+    return made;
+  }
+  // Forget the account, as Cognito would delete it
+  async removeUser(email: string) {
+    this.users.delete(email);
   }
   // Passkeys "added" here, and whether the factor lookup should fail, for tests to arrange
   passkeys = 0;

@@ -7,6 +7,7 @@ import type { Context } from "hono";
 import { z } from "zod";
 import { actorId, body, byRank, check, defined, fail, label, need, now, validateFields, who, type Env } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
+import { itemQuota } from "../lib/guards.ts";
 import { keys, type Repo } from "../store/repo.ts";
 import { issueProposal } from "../proposals.ts";
 
@@ -51,6 +52,8 @@ export function itemRoutes(app: App, k: Kit) {
     // Anyone who can read may submit a request (intake); everything else needs write
     need(c, input.kind === "request" ? "comment" : "write");
     if (input.kind === "decision") fail(400, "invalid", "Decisions are recorded by approving an option.");
+    // A prospect's projects hold a limited number of items (lib/guards.ts)
+    await itemQuota(k, c, p.id);
     if (input.kind === "proposal") fail(400, "invalid", "Proposal revisions are made by issuing the proposal.");
     if (input.kind === "invoice" || input.kind === "payment") fail(400, "invalid", "Invoices and payments are made through Billing.");
     // Agreements and acceptances are recorded by their own routes, by the people allowed to give them

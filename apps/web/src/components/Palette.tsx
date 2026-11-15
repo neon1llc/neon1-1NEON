@@ -13,7 +13,7 @@ import { Dialog } from "./ui.tsx";
 
 
 /** The palette for one organization (or none, on profile and All clients) */
-export function Palette({ me, org, open, setOpen, onHelp, onTour }: { me: Me; org?: OrgSummary; open: boolean; setOpen: (v: boolean) => void; onHelp: () => void; onTour: () => void }) {
+export function Palette({ me, org, prospect, open, setOpen, onHelp, onTour }: { me: Me; org?: OrgSummary; prospect?: boolean; open: boolean; setOpen: (v: boolean) => void; onHelp: () => void; onTour: () => void }) {
   const nav = useNavigate();
   const [q, setQ] = useState("");
   // Projects to jump to; fetched only while the palette is open
@@ -41,8 +41,9 @@ export function Palette({ me, org, open, setOpen, onHelp, onTour }: { me: Me; or
   const base = org ? `/o/${org.slug}` : "";
   // The caller's access here; neon1's operator can do everything
   const access = me.orgs.find((o) => o.id === org?.id)?.access ?? org?.access;
-  const canAdmin = me.operator || access === "admin";
-  const canWrite = canAdmin || access === "editor";
+  // A new account can't invite people, so the palette doesn't offer it
+  const canAdmin = me.operator || (access === "admin" && !prospect);
+  const canWrite = me.operator || access === "admin" || access === "editor";
   return (
     <Dialog open={open} onClose={() => setOpen(false)} label="Search" className="palette">
       <Command label="Search 1NEON" loop>
@@ -80,6 +81,7 @@ export function Palette({ me, org, open, setOpen, onHelp, onTour }: { me: Me; or
             )}
             <Command.Item onSelect={go(() => nav("/me"))}>Your profile</Command.Item>
             {me.operator && <Command.Item onSelect={go(() => nav("/all/workflow"))}>All clients</Command.Item>}
+            {me.operator && <Command.Item onSelect={go(() => nav("/all/prospects"))}>Prospects</Command.Item>}
             {me.orgs.filter((o) => o.id !== org?.id).map((o) => (
               <Command.Item key={o.id} value={`switch ${o.name} ${o.clientId}`} onSelect={go(() => nav(`/o/${o.slug}/workspace`))}>Switch to {o.name}</Command.Item>
             ))}

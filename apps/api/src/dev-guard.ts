@@ -42,6 +42,7 @@ export function guardDirectory(cfg: Pick<Config, "env" | "operatorEmails">, dire
   if (!isDev(cfg)) return directory;
   return {
     ensureUser: async (email) => (neon1Only(cfg, email) ? directory.ensureUser(email) : held("account", email)),
+    removeUser: directory.removeUser && (async (email) => directory.removeUser!(email)),
     factors: (t) => directory.factors(t),
     startPasskey: (t) => directory.startPasskey(t),
     finishPasskey: (t, c) => directory.finishPasskey(t, c),

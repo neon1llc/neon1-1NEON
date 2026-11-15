@@ -16,7 +16,9 @@ import { useQueryClient } from "@tanstack/react-query";
 
 // Organization details for everyone; stage editing for admins
 export function Settings() {
-  const { org, summary, canAdmin, access } = useOrg();
+  const { org, summary, canAdmin: admin, access, prospect } = useOrg();
+  // A new account reads its settings; stages change once neon1 and it are working together
+  const canAdmin = admin && !prospect;
   const qc = useQueryClient();
   const toast = useToast();
   // A working copy of the stages, saved all at once
@@ -66,13 +68,13 @@ export function Settings() {
         <div><span className="muted small">Organization</span> <b>{org.name}</b></div>
         <div><span className="muted small">Client ID</span> <span className="mono">{org.clientId}</span></div>
         {/* neon1's service agreement: who signed it, or a way to read and sign it */}
-        <div><span className="muted small">Service agreement</span> {org.agreements?.length ? <>signed by {org.agreements.at(-1)!.typedName}, edition {org.agreements.at(-1)!.ref}. </> : "not signed yet. "}<Link to={`/o/${summary.slug}/agreement`}>{org.agreements?.length ? "Read it" : "Read and sign"}</Link></div>
+        <div hidden={prospect}><span className="muted small">Service agreement</span> {org.agreements?.length ? <>signed by {org.agreements.at(-1)!.typedName}, edition {org.agreements.at(-1)!.ref}. </> : "not signed yet. "}<Link to={`/o/${summary.slug}/agreement`}>{org.agreements?.length ? "Read it" : "Read and sign"}</Link></div>
         <div><span className="muted small">Address</span> <span className="mono">neon1.tech/1NEON/o/{org.slug}</span></div>
         <div><span className="muted small">Your access</span> <span className="tag">{access}</span></div>
       </div>
       <h2 className="section-h">Board stages</h2>
       <p className="muted small">Each row is a column on the board, in order: its name, its layer, when it's done, and an optional limit on how many projects it holds. A hidden stage still shows on the board while projects are in it.</p>
-      {!canAdmin && <p className="muted small">Only admins can change stages.</p>}
+      {!canAdmin && <p className="muted small">{prospect ? "Stages open up once we're working together." : "Only admins can change stages."}</p>}
       {/* One row per stage: name, layer, exit rule, limit, and order controls; phones stack each stage as a card */}
       <div className="stages" data-tour="stages">
         {stages.map((s, i) => (

@@ -4,10 +4,13 @@
 
 import { handle } from "hono/aws-lambda";
 import { createApp } from "../app.ts";
+import type { Deps } from "../lib/kit.ts";
 import { CognitoAuth } from "../auth.ts";
 import { loadConfig } from "../config.ts";
 import { GetParametersCommand, SSMClient } from "@aws-sdk/client-ssm";
-import { AwsTexter, CognitoDirectory, S3Records, S3Storage, SesMailer } from "../services.ts";
+import { AwsTexter, CognitoDirectory, S3Records, S3Storage, SesMailer, TurnstileCheck } from "../services.ts";
+import { sweepSignups } from "../routes/signup.ts";
+import { sweepQuietProspects } from "../routes/prospects.ts";
 import { StripePayments } from "../payments.ts";
 import { beforeDeadline, drainOutbox } from "../outbox.ts";
 import { sweepFiles } from "../files.ts";
@@ -57,7 +60,23 @@ async function stripe() {
 }
 const payments = await stripe();
 
-const app = createApp({
+// Turnstile's secret for the sign-up form, read once at cold start from SSM. Without it sign-up stays
+// shut (signup.ts refuses deployed sign-ups with no bot check), and the rest of the API runs as usual
+async function turnstile() {
+  if (!cfg.signup || !cfg.turnstileSecretParam) return undefined;
+  const r = await new SSMClient({}).send(new GetParametersCommand({ Names: [cfg.turnstileSecretParam], WithDecryption: true })).catch((e: unknown) => {
+    console.error(JSON.stringify({ level: "error", message: "turnstile secret unreadable; sign-up shut", error: String(e) }));
+    return undefined;
+  });
+  const secret = r?.Parameters?.[0]?.Value;
+  // Tokens must come from our own pages; dev uses Cloudflare's test keys, whose tokens name example.com
+  const host = new URL(cfg.publicUrl).hostname;
+  return secret && secret !== "unset" ? new TurnstileCheck(secret, secret.startsWith("1x0000") ? [] : [host]) : undefined;
+}
+const humanCheck = await turnstile();
+
+// Production wiring, shared by the API and the scheduled pass
+const deps: Deps = {
   cfg,
   repo,
   directory: guardDirectory(cfg, new CognitoDirectory(cfg.userPoolId)),
@@ -71,8 +90,11 @@ const app = createApp({
   payments,
   // Locked copies of signed approvals, agreements, invoices, and payments
   records: cfg.recordsBucket ? new S3Records(cfg.recordsBucket) : undefined,
+  // The bot check on the sign-up form
+  humanCheck,
   neo: cfg.neoModel ? { model: bedrockNeo(), modelId: cfg.neoModel, budget: { ...DEFAULT_BUDGET, monthlyUsd: cfg.neoMonthlyUsd ?? DEFAULT_BUDGET.monthlyUsd } } : undefined,
-});
+};
+const app = createApp(deps);
 
 
 // API Gateway HTTP API (payload 2.0) events in, responses out
@@ -93,11 +115,15 @@ export const handler = async (event: Parameters<typeof http>[0] | { source?: str
     const result = await drainOutbox({ repo, mailer, texter, cfg }, { deadline: Math.min(end - 2_000, Date.now() + 7_000) });
     // Then files whose scan finished since the last pass become ready (or rejected) without a re-upload
     const files = await beforeDeadline(sweepFiles({ repo, storage }, { deadline: end - 500 }), end).catch((e) => ({ watched: 0, settled: 0, error: (e as Error).name }));
+    // Sign-ups never confirmed lose their sign-in account after a day; quiet prospects get their emails
+    // (and, at the end, deletion) once a day. Neither may hold up the next pass
+    const signups = await beforeDeadline(sweepSignups({ repo, d: deps }, { deadline: end - 300 }), end).catch((e) => ({ removed: 0, error: (e as Error).name }));
+    const quiet = Date.now() < end - 1_000 ? await beforeDeadline(sweepQuietProspects({ repo, d: deps, cfg }), end).catch((e) => ({ error: (e as Error).name })) : undefined;
     // One line per pass in CloudWatch's embedded metric format: counts and queue age only, never
     // addresses or bodies. Written to stdout directly, because the JSON log wrapper would hide the
     // metric directive inside its message field
-    process.stdout.write(`${JSON.stringify({ ...outboxMetrics(result), files })}\n`);
-    return { ...result, files };
+    process.stdout.write(`${JSON.stringify({ ...outboxMetrics(result), files, signups, quiet })}\n`);
+    return { ...result, files, signups, quiet };
   }
   return http(event as Parameters<typeof http>[0], context);
 };

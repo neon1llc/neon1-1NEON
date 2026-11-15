@@ -23,7 +23,7 @@ export interface NotifyGroup {
 // In order of importance; the first group whose match accepts an action owns it
 export const NOTIFY_GROUPS: NotifyGroup[] = [
   { id: "files", label: "Files", hint: "A file is uploaded or removed", level: "critical", email: true, match: (a) => a.startsWith("doc.") },
-  { id: "access", label: "People and access", hint: "Someone is invited, joins, or gets a different access level", level: "critical", email: true, match: (a) => a === "member.invited" || a === "member.joined" || a === "member.updated" },
+  { id: "access", label: "People and access", hint: "Someone is invited, joins, signs up, or gets a different access level", level: "critical", email: true, match: (a) => a === "member.invited" || a === "member.joined" || a === "member.updated" || a.startsWith("prospect.") },
   { id: "decisions", label: "Decisions and options", hint: "An option is proposed, approved, or changed to another, a proposal is issued, or a refresh is asked for", level: "critical", email: true, match: (a) => a === "decision.approved" || a === "decision.changed" || a.startsWith("option.") || a === "proposal.issued" || a === "proposal.refresh_asked" || a === "purchase.agreed" || a === "handoff.accepted" },
   { id: "billing", label: "Agreements, invoices, and payments", hint: "The service agreement is signed, an invoice is issued or voided, or a payment starts, arrives, or fails", level: "critical", email: true, match: (a) => a === "agreement.signed" || a === "invoice.issued" || a === "invoice.voided" || a.startsWith("payment.") },
   { id: "workflow", label: "Workflow and stages", hint: "A project moves stage, or the board's stages change", level: "critical", email: true, match: (a) => a === "project.moved" || a === "org.stages" || a === "project.created" || a === "project.trashed" },
@@ -44,8 +44,9 @@ export const RECEIPTS = new Set(["decision.approved", "decision.changed", "agree
  * where neon1 is its own client, the billing that a client would hear about as well */
 export const actorHears = (action: string, ownOrg: boolean) => RECEIPTS.has(action) || (ownOrg && groupOf(action).id === "billing");
 
-/** Actions only neon1 hears about: its own working drafts, which a client sees once issued */
-export const neon1Only = (action: string) => action === "invoice.drafted";
+/** Actions only neon1 hears about: its own working drafts, which a client sees once issued, and its
+ * handling of prospects (sign-up, keeping, suspending), apart from a promotion to client */
+export const neon1Only = (action: string) => action === "invoice.drafted" || (action.startsWith("prospect.") && action !== "prospect.promoted");
 
 
 /**

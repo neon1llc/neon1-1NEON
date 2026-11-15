@@ -911,6 +911,18 @@ export class Player {
         el.scrollIntoView({ block: "center", behavior: how() });
         await pause(560);
       }
+      // Sideways too: something past the edge of a row that scrolls on its own (a project's tabs on a
+      // phone) is scrolled into view first, as a thumb would swipe the row, so the cursor never wanders off screen
+      for (let box = el.parentElement; box && box !== document.body; box = box.parentElement) {
+        if (box.scrollWidth <= box.clientWidth + 1 || !/auto|scroll/.test(getComputedStyle(box).overflowX)) continue;
+        const rb = box.getBoundingClientRect(), re = el.getBoundingClientRect();
+        const left = Math.max(rb.left, 0) + 12, right = Math.min(rb.right, innerWidth) - 12;
+        if (re.left >= left && re.right <= right) break;
+        // Center it in the row, so the tabs on both sides of it still show
+        box.scrollBy({ left: re.left + re.width / 2 - (rb.left + rb.width / 2), behavior: how() });
+        await pause(520);
+        break;
+      }
       // Aim where the element is now; if the layout moved while gliding (a resize, a rotation, a menu
       // sliding in), aim again at where it went, so the cursor always lands on it
       for (let tries = 0; tries < 3; tries++) {

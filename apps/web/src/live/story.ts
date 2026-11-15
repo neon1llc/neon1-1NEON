@@ -211,6 +211,18 @@ async function dropFile(s: Stage, target: Parameters<Stage["click"]>[0], name: s
 }
 
 
+/** On the stand-in payment page: US bank account, the made-up bank, the business checking account,
+ * then Pay, and the receipt once it has processed. `thought` is why she picks the bank */
+async function bankCheckout(s: Stage, thought: string) {
+  await s.think(thought);
+  await s.click({ sel: "dialog[open] .dc-methods button", text: "US bank account" }, 700);
+  await s.click({ sel: "dialog[open] .dc-choice", text: "Sample Community Bank" }, 800);
+  await s.click({ sel: "dialog[open] .dc-choice", text: "Business checking" }, 700);
+  await s.click({ sel: "dialog[open] .dc-submit" }, 600);
+  await s.waitFor({ sel: "dialog[open] .dc-done" });
+  await s.hover({ sel: "dialog[open] .dc-done h2" }, 1200);
+}
+
 /** The sections, in order. Titles are what the Back and Next buttons say. Captions (say) narrate in
  * the bar; thoughts (think) are Maria's own, beside the cursor, at each look and move */
 export const STORY: Section[] = [
@@ -506,8 +518,14 @@ export const STORY: Section[] = [
       await s.top();
       await s.say("Pay opens Stripe's hosted payment page; 1NEON never sees her bank or card details");
       await s.click({ sel: ".pp-tools button", text: /^Pay / }, 1200);
-      await s.say("No money moves in a walkthrough, so a stand-in page opens. She pays from the bakery's bank account");
-      await s.click({ sel: "dialog[open] button", text: "Pay from a bank account" }, 1200);
+      await s.say("No money moves in a walkthrough, so a stand-in opens, laid out like Stripe's page: the amount, then how to pay");
+      await s.think(`${MONEY.deposit} to neon1. Right amount.`);
+      await s.hover(".dc-amount", 1000);
+      await s.say("She pays from the bakery's bank account: pick the bank, then the account");
+      await bankCheckout(s, "Bank transfer, like the invoice suggests.");
+      await s.say("Paid by bank, it's started, not finished: the bank takes a few business days to clear it");
+      await s.think("Started. Back to 1NEON.");
+      await s.click({ sel: "dialog[open] .dc-done button", text: "Return to 1NEON" }, 1000);
       await s.say("Until the bank clears it, the invoice says it's on its way, and Pay is gone so nobody pays twice");
       await s.think("Started today, and nothing more to pay. Good.");
       await s.hover(".pp-state", 1400);
@@ -665,8 +683,8 @@ export const STORY: Section[] = [
       await s.hover(".inv-hours", 1500);
       await s.top();
       await s.click({ sel: ".pp-tools button", text: /^Pay / }, 1200);
-      await s.think("From the bank account again, like the deposit.");
-      await s.click({ sel: "dialog[open] button", text: "Pay from a bank account" }, 1200);
+      await bankCheckout(s, "From the bank account again, like the deposit.");
+      await s.click({ sel: "dialog[open] .dc-done button", text: "Return to 1NEON" }, 1000);
       await s.others(finalPaid, 1200, "Her bank payment cleared");
       await s.think("Paid in full. Both invoices stay here for my accountant.");
       await s.hover(".inv-lines tfoot", 1200);

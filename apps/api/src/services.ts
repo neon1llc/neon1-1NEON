@@ -4,6 +4,7 @@
 
 import {
   AdminCreateUserCommand,
+  AdminDeleteUserCommand,
   AdminGetUserCommand,
   CognitoIdentityProviderClient,
   GetUserCommand,
@@ -21,8 +22,11 @@ import type { Records } from "./payments.ts";
 
 /** The identity directory: create sign-in accounts for invitees and check strong sign-in */
 export interface Directory {
-  /** Create a passwordless user for an invited email; no-op if they already exist */
-  ensureUser(email: string): Promise<void>;
+  /** Create a passwordless user for an invited email; no-op if they already exist. True when this
+   * call made the account (sign-up remembers that, so it only ever removes accounts it made) */
+  ensureUser(email: string): Promise<boolean | void>;
+  /** Remove a sign-in account: a sign-up never confirmed, or a deleted prospect. Missing is fine */
+  removeUser?(email: string): Promise<void>;
   /** The strong factors Cognito holds for this person. Throws when it can't tell, so callers can
    * treat the answer as unknown instead of as "none" */
   factors(accessToken: string): Promise<{ totp: boolean; passkeys: number }>;
@@ -30,6 +34,39 @@ export interface Directory {
   startPasskey(accessToken: string): Promise<unknown>;
   /** Finish adding a passkey with the browser's signed credential */
   finishPasskey(accessToken: string, credential: unknown): Promise<void>;
+}
+
+
+/** The bot check on the sign-up form (Cloudflare Turnstile in production). True only for a token the
+ * provider vouches for, issued for sign-up on this site; any doubt or failure is false */
+export interface HumanCheck {
+  verify(token: string, ip: string, signal?: AbortSignal): Promise<boolean>;
+}
+
+
+/** Cloudflare Turnstile's server-side check. The secret comes from SSM at cold start, never the repo */
+export class TurnstileCheck implements HumanCheck {
+  constructor(private secret: string, private hostnames: string[]) {}
+
+  async verify(token: string, ip: string, signal?: AbortSignal) {
+    if (!token || token.length > 2048) return false;
+    try {
+      const r = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ secret: this.secret, response: token, ...(ip && ip !== "unknown" ? { remoteip: ip } : {}) }),
+        signal: signal ?? AbortSignal.timeout(5000),
+      });
+      if (!r.ok) return false;
+      const v = (await r.json()) as { success?: boolean; hostname?: string; action?: string };
+      // The token must be for the sign-up action, issued on one of our own hostnames. Cloudflare's test
+      // keys answer with hostname "example.com", so the action alone is checked when testing on dev
+      if (!v.success || (v.action && v.action !== "signup")) return false;
+      return this.hostnames.length === 0 || this.hostnames.includes(String(v.hostname ?? ""));
+    } catch {
+      return false;
+    }
+  }
 }
 
 
@@ -147,7 +184,7 @@ export class CognitoDirectory implements Directory {
   async ensureUser(email: string) {
     try {
       await this.idp.send(new AdminGetUserCommand({ UserPoolId: this.userPoolId, Username: email }));
-      return;
+      return false;
     } catch {
       /* not found: create */
     }
@@ -165,8 +202,19 @@ export class CognitoDirectory implements Directory {
           ],
         }),
       );
+      return true;
     } catch (e) {
       if (!(e instanceof UsernameExistsException)) throw e;
+      return false;
+    }
+  }
+
+  // Delete a sign-in account; one already gone counts as done
+  async removeUser(email: string) {
+    try {
+      await this.idp.send(new AdminDeleteUserCommand({ UserPoolId: this.userPoolId, Username: email }));
+    } catch (e) {
+      if ((e as { name?: string }).name !== "UserNotFoundException") throw e;
     }
   }
 

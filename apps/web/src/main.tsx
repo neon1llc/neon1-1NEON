@@ -94,7 +94,7 @@ const router = createBrowserRouter(
             { path: "settings", lazy: page(() => import("./pages/Settings.tsx"), "Settings") },
           ] }],
         },
-        { path: "all", element: <AllLayout />, children: [{ errorElement: <RouteError inFrame />, children: [{ index: true, element: <Navigate to="workflow" replace /> }, { path: "workflow", lazy: page(() => import("./pages/AllWorkflow.tsx"), "AllWorkflow") }] }] },
+        { path: "all", element: <AllLayout />, children: [{ errorElement: <RouteError inFrame />, children: [{ index: true, element: <Navigate to="workflow" replace /> }, { path: "workflow", lazy: page(() => import("./pages/AllWorkflow.tsx"), "AllWorkflow") }, { path: "prospects", lazy: page(() => import("./pages/Prospects.tsx"), "Prospects") }] }] },
         { element: <PlainLayout />, children: [{ errorElement: <RouteError inFrame />, children: [{ path: "me", lazy: page(() => import("./pages/Me.tsx"), "MePage") }] }] },
         { path: "*", element: <NotFound /> },
       ],

@@ -3,6 +3,7 @@
 // project updates, and recent activity with what each edit changed.
 
 
+import { ProspectNote } from "../components/Prospect.tsx";
 import { KIND_LAYER, type ItemKind } from "@1neon/domain";
 import { useQuery } from "@tanstack/react-query";
 import { Check, CircleCheck, FileUp, ListTodo, PenLine, Receipt } from "lucide-react";
@@ -32,7 +33,9 @@ const ACTION = {
 
 // The organization's home
 export function WorkspacePage() {
-  const { org, summary, canWrite, canAdmin } = useOrg();
+  const { org, summary, canWrite, canAdmin: admin, prospect } = useOrg();
+  // Inviting and admin steps wait until neon1 and a new account are working together
+  const canAdmin = admin && !prospect;
   const me = useSession();
   const help = useHelp();
   const base = `/o/${summary.slug}`;
@@ -63,6 +66,7 @@ export function WorkspacePage() {
   return (
     <>
       <h1 className="page-title">{first ? `Hi, ${first}` : "Home"}</h1>
+      {prospect && <ProspectNote />}
       <p className="lead">{ws.data && !blocked ? (n ? `${n} ${n === 1 ? "thing needs" : "things need"} you.` : "Nothing needs you right now.") : " "}</p>
       <Stale reads={[ws]} />
 
