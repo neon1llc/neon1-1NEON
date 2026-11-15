@@ -14,6 +14,13 @@ try {
   // No storage, no fade
 }
 
+// neon1.tech's pages also cross-fade into the next page (@view-transition in shared/neon1.css). Arriving
+// here, the site has already faded to its rain and the app fades the sign-in in, so that browser fade is
+// skipped: one fade, not two in a row
+addEventListener("pagereveal", (e) => {
+  if (e.viewTransition && document.documentElement.classList.contains("from-site")) e.viewTransition.skipTransition();
+});
+
 
 // The app's bundle failing to load (offline, blocked, or a stale page after a deploy) would leave a
 // blank screen, so the shell's plain fallback message is shown instead. Script errors don't bubble,
