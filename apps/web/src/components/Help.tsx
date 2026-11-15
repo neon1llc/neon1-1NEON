@@ -300,7 +300,6 @@ export function HelpProvider({ me, children }: { me: Me; children: ReactNode }) 
       <Dialog open={welcome} onClose={() => setWelcome(false)} label="Welcome to 1NEON">
         <p className="eyebrow">Welcome to 1NEON</p>
         <h2>New here? Take the 1-minute tour.</h2>
-        <p className="muted">It shows where things are and what to do first.</p>
         {!me.user.name && (
           <div style={{ margin: "12px 0" }}>
             <label htmlFor="welcome-name">Your name, so others know who you are</label>

@@ -75,7 +75,7 @@ export function People() {
   return (
     <>
       <h1 className="page-title">People</h1>
-      <p className="lead">Everyone here sees the same projects. Access sets what they can change.</p>
+      <p className="lead">Everyone here sees the same projects.</p>
       {canAdmin && <Invite />}
       <Stale reads={[members]} />
       {/* Until the list answers, no empty table */}

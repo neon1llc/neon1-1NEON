@@ -10,7 +10,7 @@ Measured 2026-11-09 with `scripts/perf-signin.cjs`: an emulated Pixel 7 on Slow 
 | After route splitting, local, uncompressed | 679 kB | 4.5 s | 4.9 s | 0.91 s |
 | Live at neon1.tech (compressed by CloudFront) | 213 kB | 2.2 s | 2.6 s | 1.0 s |
 
-Both local runs serve the builds the same way (no compression, API and shared files forwarded to neon1.tech), so the difference is the code split alone: about 100 kB less script and half a second sooner to type. The live row shows what visitors get with compression.
+The two local runs are served the same way, so the difference is the code split alone: about 100 kB less script and half a second sooner to type.
 
 What's left is React, the router, and zod, which every page needs. Splitting further would trade one download for several round trips on a slow link, so nothing more is planned unless a real phone shows a problem.
 
