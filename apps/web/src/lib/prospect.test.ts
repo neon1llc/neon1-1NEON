@@ -43,19 +43,24 @@ describe("prospect state", () => {
 });
 
 describe("sign-up form", () => {
-  const ok = { email: " a@b.co ", name: " Ana ", org: " Acme ", terms: true };
+  const ok = { email: " a@b.co ", name: " Ana ", org: " Acme ", place: " Queens, NY ", link: "", terms: true };
   it("needs every field and the terms", () => {
     expect(signUpReady(ok)).toBe(true);
     expect(signUpReady({ ...ok, terms: false })).toBe(false);
     expect(signUpReady({ ...ok, org: " " })).toBe(false);
     expect(signUpReady({ ...ok, email: "nope" })).toBe(false);
   });
+  it("needs a place or a working link", () => {
+    expect(signUpReady({ ...ok, place: "" })).toBe(false);
+    expect(signUpReady({ ...ok, place: "", link: "acme.com" })).toBe(true);
+    expect(signUpReady({ ...ok, link: "not a link" })).toBe(false);
+  });
   it("measures the time the form was open, never negative", () => {
     expect(elapsedSince(1000, 4500)).toBe(3500);
     expect(elapsedSince(5000, 1000)).toBe(0);
   });
   it("sends trimmed values with the check, hidden field, and time", () => {
-    expect(signUpBody(ok, { check: "tok", website: "", elapsed: 5000, remember: true })).toEqual({ email: "a@b.co", name: "Ana", org: "Acme", terms: true, check: "tok", website: "", elapsed: 5000, remember: true });
+    expect(signUpBody(ok, { check: "tok", website: "", elapsed: 5000, remember: true })).toEqual({ email: "a@b.co", name: "Ana", org: "Acme", place: "Queens, NY", link: "", terms: true, check: "tok", website: "", elapsed: 5000, remember: true });
   });
   it("asks Turnstile for the invisible widget for sign-up", () => {
     const o = widgetOptions("key", { callback: () => undefined, expired: () => undefined, error: () => undefined });

@@ -6,7 +6,7 @@
 // The answer never says whether an email already has an account.
 
 
-import { DEFAULT_STAGES, PORTAL_TERMS_EDITION, formatProspectId, newId, slugify, type Member, type Tenant, type User } from "@1neon/domain";
+import { DEFAULT_STAGES, PORTAL_TERMS_EDITION, PublicFace, formatProspectId, newId, slugify, type Member, type Tenant, type User } from "@1neon/domain";
 import type { Context } from "hono";
 import { z } from "zod";
 import { isDev, neon1Only } from "../dev-guard.ts";
@@ -43,6 +43,8 @@ const PROSPECT_COUNTER = { PK: "COUNTER", SK: "PROSPECTID" } as const;
 
 
 // What the form sends
+// What the form sends. Where the business is based, or a link to it, is required (at least one), so
+// Pradeep can see who he'd be working with before he replies
 const SignUpBody = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
   name: z.string().trim().min(1).max(80),
@@ -56,7 +58,7 @@ const SignUpBody = z.object({
   // How long the form was open, in milliseconds, as the page measured it
   elapsed: z.number().int().nonnegative().max(7 * 24 * 3600 * 1000).default(0),
   remember: z.boolean().default(true),
-});
+}).and(PublicFace);
 
 
 /** The caller's address, as CloudFront saw it */
@@ -125,7 +127,7 @@ export function signupRoutes(app: App, k: Kit) {
       // sign-in account (only then may the sweep remove it). It expires on its own after three days
       await repo.table.write([{
         put: {
-          PK: SIGNUP_PK, SK: b.email, email: b.email, name: b.name, org: b.org, terms: PORTAL_TERMS_EDITION, from: who,
+          PK: SIGNUP_PK, SK: b.email, email: b.email, name: b.name, org: b.org, place: b.place, link: b.link, terms: PORTAL_TERMS_EDITION, from: who,
           made: made || Boolean(before?.made), at: new Date().toISOString(), ttl: Math.floor(Date.now() / 1000) + 3 * 24 * 3600,
         },
         guard: { always: true },
@@ -163,6 +165,9 @@ export async function claimSignup(k: Pick<Kit, "repo" | "cfg">, email: string): 
     slug: `${slugify(orgName).slice(0, 32).replace(/-+$/, "")}-${suffix}`,
     clientId: formatProspectId(await repo.table.increment(PROSPECT_COUNTER.PK, PROSPECT_COUNTER.SK)),
     name: orgName,
+    // Where the business is based and its link, as given at sign-up (the form checked them)
+    ...(pending.place ? { place: String(pending.place).slice(0, 80) } : {}),
+    ...(pending.link ? { link: String(pending.link).slice(0, 200) } : {}),
     status: "active",
     stages: DEFAULT_STAGES,
     prospect: { since: ts, terms: String(pending.terms ?? PORTAL_TERMS_EDITION).slice(0, 20), from: pending.from ? String(pending.from).slice(0, 64) : undefined },
@@ -193,7 +198,7 @@ export async function claimSignup(k: Pick<Kit, "repo" | "cfg">, email: string): 
   if (opId && opEmail) ops.push(repo.memberOp(member(opId, opEmail, (await repo.getUser(opId))?.name ?? "neon1"), { create: true }));
   ops.push(
     repo.membershipRevOp(tenant.id, 0),
-    repo.auditOp({ tenantId: tenant.id, actorId: uid, action: "prospect.signedup", target: tenant.id, summary: `${name || email} (${email}) signed up as ${orgName} (${tenant.clientId})` }),
+    repo.auditOp({ tenantId: tenant.id, actorId: uid, action: "prospect.signedup", target: tenant.id, summary: `${name || email} (${email}) signed up as ${orgName} (${tenant.clientId})${[tenant.place, tenant.link].filter(Boolean).map((x) => `, ${x}`).join("")}` }),
     { delete: { PK: SIGNUP_PK, SK: email } },
   );
   await repo.table.write(ops);

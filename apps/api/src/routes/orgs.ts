@@ -23,6 +23,8 @@ export function orgRoutes(app: App, k: Kit) {
       slug: input.slug ?? slugify(input.name),
       clientId: formatClientId(n),
       name: input.name,
+      ...(input.place ? { place: input.place } : {}),
+      ...(input.link ? { link: input.link } : {}),
       status: "active",
       stages: DEFAULT_STAGES,
       version: 1,

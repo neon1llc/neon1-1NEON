@@ -1,5 +1,6 @@
 // packages/domain/src/prospect.test.ts - The prospect allowlist and file rules: everything not listed is
 // refused, and a file's declared type and extension must agree.
+import { normalizeLink } from "./api.ts";
 
 
 import { describe, expect, it } from "vitest";
@@ -73,5 +74,15 @@ describe("quietStep", () => {
     expect(quietStep(30, 2, 9)).toBe("delete");
     // A pass missed for days still sends one email at a time, never a burst
     expect(quietStep(16, 0)).toBe("nudge");
+  });
+});
+
+
+describe("normalizeLink", () => {
+  it("makes typed addresses into full https links and refuses anything else", () => {
+    expect(normalizeLink("kimbakery.com")).toBe("https://kimbakery.com/");
+    expect(normalizeLink(" https://www.yelp.com/biz/kim-bakery ")).toBe("https://www.yelp.com/biz/kim-bakery");
+    expect(normalizeLink("http://example.org/a?b=1")).toBe("http://example.org/a?b=1");
+    for (const bad of ["", "kim bakery", "javascript:alert(1)", "ftp://x.com", "localhost", "https://user:pw@x.com", "data:text/html,hi"]) expect(normalizeLink(bad)).toBeUndefined();
   });
 });

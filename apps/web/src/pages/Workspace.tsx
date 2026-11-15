@@ -18,6 +18,7 @@ type HealthT = Project["health"];
 import { qk } from "../lib/hooks.ts";
 import { failureOf, hidesData, read } from "../lib/reads.ts";
 import type { Workspace } from "../lib/types.ts";
+import { FaceForm } from "../components/OrgFace.tsx";
 
 
 // The words and icon for each kind of thing waiting on someone
@@ -67,6 +68,8 @@ export function WorkspacePage() {
     <>
       <h1 className="page-title">{first ? `Hi, ${first}` : "Home"}</h1>
       {prospect && <ProspectNote />}
+      {/* An organization with neither a place nor a link: its own admins (not neon1) are asked here until one is added */}
+      {admin && !me.operator && !org.place && !org.link && <FaceForm ask />}
       <p className="lead">{ws.data && !blocked ? (n ? `${n} ${n === 1 ? "thing needs" : "things need"} you.` : "Nothing needs you right now.") : " "}</p>
       <Stale reads={[ws]} />
 

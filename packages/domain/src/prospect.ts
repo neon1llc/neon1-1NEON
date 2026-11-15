@@ -87,6 +87,8 @@ export const isSuspended = (t: Pick<Tenant, "prospect"> | undefined) => Boolean(
 // The changes a prospect's own people may make, by method and path under /t/:tid. Anything not listed
 // is refused: inviting people, settings, signing, approvals, proposals, quotes, invoices, and payments
 const ALLOWED: [method: string, path: RegExp][] = [
+  // Where they're based and their link, which sign-up asked for
+  ["PUT", /^\/profile$/],
   ["POST", /^\/projects$/],
   ["PATCH", /^\/projects\/[^/]+$/],
   ["DELETE", /^\/projects\/[^/]+$/],
