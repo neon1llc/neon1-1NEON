@@ -6,7 +6,7 @@
 
 import {
   AGREEMENT_EDITION, AGREEMENT_TEXT, CreateInvoiceInput, IssueInvoiceInput, Item, InvoiceFields, PaymentFields, RecordPaymentInput, SignAgreementInput, UpdateInvoiceInput, VoidInvoiceInput,
-  balanceOf, canonical, signedNameProblem, clearingOn, depositLines, finalLines, priceOf, type PriceTerms, invoiceNumber, invoiceTotal, isOwnOrg, money, newId, payableOn, plusDays, proposalNumber, reimbursementLines, revisions, sha256Hex, signature, todayIn,
+  balanceOf, canonical, creditRoomOn, signedNameProblem, clearingOn, depositLines, finalLines, priceOf, type PriceTerms, invoiceNumber, invoiceTotal, isOwnOrg, money, payableOn, plusDays, proposalNumber, reimbursementLines, revisions, sha256Hex, signature, todayIn,
   type Project, type Tenant,
 } from "@1neon/domain";
 import type { Context } from "hono";
@@ -173,6 +173,13 @@ export function billingRoutes(app: App, k: Kit, pay: ReturnType<typeof stripeWeb
     const suggested = input.type === "deposit" ? (decision ? depositLines(decision, undefined, items) : []) : input.type === "final" || input.type === "progress" ? (decision ? finalLines(decision, items) : []) : input.type === "reimbursement" ? reimbursementLines(items) : [];
     const lines = input.lines ?? suggested;
     if (!lines.length) fail(400, "no_lines", "There's nothing to bill yet. Add a line with what it's for and the amount.");
+    // A credit takes back money asked for, so it can't be more than is left on the invoice it names
+    if (input.type === "credit") {
+      const target = items.find((i) => i.id === input.appliesTo)!;
+      const room = creditRoomOn(target, items);
+      const asked = Math.abs(invoiceTotal({ type: "credit", taxCents: 0, lines: InvoiceFields.shape.lines.parse(lines) }));
+      if (asked > room) fail(400, "invalid", `${String(target.fields.number)} has ${money(room)} left to credit. A credit can't be more than that.`);
+    }
     const ts = now();
     const draft = draftInvoice(p, input.type, lines, ts, actorId(c), { termsDays: input.termsDays ?? 15, note: input.note, appliesTo: input.type === "credit" ? input.appliesTo : undefined })!;
     await repo.table.write([repo.itemOp(draft, { create: true }), repo.auditOp({ tenantId: p.tenantId, actorId: actorId(c), action: "invoice.drafted", target: draft.id, summary: `${p.key}: drafted ${draft.title.toLowerCase()} for ${money(invoiceTotal(InvoiceFields.parse(draft.fields)))}` })]);
@@ -208,6 +215,16 @@ export function billingRoutes(app: App, k: Kit, pay: ReturnType<typeof stripeWeb
     const t = c.get("tenant");
     const items = await repo.listItems(p.tenantId, p.id);
     const f = InvoiceFields.parse(it.fields);
+    // Two drafts can ask for the same money (a double click, or a second request for a deposit or the
+    // final); once one is issued, the same ask is never issued again
+    const same = (a: InvoiceFields["lines"], b: InvoiceFields["lines"]) => canonical(a) === canonical(b);
+    const twin = (f.type === "deposit" || f.type === "final") && items.find((i) => i.kind === "invoice" && i.id !== it.id && (i.status === "issued" || i.status === "paid") && i.fields.type === f.type && same(InvoiceFields.parse(i.fields).lines, f.lines));
+    if (twin) fail(409, "duplicate", `${String(twin.fields.number)} already asks for exactly this. Delete this draft instead of issuing it.`);
+    // A credit issued can't take its invoice below nothing, with the credits already issued counted
+    if (f.type === "credit") {
+      const target = items.find((i) => i.id === f.appliesTo);
+      if (target && Math.abs(invoiceTotal(f)) > creditRoomOn(target, items, true)) fail(409, "over_credit", `${String(target.fields.number)} has ${money(creditRoomOn(target, items, true))} left to credit. This credit is more than that.`);
+    }
     // Numbered under the project's proposal number, or its key when it has no proposal yet
     const first = revisions(items)[0];
     const base = first ? proposalNumber(first.p.number) : p.key;
@@ -270,7 +287,10 @@ export function billingRoutes(app: App, k: Kit, pay: ReturnType<typeof stripeWeb
     const left = payableOn(it, all);
     const onWay = clearingOn(it, all);
     if (input.amountCents > left) fail(400, "too_much", onWay ? `${money(left)} can be recorded: a bank payment of ${money(onWay)} is on its way for this invoice.` : `Only ${money(left)} is owed on this invoice.`);
-    const r = await pay.writePayment(p, it, { id: newId("i"), amountCents: input.amountCents, method: input.method, ref: input.ref, receivedAt: input.receivedAt, by: actorId(c) });
+    // Each hand payment's ID follows from how many the invoice already has, so two sent at the same
+    // moment (two tabs, a double click) collide: one is recorded and the other is told
+    const nth = all.filter((i) => i.kind === "payment" && i.fields.invoiceId === it.id).length;
+    const r = await pay.writePayment(p, it, { id: `i_h${replayKey(`${it.id}|${nth}`)}`, amountCents: input.amountCents, method: input.method, ref: input.ref, receivedAt: input.receivedAt, by: actorId(c) });
     return c.json(r, 201);
   });
 

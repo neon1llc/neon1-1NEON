@@ -206,10 +206,26 @@ export function inStageFor(iso: string) {
   const n = daysSince(iso);
   return n === 0 ? "since today" : `for ${n} day${n === 1 ? "" : "s"}`;
 }
-/** The same, compact, for lists and cards: "today", "1d", "12d" */
+/** The same, short enough for lists and cards, still in words: "new today", "1 day", "12 days" */
 export function stageAge(iso: string) {
   const n = daysSince(iso);
-  return n === 0 ? "today" : `${n}d`;
+  return n === 0 ? "new today" : `${n} day${n === 1 ? "" : "s"}`;
+}
+
+
+/**
+ * Where a project stands, for cards and lists. An open project shows its health, the team's current
+ * assessment. A closed project is finished, so it shows that and when instead: its last health was
+ * about work that has ended, and showing it would read as a current status ("On track" on closed work)
+ */
+export function Standing({ health, closed, since }: { health: HealthT; closed: boolean; since: string }) {
+  if (!closed) return <Health value={health} />;
+  return (
+    <span className="health h-closed" title={`Closed on ${dateLabel(since)}. The project page has the handover.`}>
+      <i aria-hidden="true" />
+      Closed {dateLabel(since)}
+    </span>
+  );
 }
 
 

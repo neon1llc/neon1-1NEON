@@ -9,7 +9,7 @@ import type { DocumentRecord, Item, Project, Tenant } from "@1neon/domain";
 import { makeZip } from "client-zip";
 import JSZip from "jszip";
 import { describe, expect, it } from "vitest";
-import { entries, gather, type Source } from "./export-build.ts";
+import { changedSince, entries, gather, type Source } from "./export-build.ts";
 import { MEMORY_LIMIT_BYTES, memoryWarning, sha256, zipName, type Manifest } from "./export-plan.ts";
 
 
@@ -26,30 +26,38 @@ type Org = { live: { project: Project; items: Item[]; docs: DocumentRecord[] }[]
 /** How a file's download goes: bytes, or failures in order (then bytes) */
 type Plan = { bytes?: Uint8Array; fail?: unknown[] };
 
-/** A Source over the fake organization; `plans` decides each file's download by doc id */
-function fake(o: Org, plans: Record<string, Plan> = {}) {
+/** A Source over the fake organization; `plans` decides each file's download by doc id (by default
+ * bytes as long as the record says), and `onFile` runs as each download starts, so a test can change
+ * the organization part way through, as another person would. Routes are worked out per read */
+function fake(o: Org, plans: Record<string, Plan> = {}, onFile?: (id: string) => void) {
   const calls: Record<string, number> = {};
-  const routes: Record<string, unknown> = {
-    [`/t/${org.id}/projects`]: o.live.map((d) => d.project),
-    [`/t/${org.id}/members`]: Array.from({ length: o.members ?? 2 }, (_, i) => ({ userId: `u${i}`, name: `M${i}`, email: `m${i}@x.example`, access: "admin", status: "joined", invitedAt: at })),
-    [`/t/${org.id}/docs`]: { docs: [...o.orgDocs, ...o.live.flatMap((d) => d.docs.filter((x) => x.state !== "receiving"))] },
-    ...Object.fromEntries(o.live.map((d) => [`/t/${org.id}/projects/${d.project.id}`, d])),
+  const routes = (): Record<string, unknown> => {
+    const r: Record<string, unknown> = {
+      [`/t/${org.id}/projects`]: o.live.map((d) => d.project),
+      [`/t/${org.id}/members`]: Array.from({ length: o.members ?? 2 }, (_, i) => ({ userId: `u${i}`, name: `M${i}`, email: `m${i}@x.example`, access: "admin", status: "joined", invitedAt: at })),
+      [`/t/${org.id}/docs`]: { docs: [...o.orgDocs, ...o.live.flatMap((d) => d.docs.filter((x) => x.state !== "receiving"))] },
+      ...Object.fromEntries(o.live.map((d) => [`/t/${org.id}/projects/${d.project.id}`, d])),
+    };
+    // An API with the export's routes answers both; an older one (no trash given) answers neither
+    if (o.trash) r[`/t/${org.id}/export/trash`] = { projects: o.trash };
+    if (o.trash) r[`/t/${org.id}/export/history`] = o.history ?? { comments: [], audit: [] };
+    return r;
   };
-  // An API with the export's routes answers both; an older one (no trash given) answers neither
-  if (o.trash) routes[`/t/${org.id}/export/trash`] = { projects: o.trash };
-  if (o.trash) routes[`/t/${org.id}/export/history`] = o.history ?? { comments: [], audit: [] };
+  const records = () => [...o.orgDocs, ...o.live.flatMap((d) => d.docs), ...(o.trash ?? []).flatMap((d) => d.docs)];
   const src: Source = {
     async get<T>(path: string) {
-      if (!(path in routes)) throw { status: 404, body: { error: "http", message: "Not Found" } };
-      return structuredClone(routes[path]) as T;
+      const r = routes();
+      if (!(path in r)) throw { status: 404, body: { error: "http", message: "Not Found" } };
+      return structuredClone(r[path]) as T;
     },
     async file(path: string) {
       const id = /\/docs\/([^/?]+)\/download/.exec(path)![1]!;
       calls[id] = (calls[id] ?? 0) + 1;
+      onFile?.(id);
       const p = plans[id] ?? {};
       const failure = p.fail?.[calls[id]! - 1];
       if (failure) throw failure;
-      const b = p.bytes ?? new TextEncoder().encode(`bytes of ${id}`);
+      const b = p.bytes ?? new Uint8Array(records().find((d) => d.id === id)?.size ?? 0).fill(id.charCodeAt(1));
       return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) as ArrayBuffer;
     },
   };
@@ -57,8 +65,8 @@ function fake(o: Org, plans: Record<string, Plan> = {}) {
 }
 
 /** Run the whole export into a real zip; returns the manifest and the zip read back */
-async function run(o: Org, plans?: Record<string, Plan>) {
-  const { src, calls } = fake(o, plans);
+async function run(o: Org, plans?: Record<string, Plan>, onFile?: (id: string) => void) {
+  const { src, calls } = fake(o, plans, onFile);
   const said: string[] = [];
   const g = await gather(org, src, (s) => said.push(s));
   let m: Manifest | undefined;
@@ -195,16 +203,149 @@ describe("export end to end", () => {
   });
 
   it("warns before 2,000 files past the in-memory limit, and the counts still add up", async () => {
-    // Records claim 1 MB each (2,000 MB in all); the fake API sends a few bytes, so the test stays small
+    // Records claim 1 MB each (2,000 MB in all): enough to warn, read without downloading anything
     const a = project("FLOW-1");
-    const docs = Array.from({ length: 2000 }, (_, i) => doc(`scan-${i % 500}.pdf`, a.id, { size: 1024 ** 2 }));
-    const failing = Object.fromEntries(docs.slice(0, 3).map((d) => [d.id, { fail: [{ status: 500 }, { status: 500 }] }]));
-    const { g, m, zip } = await run({ live: [{ project: a, items: [], docs }], trash: [], orgDocs: [] }, failing);
+    const big = Array.from({ length: 2000 }, (_, i) => doc(`scan-${i % 500}.pdf`, a.id, { size: 1024 ** 2 }));
+    const g = await gather(org, fake({ live: [{ project: a, items: [], docs: big }], trash: [], orgDocs: [] }).src, () => undefined);
     expect(g.expected).toBe(2000 * 1024 ** 2);
     expect(g.expected).toBeGreaterThan(MEMORY_LIMIT_BYTES);
     expect(memoryWarning(g.expected)).toMatch(/^This export is about 2\.0 GB\./);
+    // The same 2,000 files at a size the test can build; three fail twice
+    const docs = Array.from({ length: 2000 }, (_, i) => doc(`scan-${i % 500}.pdf`, a.id, { size: 4 }));
+    const failing = Object.fromEntries(docs.slice(0, 3).map((d) => [d.id, { fail: [{ status: 500 }, { status: 500 }] }]));
+    const { m, zip } = await run({ live: [{ project: a, items: [], docs }], trash: [], orgDocs: [] }, failing);
     expect(m.counts.files).toEqual({ expected: 2000, included: 1997, omitted: 3 });
     expect(new Set(m.files.map((f) => f.path.toLowerCase())).size).toBe(2000);
     await agrees(m, zip);
   }, 60_000);
+});
+
+
+// --- Edge cases: a snapshot that holds still, and checksums that mean it -------------------------
+
+const readmeTop = async (zip: JSZip) => (await zip.file("README.txt")!.async("string")).split("\n")[0];
+
+describe("export while the data changes", () => {
+  it("is complete, with no note, when nothing changes during the export", async () => {
+    const a = project("FLOW-1");
+    const { m } = await run({ live: [{ project: a, items: [], docs: [doc("a.pdf", a.id)] }], trash: [], orgDocs: [] });
+    expect(m.complete).toBe(true);
+    expect(m.notInExport.some((n) => n.changed)).toBe(false);
+  });
+
+  it("names a project added during the export, and is partial", async () => {
+    const a = project("FLOW-1");
+    const o: Org = { live: [{ project: a, items: [], docs: [doc("a.pdf", a.id)] }], trash: [], orgDocs: [] };
+    const { m, zip } = await run(o, {}, () => o.live.push({ project: project("FLOW-9"), items: [], docs: [] }));
+    expect(m.complete).toBe(false);
+    expect(m.notInExport[0]).toMatchObject({ partial: true, changed: true });
+    expect(m.notInExport[0]!.what).toContain("FLOW-9");
+    expect(await readmeTop(zip)).toBe("This export is partial: Projects changed while the export ran: FLOW-9 (they may differ from what 1NEON holds now; export again for a consistent copy).");
+    // The zip still matches its own manifest: FLOW-9 is in neither
+    expect(paths(zip)).not.toContain("FLOW-9/project.json");
+    await agrees(m, zip);
+  });
+
+  it("names a project edited, and one moved to Trash, during the export", async () => {
+    const a = project("FLOW-1"), b = project("FLOW-2");
+    const o: Org = { live: [{ project: a, items: [], docs: [doc("a.pdf", a.id)] }, { project: b, items: [], docs: [] }], trash: [], orgDocs: [] };
+    const { m, zip } = await run(o, {}, () => {
+      a.updatedAt = "2026-10-02T00:00:00.000Z";
+      const gone = o.live.pop()!;
+      gone.project.deletedAt = "2026-10-02T00:00:00.000Z";
+      o.trash!.push(gone);
+    });
+    expect(m.complete).toBe(false);
+    expect(m.notInExport[0]!.what).toContain("FLOW-1");
+    expect(m.notInExport[0]!.what).toContain("FLOW-2");
+    expect(zipName(org.slug, m.exportedAt, m.complete)).toMatch(/-partial\.zip$/);
+    await agrees(m, zip);
+  });
+
+  it("catches a project trashed after the Trash read but before the project list, which neither read holds", async () => {
+    const a = project("FLOW-1"), b = project("FLOW-2");
+    const o: Org = { live: [{ project: a, items: [], docs: [] }, { project: b, items: [], docs: [] }], trash: [], orgDocs: [] };
+    const { src } = fake(o);
+    // The first read of the project list (after Trash) finds FLOW-2 already trashed
+    let listed = 0;
+    const racing: Source = {
+      ...src,
+      async get<T>(path: string) {
+        if (path === `/t/${org.id}/projects` && listed++ === 0) {
+          const gone = o.live.pop()!;
+          gone.project.deletedAt = "2026-10-02T00:00:00.000Z";
+          o.trash!.push(gone);
+        }
+        return src.get<T>(path);
+      },
+    };
+    const g = await gather(org, racing, () => undefined);
+    expect(g.held.map((h) => h.project.key)).toEqual(["FLOW-1"]);
+    expect(await changedSince(org, g, racing)).toEqual(["FLOW-2"]);
+  });
+
+  it("lists a file deleted during the export as missing, not silently dropped", async () => {
+    const a = project("FLOW-1");
+    const f = doc("a.pdf", a.id);
+    const { m, zip } = await run({ live: [{ project: a, items: [], docs: [f] }], trash: [], orgDocs: [] }, { [f.id]: { fail: [{ status: 404, body: { error: "not_found" } }, { status: 404, body: { error: "not_found" } }] } });
+    expect(m.files[0]).toMatchObject({ status: "omitted", reason: "it was deleted while the export ran" });
+    expect(m.complete).toBe(false);
+    await agrees(m, zip);
+  });
+
+  it("leaves a file uploaded during the export out of both the zip and every record", async () => {
+    const a = project("FLOW-1");
+    const o: Org = { live: [{ project: a, items: [], docs: [doc("a.pdf", a.id)] }], trash: [], orgDocs: [] };
+    const { m, zip } = await run(o, {}, () => o.orgDocs.push(doc("late.pdf")));
+    expect(m.files.map((f) => f.name)).toEqual(["a.pdf"]);
+    expect(paths(zip).some((p) => p.includes("late"))).toBe(false);
+    const rec = JSON.parse(await zip.file("FLOW-1/project.json")!.async("string")).files as { id: string }[];
+    // Every file a record mentions is in the manifest
+    expect(rec.every((r) => m.files.some((f) => f.id === r.id))).toBe(true);
+    await agrees(m, zip);
+  });
+});
+
+
+describe("complete means present and matching", () => {
+  it("is partial, with the reason, when a file arrives shorter than its record", async () => {
+    const a = project("FLOW-1");
+    const cut = doc("cut.pdf", a.id, { size: 10 }), fine = doc("fine.pdf", a.id, { size: 3 });
+    const { m, zip } = await run({ live: [{ project: a, items: [], docs: [cut, fine] }], trash: [], orgDocs: [] }, { [cut.id]: { bytes: new Uint8Array(6) } });
+    expect(m.complete).toBe(false);
+    expect(m.files.find((f) => f.id === cut.id)).toMatchObject({ status: "omitted", bytes: 10 });
+    expect(m.files.find((f) => f.id === cut.id)!.reason).toBe("it arrived as 6 bytes but 1NEON records 10 bytes (cut short, or changed while the export ran)");
+    expect(m.files.find((f) => f.id === fine.id)?.status).toBe("included");
+    expect(await readmeTop(zip)).toBe("This export is partial: 1 file is not included (listed below and in manifest.json).");
+    expect(zipName(org.slug, m.exportedAt, m.complete)).toMatch(/-partial\.zip$/);
+    await agrees(m, zip);
+  });
+
+  it("is partial when a file arrives longer than its record", async () => {
+    const a = project("FLOW-1");
+    const grown = doc("grown.pdf", a.id, { size: 3 });
+    const { m, zip } = await run({ live: [{ project: a, items: [], docs: [grown] }], trash: [], orgDocs: [] }, { [grown.id]: { bytes: new Uint8Array(8) } });
+    expect(m.complete).toBe(false);
+    expect(m.counts.files).toMatchObject({ included: 0, omitted: 1 });
+    await agrees(m, zip);
+  });
+
+  it("takes an empty file recorded as empty as complete", async () => {
+    const a = project("FLOW-1");
+    const { m, zip } = await run({ live: [{ project: a, items: [], docs: [doc("empty.txt", a.id, { size: 0 })] }], trash: [], orgDocs: [] });
+    expect(m.complete).toBe(true);
+    await agrees(m, zip);
+  });
+
+  it("hashes the bytes written into the zip: every included file's checksum and size match its zip entry", async () => {
+    const a = project("FLOW-1");
+    const odd = doc("odd.bin", a.id, { size: 5 });
+    const { m, zip } = await run({ live: [{ project: a, items: [], docs: [odd] }], trash: [], orgDocs: [] }, { [odd.id]: { bytes: Uint8Array.of(0, 255, 1, 254, 2) } });
+    const f = m.files[0]!;
+    const inZip = await zip.file(f.path)!.async("uint8array");
+    expect([...inZip]).toEqual([0, 255, 1, 254, 2]);
+    expect(f.sha256).toBe(await sha256(inZip));
+    expect(f.bytes).toBe(inZip.byteLength);
+    expect(m.counts.bytes.included).toBe(5);
+  });
 });

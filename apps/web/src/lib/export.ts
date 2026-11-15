@@ -92,7 +92,7 @@ export async function exportOrganization(org: Tenant, say: Progress, confirm: (w
   const folder = root ? await exportFolder(root) : undefined;
   const room = folder ? await freeBytes() : 0;
   const onDisk = Boolean(folder) && room >= g.expected + DISK_MARGIN_BYTES;
-  if (root && !onDisk) await release(root);
+  if (root && !onDisk) await release(root, folder);
 
   let done: Manifest | undefined;
   const finish = (m: Manifest) => (done = m);
@@ -104,15 +104,15 @@ export async function exportOrganization(org: Tenant, say: Progress, confirm: (w
 
   if (onDisk && root && folder) {
     try {
-      // Written as it's built; a failure removes the folder, and nothing is saved
+      // Written as it's built; a failure removes this export's folder, and nothing is saved
       const file = await writeZip(root, folder, makeZip(entries(org, g, source, say, finish)));
       const name = named();
       say("Saving…");
       save(file, name);
-      clearAfterHandOff(root);
+      clearAfterHandOff(root, folder);
       return { name, manifest: done!, builtOn: "disk" };
     } catch (e) {
-      await release(root);
+      await release(root, folder);
       // The browser's storage refused part way (full, or private mode): start again in memory
       say(`Couldn't build it on this device's storage (${e instanceof Error ? e.message : String(e)}); starting again in memory…`);
       done = undefined;
