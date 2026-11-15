@@ -18,7 +18,8 @@ type HealthT = Project["health"];
 import { qk } from "../lib/hooks.ts";
 import { failureOf, hidesData, read } from "../lib/reads.ts";
 import type { Workspace } from "../lib/types.ts";
-import { FaceForm } from "../components/OrgFace.tsx";
+import { FaceForm, faceAskDismissed } from "../components/OrgFace.tsx";
+import { useState } from "react";
 
 
 // The words and icon for each kind of thing waiting on someone
@@ -48,6 +49,8 @@ export function WorkspacePage() {
   useTopBar(<span>{org.name}</span>, [org.name]);
   const c = ws.data?.counts;
   const first = (me.user.name || "").split(" ")[0];
+  // Home's "Where can I see your business?" ask, until it's answered or put away with "Not now"
+  const [faceSkipped, setFaceSkipped] = useState(() => faceAskDismissed(org.id));
 
   // Setup steps, each ticked off by the real state; the card goes once all are done
   const steps = [
@@ -68,8 +71,8 @@ export function WorkspacePage() {
     <>
       <h1 className="page-title">{first ? `Hi, ${first}` : "Home"}</h1>
       {prospect && <ProspectNote />}
-      {/* An organization with neither a place nor a link: its own admins (not neon1) are asked here until one is added */}
-      {admin && !me.operator && !org.place && !org.link && <FaceForm ask />}
+      {/* An organization with neither a place nor a link: its own admins (not neon1) are asked here until one is added or they say "Not now" */}
+      {admin && !me.operator && !org.place && !org.link && !faceSkipped && <FaceForm ask onDone={() => setFaceSkipped(true)} />}
       <p className="lead">{ws.data && !blocked ? (n ? `${n} ${n === 1 ? "thing needs" : "things need"} you.` : "Nothing needs you right now.") : " "}</p>
       <Stale reads={[ws]} />
 

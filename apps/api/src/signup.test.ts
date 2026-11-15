@@ -78,8 +78,8 @@ describe("the sign-up form", () => {
     expect((await signup({ ...form, terms: false })).status).toBe(400);
   });
 
-  it("needs where the business is based or a link to it, and keeps them on the organization", async () => {
-    expect((await signup({ ...form, link: "" })).status).toBe(400);
+  it("takes where the business is based and a link as optional, and keeps them on the organization", async () => {
+    expect((await signup({ ...form, email: "d@example.com", link: "" }, "198.51.100.10")).status).toBe(200);
     expect((await signup({ ...form, link: "javascript:alert(1)" })).status).toBe(400);
     expect((await signup({ ...form, link: "", place: "Queens, NY" })).status).toBe(200);
     const { tenant } = await prospect("b@example.com");
@@ -92,7 +92,7 @@ describe("the sign-up form", () => {
   it("lets the prospect's admin change the place and link without confirming it's them", async () => {
     const { tid, tenant } = await prospect("e@example.com");
     const put = (b: unknown) => as("e@example.com", `/t/${tid}/profile`, "PUT", b);
-    expect((await put({ version: tenant.version, place: "", link: "" })).status).toBe(400);
+    expect((await put({ version: tenant.version, place: "", link: "bad link" })).status).toBe(400);
     const r = await put({ version: tenant.version, place: "Bayside, NY", link: "" });
     expect(r.status).toBe(200);
     const after = (await repo.getTenant(tid))!;

@@ -50,8 +50,8 @@ describe("sign-up form", () => {
     expect(signUpReady({ ...ok, org: " " })).toBe(false);
     expect(signUpReady({ ...ok, email: "nope" })).toBe(false);
   });
-  it("needs a place or a working link", () => {
-    expect(signUpReady({ ...ok, place: "" })).toBe(false);
+  it("takes the place and link as optional, but a link must work", () => {
+    expect(signUpReady({ ...ok, place: "" })).toBe(true);
     expect(signUpReady({ ...ok, place: "", link: "acme.com" })).toBe(true);
     expect(signUpReady({ ...ok, link: "not a link" })).toBe(false);
   });

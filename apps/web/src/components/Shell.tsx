@@ -339,7 +339,8 @@ function SignIn() {
           </a>
         </div>
       </header>
-      <div className="panel glass">
+      {/* Signing up widens the panel on a wide screen, so the form fits without scrolling */}
+      <div className={`panel glass${signingUp ? " signing-up" : ""}`}>
         <Wordmark />
         {/* Who this is for, before anyone types: clients, by invitation */}
         {/* Who this is for, worded and sized the same on the real sign-in and the demo's picker */}
@@ -744,6 +745,10 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
               <Item to="/all/prospects" icon={<Icon name="people" />} label="Potentials" />
             </>
           ) : null}
+        </ul>
+        {/* Every way to reach neon1, for every account, new ones included */}
+        <ul className="nav contact-nav">
+          <Item to="/contact" icon={<Icon name="contact" />} label="Contact neon1" tour="nav-contact" />
         </ul>
         {/* Back to the neon1.tech site, outside the app's routes, then the signed-in person */}
         <a className="site-link" href="/" title="neon1.tech">

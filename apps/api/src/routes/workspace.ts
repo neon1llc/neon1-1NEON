@@ -23,8 +23,8 @@ export function workspaceRoutes(app: App, k: Kit) {
   });
 
   // Where the organization is based and its website or public page: admins (prospects too, since it's
-  // theirs to keep right). Public facts, so no "confirm it's you" step, unlike the other settings. At least
-  // one stays filled; an empty one is removed from the record
+  // theirs to keep right). Public facts, so no "confirm it's you" step, unlike the other settings. Both are
+  // optional; an empty one is removed from the record
   app.put("/t/:tid/profile", async (c) => {
     need(c, "write");
     if (!who(c).actor.operator && c.get("access") !== "admin") fail(403, "forbidden", "Only an admin of this organization can change this.");

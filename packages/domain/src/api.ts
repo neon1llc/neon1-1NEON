@@ -34,8 +34,9 @@ const Place = z.string().trim().max(80).default("");
 // A website or public page; "" for none, otherwise it must make a real address
 const Link = z.string().trim().max(200).default("").refine((v) => v === "" || normalizeLink(v) !== undefined, "Enter a web address, like yourbusiness.com.").transform((v) => (v ? normalizeLink(v)! : ""));
 
-/** Where neon1 can see an organization from outside: at least one of a place or a link */
-export const PublicFace = z.object({ place: Place, link: Link }).refine((f) => f.place.length > 0 || f.link.length > 0, { message: "Add where you're based or a link to your business.", path: ["place"] });
+/** Where neon1 can see an organization from outside: a place, a link, both, or neither. Both are
+ * optional, so a person who'd rather stay private can still start; Home asks again later */
+export const PublicFace = z.object({ place: Place, link: Link });
 
 export const CreateTenantInput = z.object({
   name: z.string().trim().min(1).max(80),
@@ -46,7 +47,7 @@ export const CreateTenantInput = z.object({
 });
 
 /** An admin's edit of the organization's place and link (Settings) */
-export const OrgProfileInput = z.object({ version: z.number().int(), place: Place, link: Link }).refine((f) => f.place.length > 0 || f.link.length > 0, { message: "Add where you're based or a link to your business.", path: ["place"] });
+export const OrgProfileInput = z.object({ version: z.number().int(), place: Place, link: Link });
 
 
 // People

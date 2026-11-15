@@ -34,7 +34,7 @@ interface Guide {
 
 
 // The pages that have guidance; every signed-in route maps to one
-export type PageKey = "home" | "board" | "projects" | "project" | "newproject" | "layer" | "people" | "files" | "insights" | "settings" | "me" | "all";
+export type PageKey = "home" | "board" | "projects" | "project" | "newproject" | "layer" | "people" | "files" | "insights" | "settings" | "me" | "contact" | "all";
 
 
 // Plain words, one idea per line. The tours point at data-tour names that pages put on their elements
@@ -128,6 +128,12 @@ export const GUIDES: Record<PageKey, Guide> = {
     howto: ["Choose what reaches you by email or text under Notifications.", "Add a passkey, authenticator app, or text codes to confirm admin actions.", "Replay the tutorial whenever you like."],
     tour: [{ at: "passkey", title: "Two-step verification", text: "Add a passkey, authenticator app, or text codes. Admins need one to manage people and settings." }],
   },
+  contact: {
+    title: "Contact",
+    purpose: "Every way to reach neon1: email, call or text, or a booked call.",
+    howto: ["Tap the email or number to open your mail or phone app.", "For anything about a project, write in that project so it stays together."],
+    tour: [],
+  },
   all: {
     title: "All clients",
     purpose: "Every client's projects on one read-only board.",
@@ -141,6 +147,7 @@ export const GUIDES: Record<PageKey, Guide> = {
 export function pageKey(path: string): PageKey {
   if (path.startsWith("/all")) return "all";
   if (path.startsWith("/me")) return "me";
+  if (path.startsWith("/contact")) return "contact";
   if (/\/projects\/new$/.test(path)) return "newproject";
   if (/\/projects\/[^/]+/.test(path)) return "project";
   if (path.endsWith("/projects")) return "projects";
@@ -291,10 +298,10 @@ export function HelpProvider({ me, children }: { me: Me; children: ReactNode }) 
         <h2>{g.purpose}</h2>
         <ul className="howto">{g.howto.map((h) => <li key={h}>{h}</li>)}</ul>
         <div className="actions">
-          <button className="btn btn-primary" onClick={() => { setSheet(false); setTimeout(() => runTour(g.tour), 250); }}>Show me on this page</button>
+          {g.tour.length > 0 && <button className="btn btn-primary" onClick={() => { setSheet(false); setTimeout(() => runTour(g.tour), 250); }}>Show me on this page</button>}
           <button className="btn btn-ghost" onClick={welcomeTour}>Full tour</button>
         </div>
-        <p className="small muted">More answers in the <Link to="/faqs" onClick={() => setSheet(false)}>FAQs</Link>.</p>
+        <p className="small muted">More answers in the <Link to="/faqs" onClick={() => setSheet(false)}>FAQs</Link>, or <Link to="/contact" onClick={() => setSheet(false)}>contact neon1</Link>.</p>
       </Dialog>
       {/* First sign-in: offer the tour, with remind-me and skip */}
       <Dialog open={welcome} onClose={() => setWelcome(false)} label="Welcome to 1NEON">

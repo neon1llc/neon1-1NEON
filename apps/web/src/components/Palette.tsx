@@ -90,6 +90,7 @@ export function Palette({ me, org, prospect, open, setOpen, onHelp, onTour }: { 
             <Command.Item onSelect={go(onHelp)}>Help for this page</Command.Item>
             <Command.Item onSelect={go(onTour)}>Take the tour</Command.Item>
             <Command.Item onSelect={go(() => nav("/faqs"))}>FAQs</Command.Item>
+            <Command.Item value="contact neon1 email call text phone" onSelect={go(() => nav("/contact"))}>Contact neon1</Command.Item>
           </Command.Group>
         </Command.List>
       </Command>

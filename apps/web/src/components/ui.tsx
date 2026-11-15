@@ -390,6 +390,8 @@ const ICONS = {
   documents: "M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6",
   settings: "M4 7h10M18 7h2M4 17h4M12 17h8M16 5v4M10 15v4",
   insights: "M4 20V10M10 20V4M16 20v-7M22 20H2",
+  // An envelope, for Contact
+  contact: "M3 6h18v12H3zM3 7l9 6 9-6",
   // neon1's mark: two arches of nested arcs falling into columns, on its own 64px grid
   site: "M6 6a24 24 0 0 1 24 24v30M6 18a12 12 0 0 1 12 12v30M34 6a24 24 0 0 1 24 24v30M34 18a12 12 0 0 1 12 12v30",
 } as const;
