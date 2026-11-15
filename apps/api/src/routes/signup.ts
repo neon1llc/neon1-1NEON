@@ -45,7 +45,7 @@ const PROSPECT_COUNTER = { PK: "COUNTER", SK: "PROSPECTID" } as const;
 
 
 // What the form sends. Who they are ("Which describes you best?") is required, and every answer but an
-// individual names its organization. Where the business is based and a link to it are optional, so
+// individual names its organization ("Something else" may leave it out: their own words say what it is). Where the business is based and a link to it are optional, so
 // someone who'd rather stay private can still start. The fields' own checks (vet.ts) run after the bot
 // check and answer field by field
 const SignUpBody = z.object({
@@ -83,7 +83,7 @@ async function checkSignUp(v: Vetting | undefined, b: z.infer<typeof SignUpBody>
   if (b.kind === "other" && !b.kindOther) problems.kindOther = "Say what describes you.";
   else if (b.kind === "other") { const t = textProblem(b.kindOther, "what describes you"); if (t) problems.kindOther = t; }
   if (b.kind !== "individual") {
-    if (!b.org) problems.org = "Enter your organization's name.";
+    if (!b.org) { if (b.kind !== "other") problems.org = "Enter your organization's name."; }
     else { const t = textProblem(b.org, "your organization's name", MIN_TEXT); if (t) problems.org = t; }
   }
   if (link) problems.link = link;
@@ -140,8 +140,8 @@ export function signupRoutes(app: App, k: Kit) {
     // The fields, each checked on its own (a real mail domain, a website that answers, a real place),
     // before any counter moves, so fixing a typo never uses up a try
     const { place } = await checkSignUp(d.vetting, b);
-    // An individual's account is named for them
-    const org = b.kind === "individual" ? b.name : b.org;
+    // An individual's account is named for them, and so is "Something else" without an organization's name
+    const org = b.kind === "individual" || !b.org ? b.name : b.org;
 
     // Counters: per address each hour and day, per email each day, and everyone each day
     const who = await shortHash(ip);

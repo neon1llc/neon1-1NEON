@@ -55,6 +55,8 @@ describe("sign-up form", () => {
     expect(signUpReady({ ...ok, kind: "individual", org: "" })).toBe(true);
     expect(signUpReady({ ...ok, kind: "other" })).toBe(false);
     expect(signUpReady({ ...ok, kind: "other", kindOther: "A family office" })).toBe(true);
+    expect(signUpReady({ ...ok, kind: "other", kindOther: "A chess club", org: "" })).toBe(true);
+    expect(signUpReady({ ...ok, kind: "other", kindOther: "A chess club", org: "x" })).toBe(false);
     expect(signUpReady({ ...ok, found: "other" })).toBe(false);
     expect(signUpReady({ ...ok, found: "other", foundOther: "A podcast" })).toBe(true);
   });

@@ -30,8 +30,12 @@ export function linkOk(link: string) {
 }
 
 
-/** Does this answer need an organization's name? Every one but an individual's */
+/** Does this answer show the organization's name field? Every one but an individual's */
 export const needsOrg = (kind: string) => kind !== "" && kind !== "individual";
+
+/** Must they fill it in? Not for "Something else": a club or a hobby project often has no formal name,
+ * and their own words already say what it is */
+export const orgRequired = (kind: string) => needsOrg(kind) && kind !== "other";
 
 
 /**
@@ -47,7 +51,7 @@ export function signUpProblems(f: SignUpFields): Record<string, string> {
   if (name) out.name = name;
   const kindOther = f.kind === "other" ? textProblem(f.kindOther ?? "", "what describes you") : undefined;
   if (kindOther) out.kindOther = kindOther;
-  const org = needsOrg(f.kind) ? textProblem(f.org, "your organization's name", MIN_TEXT) : undefined;
+  const org = needsOrg(f.kind) && (orgRequired(f.kind) || f.org.trim()) ? textProblem(f.org, "your organization's name", MIN_TEXT) : undefined;
   if (org) out.org = org;
   if (!linkOk(f.link)) out.link = "Enter a web address, like yourbusiness.com.";
   const place = placeShapeProblem(f.city ?? "", f.state ?? "");
@@ -58,11 +62,12 @@ export function signUpProblems(f: SignUpFields): Record<string, string> {
 }
 
 
-/** Can the form be sent? Every required field filled (an organization's name unless individual, their
+/** Can the form be sent? Every required field filled (an organization's name unless individual or
+ * "Something else", their
  * words when they picked "Something else" or "Somewhere else"), nothing that fails the rules above, and
  * the terms ticked (the API checks all of it again) */
 export function signUpReady(f: SignUpFields) {
-  const filled = f.email.trim() && f.name.trim() && f.kind && (!needsOrg(f.kind) || f.org.trim()) && (f.kind !== "other" || f.kindOther?.trim()) && (f.found !== "other" || f.foundOther?.trim());
+  const filled = f.email.trim() && f.name.trim() && f.kind && (!orgRequired(f.kind) || f.org.trim()) && (f.kind !== "other" || f.kindOther?.trim()) && (f.found !== "other" || f.foundOther?.trim());
   return Boolean(filled) && Object.keys(signUpProblems(f)).length === 0 && f.terms;
 }
 

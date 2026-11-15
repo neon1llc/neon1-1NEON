@@ -121,6 +121,14 @@ describe("the sign-up form", () => {
     expect(tenant.prospect).toMatchObject({ kind: "individual" });
   });
 
+  it("lets \"Something else\" leave the organization's name out, and names that account for them", async () => {
+    expect((await signup({ ...form, email: "club@example.com", kind: "other", kindOther: "A chess club", org: "" }, "198.51.100.14")).status).toBe(200);
+    const uid = await claimSignup({ repo, cfg }, "club@example.com");
+    const tenant = (await repo.getTenant((await repo.membershipsOf(uid!))[0]!.tenantId))!;
+    expect(tenant.name).toBe("Dana Kim");
+    expect(tenant.prospect).toMatchObject({ kind: "other", kindOther: "A chess club" });
+  });
+
   it("keeps their own words for Something else and Somewhere else, and refuses rude or junk answers", async () => {
     const bad = await signup({ ...form, org: "fuck off", kind: "other", kindOther: "asdf" });
     expect(((await bad.json()) as { current: { fields: Record<string, string> } }).current.fields).toMatchObject({ org: expect.stringMatching(/reword/), kindOther: expect.stringMatching(/real answer/) });

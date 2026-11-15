@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { DESCRIBES, FOUND_VIA, US_STATES } from "@1neon/domain";
 import { Link } from "react-router";
 import { api, HttpError, Unconfirmed } from "../lib/api.ts";
-import { elapsedSince, needsOrg, signUpBody, signUpProblems, signUpReady, type SignUpInfo } from "../lib/signup.ts";
+import { elapsedSince, needsOrg, orgRequired, signUpBody, signUpProblems, signUpReady, type SignUpInfo } from "../lib/signup.ts";
 import { loadTurnstile, widgetOptions } from "../lib/turnstile.ts";
 import type { Step } from "./Shell.tsx";
 
@@ -177,8 +177,8 @@ export function SignUp({ info: known, email: start, remember, onStep, onBack, lo
           </Field>
         )}
         {needsOrg(kind) && (
-          <Field id="org" label="Organization name" required problem={problem("org")}>
-            <input id="su-org" name="org" required maxLength={80} autoComplete="organization" value={org} onChange={(e) => edit("org", setOrg)(e.target.value)} onBlur={leave("org")} {...invalid("org", problem("org"))} />
+          <Field id="org" label="Organization name" required={orgRequired(kind)} problem={problem("org")}>
+            <input id="su-org" name="org" required={orgRequired(kind)} maxLength={80} autoComplete="organization" value={org} onChange={(e) => edit("org", setOrg)(e.target.value)} onBlur={leave("org")} {...invalid("org", problem("org"))} />
           </Field>
         )}
       </div>
