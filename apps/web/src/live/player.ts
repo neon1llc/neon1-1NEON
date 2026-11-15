@@ -461,7 +461,7 @@ export class Player {
           `One part of a longer story, on its own: “${sec.title}”. Maria owns a fictional bakery, and Pradeep at neon1 is helping her stop retyping orders every night.`,
           "The story up to this point is set up first, out of sight, which takes a few seconds. Then she signs in and does this one thing.",
         ] },
-        sections: [{ id: `${sec.id}-in`, title: "Sign in", run: (st) => opening(`${sec.id}-in`, "Maria opens 1NEON and signs in", sec.why!, this.prepPath).run(st) }, sec],
+        sections: [{ id: `${sec.id}-in`, title: "Sign in to Home", run: (st) => opening(`${sec.id}-in`, "Maria opens 1NEON and signs in", sec.why!, this.prepPath).run(st) }, sec],
         end: `That was “${sec.title}”.`,
         recap: "It's one chapter of the full story, which plays every step of a project from the first sign-in to ongoing care.",
       };

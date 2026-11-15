@@ -115,6 +115,12 @@ const state = (page) => page.evaluate(() => {
     paused: Boolean(document.querySelector('.live-play[aria-label="Play"]')),
     chapter: Number(/^(\d+)\//.exec(text(".live-title"))?.[1] ?? 0),
     of: Number(/^\d+\/(\d+)/.exec(text(".live-title"))?.[1] ?? 0),
+    // How far the portal's top bar sits from the bottom of the narration band; 0 when it's where it belongs
+    barGap: (() => {
+      const bar = document.querySelector(".top")?.getBoundingClientRect();
+      const sub = document.querySelector(".live-sub")?.getBoundingClientRect();
+      return bar && sub && bar.height > 0 ? Math.round(bar.top - sub.bottom) : 0;
+    })(),
   };
 }).catch(() => ({ title: "", line: "", eye: "", card: "", paused: false, chapter: 0, of: 0 }));
 
@@ -134,9 +140,14 @@ function statedLength(eye) {
 async function until(page, test, what, limit = LIMIT) {
   const end = Date.now() + limit;
   let s;
+  let offBar = 0;
   while (Date.now() < end) {
     s = await state(page);
     if (s.card === "failed") throw new Error(`stopped at "${s.title}" while waiting for ${what}`);
+    // The portal's top bar sticks right under the narration. Twice in a row off by more than a couple
+    // of pixels is the bar drawn partway down the page (as WebKit did where the body scrolls), not a frame mid-slide
+    offBar = !s.card && Math.abs(s.barGap) > 2 ? offBar + 1 : 0;
+    if (offBar >= 2) throw new Error(`the portal's top bar is ${s.barGap}px from the narration band at "${s.title}"; it should sit right under it`);
     if (test(s)) return s;
     await page.waitForTimeout(150);
   }
