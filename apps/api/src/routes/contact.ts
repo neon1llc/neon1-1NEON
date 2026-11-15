@@ -2,7 +2,8 @@
 // message to neon1, with the sender as Reply-To. It mails only neon1's own inbox, never the address a
 // visitor types, so it can't be used to send mail to anyone else. A hidden field catches simple bots,
 // and counters cap messages per sender each hour and in total each day. The counters expire after a day.
-import { FOUND_KEYS, FOUND_VIA } from "@1neon/domain";
+import { FOUND_KEYS, foundLabel } from "@1neon/domain";
+import { emailProblem, failFields, nameProblem, textProblem, type FieldProblems } from "../lib/vet.ts";
 import { z } from "zod";
 import { body, fail } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
@@ -29,7 +30,7 @@ const TopicKey = z.enum(Object.keys(TOPICS) as [keyof typeof TOPICS, ...(keyof t
 
 const Message = z.object({
   name: z.string().trim().min(1).max(100),
-  email: z.string().trim().email().max(200),
+  email: z.string().trim().max(200),
   company: z.string().trim().max(120).optional().default(""),
   topics: z.array(TopicKey).max(5).optional().default([]),
   // The older one-topic form, still accepted
@@ -41,6 +42,8 @@ const Message = z.object({
   timing: z.string().trim().max(200).optional().default(""),
   // "How did you find neon1?": optional, the same list as sign-up (FOUND_VIA)
   found: z.enum(FOUND_KEYS).optional(),
+  // Their words for "Somewhere else"
+  foundOther: z.string().trim().max(80).optional().default(""),
   // Hidden from people; a bot that fills every field fills this one too
   website: z.string().max(200).optional().default(""),
 });
@@ -53,6 +56,21 @@ export function contactRoutes(app: App, k: Kit) {
     const m = await body(c, Message);
     // A filled hidden field looks like success to the bot, and nothing is sent
     if (m.website) return c.json({ ok: true });
+
+    // Each field's check, the same as sign-up's but lighter on the name (one name is fine here), answered
+    // field by field so the site can show each beside its field. Counters don't move for a typo
+    const problems: FieldProblems = {};
+    const email = await emailProblem(d.vetting, m.email);
+    if (email) problems.email = email;
+    const name = nameProblem(m.name, true);
+    if (name) problems.name = name;
+    const company = textProblem(m.company, "the organization's name");
+    if (company) problems.company = company;
+    if (m.found === "other" && !m.foundOther) problems.foundOther = "Say where you found neon1.";
+    else if (m.found === "other") { const t = textProblem(m.foundOther, "where you found neon1"); if (t) problems.foundOther = t; }
+    const other = textProblem(m.other, "the topic");
+    if (other) problems.other = other;
+    if (Object.keys(problems).length) failFields(problems);
 
     // The sender's address is hashed before it's counted, so no address is stored
     const ip = (c.req.header("cloudfront-viewer-address") ?? c.req.header("x-forwarded-for") ?? "unknown").split(",")[0]!.replace(/:\d+$/, "").trim();
@@ -72,7 +90,7 @@ export function contactRoutes(app: App, k: Kit) {
       ["About", topic], ["What happens today", m.today],
       ...(m.better ? [["What would be better", m.better] as [string, string]] : []),
       ...(m.timing ? [["Timing", m.timing] as [string, string]] : []),
-      ...(m.found ? [["Found neon1 through", FOUND_VIA[m.found]] as [string, string]] : []),
+      ...(m.found ? [["Found neon1 through", foundLabel(m)] as [string, string]] : []),
     ];
     const text = rows.map(([k2, v]) => `${k2}: ${v}`).join("\n\n");
     const html = branded({

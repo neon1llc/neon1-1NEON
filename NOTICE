@@ -1,0 +1,13 @@
+1NEON
+Copyright neon1 LLC. The code is MIT licensed (see LICENSE).
+
+This repository bundles two data lists, used by the API's form checks
+(apps/api/src/vetting/, written by scripts/vetting-data.mjs):
+
+- US populated places from GeoNames (https://www.geonames.org/), licensed
+  under Creative Commons Attribution 4.0 (https://creativecommons.org/licenses/by/4.0/).
+  The list keeps only place names by state, normalized for matching.
+
+- Temporary-mailbox domains from the disposable-email-domains project
+  (https://github.com/disposable-email-domains/disposable-email-domains),
+  dedicated to the public domain under CC0 1.0.

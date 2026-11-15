@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from "vitest";
 import { limitedProspect, prospectEverywhere, prospectState, stateLabel } from "./prospect.ts";
-import { elapsedSince, signUpBody, signUpReady } from "./signup.ts";
+import { elapsedSince, signUpBody, signUpProblems, signUpReady } from "./signup.ts";
 import { widgetOptions } from "./turnstile.ts";
 
 
@@ -43,25 +43,40 @@ describe("prospect state", () => {
 });
 
 describe("sign-up form", () => {
-  const ok = { email: " a@b.co ", name: " Ana ", org: " Acme ", place: " Queens, NY ", link: "", terms: true };
-  it("needs every field and the terms", () => {
+  const ok = { email: " a@b.co ", name: " Ana  Ruiz ", kind: "small", org: " Acme ", city: " Queens ", state: "NY", link: "", terms: true };
+  it("needs every required field and the terms", () => {
     expect(signUpReady(ok)).toBe(true);
     expect(signUpReady({ ...ok, terms: false })).toBe(false);
     expect(signUpReady({ ...ok, org: " " })).toBe(false);
+    expect(signUpReady({ ...ok, kind: "" })).toBe(false);
     expect(signUpReady({ ...ok, email: "nope" })).toBe(false);
   });
-  it("takes the place and link as optional, but a link must work", () => {
-    expect(signUpReady({ ...ok, place: "" })).toBe(true);
-    expect(signUpReady({ ...ok, place: "", link: "acme.com" })).toBe(true);
-    expect(signUpReady({ ...ok, link: "not a link" })).toBe(false);
+  it("asks an individual for no organization, and Something else for their words", () => {
+    expect(signUpReady({ ...ok, kind: "individual", org: "" })).toBe(true);
+    expect(signUpReady({ ...ok, kind: "other" })).toBe(false);
+    expect(signUpReady({ ...ok, kind: "other", kindOther: "A family office" })).toBe(true);
+    expect(signUpReady({ ...ok, found: "other" })).toBe(false);
+    expect(signUpReady({ ...ok, found: "other", foundOther: "A podcast" })).toBe(true);
+  });
+  it("speaks field by field about what was typed", () => {
+    expect(signUpProblems({ ...ok, name: "Ana" })).toEqual({ name: "Enter your first and last name." });
+    expect(signUpProblems({ ...ok, name: "Ana", oneName: true })).toEqual({});
+    expect(signUpProblems({ ...ok, city: "Albany", state: "" })).toHaveProperty("place");
+    expect(signUpProblems({ ...ok, link: "not a link" })).toHaveProperty("link");
+    expect(signUpProblems({ ...ok, email: "a@b" })).toHaveProperty("email");
+  });
+  it("takes the place and link as optional", () => {
+    expect(signUpReady({ ...ok, city: "", state: "" })).toBe(true);
+    expect(signUpReady({ ...ok, city: "", state: "NJ", link: "acme.com" })).toBe(true);
   });
   it("measures the time the form was open, never negative", () => {
     expect(elapsedSince(1000, 4500)).toBe(3500);
     expect(elapsedSince(5000, 1000)).toBe(0);
   });
-  it("sends trimmed values with the check, hidden field, and time", () => {
-    expect(signUpBody(ok, { check: "tok", website: "", elapsed: 5000, remember: true })).toEqual({ email: "a@b.co", name: "Ana", org: "Acme", place: "Queens, NY", link: "", terms: true, check: "tok", website: "", elapsed: 5000, remember: true });
-    expect(signUpBody({ ...ok, found: "google" }, { check: "", website: "", elapsed: 1, remember: false })).toMatchObject({ found: "google" });
+  it("sends trimmed values, the place as City, ST, and only the answers that apply", () => {
+    expect(signUpBody(ok, { check: "tok", website: "", elapsed: 5000, remember: true })).toEqual({ email: "a@b.co", name: "Ana Ruiz", kind: "small", org: "Acme", place: "Queens, NY", link: "", terms: true, check: "tok", website: "", elapsed: 5000, remember: true });
+    expect(signUpBody({ ...ok, kind: "individual" }, { check: "", website: "", elapsed: 1, remember: false })).toMatchObject({ org: "" });
+    expect(signUpBody({ ...ok, found: "other", foundOther: " A podcast " }, { check: "", website: "", elapsed: 1, remember: false })).toMatchObject({ found: "other", foundOther: "A podcast" });
     expect(signUpBody(ok, { check: "", website: "", elapsed: 1, remember: false })).not.toHaveProperty("found");
   });
   it("asks Turnstile for the invisible widget for sign-up", () => {

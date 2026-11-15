@@ -6,7 +6,9 @@
 // The answer never says whether an email already has an account.
 
 
-import { DEFAULT_STAGES, FOUND_KEYS, FOUND_VIA, PORTAL_TERMS_EDITION, PublicFace, formatProspectId, newId, slugify, type FoundVia, type Member, type Tenant, type User } from "@1neon/domain";
+import { DEFAULT_STAGES, DESCRIBES, DESCRIBES_KEYS, FOUND_KEYS, FOUND_VIA, PORTAL_TERMS_EDITION, PublicFace, describesLabel, foundLabel, formatProspectId, newId, slugify, type Member, type Tenant, type User } from "@1neon/domain";
+import { emailProblem, failFields, linkProblem, nameProblem, placeCheck, textProblem, type FieldProblems } from "../lib/vet.ts";
+import type { Vetting } from "../vetting/types.ts";
 import type { Context } from "hono";
 import { z } from "zod";
 import { isDev, neon1Only } from "../dev-guard.ts";
@@ -42,12 +44,19 @@ export const SIGNUP_SWITCH = { PK: "CONFIG", SK: "SIGNUP" } as const;
 const PROSPECT_COUNTER = { PK: "COUNTER", SK: "PROSPECTID" } as const;
 
 
-// What the form sends. Where the business is based and a link to it are optional, so someone who'd
-// rather stay private can still start; a link that's given must be a real web address
+// What the form sends. Who they are ("Which describes you best?") is required, and every answer but an
+// individual names its organization. Where the business is based and a link to it are optional, so
+// someone who'd rather stay private can still start. The fields' own checks (vet.ts) run after the bot
+// check and answer field by field
 const SignUpBody = z.object({
-  email: z.string().trim().toLowerCase().email().max(254),
-  name: z.string().trim().min(1).max(80),
-  org: z.string().trim().min(1).max(80),
+  email: z.string().trim().toLowerCase().max(254),
+  name: z.string().trim().max(80),
+  // They said they go by one name, so a last name isn't asked for
+  oneName: z.boolean().default(false),
+  kind: z.enum(DESCRIBES_KEYS),
+  // Their own words when "Something else" is picked
+  kindOther: z.string().trim().max(80).default(""),
+  org: z.string().trim().max(80).default(""),
   // Accepting the portal terms is required, and recorded with the edition shown
   terms: z.literal(true),
   // Cloudflare Turnstile's token
@@ -57,9 +66,33 @@ const SignUpBody = z.object({
   // How long the form was open, in milliseconds, as the page measured it
   elapsed: z.number().int().nonnegative().max(7 * 24 * 3600 * 1000).default(0),
   remember: z.boolean().default(true),
-  // "How did you find us?": optional, one of FOUND_VIA's keys
+  // "How did you find neon1?": optional, one of FOUND_VIA's keys, with their words for "Somewhere else"
   found: z.enum(FOUND_KEYS).optional(),
+  foundOther: z.string().trim().max(80).default(""),
 }).and(PublicFace);
+
+
+/** Every field's own check, run together: the person sees each problem beside its field at once.
+ * Returns the place in its proper spelling */
+async function checkSignUp(v: Vetting | undefined, b: z.infer<typeof SignUpBody>): Promise<{ place: string }> {
+  const problems: FieldProblems = {};
+  const [email, link, place] = await Promise.all([emailProblem(v, b.email), linkProblem(v, b.link), placeCheck(v, b.place)]);
+  if (email) problems.email = email;
+  const name = nameProblem(b.name, b.oneName);
+  if (name) problems.name = name;
+  if (b.kind === "other" && !b.kindOther) problems.kindOther = "Say what describes you.";
+  else if (b.kind === "other") { const t = textProblem(b.kindOther, "what describes you"); if (t) problems.kindOther = t; }
+  if (b.kind !== "individual") {
+    if (!b.org) problems.org = "Enter your organization's name.";
+    else { const t = textProblem(b.org, "your organization's name"); if (t) problems.org = t; }
+  }
+  if (link) problems.link = link;
+  if ("problem" in place) problems.place = place.problem;
+  if (b.found === "other" && !b.foundOther) problems.foundOther = "Say where you found neon1.";
+  else if (b.found === "other") { const t = textProblem(b.foundOther, "where you found neon1"); if (t) problems.foundOther = t; }
+  if (Object.keys(problems).length) failFields(problems);
+  return { place: "place" in place ? place.place : "" };
+}
 
 
 /** The caller's address, as CloudFront saw it */
@@ -104,6 +137,12 @@ export function signupRoutes(app: App, k: Kit) {
       fail(503, "signup_closed", "Sign-up is paused right now. Email hello@neon1.tech, and I'll set you up.");
     }
 
+    // The fields, each checked on its own (a real mail domain, a website that answers, a real place),
+    // before any counter moves, so fixing a typo never uses up a try
+    const { place } = await checkSignUp(d.vetting, b);
+    // An individual's account is named for them
+    const org = b.kind === "individual" ? b.name : b.org;
+
     // Counters: per address each hour and day, per email each day, and everyone each day
     const who = await shortHash(ip);
     const mail = await shortHash(b.email);
@@ -128,7 +167,7 @@ export function signupRoutes(app: App, k: Kit) {
       // sign-in account (only then may the sweep remove it). It expires on its own after three days
       await repo.table.write([{
         put: {
-          PK: SIGNUP_PK, SK: b.email, email: b.email, name: b.name, org: b.org, place: b.place, link: b.link, found: b.found, terms: PORTAL_TERMS_EDITION, from: who,
+          PK: SIGNUP_PK, SK: b.email, email: b.email, name: b.name, org, kind: b.kind, kindOther: b.kind === "other" ? b.kindOther : undefined, place, link: b.link, found: b.found, foundOther: b.found === "other" ? b.foundOther : undefined, terms: PORTAL_TERMS_EDITION, from: who,
           made: made || Boolean(before?.made), at: new Date().toISOString(), ttl: Math.floor(Date.now() / 1000) + 3 * 24 * 3600,
         },
         guard: { always: true },
@@ -140,6 +179,20 @@ export function signupRoutes(app: App, k: Kit) {
     const r = await d.auth.start(c, b.email, b.remember);
     return c.json(r.next);
   });
+}
+
+
+/** What the pending row says about who they are and how they found neon1, kept only when it's one of
+ * the known answers */
+function prospectAnswers(pending: Record<string, unknown>) {
+  const kind = typeof pending.kind === "string" && pending.kind in DESCRIBES ? pending.kind : undefined;
+  const found = typeof pending.found === "string" && pending.found in FOUND_VIA ? pending.found : undefined;
+  return {
+    ...(kind ? { kind } : {}),
+    ...(kind === "other" && pending.kindOther ? { kindOther: String(pending.kindOther).slice(0, 80) } : {}),
+    ...(found ? { found } : {}),
+    ...(found === "other" && pending.foundOther ? { foundOther: String(pending.foundOther).slice(0, 80) } : {}),
+  };
 }
 
 
@@ -171,7 +224,7 @@ export async function claimSignup(k: Pick<Kit, "repo" | "cfg">, email: string): 
     ...(pending.link ? { link: String(pending.link).slice(0, 200) } : {}),
     status: "active",
     stages: DEFAULT_STAGES,
-    prospect: { since: ts, terms: String(pending.terms ?? PORTAL_TERMS_EDITION).slice(0, 20), from: pending.from ? String(pending.from).slice(0, 64) : undefined, ...(typeof pending.found === "string" && pending.found in FOUND_VIA ? { found: pending.found } : {}) },
+    prospect: { since: ts, terms: String(pending.terms ?? PORTAL_TERMS_EDITION).slice(0, 20), from: pending.from ? String(pending.from).slice(0, 64) : undefined, ...prospectAnswers(pending) },
     version: 1,
     createdAt: ts,
     updatedAt: ts,
@@ -199,7 +252,7 @@ export async function claimSignup(k: Pick<Kit, "repo" | "cfg">, email: string): 
   if (opId && opEmail) ops.push(repo.memberOp(member(opId, opEmail, (await repo.getUser(opId))?.name ?? "neon1"), { create: true }));
   ops.push(
     repo.membershipRevOp(tenant.id, 0),
-    repo.auditOp({ tenantId: tenant.id, actorId: uid, action: "prospect.signedup", target: tenant.id, summary: `${name || email} (${email}) signed up as ${orgName} (${tenant.clientId})${[tenant.place, tenant.link, tenant.prospect?.found && `found via ${FOUND_VIA[tenant.prospect.found as FoundVia]}`].filter(Boolean).map((x) => `, ${x}`).join("")}` }),
+    repo.auditOp({ tenantId: tenant.id, actorId: uid, action: "prospect.signedup", target: tenant.id, summary: `${name || email} (${email}) signed up as ${orgName} (${tenant.clientId})${[tenant.prospect?.kind && describesLabel(tenant.prospect), tenant.place, tenant.link, tenant.prospect?.found && `found via ${foundLabel(tenant.prospect)}`].filter(Boolean).map((x) => `, ${x}`).join("")}` }),
     { delete: { PK: SIGNUP_PK, SK: email } },
   );
   await repo.table.write(ops);

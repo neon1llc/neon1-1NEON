@@ -114,7 +114,7 @@ describe("email", () => {
   it("puts the sign-in code in one selectable piece under a plain subject", () => {
     const event = { triggerSource: "CustomMessage_Authentication", request: { codeParameter: "{####}", userAttributes: {} }, response: {} } as unknown as CustomMessageTriggerEvent;
     const out = message(event, new Date("2026-11-06T20:22:00Z"));
-    expect(out.response.emailSubject).toBe("Your portal sign-in code");
+    expect(out.response.emailSubject).toBe("Your 1NEON sign-in code");
     expect(out.response.emailMessage).toMatch(/user-select:all">\{####\}<\/span>/);
     expect(out.response.emailMessage).toContain('sign in to <a href="https://neon1.tech/1NEON/"');
     expect(out.response.emailMessage).toContain("Sent Nov 6, 2026, 8:22 PM UTC");

@@ -35,7 +35,7 @@ beforeEach(async () => {
   await repo.createUser(op);
 });
 
-const form = { email: "dana@example.com", name: "Dana Kim", org: "Kim Dental", link: "kimdental.com", terms: true, elapsed: 8000 };
+const form = { email: "dana@example.com", name: "Dana Kim", kind: "small", org: "Kim Dental", link: "kimdental.com", terms: true, elapsed: 8000 };
 const signup = (b: unknown, ip = "203.0.113.7") =>
   app.request("/1NEON/api/auth/signup", { method: "POST", headers: { "content-type": "application/json", "x-1neon": "1", "x-forwarded-for": ip }, body: JSON.stringify(b) });
 const as = (email: string, path: string, method = "GET", b?: unknown) =>
@@ -97,6 +97,55 @@ describe("the sign-up form", () => {
     expect(tenant.prospect?.found).toBe("linkedin");
     const { tenant: plain } = await prospect("g@example.com");
     expect(plain.prospect?.found).toBeUndefined();
+  });
+
+  it("checks each field and answers field by field, before any counter moves", async () => {
+    const r = await signup({ ...form, email: "nope", name: "Dana", kind: "other", kindOther: "", found: "other", foundOther: "" });
+    expect(r.status).toBe(400);
+    const b = await r.json() as { error: string; current: { fields: Record<string, string> } };
+    expect(b.error).toBe("check_fields");
+    expect(Object.keys(b.current.fields).sort()).toEqual(["email", "foundOther", "kindOther", "name"]);
+    expect(b.current.fields.name).toBe("Enter your first and last name.");
+    // Six tries with mistakes, then a clean one, all from one address: the hourly cap (3) was never touched
+    for (let i = 0; i < 6; i++) expect((await signup({ ...form, name: "x" })).status).toBe(400);
+    expect((await signup(form)).status).toBe(200);
+  });
+
+  it("needs an organization's name except from an individual, whose account is named for them", async () => {
+    const r = await signup({ ...form, org: "" });
+    expect(((await r.json()) as { current: { fields: Record<string, string> } }).current.fields.org).toMatch(/organization's name/);
+    expect((await signup({ ...form, email: "solo@example.com", kind: "individual", org: "", oneName: true, name: "Madonna" }, "198.51.100.12")).status).toBe(200);
+    const uid = await claimSignup({ repo, cfg }, "solo@example.com");
+    const tenant = (await repo.getTenant((await repo.membershipsOf(uid!))[0]!.tenantId))!;
+    expect(tenant.name).toBe("Madonna");
+    expect(tenant.prospect).toMatchObject({ kind: "individual" });
+  });
+
+  it("keeps their own words for Something else and Somewhere else, and refuses rude or junk answers", async () => {
+    const bad = await signup({ ...form, org: "fuck off", kind: "other", kindOther: "asdf" });
+    expect(((await bad.json()) as { current: { fields: Record<string, string> } }).current.fields).toMatchObject({ org: expect.stringMatching(/reword/), kindOther: expect.stringMatching(/real answer/) });
+    expect((await signup({ ...form, email: "h@example.com", kind: "other", kindOther: "A family office", found: "other", foundOther: "A podcast" }, "198.51.100.13")).status).toBe(200);
+    const uid = await claimSignup({ repo, cfg }, "h@example.com");
+    const tenant = (await repo.getTenant((await repo.membershipsOf(uid!))[0]!.tenantId))!;
+    expect(tenant.prospect).toMatchObject({ kind: "other", kindOther: "A family office", found: "other", foundOther: "A podcast" });
+  });
+
+  it("with the outside checks, refuses throwaway mailboxes, domains that take no mail, dead links, and places that don't exist", async () => {
+    app = createApp({ cfg, repo, directory, mailer, storage, vetting: {
+      mailDomain: async (d) => (d === "nomail.example" ? "no_mail" : "ok"),
+      disposable: async (d) => d === "mailinator.com",
+      reachable: async (u) => (u.includes("dead") ? "unreachable" : u.includes("internal") ? "refused" : "ok"),
+      place: async (city, st) => (city.toLowerCase() === "albany" && st === "NY" ? "Albany" : undefined),
+    } });
+    const fields = async (b: unknown) => ((await (await signup(b)).json()) as { current?: { fields: Record<string, string> } }).current?.fields;
+    expect((await fields({ ...form, email: "a@mailinator.com" }))?.email).toMatch(/Temporary/);
+    expect((await fields({ ...form, email: "a@nomail.example" }))?.email).toMatch(/doesn't receive email/);
+    expect((await fields({ ...form, link: "dead.example" }))?.link).toMatch(/didn't answer/);
+    expect((await fields({ ...form, link: "internal.example" }))?.link).toMatch(/can't be used/);
+    expect((await fields({ ...form, place: "Gotham, NY" }))?.place).toMatch(/couldn't find Gotham/);
+    expect((await signup({ ...form, email: "p@example.com", place: "albany, ny" }, "198.51.100.14")).status).toBe(200);
+    const uid = await claimSignup({ repo, cfg }, "p@example.com");
+    expect((await repo.getTenant((await repo.membershipsOf(uid!))[0]!.tenantId))!.place).toBe("Albany, NY");
   });
 
   it("lets the prospect's admin change the place and link without confirming it's them", async () => {

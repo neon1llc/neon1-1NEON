@@ -1560,9 +1560,7 @@ ul.md-says { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; 
 .signin .signup-form select { width: 100%; background-color: rgba(255, 255, 255, .04); color: #D6F5DC; border-color: rgba(0, 255, 65, .3); }
 .signin .signup-form select.unpicked { color: #84A98C; }
 .signin .signup-form select option { background: #0D0208; color: #D6F5DC; }
-/* The line between the needed and optional columns: the same faint neon as the rule above the links
-   under sign-in. Only a wide screen has two columns, so only it shows */
-.signin .signup-form .col-rule { display: none; }
+
 .signin label.agree a { color: #D6F5DC; }
 .signin .check:empty { display: none; }
 /* "Where can I see your business?": the two fields as one group, spaced like the rest of the form */
@@ -1571,34 +1569,46 @@ ul.md-says { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; 
 .signin .signup-form .f { display: grid; gap: 8px; min-width: 0; }
 .signin .signup-form .f > * { margin: 0; }
 .signin .signup-form .face-hint { margin: -4px 0 0; }
-/* Sign-up, wide: a tablet or desktop sets who you are (left) beside where to see the business (right),
-   so the whole form shows without scrolling: three fields a side, a faint line between, and the terms
-   level with the note on the optional side. Narrower than this, phones included, it stays the single
-   column that scrolls. The fields read left-aligned in columns; the rest spans both */
+/* Sign-up's two columns, stacked on a phone: each a column of fields with the form's own spacing.
+   City and state share a row at any width, the state narrower */
+.signin .signup-form .su-col { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.signin .signup-form .su-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .8fr); gap: 10px; }
+.signin .signup-form .su-pair .f { display: grid; gap: 8px; min-width: 0; }
+/* A required field's green asterisk, after its label */
+.signin .signup-form .req { margin-left: 4px; color: var(--neon); font-weight: 700; }
+/* "I go by one name", under the name once a last name was asked for */
+.signin .signup-form label.one-name { font-size: 12px; margin-top: -2px; }
+/* Sign-up, wide: a tablet or desktop sets what's needed (left) beside what's optional (right), past a
+   faint line in the same neon as the rule above the links under sign-in, so the whole form shows without
+   scrolling. The terms sit level with the note on the optional side, and the line runs down past both.
+   Narrower than this, phones included, it stays the single column that scrolls */
 @media (min-width: 760px) {
   .signin .panel.signing-up { width: min(820px, calc(100% - 48px)); padding-top: 24px; padding-bottom: 24px; }
   .signin .panel.signing-up .word { margin-bottom: 10px; }
   .signin .panel.signing-up .signin-lead { margin-bottom: 14px; }
-  .signin form.signup-form { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 24px;
-    grid-template-areas: "email link" "name place" "org found" "terms hint"; text-align: left; }
+  /* form.signup-form outweighs ".signin form.stack", whose single column would otherwise win */
+  .signin form.signup-form { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 0;
+    grid-template-areas: "err err" "need opt" "terms hint"; text-align: left; }
   .signin .signup-form input:not([type="checkbox"]) { text-align: left; }
-  .signin .signup-form .f-email { grid-area: email; }
-  .signin .signup-form .f-name { grid-area: name; }
-  .signin .signup-form .f-org { grid-area: org; }
-  .signin .signup-form .f-link { grid-area: link; }
-  .signin .signup-form .f-place { grid-area: place; }
-  .signin .signup-form .f-found { grid-area: found; }
-  .signin .signup-form label.agree { grid-area: terms; align-self: center; }
-  /* The hint sits level with the terms, in the optional column */
-  .signin .signup-form .face-hint { grid-area: hint; align-self: center; margin: 0; line-height: 15px; }
-  /* Spans every field row and the terms row, centered in the gap between the columns */
-  .signin .signup-form .col-rule { display: block; grid-column: 2; grid-row: 1 / 5; justify-self: start; width: 0; margin-left: -12.5px;
-    border-left: 1px solid rgba(0, 255, 65, .16); pointer-events: none; }
-  /* form.signup-form above outweighs ".signin form.stack", whose 12px gap would otherwise win */
+  .signin .signup-form .su-error { grid-area: err; }
+  .signin .signup-form .su-need { grid-area: need; padding-right: 24px; }
+  .signin .signup-form .su-opt { grid-area: opt; padding-left: 24px; border-left: 1px solid rgba(0, 255, 65, .16); }
+  .signin .signup-form label.su-terms { grid-area: terms; align-self: center; padding-right: 24px; }
+  /* The note stretches to the row's height so the line above carries on through it, unbroken */
+  .signin .signup-form .face-hint { grid-area: hint; align-self: stretch; display: flex; align-items: center; margin: -12px 0 0; padding: 12px 0 0 24px;
+    line-height: 15px; border-left: 1px solid rgba(0, 255, 65, .16); }
   .signin .signup-form .full { grid-column: 1 / -1; text-align: center; }
+  /* What follows the fields keeps its own rows, so none of it fills the error's row when there's no error */
+  .signin .signup-form .su-end1 { grid-row: 4; }
+  .signin .signup-form .su-end2 { grid-row: 5; }
+  .signin .signup-form .su-end3 { grid-row: 6; }
+  .signin .signup-form .su-end4 { grid-row: 7; }
   .signin .signup-form .btn-primary.full { justify-self: center; width: min(360px, 100%); }
 }
+/* A field's message, and the field itself, in amber: the neon green already means "fine" and red clashes
+   with the palette; amber reads as "needs a look" and measures 10.9:1 on the void */
 .signin .field-error { color: #FFB86B; }
+.signin .signup-form [aria-invalid="true"] { border-color: rgba(255, 184, 107, .75); }
 /* The note on a new account's workspace stays calm: the notice look, in the accent instead of amber */
 .prospect-note { border-color: var(--line-strong); background: var(--accent-soft); }
 /* The operator's list: one card each, which stacks as it is on a phone */
@@ -1625,6 +1635,9 @@ a.out:hover .out-arrow, a.out:focus-visible .out-arrow { transform: translate(2p
 .face-form { display: grid; gap: 8px; max-width: 520px; }
 .face-form > * { margin: 0; }
 .face-form .field-label { display: block; font: 12px var(--mono); color: var(--muted); }
+.face-form .face-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .8fr); gap: 10px; }
+.face-form .face-pair > div { display: grid; gap: 8px; min-width: 0; }
+.face-form .face-pair select { width: 100%; }
 .face-form .actions { margin-top: 6px; }
 .field-error { color: #B45309; }
 @media (max-width: 520px) { .prospect-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

@@ -11,6 +11,7 @@ import type { Repo } from "../store/repo.ts";
 import type { NeoModel } from "../neo/agent.ts";
 import type { NeoBudget } from "../routes/neo.ts";
 import type { WriteOp } from "../store/types.ts";
+import type { Vetting } from "../vetting/types.ts";
 import type { Payments, Records } from "../payments.ts";
 import { actorId, check, fail, who, type Env } from "./http.ts";
 
@@ -36,6 +37,9 @@ export interface Deps {
   records?: Records;
   // Optional: the bot check on the sign-up form (Cloudflare Turnstile). Deployed without it, sign-up stays shut
   humanCheck?: HumanCheck;
+  // Optional: the form checks that look outside (a mail domain, a website, a place). Without it, only the
+  // checks that need nothing from outside run: the browser demo, local runs, and most tests
+  vetting?: Vetting;
 }
 
 

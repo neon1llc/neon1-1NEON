@@ -8,6 +8,9 @@
 - **Next step** on a free account's Home: **Ask for an assessment** or **Ask for a call**, with an optional note. Each emails neon1 with the person as Reply-To, is recorded, and Home shows when each was last asked for; up to 4 a day per organization.
 - "How did you find neon1?" is an optional dropdown on sign-up and on neon1.tech's contact form (one shared list). neon1 sees the answer on Potentials and in the email.
 - **Contact neon1** in the menu for every account, free accounts included: a page with email, call or text, a booked call, and the hours I answer. A new account's note on Home, the help sheet, and the command palette link to it.
+- Strong form checks, shared by sign-up, the contact form, Settings' place and link, and invites. An email must be a full address whose domain takes mail (DNS) and isn't a temporary-mailbox service (a bundled public list). A name needs a first and last name unless "I go by one name" is ticked. A website must answer from the server, which refuses private addresses and rechecks each redirect. A city must be a populated place in its state (GeoNames, bundled), and the proper spelling is kept; a state alone is fine, a city alone isn't. Junk ("asdf", "xxxxx", no letters) and a short list of slurs are refused, whole words only, so real names aren't caught. A check that can't decide lets the person through.
+- Each problem shows under its own field, in amber, which reads as a warning on both the dark sign-in screen and light pages without clashing with the neon. Every field's message comes back at once, and a retry after a typo doesn't count against the sign-up limits.
+- Required fields carry a green asterisk instead of "optional" labels, on sign-up and on neon1.tech's contact form.
 
 ### Changed
 - A free account's website and city are optional at sign-up, so people who'd rather stay private can still start. A link that's given must still be a real web address. Settings can clear both, and Home's ask for them has **Not now**, remembered per organization in that browser.
@@ -19,6 +22,8 @@
 - Wording describes what the portal does instead of what Pradeep does: the sign-up intro ("write down what your project needs, then ask for an assessment or a call from your account"), "You'll get a code by email to finish", the free-account note on Home, and the quiet-account email.
 - Wide sign-up has three fields a side with a faint line between the needed and optional columns, and the terms checkbox sits level with the note under the optional fields. The checkbox and its words share one center line.
 - "Start a free account" draws the form at once: the sign-in screen's own answer about sign-up is handed to the form, instead of the form showing "One moment…" while it asks again.
+- Sign-up asks "Which describes you best?" (individual, a business by size, technical team, nonprofit, school or public agency, or something else in your words) in place of "Organization / Area". Everyone but an individual names their organization. "Somewhere else" on "How did you find neon1?" asks where. City and state are two half-width fields, here and in Settings.
+- Sign-in code emails say "Your 1NEON sign-in code" in the subject and "Your 1NEON sign-in code is 12345678" first in the body, the wording mail apps like Gmail look for to offer a one-tap copy.
 
 ## v0.14.0 - 2026-11-15
 

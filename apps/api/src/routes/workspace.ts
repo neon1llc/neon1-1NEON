@@ -2,6 +2,7 @@
 // its workflow stages, the workspace landing, Coming up, Insights, and the audit trail.
 
 
+import { checkFace } from "../lib/vet.ts";
 import { InvoiceFields, OrgProfileInput, RECORD_KINDS, Stage, canApprove, dollars, failedOn, invoiceState, payableOn, changeRecord, occurrences, stageChanges, dateIn, isClosed, isOwnOrg, metricReached, mondayOf, neon1Only, plusDays, todayIn, type Tenant } from "@1neon/domain";
 import { z } from "zod";
 import { actorId, body, fail, need, now, who } from "../lib/http.ts";
@@ -14,7 +15,7 @@ const WAITING_ALL = 200;
 
 
 export function workspaceRoutes(app: App, k: Kit) {
-  const { repo, allDocs } = k;
+  const { repo, allDocs, d } = k;
 
   // The organization and the caller's access, for the web app's frame
   app.get("/t/:tid", (c) => {
@@ -29,6 +30,8 @@ export function workspaceRoutes(app: App, k: Kit) {
     need(c, "write");
     if (!who(c).actor.operator && c.get("access") !== "admin") fail(403, "forbidden", "Only an admin of this organization can change this.");
     const input = await body(c, OrgProfileInput);
+    // The same checks as sign-up: a real place (stored in its proper spelling) and a link that answers
+    input.place = await checkFace(d.vetting, input.place, input.link);
     const t = c.get("tenant");
     const { place: _p, link: _l, ...rest } = t;
     const next: Tenant = { ...rest, ...(input.place ? { place: input.place } : {}), ...(input.link ? { link: input.link } : {}), version: t.version + 1, updatedAt: now(), updatedBy: actorId(c) };

@@ -2,25 +2,26 @@
 // open, and what's sent. Kept apart from the form so they can be tested without a browser.
 
 
-import { normalizeLink } from "@1neon/domain";
+import { emailShapeOk, joinPlace, nameProblem, normalizeLink, placeShapeProblem, textProblem } from "@1neon/domain";
 
 
-/** What a person types */
+/** What a person types. `kind` is "Which describes you best?"; `org` is asked for every answer but an
+ * individual; `kindOther` and `foundOther` are their words for "Something else" and "Somewhere else" */
 export interface SignUpFields {
   email: string;
   name: string;
+  oneName?: boolean;
+  kind: string;
+  kindOther?: string;
   org: string;
-  // Where the business is based, and its website or a public page: both optional
-  place: string;
+  // Where the business is based (city and state, or the state alone) and its website: both optional
+  city?: string;
+  state?: string;
   link: string;
-  // "How did you find us?": a FOUND_VIA key, or "" when they didn't say
   found?: string;
+  foundOther?: string;
   terms: boolean;
 }
-
-
-// The same shape of address the sign-in screen accepts
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 
 /** Is the link field fine? Empty, or something that makes a web address */
@@ -29,10 +30,40 @@ export function linkOk(link: string) {
 }
 
 
-/** Can the form be sent? Email, name, and organization filled, a link (if any) that works, and the terms
- * ticked (the API checks again). The place and link are optional */
+/** Does this answer need an organization's name? Every one but an individual's */
+export const needsOrg = (kind: string) => kind !== "" && kind !== "individual";
+
+
+/**
+ * What the form can tell before sending, field by field: the same rules the API runs first (forms.ts),
+ * so most problems show beside their field at once. The API's outside checks (a mail domain, a website
+ * that answers, a real place) come back the same way after sending. Empty fields that are required are
+ * left to the button, which stays off until they're filled; this only speaks about what was typed
+ */
+export function signUpProblems(f: SignUpFields): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (f.email.trim() && !emailShapeOk(f.email)) out.email = "Enter a full email address, like you@company.com.";
+  const name = f.name.trim() ? nameProblem(f.name, f.oneName) : undefined;
+  if (name) out.name = name;
+  const kindOther = f.kind === "other" ? textProblem(f.kindOther ?? "", "what describes you") : undefined;
+  if (kindOther) out.kindOther = kindOther;
+  const org = needsOrg(f.kind) ? textProblem(f.org, "your organization's name") : undefined;
+  if (org) out.org = org;
+  if (!linkOk(f.link)) out.link = "Enter a web address, like yourbusiness.com.";
+  const place = placeShapeProblem(f.city ?? "", f.state ?? "");
+  if (place) out.place = place;
+  const foundOther = f.found === "other" ? textProblem(f.foundOther ?? "", "where you found neon1") : undefined;
+  if (foundOther) out.foundOther = foundOther;
+  return out;
+}
+
+
+/** Can the form be sent? Every required field filled (an organization's name unless individual, their
+ * words when they picked "Something else" or "Somewhere else"), nothing that fails the rules above, and
+ * the terms ticked (the API checks all of it again) */
 export function signUpReady(f: SignUpFields) {
-  return EMAIL.test(f.email.trim()) && f.name.trim().length > 0 && f.org.trim().length > 0 && linkOk(f.link) && f.terms;
+  const filled = f.email.trim() && f.name.trim() && f.kind && (!needsOrg(f.kind) || f.org.trim()) && (f.kind !== "other" || f.kindOther?.trim()) && (f.found !== "other" || f.foundOther?.trim());
+  return Boolean(filled) && Object.keys(signUpProblems(f)).length === 0 && f.terms;
 }
 
 
@@ -46,7 +77,23 @@ export function elapsedSince(shownAt: number, now = Date.now()) {
 /** The body of POST /auth/signup. `website` is the hidden field: a person leaves it empty. `check` is
  * Turnstile's token, or "" when no site key is set (local runs) */
 export function signUpBody(f: SignUpFields, extra: { check: string; website: string; elapsed: number; remember: boolean }) {
-  return { email: f.email.trim(), name: f.name.trim(), org: f.org.trim(), place: f.place.trim(), link: f.link.trim(), ...(f.found ? { found: f.found } : {}), terms: true as const, check: extra.check, website: extra.website, elapsed: extra.elapsed, remember: extra.remember };
+  return {
+    email: f.email.trim(),
+    name: f.name.trim().replace(/\s+/g, " "),
+    ...(f.oneName ? { oneName: true } : {}),
+    kind: f.kind,
+    ...(f.kind === "other" ? { kindOther: (f.kindOther ?? "").trim() } : {}),
+    org: needsOrg(f.kind) ? f.org.trim() : "",
+    place: joinPlace(f.city ?? "", f.state ?? ""),
+    link: f.link.trim(),
+    ...(f.found ? { found: f.found } : {}),
+    ...(f.found === "other" ? { foundOther: (f.foundOther ?? "").trim() } : {}),
+    terms: true as const,
+    check: extra.check,
+    website: extra.website,
+    elapsed: extra.elapsed,
+    remember: extra.remember,
+  };
 }
 
 
