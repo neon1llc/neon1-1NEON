@@ -2,6 +2,12 @@
 
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
+## Unreleased
+
+### Fixed
+- On an iPhone, the walkthrough's view of the portal drew its top bar partway down the page, over the cards, with an empty band above the page title. The bar now sits right under the walkthrough's narration, as it does elsewhere. The interactive demo (/1NEON/demo) had the same gap under its notice bar, now gone too. The walkthrough check now fails if the bar drifts from under the narration.
+- The first chapter of a walkthrough says "Sign in to Home" instead of "Sign in", since it shows Home too.
+
 ## v0.12.0 - 2026-11-15
 
 ### Changed

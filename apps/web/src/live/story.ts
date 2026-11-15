@@ -216,7 +216,8 @@ async function dropFile(s: Stage, target: Parameters<Stage["click"]>[0], name: s
 export const STORY: Section[] = [
   {
     id: "signin",
-    title: "Sign in",
+    // She signs in and looks around Home, so the chapter says both
+    title: "Sign in to Home",
     run: async (s) => {
       await s.say("Maria, who owns Maple Street Bakery, opens 1NEON for the first time");
       await s.think("Pradeep said our project lives here. Let me sign in.");
