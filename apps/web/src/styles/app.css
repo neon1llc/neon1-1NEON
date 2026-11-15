@@ -903,6 +903,10 @@ body:not(:has(.shell:not(.example))) .n1chat-right.n1chat-grow, body:not(:has(.s
 body:has(.demo-bar) { --demo-h: 36px; padding-top: var(--demo-h); }
 body:has(.demo-bar) .side { top: var(--demo-h); }
 body:has(.demo-bar) .top { top: var(--demo-h); }
+/* Where the body scrolls (iPhones, lib/edge.ts), WebKit adds its top padding to the sticky top bar's
+   offset; the room goes on #root there so the bar sticks right under the demo bar */
+html.body-scrolls body:has(.demo-bar) { padding-top: 0; }
+html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 @media (max-width: 640px) { .demo-note { display: none; } .demo-acts { margin-left: auto; } }
 /* The demo can't save on this device: one calm line, in the bar and on the picker (13:1 on the void) */
 .demo-tab-only { color: #FFD27A; }

@@ -104,6 +104,11 @@
 body:has(.live-bar) { padding-top: var(--live-top); }
 body:has(.live-bar) .side { top: var(--live-top); }
 body:has(.live-bar) .top { top: var(--live-top); }
+/* On an iPhone the body is what scrolls (lib/edge.ts), and WebKit counts a scrolling box's own top
+   padding into a sticky child's offset, so the portal's top bar stuck a whole --live-top lower, partway
+   down the page. There the room goes on #root instead, and the bar sticks right under the narration */
+html.body-scrolls body:has(.live-bar) { padding-top: 0; }
+html.body-scrolls body:has(.live-bar) #root { padding-top: var(--live-top); }
 body:has(.live-bar) #root { cursor: default; }
 /* While playing, the portal takes no clicks; no hint follows the mouse around */
 .live-shield { position: fixed; inset: var(--demo-h) 0 0 0; z-index: 2147483639; cursor: default; }
