@@ -148,7 +148,7 @@ export function SignUp({ info: known, email: start, remember, onStep, onBack, lo
       </div>
       <div className="f f-found">
         <label className="field-label" htmlFor="su-found">How did you find neon1? <span className="opt">optional</span></label>
-        <select id="su-found" name="found" aria-describedby="su-face-hint" value={found} onChange={(e) => setFound(e.target.value)}>
+        <select id="su-found" name="found" className={found ? undefined : "unpicked"} aria-describedby="su-face-hint" value={found} onChange={(e) => setFound(e.target.value)}>
           <option value="">Choose one</option>
           {Object.entries(FOUND_VIA).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
