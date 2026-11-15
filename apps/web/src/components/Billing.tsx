@@ -378,7 +378,7 @@ export function Hours({ items, path }: { items: Item[]; path: string }) {
           </tbody>
         </table>
       )}
-      {!entries.length && <p className="small muted">No hours logged yet. Each entry appears here as the work is done.</p>}
+      {!entries.length && <p className="small muted">No hours logged yet.</p>}
       {/* neon1 logs its own hours; the client only reads them */}
       {me.operator && at && (
         <form className="hours-add" onSubmit={(e) => { e.preventDefault(); if (ready && !busy) void add(); }}>

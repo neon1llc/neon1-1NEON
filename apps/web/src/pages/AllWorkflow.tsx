@@ -30,7 +30,7 @@ export function AllWorkflow() {
     <>
       <h1 className="page-title">All clients</h1>
       {/* Archived projects and inactive organizations are left out; closed projects stay, in their own column */}
-      <p className="lead">Every open and closed project across organizations, archived ones left out. Open one to make changes in its organization.</p>
+      <p className="lead">Archived projects are left out.</p>
       {/* View switch between lanes and one board */}
       {/* Plain toggle buttons styled as tabs: Tab reaches each, Enter or Space picks it */}
       <div className="tabs" role="group" aria-label="View">
