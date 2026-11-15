@@ -121,7 +121,7 @@ export type Counts = {
 
 /** Something the export doesn't hold, and why. `partial` when it should be there and isn't (that makes
  * the export partial); otherwise it's left out on purpose, said so nobody wonders */
-export type NotIncluded = { what: string; why: string; partial: boolean };
+export type NotIncluded = { what: string; why: string; partial: boolean; changed?: true };
 
 /** Which of the export's own reads the API answered ("unavailable": an older API without the route) */
 export type Reads = { trash: "included" | "unavailable"; history: "included" | "unavailable" };
@@ -153,7 +153,7 @@ export function notIncluded(reads: Reads, held: Held[]): NotIncluded[] {
 }
 
 /** Build manifest.json's content. Complete: every file arrived, and Trash and the history were read */
-export function manifest(input: { org: Tenant; at: string; held: Held[]; reads: Reads; members: number; comments: number; activity: number; records: RecordEntry[]; files: FileEntry[] }): Manifest {
+export function manifest(input: { org: Tenant; at: string; held: Held[]; reads: Reads; members: number; comments: number; activity: number; records: RecordEntry[]; files: FileEntry[]; changed?: string[] }): Manifest {
   const { org, held, files, reads } = input;
   const items: Record<string, number> = {};
   for (const h of held) for (const i of h.items) items[i.kind] = (items[i.kind] ?? 0) + 1;
@@ -161,6 +161,8 @@ export function manifest(input: { org: Tenant; at: string; held: Held[]; reads: 
   const included = files.filter((f) => f.status === "included");
   const omitted = files.length - included.length;
   const notInExport = notIncluded(reads, held);
+  // Projects that changed between the export's reads: the zip is each one as it was read, so say so
+  if (input.changed?.length) notInExport.unshift({ what: `Projects changed while the export ran: ${input.changed.join(", ")}`, why: "they may differ from what 1NEON holds now; export again for a consistent copy", partial: true, changed: true });
   return {
     format: "1neon-export/1",
     exportedAt: input.at,
@@ -198,7 +200,8 @@ export function verdict(m: Pick<Manifest, "complete" | "notInExport" | "counts">
   const missed = m.counts.files.omitted;
   const parts = [
     ...(missed ? [`${plural(missed, "file is", "files are")} not included (listed below and in manifest.json)`] : []),
-    ...m.notInExport.filter((n) => n.partial).map((n) => `${n.what[0]!.toLowerCase()}${n.what.slice(1)} are not included (this version of 1NEON can't export them)`),
+    // Data that moved while the export ran has its own wording; the rest is what an older API can't give
+    ...m.notInExport.filter((n) => n.partial).map((n) => (n.changed ? `${n.what} (${n.why})` : `${n.what[0]!.toLowerCase()}${n.what.slice(1)} are not included (this version of 1NEON can't export them)`)),
   ];
   return `This export is partial: ${parts.join("; ")}.`;
 }

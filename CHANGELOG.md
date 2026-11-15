@@ -7,6 +7,19 @@
 ### Changed
 - **The privacy and data policy, the cookie and storage notice, and the terms come from neon1-corpus.** `node scripts/legal.mjs <ref>` copies them at a pinned corpus ref, so /1NEON/privacy, /1NEON/cookies, and /1NEON/terms match the Knowledge Center word for word. The privacy page becomes the privacy and data policy (edition 3.0): the contact form, Stripe payments, upload scanning, signatures, log periods, a retention table, the test environment on generated data only, downloads, deletion, client systems, and incidents. The terms catch up with the corpus (Download everything, the business address).
 - **Contact form counters expire.** The per-sender hourly and daily counters behind the neon1.tech contact form's limits now expire a day after their first count (DynamoDB TTL), instead of staying in the table.
+- **Dev runs on made-up data, never a copy of production's.** `apps/api/src/dev-sample.ts` empties dev and fills it with fictional organizations, people, projects, invoices, payment records, and one harmless file; the production-to-dev copy (`scripts/dev-data.mjs`) is gone. Dev still admits and mails only neon1's own people. For payments, dev takes Stripe test-mode keys only, so checkout, bank transfers, and webhooks can be tried end to end with test numbers; a live key on dev turns online payment off.
+- **The board says what's open and what's finished.** A closed project shows "Closed" and the day it closed instead of its last health, so finished work never reads "On track". All clients counts each organization's projects as open and closed (it used to call every one "active"), and its introduction says it shows open and closed projects, archived ones left out. The project list and a project's page do the same.
+- Cards and the project list say time in a stage in words ("4 days in Build", "new today"), not "4d".
+
+### Fixed
+- An invoice that asks for exactly what an issued deposit or final invoice already asks for (a double click, or a second request) can't be issued; the draft says which invoice already covers it.
+- A credit can't be more than what's left on the invoice it reduces, alone or added to other credits, so a refund never exceeds what was invoiced. The closing refund credits the invoice with the most room and says if more is owed back on another.
+- Two approvals sent at the same moment from two tabs no longer make two decisions (and two deposits): one is recorded and the other is told. The same holds for two hand-recorded payments on one invoice, which could together have come to more than was owed.
+- **Download everything** is marked partial, with the reason, when a file arrives shorter or longer than 1NEON's record of it, or when a project is added, edited, or moved to Trash while the export runs. It used to call such an export complete.
+- Two exports running at once in two tabs no longer delete each other's files: each builds in its own folder, and the leftovers of an export whose tab closed mid-way are cleared later without touching one still running.
+
+### Tests
+- Twelve commercial scenarios each have tests: revised terms keeping the signed ones, deposit share changes, duplicate drafts, late, failed, and pending bank transfers, cancellation after a deposit, refunds, a changed decision, two tabs at once, a client leaving, and Quick fix. Edited Word copies are tested to only suggest changes for neon1 to check, to never change signed terms, and to list what they couldn't match.
 
 ## v0.11.0 - 2026-11-14
 
