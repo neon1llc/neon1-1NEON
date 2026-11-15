@@ -3,6 +3,7 @@
 
 
 import { useQueries } from "@tanstack/react-query";
+import { Link } from "react-router";
 import { read } from "../lib/reads.ts";
 import { BOOK_A_CALL, prospectEverywhere } from "../lib/prospect.ts";
 import type { Me, OrgResponse } from "../lib/types.ts";
@@ -25,7 +26,7 @@ export function useProspectEverywhere(me: Me): boolean | undefined {
 export function ProspectNote() {
   return (
     <p className="notice prospect-note" role="note">
-      <span>You're set up as a new account. Add your projects' needs here, and I'll take a look and get back to you. Want to talk sooner? <a href={BOOK_A_CALL} target="_blank" rel="noopener">Book a call</a>.</span>
+      <span>You're set up as a new account. Add your projects' needs here, and I'll take a look and get back to you. Want to talk sooner? <a className="out" href={BOOK_A_CALL} target="_blank" rel="noopener noreferrer">Book a call<span className="out-arrow" aria-hidden="true">↗</span></a>, or <Link to="/contact">email, call, or text</Link>.</span>
     </p>
   );
 }

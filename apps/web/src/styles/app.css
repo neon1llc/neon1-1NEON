@@ -121,6 +121,9 @@ input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outlin
 .nav .sep { font: 11px var(--mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; padding: 12px 6px 4px; }
 .side:not(.open) .nav .sep { padding: 0; margin: 6px 4px; border-top: 1px solid var(--line); }
 .site-link { margin-top: auto; font: 13px var(--mono); color: var(--muted); }
+/* Contact neon1 sits at the foot of the menu, just above the site link */
+.side .contact-nav { margin-top: auto; }
+.side .contact-nav + .site-link { margin-top: 0; }
 .who-link { border-top: 1px solid var(--line); border-radius: 0; padding-top: 10px; margin-top: 4px; }
 .side .org { margin: 2px 0 6px; }
 /* Organization chooser; amber when it shows All clients */
@@ -995,12 +998,12 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 /* --- Menu rows, one grid open or closed (2026-11-09) ---
    Every row of the menu has the same height and place whether it's the mini rail or the full menu, so
    opening it from the rail only slides each label out to the right of its icon. The rows share the
-   screen's height (15 rows after the paddings, section rules, and profile line), between 40px and
+   screen's height (16 rows after the paddings, section rules, and profile line), between 40px and
    18px, so the whole menu fits without scrolling on every screen, a phone sideways included.
    Section rules and their labels take the same 14px either way: a thin line closed, the word open */
 /* Rows never go under 24px (WCAG 2.2 target size) on the mini rail, and the open menu keeps full 40px
  * rows and scrolls instead of squeezing them (AP-02) */
-.side { --row: clamp(24px, calc((100dvh - var(--demo-h, 0px) - 70px) / 15), 40px); --sep: 14px; gap: 0; padding-top: 8px; padding-bottom: 8px; }
+.side { --row: clamp(24px, calc((100dvh - var(--demo-h, 0px) - 70px) / 16), 40px); --sep: 14px; gap: 0; padding-top: 8px; padding-bottom: 8px; }
 /* Short screens: the chooser keeps only the organization's name, so it fits the row */
 @media (max-height: 500px) { .side .org-full .org small { display: none; } }
 .side :is(.brand, .org-mini, .nav a, .site-link, .who-link),
@@ -1553,9 +1556,30 @@ ul.md-says { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; 
 .signin label.agree a { color: #D6F5DC; }
 .signin .check:empty { display: none; }
 /* "Where can I see your business?": the two fields as one group, spaced like the rest of the form */
-.signin fieldset.face { display: grid; gap: 8px; margin: 0; padding: 10px 12px 12px; border: 1px solid #1F3A25; border-radius: 10px; min-width: 0; }
-.signin fieldset.face legend { padding: 0 6px; }
-.signin fieldset.face > p { margin: 0; }
+/* Sign-up's optional fields say so after their label, quietly */
+.signin .opt { margin-left: 6px; font-size: 11px; color: #84A98C; }
+.signin .signup-form .f { display: grid; gap: 8px; min-width: 0; }
+.signin .signup-form .f > * { margin: 0; }
+.signin .signup-form .face-hint { margin: -4px 0 0; }
+/* Sign-up, wide: a tablet or desktop sets who you are (left) beside where to see the business (right),
+   so the whole form shows without scrolling. Narrower than this, phones included, it stays the single
+   column that scrolls. The fields read left-aligned in columns; the rest spans both */
+@media (min-width: 760px) {
+  .signin .panel.signing-up { width: min(820px, calc(100% - 48px)); padding-top: 24px; padding-bottom: 24px; }
+  .signin .panel.signing-up .word { margin-bottom: 10px; }
+  .signin .panel.signing-up .signin-lead { margin-bottom: 14px; }
+  .signin .signup-form { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 24px;
+    grid-template-areas: "email link" "name place" "org hint"; text-align: left; }
+  .signin .signup-form input:not([type="checkbox"]) { text-align: left; }
+  .signin .signup-form .f-email { grid-area: email; }
+  .signin .signup-form .f-name { grid-area: name; }
+  .signin .signup-form .f-org { grid-area: org; }
+  .signin .signup-form .f-link { grid-area: link; }
+  .signin .signup-form .f-place { grid-area: place; }
+  .signin .signup-form .face-hint { grid-area: hint; align-self: start; margin-top: 4px; }
+  .signin .signup-form .full { grid-column: 1 / -1; text-align: center; }
+  .signin .signup-form .btn-primary.full { justify-self: center; width: min(360px, 100%); }
+}
 .signin .field-error { color: #FFB86B; }
 /* The note on a new account's workspace stays calm: the notice look, in the accent instead of amber */
 .prospect-note { border-color: var(--line-strong); background: var(--accent-soft); }
@@ -1575,6 +1599,11 @@ a.out .out-arrow { display: inline-block; margin-left: 2px; transition: transfor
 a.out:hover .out-arrow, a.out:focus-visible .out-arrow { transform: translate(2px, -2px); }
 @media (prefers-reduced-motion: reduce) { a.out .out-arrow { transition: none; } }
 /* The place-and-link form, in Settings and on Home */
+/* Contact: one row per way to reach neon1 */
+.contact-ways { max-width: 640px; }
+.contact-ways .facts { display: grid; gap: 14px; margin: 0 0 14px; }
+.contact-ways .facts dt { font: 11px var(--mono); color: var(--muted); }
+.contact-ways .facts dd { margin: 2px 0 0; overflow-wrap: anywhere; }
 .face-form { display: grid; gap: 8px; max-width: 520px; }
 .face-form > * { margin: 0; }
 .face-form .field-label { display: block; font: 12px var(--mono); color: var(--muted); }

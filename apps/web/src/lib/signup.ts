@@ -10,7 +10,7 @@ export interface SignUpFields {
   email: string;
   name: string;
   org: string;
-  // Where the business is based, and its website or a public page: at least one
+  // Where the business is based, and its website or a public page: both optional
   place: string;
   link: string;
   terms: boolean;
@@ -27,10 +27,10 @@ export function linkOk(link: string) {
 }
 
 
-/** Can the form be sent? Every field filled, a place or a working link, and the terms ticked (the API checks again) */
+/** Can the form be sent? Email, name, and organization filled, a link (if any) that works, and the terms
+ * ticked (the API checks again). The place and link are optional */
 export function signUpReady(f: SignUpFields) {
-  const face = f.place.trim().length > 0 || f.link.trim().length > 0;
-  return EMAIL.test(f.email.trim()) && f.name.trim().length > 0 && f.org.trim().length > 0 && face && linkOk(f.link) && f.terms;
+  return EMAIL.test(f.email.trim()) && f.name.trim().length > 0 && f.org.trim().length > 0 && linkOk(f.link) && f.terms;
 }
 
 

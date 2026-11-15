@@ -1,6 +1,7 @@
 // apps/web/src/components/OrgFace.tsx - Where an organization can be seen from outside: the city and
-// state it's based in, and its website or a public page. Sign-up asks for at least one; this shows them,
-// lets an admin change them (Settings), and asks for them on Home when an organization has neither.
+// state it's based in, and its website or a public page. Both are optional at sign-up, so a person who'd
+// rather stay private can start; this shows them, lets an admin change them (Settings), and asks for them
+// on Home when an organization has neither, until the admin adds one or says "Not now".
 
 
 import { normalizeLink, type Tenant } from "@1neon/domain";
@@ -8,6 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "../lib/api.ts";
 import { problem } from "../lib/hooks.ts";
+import { prefs } from "../lib/prefs.ts";
 import { useOrg } from "./Shell.tsx";
 import { useToast } from "./ui.tsx";
 
@@ -31,6 +33,11 @@ export function FaceFacts({ place, link }: Pick<Tenant, "place" | "link">) {
 }
 
 
+// Home's ask stays put away once an admin says "Not now", per organization, in this browser
+const askKey = (orgId: string) => `1neon.face-ask.${orgId}`;
+export const faceAskDismissed = (orgId: string) => prefs.get(askKey(orgId)) === "no";
+
+
 /** An admin's form for the place and link. `ask` is Home's version, with the reason it's asked */
 export function FaceForm({ ask = false, onDone }: { ask?: boolean; onDone?: () => void }) {
   const { org, summary, access } = useOrg();
@@ -41,7 +48,8 @@ export function FaceForm({ ask = false, onDone }: { ask?: boolean; onDone?: () =
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const linkBad = link.trim() !== "" && normalizeLink(link) === undefined;
-  const ready = (place.trim() !== "" || link.trim() !== "") && !linkBad;
+  // Home's ask needs one to save; Settings can also clear both
+  const ready = (!ask || place.trim() !== "" || link.trim() !== "") && !linkBad;
   const changed = place.trim() !== (org.place ?? "") || (link.trim() ? normalizeLink(link) : "") !== (org.link ?? "");
 
   // Save both against the organization's version; the frame's copy of the organization takes the answer
@@ -63,7 +71,7 @@ export function FaceForm({ ask = false, onDone }: { ask?: boolean; onDone?: () =
   return (
     <form className={`face-form${ask ? " card" : ""}`} onSubmit={(e) => { e.preventDefault(); if (ready && changed && !busy) void save(); }}>
       {ask && <h2 className="section-h">Where can I see your business?</h2>}
-      <p className="muted small">{ask ? "Add your website or a public page (Google, Yelp, LinkedIn), or where you're based, so I know who I'm working with. One is enough." : "Your website or a public page, and where you're based. At least one."}</p>
+      <p className="muted small">{ask ? "If you'd like, add your website or a public page (Google, Yelp, LinkedIn), or where you're based, so I know who I'm working with. One is enough, and you can skip it." : "Your website or a public page, and where you're based. Both are optional."}</p>
       {error && <p className="notice" role="alert">{error}</p>}
       <label className="field-label" htmlFor="face-link">Website or public page</label>
       <input id="face-link" inputMode="url" maxLength={200} autoComplete="url" placeholder="yourbusiness.com" aria-invalid={linkBad} value={link} onChange={(e) => setLink(e.target.value)} />
@@ -73,6 +81,7 @@ export function FaceForm({ ask = false, onDone }: { ask?: boolean; onDone?: () =
       <div className="actions">
         <button className="btn btn-primary btn-sm" disabled={!ready || !changed || busy}>{busy ? "Saving…" : "Save"}</button>
         {onDone && !ask && <button type="button" className="btn btn-ghost btn-sm" onClick={onDone}>Cancel</button>}
+        {ask && <button type="button" className="btn btn-ghost btn-sm" onClick={() => { prefs.set(askKey(org.id), "no"); onDone?.(); }}>Not now</button>}
       </div>
     </form>
   );

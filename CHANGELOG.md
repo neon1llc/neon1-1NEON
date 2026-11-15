@@ -2,6 +2,16 @@
 
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
+## Unreleased
+
+### Added
+- **Contact neon1** in the menu for every account, free accounts included: a page with email, call or text, a booked call, and the hours I answer. A new account's note on Home, the help sheet, and the command palette link to it.
+
+### Changed
+- A free account's website and city are optional at sign-up, so people who'd rather stay private can still start. A link that's given must still be a real web address. Settings can clear both, and Home's ask for them has **Not now**, remembered per organization in that browser.
+- Sign-in no longer blinks from the invitation-only wording to the free-account wording on load, refresh, or coming back to the tab: the last answer about sign-up is kept in the browser (`1neon.signup`), a first visit waits for it, and a session check while sign-in is showing keeps the same screen instead of drawing it again.
+- On a tablet or desktop (760px wide and up), sign-up sets who you are beside where to see the business, in two columns, so the form fits without scrolling. Narrower screens, phones included, keep the single column.
+
 ## v0.14.0 - 2026-11-15
 
 ### Added

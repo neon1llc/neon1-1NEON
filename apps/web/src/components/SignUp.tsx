@@ -114,38 +114,47 @@ export function SignUp({ email: start, remember, onStep, onBack, local }: { emai
     );
   }
   return (
-    <form className="stack" name="signup" onSubmit={(e) => { e.preventDefault(); submit(); }}>
-      {error && <p className="notice" role="alert">{error}</p>}
-      <label className="field-label" htmlFor="su-email">Email address</label>
-      <input id="su-email" name="username" type="email" required autoComplete="username" placeholder="you@company.com" value={email} onChange={(e) => setEmail(e.target.value)} />
-      <label className="field-label" htmlFor="su-name">Your name</label>
-      <input id="su-name" name="name" required maxLength={80} autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} />
-      <label className="field-label" htmlFor="su-org">Organization name</label>
-      <input id="su-org" name="org" required maxLength={80} autoComplete="organization" value={org} onChange={(e) => setOrg(e.target.value)} />
-      {/* Either one is enough; both help. The hint says why it's asked */}
-      <fieldset className="face">
-        <legend className="field-label">Where can I see your business?</legend>
-        <p className="fine" id="su-face-hint">Your website or a public page (Google, Yelp, LinkedIn), or where you're based. One is enough.</p>
-        <label className="field-label" htmlFor="su-link">Website or public page</label>
+    <form className="stack signup-form" name="signup" onSubmit={(e) => { e.preventDefault(); submit(); }}>
+      {error && <p className="notice full" role="alert">{error}</p>}
+      {/* Each field is a label and its input together, so a wide screen can set who you are beside where
+          to see the business, in two columns, with no scrolling (styles: "Sign-up, wide") */}
+      <div className="f f-email">
+        <label className="field-label" htmlFor="su-email">Email address</label>
+        <input id="su-email" name="username" type="email" required autoComplete="username" placeholder="you@company.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+      </div>
+      <div className="f f-name">
+        <label className="field-label" htmlFor="su-name">Your name</label>
+        <input id="su-name" name="name" required maxLength={80} autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} />
+      </div>
+      <div className="f f-org">
+        <label className="field-label" htmlFor="su-org">Organization name</label>
+        <input id="su-org" name="org" required maxLength={80} autoComplete="organization" value={org} onChange={(e) => setOrg(e.target.value)} />
+      </div>
+      {/* Where the business can be seen: optional, since some people would rather stay private until we talk */}
+      <div className="f f-link">
+        <label className="field-label" htmlFor="su-link">Website or public page <span className="opt">optional</span></label>
         <input id="su-link" name="url" inputMode="url" maxLength={200} autoComplete="url" placeholder="yourbusiness.com" aria-describedby="su-face-hint" aria-invalid={!linkOk(link)} value={link} onChange={(e) => setLink(e.target.value)} />
         {!linkOk(link) && <p className="fine field-error" role="status">Enter a web address, like yourbusiness.com.</p>}
-        <label className="field-label" htmlFor="su-place">City and state</label>
+      </div>
+      <div className="f f-place">
+        <label className="field-label" htmlFor="su-place">City and state <span className="opt">optional</span></label>
         <input id="su-place" name="place" maxLength={80} autoComplete="address-level2" placeholder="Albany, NY" aria-describedby="su-face-hint" value={place} onChange={(e) => setPlace(e.target.value)} />
-      </fieldset>
+      </div>
+      <p className="fine face-hint" id="su-face-hint">Helps me see who I'd be working with. You can add it later.</p>
       {/* Off-screen, not display:none, since some bots skip hidden fields; people and screen readers never reach it */}
       <div className="hp" aria-hidden="true">
         <input name="website" type="text" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
       </div>
       {/* The portal's terms, opened in a new tab so what's typed here stays */}
-      <label className="remember agree">
+      <label className="remember agree full">
         <input type="checkbox" required checked={terms} onChange={(e) => setTerms(e.target.checked)} />
         <span>I agree to the <Link to="/terms" target="_blank" rel="noopener">terms of use</Link></span>
       </label>
       {/* Turnstile draws here only if Cloudflare needs the person to do something */}
-      <div ref={box} className="check" />
-      <button className="btn btn-primary" type="submit" disabled={!ready || busy || waiting}>{busy || waiting ? "One moment…" : "Create account"}</button>
-      <p className="fine next-hint">I'll email you a code to finish. No password. <a href="/knowledge/guides/free-accounts/" target="_blank" rel="noopener">How free accounts work</a></p>
-      <p className="fine"><button className="linkish" type="button" onClick={onBack}>Back to sign-in</button></p>
+      <div ref={box} className="check full" />
+      <button className="btn btn-primary full" type="submit" disabled={!ready || busy || waiting}>{busy || waiting ? "One moment…" : "Create account"}</button>
+      <p className="fine next-hint full">I'll email you a code to finish. No password. <a href="/knowledge/guides/free-accounts/" target="_blank" rel="noopener">How free accounts work</a></p>
+      <p className="fine full"><button className="linkish" type="button" onClick={onBack}>Back to sign-in</button></p>
     </form>
   );
 }

@@ -42,9 +42,8 @@ export const SIGNUP_SWITCH = { PK: "CONFIG", SK: "SIGNUP" } as const;
 const PROSPECT_COUNTER = { PK: "COUNTER", SK: "PROSPECTID" } as const;
 
 
-// What the form sends
-// What the form sends. Where the business is based, or a link to it, is required (at least one), so
-// Pradeep can see who he'd be working with before he replies
+// What the form sends. Where the business is based and a link to it are optional, so someone who'd
+// rather stay private can still start; a link that's given must be a real web address
 const SignUpBody = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
   name: z.string().trim().min(1).max(80),
