@@ -243,10 +243,13 @@ export function itemRoutes(app: App, k: Kit) {
     if (misnamed) fail(400, "signature_name", misnamed);
     const signed = signature("approval", snap.code, await sha256Hex(canonical({ code: snap.code, proposal: rev.title, terms, conditions: input.conditions, ...changed })), input.signature, { id: by, name, email: approver.email }, ts, from(c));
     const initials = input.initials || initialsOf(input.signature.typedName);
+    // The decision's ID follows from the one it replaces (or the project's first), so two approvals made
+    // at the same moment from two tabs collide: one becomes the decision and the other is told
+    const decisionId = `i_d${replayKey(`${p.tenantId}|${p.id}|${current?.id ?? "first"}`)}`;
     const decision = Item.parse({
       tenantId: p.tenantId,
       projectId: p.id,
-      id: newId("i"),
+      id: decisionId,
       kind: "decision",
       title: `Approved: ${option.title}`,
       body: input.conditions,

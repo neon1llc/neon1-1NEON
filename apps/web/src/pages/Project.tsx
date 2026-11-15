@@ -14,7 +14,7 @@ import { MarkupList } from "../components/Markup.tsx";
 import { gate, Stale } from "../components/Reads.tsx";
 import { Link, NavLink, useLocation, useNavigate, useParams } from "react-router";
 import { useOrg, useSession, useTopBar } from "../components/Shell.tsx";
-import { Avatar, ConflictDialog, Dialog, Empty, Health, HEALTH_LABEL, LayerBadge, LAYERS, layerHint, layerName, layerProgress, OnionProgress, Trend, ago, dateLabel, daysSince, inStageFor, layerFromSlug, layerSlug, useAsk, useToast } from "../components/ui.tsx";
+import { Avatar, ConflictDialog, Dialog, Empty, Health, HEALTH_LABEL, Standing, LayerBadge, LAYERS, layerHint, layerName, layerProgress, OnionProgress, Trend, ago, dateLabel, daysSince, inStageFor, layerFromSlug, layerSlug, useAsk, useToast } from "../components/ui.tsx";
 import { api, BASE_PATH, DEMO, HttpError, NEW_TAB } from "../lib/api.ts";
 import { AgreementNeeded, Hours, Invoices, PriceBasis, SignBox, signReady, useAgreementSigned, type Priced, type SignValue } from "../components/Billing.tsx";
 import { firstYear, money, parseCost, type Recurring } from "../lib/cost.ts";
@@ -117,10 +117,10 @@ export function ProjectPage() {
     <>
       {/* Shown data that a refresh couldn't update is marked, so nobody acts on it unknowingly */}
       <Stale reads={[projects, detail]} />
-      {/* Key, current stage with its age, then the name with health and archive state */}
+      {/* Key, current stage with its age, then the name with where it stands (health, or closed and when) and archive state */}
       <p className="mono small muted" style={{ margin: 0 }}>{p.key} · {org.stages[stageAt]?.name} {inStageFor(p.stageEnteredAt)}</p>
       <h1 className="page-title" style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-        {p.name} <Health value={p.health} />
+        {p.name} <Standing health={p.health} closed={isClosed(org.stages, p.stageId)} since={p.stageEnteredAt} />
         <OnionProgress progress={prog} size={44} />
         {p.archived && <span className="tag warn">archived</span>}
       </h1>

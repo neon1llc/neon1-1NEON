@@ -2,6 +2,7 @@
 // view, one lane per organization.
 
 
+import { isClosed } from "@1neon/domain";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Board } from "../components/Board.tsx";
@@ -28,7 +29,8 @@ export function AllWorkflow() {
   return (
     <>
       <h1 className="page-title">All clients</h1>
-      <p className="lead">Every active project across organizations. Open a project to make changes inside its organization.</p>
+      {/* Archived projects and inactive organizations are left out; closed projects stay, in their own column */}
+      <p className="lead">Every project across organizations, open and closed, except archived ones. Open a project to make changes inside its organization.</p>
       {/* View switch between lanes and one board */}
       {/* Plain toggle buttons styled as tabs: Tab reaches each, Enter or Space picks it */}
       <div className="tabs" role="group" aria-label="View">
@@ -48,9 +50,12 @@ export function AllWorkflow() {
           {data.orgs.map((o) => {
             const mine = data.projects.filter((p) => p.tenantId === o.id);
             if (mine.length === 0) return null;
+            // The count says what is still open and what is finished, never calling closed work active
+            const closed = mine.filter((p) => isClosed(o.stages, p.stageId)).length;
+            const counts = [mine.length - closed > 0 && `${mine.length - closed} open`, closed > 0 && `${closed} closed`].filter(Boolean).join(" · ");
             return (
               <section className="lane" key={o.id}>
-                <h3>{o.name} <span className="tag client">{o.clientId}</span> <span className="muted small">{mine.length} active</span></h3>
+                <h3>{o.name} <span className="tag client">{o.clientId}</span> <span className="muted small">{counts}</span></h3>
                 <Board stages={o.stages} projects={mine} hrefFor={(p) => href(p.tenantId, p.key)} />
               </section>
             );
