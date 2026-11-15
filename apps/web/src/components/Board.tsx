@@ -2,11 +2,11 @@
 // ordered by rank. Drag and drop for pointers, a "Move to" menu for keyboards and screen readers.
 
 
-import type { Project, Stage } from "@1neon/domain";
+import { isClosed, type Project, type Stage } from "@1neon/domain";
 import { useState } from "react";
 import { Link } from "react-router";
 import { byRank } from "../lib/hooks.ts";
-import { Health, LayerBadge, stageAge } from "./ui.tsx";
+import { LayerBadge, Standing, stageAge } from "./ui.tsx";
 
 
 /** A requested move: target stage and the ranks of the neighbours it lands between */
@@ -109,15 +109,16 @@ export function Board({
                   drop(s.id, p.id);
                 }}
               >
-                {/* Project key, its organization on All clients, name, health, and days in stage */}
+                {/* Project key, its organization on All clients, name, then where it stands: health and days in
+                    stage while open; for a closed project, that it's closed and when, never a health */}
                 <div className="k">
                   <span>{p.key}</span>
                   {orgName?.(p) && <span className="tag client">{orgName(p)}</span>}
                 </div>
                 <Link className="name" to={hrefFor(p)}>{p.name}</Link>
                 <div className="meta">
-                  <Health value={p.health} />
-                  <span title="Time in this stage">{stageAge(p.stageEnteredAt)}</span>
+                  <Standing health={p.health} closed={isClosed(stages, s.id)} since={p.stageEnteredAt} />
+                  {!isClosed(stages, s.id) && <span title={`Time in ${s.name}`}>{stageAge(p.stageEnteredAt)} in {s.name}</span>}
                 </div>
                 {/* Keyboard, tap, and screen-reader path: the same moves as dragging. Up and down reorder within
                     the column (AP-06); another stage moves the card to the end of that column */}

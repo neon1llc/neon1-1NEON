@@ -1,4 +1,4 @@
-// apps/api/src/dev-guard.test.ts - In dev (a copy of production's data) mail and new accounts reach
+// apps/api/src/dev-guard.test.ts - In dev (made-up sample data) mail and new accounts reach
 // neon1 only; everywhere else the guards change nothing.
 import { describe, expect, it } from "vitest";
 import { guardDirectory, guardMailer, neon1Only } from "./dev-guard.ts";

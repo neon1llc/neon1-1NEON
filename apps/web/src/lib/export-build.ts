@@ -133,6 +133,32 @@ export function downloadPath(org: Tenant, f: Planned): string {
   return `/t/${org.id}/docs/${d.id}/download${d.projectId ? `?p=${d.projectId}` : ""}`;
 }
 
+/** Keys of projects that were added, trashed, restored, or edited after they were read: the export is
+ * each project as it was read, so the manifest names these and the export is partial. A failed re-read
+ * says nothing either way */
+export async function changedSince(org: Tenant, g: Gathered, src: Source): Promise<string[]> {
+  try {
+    const [now, trash] = await Promise.all([
+      src.get<Project[]>(`/t/${org.id}/projects`),
+      g.reads.trash === "included" ? src.get<{ projects: Detail[] }>(`/t/${org.id}/export/trash`) : undefined,
+    ]);
+    const was = new Map(g.held.map((h) => [h.project.id, h]));
+    const liveNow = new Map(now.filter((p) => !p.deletedAt).map((p) => [p.id, p]));
+    const trashedNow = new Set((trash?.projects ?? []).map((d) => d.project.id));
+    const changed: string[] = [];
+    for (const h of g.held) {
+      const p = h.project;
+      const here = h.trashed ? trashedNow.has(p.id) : liveNow.get(p.id)?.updatedAt === p.updatedAt;
+      if (!here) changed.push(p.key);
+    }
+    for (const p of liveNow.values()) if (!was.has(p.id)) changed.push(p.key);
+    for (const d of trash?.projects ?? []) if (!was.has(d.project.id)) changed.push(d.project.key);
+    return changed;
+  } catch {
+    return [];
+  }
+}
+
 /** A file's bytes, asking once more if the first try fails (not when the API says it never will) */
 async function fetchWithRetry(src: Source, path: string): Promise<ArrayBuffer> {
   try {
@@ -172,13 +198,20 @@ export async function* entries(org: Tenant, g: Gathered, src: Source, say: Progr
       continue;
     }
     const input = new Uint8Array(bytes);
+    // The record's size is what the server checked at upload; other bytes mean a cut-short download or
+    // a file replaced mid-export, so it's listed as missing rather than trusted
+    if (input.byteLength !== f.doc.size) {
+      out.push({ ...base, bytes: f.doc.size, status: "omitted", reason: `it arrived as ${size(input.byteLength)} but 1NEON records ${size(f.doc.size)} (cut short, or changed while the export ran)` });
+      continue;
+    }
     done += input.byteLength;
     out.push({ ...base, bytes: input.byteLength, sha256: await sha256(input), status: "included" });
     yield { name: f.path, input, lastModified: new Date(f.doc.updatedAt || f.doc.createdAt || g.at) };
   }
 
   // What arrived, then the plain-words guide that opens with complete or partial
-  const m = manifest({ org, at: g.at, held: g.held, reads: g.reads, members: g.members.length, comments: g.comments.length, activity: g.activity.length, records: recs, files: out });
+  const changed = await changedSince(org, g, src);
+  const m = manifest({ org, at: g.at, held: g.held, reads: g.reads, members: g.members.length, comments: g.comments.length, activity: g.activity.length, records: recs, files: out, changed });
   yield { name: "manifest.json", input: enc.encode(JSON.stringify(m, null, 2)), lastModified: when };
   yield { name: "README.txt", input: enc.encode(readme(m)), lastModified: when };
   finished(m);

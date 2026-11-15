@@ -28,7 +28,7 @@ if (!cfg.table || !cfg.userPoolId || !cfg.clientId || !cfg.authDomain || !cfg.ma
 
 // Production wiring: DynamoDB, Cognito, SES, and S3 behind the same interfaces tests use
 const repo = new Repo(new DynamoTable(cfg.table));
-// In dev (a copy of production's data) mail reaches neon1 only; see dev-guard.ts
+// In dev (made-up sample data) mail reaches neon1 only; see dev-guard.ts
 const mailer = guardMailer(cfg, new SesMailer(cfg.mailFrom));
 // Texts only once the toll-free number is set up
 const texter = cfg.smsFrom ? new AwsTexter(cfg.smsFrom) : undefined;
@@ -46,6 +46,12 @@ async function stripe() {
   if (!r) return undefined;
   const value = (name: string) => r.Parameters?.find((x) => x.Name === name)?.Value;
   const key = value(cfg.stripeKeyParam), hook = value(cfg.stripeWebhookParam);
+  // Dev runs on made-up data and must never move real money: it takes Stripe test-mode keys only, and a
+  // live key put there by mistake leaves online payment off (and says so) instead of charging anyone
+  if (cfg.env === "dev" && key && /^(sk|rk)_live_/.test(key)) {
+    console.error(JSON.stringify({ level: "error", message: "dev has a live Stripe key; online payment off. Use test-mode keys on dev" }));
+    return undefined;
+  }
   // A placeholder value (set by Terraform before the real key is put in) leaves online payment off. A restricted key (rk_) with Checkout Sessions write is all it needs
   return key && /^(sk|rk)_/.test(key) && hook?.startsWith("whsec_") ? new StripePayments(key, hook) : undefined;
 }

@@ -194,6 +194,8 @@ a.row:hover { background: var(--accent-soft); }
 .health { display: inline-flex; align-items: center; gap: 6px; font: 12px var(--mono); white-space: nowrap; }
 .health i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 .h-on_track i { background: var(--ok); } .h-at_risk i { background: var(--amber); } .h-off_track i { background: var(--red); } .h-not_started i { background: var(--muted); }
+/* Closed: finished work, a hollow ring rather than a health color */
+.h-closed i { background: transparent; border: 1.5px solid var(--muted); box-sizing: border-box; }
 .tag { font: 11px var(--mono); padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line-strong); color: var(--muted); white-space: nowrap; }
 .tag.client { color: var(--accent); }
 .tag.rec { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }

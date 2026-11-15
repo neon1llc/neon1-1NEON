@@ -8,7 +8,7 @@ import { Link } from "react-router";
 import { gate, Stale } from "../components/Reads.tsx";
 import { RowMenu } from "../components/RowMenu.tsx";
 import { useOrg, useTopBar } from "../components/Shell.tsx";
-import { dateLabel, Empty, stageAge, Health, LayerBadge, LAYERS, layerName, useAsk, useToast } from "../components/ui.tsx";
+import { dateLabel, Empty, stageAge, Standing, LayerBadge, LAYERS, layerName, useAsk, useToast } from "../components/ui.tsx";
 import { api } from "../lib/api.ts";
 import { problem, useProjects, useRefresh } from "../lib/hooks.ts";
 import { slide } from "../lib/motion.ts";
@@ -118,11 +118,11 @@ export function Projects() {
         <Empty text={q || layer !== "all" ? "No project matches." : "No projects yet."} action={canWrite && !q && layer === "all" && <Link className="btn btn-primary" to={`/o/${summary.slug}/projects/new`}>Start the first one</Link>} />
       )}
       {wait ? null : view === "list" ? (
-        // One row per project: key and name, stage with its days, health, and target date
+        // One row per project: key and name, stage with its days, where it stands (health, or closed and when), and target date
         <div className="ptable slide-stage" data-tour="project-list" role="table" aria-label="Projects">
           {list.length > 0 && (
             <div className="ptr head" role="row">
-              <span role="columnheader">Project</span><span role="columnheader">Stage</span><span role="columnheader">Health</span><span role="columnheader">Target</span><span role="columnheader"><span className="sr">Actions</span></span>
+              <span role="columnheader">Project</span><span role="columnheader">Stage</span><span role="columnheader">Standing</span><span role="columnheader">Target</span><span role="columnheader"><span className="sr">Actions</span></span>
             </div>
           )}
           {list.map((p) => {
@@ -131,8 +131,8 @@ export function Projects() {
               // The whole row opens the project (its link stretches over it); the dots menu sits above that
               <div key={p.id} className="ptr" role="row">
                 <span role="cell"><Link className="ptr-link" to={`/o/${summary.slug}/projects/${p.key}`}><span className="s">{p.key}</span><span className="t">{p.name}</span></Link></span>
-                <span role="cell" className="small stage-cell">{s && <LayerBadge layer={s.layer} />}{s?.name ?? p.stageId} <span className="muted">{stageAge(p.stageEnteredAt)}</span></span>
-                <span role="cell"><Health value={p.health} /></span>
+                <span role="cell" className="small stage-cell">{s && <LayerBadge layer={s.layer} />}{s?.name ?? p.stageId} {!isClosed(org.stages, p.stageId) && <span className="muted">{stageAge(p.stageEnteredAt)}</span>}</span>
+                <span role="cell"><Standing health={p.health} closed={isClosed(org.stages, p.stageId)} since={p.stageEnteredAt} /></span>
                 <span role="cell" className="small muted">{p.targetDate ? dateLabel(p.targetDate) : "–"}</span>
                 <span role="cell" className="ptr-more">{menu(p)}</span>
               </div>

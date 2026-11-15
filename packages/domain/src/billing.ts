@@ -167,6 +167,16 @@ export function balanceOf(invoice: Rec, items: Rec[]): number {
   return Math.max(0, invoiceTotal(f) + credits - paid);
 }
 
+/**
+ * What can still be credited against an issued invoice: its total, less the credits already made
+ * against it (drafts too, unless `issuedOnly`, so a pile of drafts can't add up to more than it). A
+ * credit never takes an invoice below nothing, so a refund never exceeds what was invoiced
+ */
+export function creditRoomOn(invoice: Rec, items: Rec[], issuedOnly = false): number {
+  const taken = items.filter((i) => i.kind === "invoice" && i.fields.type === "credit" && i.fields.appliesTo === invoice.id && i.status !== "void" && (!issuedOnly || i.status !== "draft")).reduce((n, i) => n - invoiceTotal(InvoiceFields.parse(i.fields)), 0);
+  return invoiceTotal(InvoiceFields.parse(invoice.fields)) - taken;
+}
+
 /** Bank payments started on an invoice and still clearing, in cents, up to what is owed */
 export function clearingOn(invoice: Rec, items: Rec[]): number {
   const started = paymentsOn(invoice, items).filter((i) => i.status === "pending").reduce((s, i) => s + PaymentFields.parse(i.fields).amountCents, 0);
@@ -397,7 +407,7 @@ export function finalLines(d: Decision, items: Rec[]): InvoiceLine[] {
 
 /**
  * The refund the service agreement promises: when the work comes to less than what issued invoices
- * already asked for, a credit for the difference against the largest of them. On an estimate the work
+ * already asked for, a credit for the difference against the invoice with the most left to credit, never more than that invoice's total. On an estimate the work
  * is the hours worked (a deposit larger than the finished work); on a fixed price it's the price, which
  * can be less than what was paid after changing to a smaller option. Invoices on a decision this one
  * replaced count. Credits already made for it count too, so it is suggested once
@@ -415,14 +425,20 @@ export function refundCredit(d: Decision, items: Rec[]): { appliesTo: string; li
   const credited = items.filter((i) => i.kind === "invoice" && i.status !== "void" && i.fields.type === "credit" && before.some((b) => b.id === i.fields.appliesTo)).reduce((n, i) => n - invoiceTotal(InvoiceFields.parse(i.fields)), 0);
   const due = billed - earned - credited;
   if (due <= 0) return undefined;
-  const target = [...before].sort((a, b) => sums(b) - sums(a))[0]!;
+  // A credit reduces one invoice and can't take it below nothing: it names the invoice with the most
+  // left to credit, is capped at that, and says so when more is owed back on another
+  const room = (i: Rec) => creditRoomOn(i, items);
+  const target = [...before].sort((a, b) => room(b) - room(a))[0]!;
+  const give = Math.min(due, room(target));
+  if (give <= 0) return undefined;
   const text = price.kind === "fixed"
     ? `Refund on ${named(d)}: its fixed price of ${money(earned)} is less than the ${money(billed)} invoiced earlier`
     : `Refund on ${named(d)}: ${hoursText(at!.billable)} worked comes to ${money(earned)}, less than the ${money(billed)} invoiced earlier`;
-  const note = price.kind === "fixed"
+  const note = (price.kind === "fixed"
     ? "The option you changed to costs less than what was already invoiced, so the difference is refunded, as the service agreement says."
-    : "The work took fewer hours than the deposit covered, so the difference is refunded, as the service agreement says.";
-  return { appliesTo: target.id, lines: [{ text: text.slice(0, 200), qty: 1, unitCents: due, ref: d.id }], note };
+    : "The work took fewer hours than the deposit covered, so the difference is refunded, as the service agreement says.")
+    + (give < due ? ` ${money(due - give)} more is owed back on another invoice; credit it separately.` : "");
+  return { appliesTo: target.id, lines: [{ text: text.slice(0, 200), qty: 1, unitCents: give, ref: d.id }], note };
 }
 
 /** Items neon1 bought for the client, at the receipt's cost, not yet on any invoice */
