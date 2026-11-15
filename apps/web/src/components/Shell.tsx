@@ -337,10 +337,16 @@ function SignIn() {
             <h2 className="signin-h">Interactive demo</h2>
             <p className="signin-lead">A working copy of 1NEON with made-up clients. Everything you do stays in this browser.</p>
           </>
+        ) : signingUp ? (
+          // Sign-up: who it's for and what happens next, in place of the invitation note
+          <>
+            <h2 className="signin-h">Start in 1NEON</h2>
+            <p className="signin-lead">A free account for your projects' needs and files. I'll look them over and reply.</p>
+          </>
         ) : (
           <>
             <h2 className="signin-h">Client portal</h2>
-            <p className="signin-lead">For neon1 clients. Access is by invitation.</p>
+            <p className="signin-lead">For neon1 clients, by invitation, or start your own free account below.</p>
           </>
         )}
         {problem === "not_invited" && <p className="notice" role="alert">That email hasn't been invited yet. Ask your organization's admin, or neon1.</p>}
@@ -739,8 +745,8 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
         </NavLink>
       </aside>
       <div className="main" inert={open}>
-        {/* All clients is read only; say so on every screen of it */}
-        {all && (
+        {/* All clients is read only; say so on every screen of it, except Prospects, which has neon1's actions */}
+        {all && !loc.pathname.endsWith("/all/prospects") && (
           <div className="readonly-bar" role="status">
             <strong>All clients · read only.</strong> Open a client to make changes.
           </div>
