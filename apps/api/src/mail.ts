@@ -11,8 +11,12 @@ const BRAND = "#035704", PAPER = "#F2F4F2", INK = "#12241A", MUTED = "#56665c";
 const MONO = "'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace";
 const SANS = "Figtree,-apple-system,'Segoe UI',Roboto,sans-serif";
 
+// Who 1NEON's mail is from, as infra/modules/mail sets it for production (a test keeps the two equal);
+// the walkthrough's pretend inbox shows the same sender
+export const MAIL_FROM = { name: "1NEON", address: "noreply@notify.neon1.tech" } as const;
+
 // The mark the site serves for mail: 96px dark green on transparent, shown at 32px for sharp screens
-const MARK = "https://neon1.tech/shared/mail/neon1-mark.png";
+export const MARK = "https://neon1.tech/shared/mail/neon1-mark.png";
 // Links read as links without shouting: brand green with a thin underline
 const LINK = `color:${BRAND};text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px`;
 

@@ -5,6 +5,7 @@
 
 
 import * as OTPAuth from "otpauth";
+import { MAIL_FROM, MARK } from "../../../api/src/mail.ts";
 
 
 // --- Mail ---------------------------------------------------------------------------
@@ -13,9 +14,9 @@ import * as OTPAuth from "otpauth";
 /** One message in the pretend inbox */
 export interface Mail { to: string; subject: string; text: string; html: string; at: number }
 
-// Who 1NEON's mail is from, as a mail app would show it
-const FROM = "neon1";
-const FROM_ADDR = "notify@notify.neon1.tech";
+// Who 1NEON's mail is from, as a mail app would show it: the real sender
+const FROM = MAIL_FROM.name;
+const FROM_ADDR = MAIL_FROM.address;
 
 /** A short "time ago" for the message list */
 const ago = (at: number) => {
@@ -112,6 +113,9 @@ export class MailWindow {
       el.removeAttribute("data-css");
       return [el, css] as const;
     });
+    // The mark is the same picture from this site: the page may only show its own images, so the
+    // address neon1.tech gives mail apps becomes this site's own copy of it
+    for (const img of doc.body.querySelectorAll("img")) if (img.getAttribute("src") === MARK) img.setAttribute("src", new URL(MARK).pathname);
     this.body.replaceChildren(...doc.body.childNodes);
     for (const [el, css] of styled) el.style.cssText = css;
     for (const a of this.body.querySelectorAll("a")) a.addEventListener("click", (e) => e.preventDefault());

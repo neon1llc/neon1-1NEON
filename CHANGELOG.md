@@ -10,6 +10,7 @@
 ### Changed
 - A free account's website and city are optional at sign-up, so people who'd rather stay private can still start. A link that's given must still be a real web address. Settings can clear both, and Home's ask for them has **Not now**, remembered per organization in that browser.
 - Sign-in no longer blinks from the invitation-only wording to the free-account wording on load, refresh, or coming back to the tab: the last answer about sign-up is kept in the browser (`1neon.signup`), a first visit waits for it, and a session check while sign-in is showing keeps the same screen instead of drawing it again.
+- The walkthrough's pretend inbox matches real mail: the sender is 1NEON <noreply@notify.neon1.tech> (shared with the API, and a test holds it to the Terraform sender), and the neon1 mark shows, from the site's own copy since the page may only load its own images.
 - On a tablet or desktop (760px wide and up), sign-up sets who you are beside where to see the business, in two columns, so the form fits without scrolling. Narrower screens, phones included, keep the single column.
 
 ## v0.14.0 - 2026-11-15
