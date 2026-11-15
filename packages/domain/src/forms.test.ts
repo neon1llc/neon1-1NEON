@@ -1,7 +1,7 @@
-// packages/domain/src/forms.test.ts - The shared form rules: names, junk, offensive words, email shape,
+// packages/domain/src/forms.test.ts - The shared form rules: names, junk, offensive words, email shape, minimum lengths,
 // and how a place is written and split.
 import { describe, expect, it } from "vitest";
-import { emailShapeOk, joinPlace, looksLikeJunk, nameProblem, offensive, placeShapeProblem, splitPlace, stateCode, textProblem } from "./forms.ts";
+import { emailShapeOk, joinPlace, looksLikeJunk, messageProblem, MIN_TEXT, nameProblem, offensive, placeShapeProblem, splitPlace, stateCode, textProblem } from "./forms.ts";
 
 describe("names", () => {
   it("takes real names from anywhere, and asks for a last name unless they use one", () => {
@@ -52,5 +52,24 @@ describe("places", () => {
     expect(stateCode("Puerto Rico")).toBe("PR");
     expect(placeShapeProblem("Albany", "")).toMatch(/state/);
     expect(placeShapeProblem("", "NY")).toBeUndefined();
+  });
+});
+
+
+describe("minimum lengths", () => {
+  it("refuses one-letter names and answers, and keeps real short ones", () => {
+    expect(nameProblem("L", true)).toMatch(/at least 2 letters/);
+    expect(nameProblem("Li", true)).toBeUndefined();
+    expect(nameProblem("Li Ng")).toBeUndefined();
+    expect(textProblem("x", "your organization's name", MIN_TEXT)).toMatch(/at least 2 characters/);
+    expect(textProblem("3M", "your organization's name", MIN_TEXT)).toBeUndefined();
+    expect(textProblem("ab", "where you found neon1")).toMatch(/at least 3 characters/);
+    expect(textProblem("A podcast", "where you found neon1")).toBeUndefined();
+    expect(textProblem("   ", "anything")).toBeUndefined();
+  });
+  it("asks a contact message for a sentence's worth", () => {
+    expect(messageProblem("  ")).toMatch(/what's going on/);
+    expect(messageProblem("help")).toMatch(/at least 10/);
+    expect(messageProblem("Our invoices are late every month.")).toBeUndefined();
   });
 });

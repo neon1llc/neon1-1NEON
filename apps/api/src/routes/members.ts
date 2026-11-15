@@ -3,7 +3,7 @@
 
 
 import { emailProblem, textProblem } from "../lib/vet.ts";
-import { InviteInput, UpdateMemberInput, changeRecord, newId, type Member, type Tenant, type User } from "@1neon/domain";
+import { InviteInput, UpdateMemberInput, changeRecord, MIN_TEXT, newId, type Member, type Tenant, type User } from "@1neon/domain";
 import { actorId, body, defined, fail, need, now, who } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
 import { outboxOp } from "../outbox.ts";
@@ -49,7 +49,7 @@ export function memberRoutes(app: App, k: Kit) {
       const x = await emailProblem(d.vetting, p.email);
       return x ? `${p.email}: ${x}` : undefined;
     }));
-    const named = people.map((p) => (p.name ? textProblem(p.name, `${p.email}'s name`) : undefined));
+    const named = people.map((p) => (p.name ? textProblem(p.name, `${p.email}'s name`, MIN_TEXT) : undefined));
     const first = [...problems, ...named].find(Boolean);
     if (first) fail(400, "check_fields", first);
     const out: Member[] = [];

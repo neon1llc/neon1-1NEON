@@ -2,7 +2,7 @@
 // open, and what's sent. Kept apart from the form so they can be tested without a browser.
 
 
-import { emailShapeOk, joinPlace, nameProblem, normalizeLink, placeShapeProblem, textProblem } from "@1neon/domain";
+import { emailShapeOk, joinPlace, MIN_TEXT, nameProblem, normalizeLink, placeShapeProblem, textProblem } from "@1neon/domain";
 
 
 /** What a person types. `kind` is "Which describes you best?"; `org` is asked for every answer but an
@@ -47,7 +47,7 @@ export function signUpProblems(f: SignUpFields): Record<string, string> {
   if (name) out.name = name;
   const kindOther = f.kind === "other" ? textProblem(f.kindOther ?? "", "what describes you") : undefined;
   if (kindOther) out.kindOther = kindOther;
-  const org = needsOrg(f.kind) ? textProblem(f.org, "your organization's name") : undefined;
+  const org = needsOrg(f.kind) ? textProblem(f.org, "your organization's name", MIN_TEXT) : undefined;
   if (org) out.org = org;
   if (!linkOk(f.link)) out.link = "Enter a web address, like yourbusiness.com.";
   const place = placeShapeProblem(f.city ?? "", f.state ?? "");

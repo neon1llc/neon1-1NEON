@@ -2,7 +2,7 @@
 // message to neon1, with the sender as Reply-To. It mails only neon1's own inbox, never the address a
 // visitor types, so it can't be used to send mail to anyone else. A hidden field catches simple bots,
 // and counters cap messages per sender each hour and in total each day. The counters expire after a day.
-import { FOUND_KEYS, foundLabel } from "@1neon/domain";
+import { FOUND_KEYS, foundLabel, messageProblem, MIN_TEXT } from "@1neon/domain";
 import { emailProblem, failFields, nameProblem, textProblem, type FieldProblems } from "../lib/vet.ts";
 import { z } from "zod";
 import { body, fail } from "../lib/http.ts";
@@ -29,7 +29,7 @@ export const TOPICS = {
 const TopicKey = z.enum(Object.keys(TOPICS) as [keyof typeof TOPICS, ...(keyof typeof TOPICS)[]]);
 
 const Message = z.object({
-  name: z.string().trim().min(1).max(100),
+  name: z.string().trim().max(100),
   email: z.string().trim().max(200),
   company: z.string().trim().max(120).optional().default(""),
   topics: z.array(TopicKey).max(5).optional().default([]),
@@ -37,7 +37,7 @@ const Message = z.object({
   topic: TopicKey.optional(),
   // Their own words for what it's about, when none of the four fits
   other: z.string().trim().max(120).optional().default(""),
-  today: z.string().trim().min(1).max(3000),
+  today: z.string().trim().max(3000),
   better: z.string().trim().max(1500).optional().default(""),
   timing: z.string().trim().max(200).optional().default(""),
   // "How did you find neon1?": optional, the same list as sign-up (FOUND_VIA)
@@ -60,11 +60,13 @@ export function contactRoutes(app: App, k: Kit) {
     // Each field's check, the same as sign-up's but lighter on the name (one name is fine here), answered
     // field by field so the site can show each beside its field. Counters don't move for a typo
     const problems: FieldProblems = {};
+    const today = messageProblem(m.today);
+    if (today) problems.today = today;
     const email = await emailProblem(d.vetting, m.email);
     if (email) problems.email = email;
     const name = nameProblem(m.name, true);
     if (name) problems.name = name;
-    const company = textProblem(m.company, "the organization's name");
+    const company = textProblem(m.company, "the organization's name", MIN_TEXT);
     if (company) problems.company = company;
     if (m.found === "other" && !m.foundOther) problems.foundOther = "Say where you found neon1.";
     else if (m.found === "other") { const t = textProblem(m.foundOther, "where you found neon1"); if (t) problems.foundOther = t; }
