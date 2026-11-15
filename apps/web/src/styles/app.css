@@ -1668,6 +1668,7 @@ a.out:hover .out-arrow, a.out:focus-visible .out-arrow { transform: translate(2p
 @keyframes sheet-in { from { transform: translateX(24px); opacity: 0; } }
 @keyframes sheet-up { from { transform: translateY(24px); opacity: 0; } }
 @keyframes unroll { from { opacity: 0; clip-path: inset(0 0 100% 0 round var(--r-sm)); } to { opacity: 1; clip-path: inset(0 0 0 0 round var(--r-sm)); } }
+@keyframes unroll-up { from { opacity: 0; clip-path: inset(100% 0 0 0 round var(--r-sm)); } to { opacity: 1; clip-path: inset(0 0 0 0 round var(--r-sm)); } }
 @keyframes toast-in { from { opacity: 0; translate: 0 8px; } }
 
 /* Fields settle their border and glow instead of snapping */
@@ -1698,9 +1699,13 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
   /* The same drawn arrow as .arr, centered on the line beside sentence-case choices */
   select::picker-icon { content: ""; width: .95em; height: .75em; font: 15px var(--sans); background: var(--accent); clip-path: polygon(0 50%, 31% 12%, 40% 20%, 24% 43%, 100% 43%, 100% 57%, 24% 57%, 40% 80%, 31% 88%); align-self: center; margin-left: auto; margin-right: 2px; transition: rotate var(--t-base) var(--ease); }
   select:open::picker-icon { rotate: -90deg; }
-  ::picker(select) { appearance: base-select; border: 1px solid var(--line-strong); border-radius: var(--r-sm); background: var(--panel); color: var(--text); box-shadow: 0 12px 32px rgba(0, 0, 0, .16); padding: 4px; margin-top: 4px; max-height: min(50vh, 360px); }
+  ::picker(select) { appearance: base-select; border: 1px solid var(--line-strong); border-radius: var(--r-sm); background: var(--panel); color: var(--text); box-shadow: 0 12px 32px rgba(0, 0, 0, .16); padding: 4px; margin-top: 4px; max-height: var(--picker-max, min(320px, 60vh)); position-try-fallbacks: none; }
   /* The list unrolls in the same time the arrow takes to turn, so both finish together */
   select:open::picker(select) { animation: unroll var(--t-base) var(--ease); }
+  /* With no room below, the list opens above (lib/motion.ts marks data-dir) and the arrow turns up */
+  select[data-dir="up"]::picker(select) { position-area: block-start span-inline-end; margin: 0 0 4px; }
+  select[data-dir="up"]:open::picker-icon { rotate: 90deg; }
+  select[data-dir="up"]:open::picker(select) { animation-name: unroll-up; }
   select option { padding: 8px 12px; border-radius: 6px; min-height: 0; }
   select option::checkmark { display: none; }
   select option:checked { color: var(--accent); font-weight: 600; }

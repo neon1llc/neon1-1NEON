@@ -38,6 +38,30 @@ export function setLessMotion(on: boolean) {
 }
 
 
+// --- Which way a dropdown opens ---------------------------------------------------------------------
+// A styled dropdown list opens below its box, or above when there isn't room below and there's more above.
+// Just before it opens, the select is marked data-dir="up" or "down", so the stylesheet places the list
+// and turns the arrow the right way. The same rule as watchDirection in neon1.tech's shared/motion.js,
+// but one listener for the whole page, so selects React draws later are covered too
+
+function aimDropdown(select: HTMLSelectElement, rowPx = 38, maxPx = 320, pad = 10) {
+  const r = select.getBoundingClientRect();
+  const need = Math.min(maxPx, select.options.length * rowPx + pad, innerHeight * 0.6);
+  const below = innerHeight - r.bottom - 8, above = r.top - 8;
+  const up = below < need && above > below;
+  select.dataset.dir = up ? "up" : "down";
+  // The list is held to the room on that side, so the browser never flips it against the arrow
+  select.style.setProperty("--picker-max", `${Math.max(120, Math.min(maxPx, up ? above : below))}px`);
+}
+
+/** Called once at startup: every select is aimed as it's pressed or opened from the keyboard */
+export function aimDropdowns() {
+  const at = (t: EventTarget | null) => (t instanceof HTMLSelectElement ? t : undefined);
+  document.addEventListener("pointerdown", (e) => { const s = at(e.target); if (s) aimDropdown(s); }, true);
+  document.addEventListener("keydown", (e) => { const s = at(e.target); if (s && (e.key === " " || e.key === "Enter" || (e.altKey && e.key === "ArrowDown"))) aimDropdown(s); }, true);
+}
+
+
 // Browsers without view transitions, and people who asked for less motion, get instant changes
 type VT = { finished: Promise<void>; ready?: Promise<void>; updateCallbackDone?: Promise<void> };
 type Doc = Document & { startViewTransition?: (cb: () => void) => VT };
