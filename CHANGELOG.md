@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- Create account on a phone shows a faint horizontal line between the needed fields and the optional ones, the same line the wide layout runs between its two columns.
+- In the light theme, "I agree to the terms of use" reads in the page's text color with the link in the brand green; the link had been pale green on white.
+
 ## v0.16.3 - 2026-11-16
 
 - On the sign-in and create-account screens, the space from the policies to "Or see how it works" now matches the space below it, with the line between them halfway.

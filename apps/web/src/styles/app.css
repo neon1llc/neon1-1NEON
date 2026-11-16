@@ -1574,6 +1574,9 @@ ul.md-says { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; 
 .signin .signup-form .su-col { display: grid; gap: 12px; align-content: start; min-width: 0; }
 .signin .signup-form .su-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .8fr); gap: 10px; }
 .signin .signup-form .su-pair .f { display: grid; gap: 8px; min-width: 0; }
+/* Sign-up on a phone: the optional group starts under the same faint line the wide layout runs between the columns,
+   turned across, so what's needed and what's optional read as two groups */
+.signin .signup-form .su-opt { border-top: 1px solid rgba(0, 255, 65, .16); padding-top: 16px; margin-top: 4px; }
 /* A required field's green asterisk, after its label */
 /* Sign-up, wide: a tablet or desktop sets what's needed (left) beside what's optional (right), past a
    faint line in the same neon as the rule above the links under sign-in, so the whole form shows without
@@ -1589,7 +1592,7 @@ ul.md-says { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; 
   .signin .signup-form input:not([type="checkbox"]) { text-align: left; }
   .signin .signup-form .su-error { grid-area: err; }
   .signin .signup-form .su-need { grid-area: need; padding-right: 24px; }
-  .signin .signup-form .su-opt { grid-area: opt; padding-left: 24px; border-left: 1px solid rgba(0, 255, 65, .16); }
+  .signin .signup-form .su-opt { grid-area: opt; padding-left: 24px; padding-top: 0; margin-top: 0; border-top: 0; border-left: 1px solid rgba(0, 255, 65, .16); }
   .signin .signup-form label.su-terms { grid-area: terms; align-self: center; padding-right: 24px; }
   /* The note stretches to the row's height so the line above carries on through it, unbroken */
   .signin .signup-form .face-hint { grid-area: hint; align-self: stretch; display: flex; align-items: center; margin: -12px 0 0; padding: 12px 0 0 24px;
@@ -1801,6 +1804,11 @@ html:has(.signin.awake), html:has(.signin.awake) body { background: var(--bg); c
 .signin.awake .word .rest { color: var(--muted); }
 .signin.awake .dev button { background: var(--bg); border: 1px solid var(--line); color: var(--text); }
 .signin.awake { --req-color: var(--red); }
+/* Awake sign-up: the divider lines and the terms line take the light palette (the dark ones were pale green on white) */
+.signin.awake .signup-form .su-opt, .signin.awake .signup-form .face-hint { border-color: var(--line); }
+.signin.awake label.agree { color: var(--text); }
+.signin.awake label.agree a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.signin.awake .opt { color: var(--muted); }
 
 /* Even spacing in the panel: the same gap above and below "Or see how it works", and a calmer top and bottom to match */
 .signin .panel { padding-top: 28px; }
