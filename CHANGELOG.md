@@ -4,6 +4,7 @@
 
 ## Unreleased
 
+- Switching the public screens to the dark theme, the bar's logo and Neo's button ease up smoothly to full brightness once instead of flickering, as on neon1.tech; the 1NEON mark and the other green parts keep their flicker.
 ## v0.17.0 - 2026-11-16
 
 ### Added
