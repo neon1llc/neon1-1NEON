@@ -16,6 +16,7 @@ import { HTTPException } from "hono/http-exception";
 import { ConflictError, StoreBusyError, type Row } from "./store/types.ts";
 import { REASONS, fail, who, type Env } from "./lib/http.ts";
 import { kit, type Deps } from "./lib/kit.ts";
+import { fromEdge } from "./lib/edge.ts";
 import { installOutbox } from "./lib/transactions.ts";
 import { authRoutes } from "./routes/auth.ts";
 import { signupRoutes } from "./routes/signup.ts";
@@ -54,6 +55,14 @@ export function createApp(d: Deps) {
   const drainNow = installOutbox(d);
   // Shared services and tenant guards handed to every route module
   const k = kit(d, drainNow);
+
+  // Origin lock: CloudFront adds a secret header to every request, so the API's own AWS address answers
+  // nothing. Without it a caller could skip CloudFront and choose the address the rate limits and
+  // signature records see. Off until the edge sends the header (ORIGIN_LOCK, infra/modules/api)
+  app.use("*", async (c, next) => {
+    if (cfg.originLock && !fromEdge(c.req.header("x-origin-verify"), cfg.originSecret)) fail(403, "edge", "Use 1NEON at neon1.tech/1NEON.");
+    await next();
+  });
 
   // Known errors keep their status. A version conflict returns the newer record only when the public
   // conflict policy allows that kind of record, and only its schema's fields; anything else (sign-in

@@ -2,6 +2,12 @@
 
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
+## Unreleased
+
+### Security
+- **Origin lock.** CloudFront now adds a secret header to every API request (`/1neon/<env>/origin_secret` in SSM), and with `origin_lock` on the API refuses anything that skipped CloudFront. On for dev; off in production until neon1.tech sends the header, then switched on in the next release.
+- The visitor's address for sign-up and contact limits, and on signature records, comes from CloudFront's own viewer-address header (`apps/api/src/lib/edge.ts`) instead of the first forwarded-for entry, which a caller could write.
+
 ## v0.15.0 - 2026-11-15
 
 ### Added
