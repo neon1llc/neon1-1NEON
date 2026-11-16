@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+- On a phone, opening Neo or tapping its box no longer moves the page behind it.
+
 ## v0.16.3 - 2026-11-16
 
 - On the sign-in and create-account screens, the space from the policies to "Or see how it works" now matches the space below it, with the line between them halfway.

@@ -220,6 +220,15 @@ export function Neo() {
 
   // The newest message stays in view
   useEffect(() => { log.current?.scrollTo({ top: log.current.scrollHeight }); }, [msgs, busy]);
+  // On a narrow screen the open window covers the page: the page holds its position, since iOS scrolls it
+  // when the box takes focus and the keyboard rises
+  useEffect(() => {
+    if (!open || !matchMedia("(max-width: 600px)").matches) return;
+    const at = scrollY;
+    const hold = () => { if (scrollY !== at) scrollTo({ top: at, left: 0, behavior: "instant" as ScrollBehavior }); };
+    addEventListener("scroll", hold, { passive: true });
+    return () => removeEventListener("scroll", hold);
+  }, [open]);
   // Opening moves focus into the window (not the box, so phones don't raise the keyboard)
   useEffect(() => { if (open) panel.current?.focus({ preventScroll: true }); }, [open]);
 
