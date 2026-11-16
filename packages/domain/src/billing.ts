@@ -108,9 +108,6 @@ export const InvoiceFields = z.object({
 });
 export type InvoiceFields = z.infer<typeof InvoiceFields>;
 
-/** Draft, issued (open), paid in full, or void. Partly paid and overdue are worked out, not stored */
-export const INVOICE_STATUSES = ["draft", "issued", "paid", "void"] as const;
-
 /** A line's amount: quantity times unit price, rounded to the cent */
 export const lineCents = (l: Pick<InvoiceLine, "qty" | "unitCents">) => Math.round(l.qty * l.unitCents);
 
@@ -146,9 +143,6 @@ export const PaymentFields = z.object({
   stripe: z.object({ session: z.string().max(200), intent: z.string().max(200).optional() }).optional(),
 });
 export type PaymentFields = z.infer<typeof PaymentFields>;
-
-/** Where a payment's money is */
-export const PAYMENT_STATUSES = ["pending", "failed", "done"] as const;
 
 // Any stored item: kinds are compared as strings, so plain records work too
 type Rec = Pick<Item, "id" | "status" | "fields"> & { kind: string };

@@ -782,8 +782,6 @@ details.history summary { cursor: pointer; font: 12px var(--mono); color: var(--
 
 /* --- Home: Coming up --- */
 .home-main { display: grid; gap: 16px; align-content: start; }
-.coming-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-.coming-head .section-h { margin: 0; }
 .strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin: 12px 0 14px; }
 .strip .dow { font: 11px var(--mono); color: var(--muted); text-align: center; }
 .strip .day { display: grid; gap: 4px; justify-items: center; align-content: start; min-height: 44px; padding: 5px 2px; border-radius: var(--r-sm); background: var(--bg); border: 1px solid transparent; }
@@ -897,7 +895,6 @@ html[data-slide="back"]::view-transition-new(stage) { animation: .42s cubic-bezi
 
 /* Neo: bottom left on the public screens (sign-in, FAQs, legal), exactly as on neon1.tech; bottom right once inside the portal */
 body:not(:has(.shell:not(.example))) .n1chat-launch.n1chat-right, body:not(:has(.shell:not(.example))) .n1chat.n1chat-right { left: 16px; right: auto; }
-body:not(:has(.shell:not(.example))) .n1chat-right.n1chat-grow, body:not(:has(.shell:not(.example))) .n1chat-right.n1chat-fold { animation-name: n1chat-grow; }
 
 /* --- The demo (/1NEON/demo): a slim strip above the portal; the frame moves down to make room --- */
 .demo-bar { position: fixed; inset: 0 0 auto 0; z-index: 45; height: var(--demo-h, 36px); display: flex; align-items: center; gap: 12px; padding: 0 16px; background: var(--void, #0d0208); color: var(--m-ink-soft, #E3E7E4); font: 12px var(--mono); border-bottom: 1px solid rgba(0, 255, 65, .3); }
@@ -1233,7 +1230,6 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 .cal-day-head .btn { white-space: nowrap; }
 
 /* --- Proposal (pages/Proposal.tsx): a paper page in neon1's letter look, in either theme --- */
-.proposal-link { margin: 4px 0 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .proposal { --pp-green: #035704; --pp-ink: #16201a; --pp-muted: #55655b; --pp-line: #cfdcd2;
   max-width: 860px; margin: 0 auto 32px; padding: 36px 40px 28px; background: #fff; color: var(--pp-ink);
   border: 1px solid var(--line); border-radius: var(--r-sm, 8px); font-size: 14.5px; line-height: 1.5; font-family: var(--sans, inherit); }

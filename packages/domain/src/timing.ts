@@ -8,7 +8,6 @@ export const DEFAULT_TIME_ZONE = "America/New_York";
 
 /** The words people chose, by the key the request form stores */
 export const TIMING_WORDS = { soon: "this month", quarter: "this quarter" } as const;
-export type TimingKey = keyof typeof TIMING_WORDS;
 
 
 /** Today's calendar date (YYYY-MM-DD) in a time zone; an unknown zone falls back to the default */

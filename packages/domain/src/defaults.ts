@@ -33,16 +33,6 @@ export const LAYER_NAMES = {
 export const LAYER_LETTER = { needs: "N", execution: "E", observation: "O", next: "N" } as const;
 
 
-// Labels for project roles in the People list and project sidebar
-export const PROJECT_ROLE_NAMES = {
-  lead_engineer: "Lead engineer",
-  sponsor: "Sponsor",
-  decision_maker: "Decision maker",
-  tech_contact: "Tech contact",
-  stakeholder: "Stakeholder",
-  observer: "Observer",
-} as const;
-
 
 /** An item a template adds to a new project */
 export interface TemplateItem {

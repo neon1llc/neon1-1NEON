@@ -557,9 +557,6 @@ export const HandoffFields = z.object({
 });
 
 
-// A request on a decided project says whether it changes what was agreed
-export const RequestScope = z.enum(["yes", "no", "unsure"]);
-
 
 // Which kinds validate their fields, and with which schema
 export const itemFields: Partial<Record<ItemKind, z.ZodType>> = {
