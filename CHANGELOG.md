@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+- Sign-in and create account in the dark theme no longer show the rain's grid, text, and pause buttons, which met the report and feedback links in the corner. The rain still follows the choice made on the landing page.
+
 - "Feedback" sits beside "report a bug" everywhere it appears: the corner of sign-in and create account reads "report bug \ feedback" ("report" a plain muted word leading both, a bug before "bug", a speech bubble before "feedback"), the menu has a Feedback row under Report a bug, and the profile and Settings have a Feedback button beside Report a bug. Each opens neon1.tech's feedback page in a new tab.
 - A feedback route takes comments, complaints, concerns, and suggestions from that page: a kind, where it is about, what they wrote, and an optional email, with the report form's gates. It mails feedback@neon1.tech with a reference (FDB-) and no screenshots.
 

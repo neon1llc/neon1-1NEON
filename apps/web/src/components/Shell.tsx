@@ -358,7 +358,7 @@ function SignIn() {
   const awake = look === "awake";
   return (
     <main className={`signin${awake ? " awake" : ""}`}>
-      {!awake && <Rain panes=".signin .panel, .signin .n1-logo, .rainctl button" />}
+      {!awake && <Rain panes=".signin .panel, .signin .n1-logo" controls={false} />}
       {!awake && <div className="veil" />}
       <PublicBar theme={look} onChange={setLook} />
       {/* Signing up widens the panel on a wide screen, so the form fits without scrolling */}

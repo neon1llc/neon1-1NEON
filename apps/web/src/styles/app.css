@@ -1935,6 +1935,8 @@ html:has(.signin.awake), html:has(.signin.awake) body { background: var(--bg); c
 /* In matrix the rain controls (grid, text, pause) would sit on the same corner: they rise one row above the link, and the page grows by that row so the form never meets them */
 .signin:not(.awake) .rainctl { bottom: calc(max(16px, env(safe-area-inset-bottom)) * 2 + 48px); }
 .signin:not(.awake) { padding-bottom: calc(48px + max(16px, env(safe-area-inset-bottom)) + 20px + 40px); }
+/* Without the rain controls (sign-in and create account) the corner needs only Neo's row */
+.signin:not(.awake):not(:has(.rainctl)) { padding-bottom: calc(48px + max(16px, env(safe-area-inset-bottom)) + 20px); }
 .signin .bug-corner .bug-glyph { vertical-align: 0; width: 14px; height: 14px; }
 .signin .bug-corner a:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
 .side .nav a.bug-row .ico { color: var(--accent); }

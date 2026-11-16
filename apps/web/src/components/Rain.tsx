@@ -29,8 +29,9 @@ const WORDS: WordGroup[] = [
 ];
 
 
-/** Full-screen rain with a lens behind the `panes` selector, plus the site's grid, charset, and pause controls */
-export function Rain({ panes }: { panes: string }) {
+/** Full-screen rain with a lens behind the `panes` selector, plus the site's grid, charset, and pause controls unless `controls` is false
+ * (sign-in and create account leave them to the landing page, whose saved choice the rain reads, so the corner stays for report bug and feedback) */
+export function Rain({ panes, controls = true }: { panes: string; controls?: boolean }) {
   const rainRef = useRef<HTMLCanvasElement>(null);
   const lensRef = useRef<HTMLCanvasElement>(null);
   const [api, setApi] = useState<RainApi | null>(null);
@@ -57,7 +58,7 @@ export function Rain({ panes }: { panes: string }) {
     <>
       <canvas id="rain" ref={rainRef} aria-hidden="true" />
       <canvas id="lens" ref={lensRef} aria-hidden="true" />
-      {api && (
+      {api && controls && (
         <div className="rainctl" role="group" aria-label="Rain controls">
           <button type="button" title="Rain motion: grid or free. Click to switch." onClick={() => api.toggleMode()}>{api.mode}</button>
           <button type="button" title="Rain characters. Click to cycle." onClick={() => api.nextCharset()}>{api.charset}</button>
