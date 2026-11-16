@@ -362,7 +362,6 @@ function SignIn() {
       {/* Signing up widens the panel on a wide screen, so the form fits without scrolling */}
       <div className={`panel glass${signingUp ? " signing-up" : ""}`}>
         <Wordmark />
-        {/* Who this is for, before anyone types: clients, by invitation */}
         {/* Who this is for, worded and sized the same on the real sign-in and the demo's picker */}
         {PICKER ? (
           <>
@@ -370,7 +369,7 @@ function SignIn() {
             <p className="signin-lead">A working copy of 1NEON with made-up clients. Everything you do stays in this browser.</p>
           </>
         ) : signingUp ? (
-          // Sign-up: who it's for and what happens next, in place of the invitation note
+          // Sign-up: who it's for and what happens next, in place of the sign-in note
           <>
             <h2 className="signin-h">Start in 1NEON</h2>
             <p className="signin-lead">Free. Write down what your project needs, then ask for an assessment or a call from your account.</p>
@@ -378,7 +377,7 @@ function SignIn() {
         ) : (
           <>
             <h2 className="signin-h">Client portal</h2>
-            <p className="signin-lead" style={signupOpen === undefined ? { visibility: "hidden" } : undefined}>{signupOpen ? "For neon1 clients, by invitation. New here? Start a free account below." : "For neon1 clients, by invitation."}</p>
+            <p className="signin-lead" style={signupOpen === undefined ? { visibility: "hidden" } : undefined}>{signupOpen ? "Sign in to your 1NEON account. New here? Start for free." : "Sign in to your 1NEON account."}</p>
           </>
         )}
         {problem === "not_invited" && <p className="notice" role="alert">That email hasn't been invited yet. Ask your organization's admin, or neon1.</p>}

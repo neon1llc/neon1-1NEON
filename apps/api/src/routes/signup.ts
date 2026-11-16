@@ -79,7 +79,7 @@ async function checkSignUp(v: Vetting | undefined, b: z.infer<typeof SignUpBody>
   const problems: FieldProblems = {};
   const [email, link, place] = await Promise.all([emailProblem(v, b.email), linkProblem(v, b.link), placeCheck(v, b.place)]);
   if (email) problems.email = email;
-  const name = nameProblem(b.name, b.oneName);
+  const name = nameProblem(b.name);
   if (name) problems.name = name;
   if (b.kind === "other" && !b.kindOther) problems.kindOther = "Say what describes you.";
   else if (b.kind === "other") { const t = textProblem(b.kindOther, "what describes you"); if (t) problems.kindOther = t; }

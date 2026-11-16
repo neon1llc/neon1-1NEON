@@ -100,12 +100,12 @@ describe("the sign-up form", () => {
   });
 
   it("checks each field and answers field by field, before any counter moves", async () => {
-    const r = await signup({ ...form, email: "nope", name: "Dana", kind: "other", kindOther: "", found: "other", foundOther: "" });
+    const r = await signup({ ...form, email: "nope", name: "D4na", kind: "other", kindOther: "", found: "other", foundOther: "" });
     expect(r.status).toBe(400);
     const b = await r.json() as { error: string; current: { fields: Record<string, string> } };
     expect(b.error).toBe("check_fields");
     expect(Object.keys(b.current.fields).sort()).toEqual(["email", "foundOther", "kindOther", "name"]);
-    expect(b.current.fields.name).toBe("Enter your first and last name.");
+    expect(b.current.fields.name).toMatch(/numbers/);
     // Six tries with mistakes, then a clean one, all from one address: the hourly cap (3) was never touched
     for (let i = 0; i < 6; i++) expect((await signup({ ...form, name: "x" })).status).toBe(400);
     expect((await signup(form)).status).toBe(200);
@@ -138,19 +138,19 @@ describe("the sign-up form", () => {
     expect(tenant.prospect).toMatchObject({ kind: "other", kindOther: "A family office", found: "other", foundOther: "A podcast" });
   });
 
-  it("with the outside checks, refuses throwaway mailboxes, domains that take no mail, dead links, and places that don't exist", async () => {
+  it("with the outside checks, refuses throwaway mailboxes and domains that take no mail, and takes any link and place", async () => {
     app = createApp({ cfg, repo, directory, mailer, storage, vetting: {
       mailDomain: async (d) => (d === "nomail.example" ? "no_mail" : "ok"),
       disposable: async (d) => d === "mailinator.com",
-      reachable: async (u) => (u.includes("dead") ? "unreachable" : u.includes("internal") ? "refused" : "ok"),
       place: async (city, st) => (city.toLowerCase() === "albany" && st === "NY" ? "Albany" : undefined),
     } });
     const fields = async (b: unknown) => ((await (await signup(b)).json()) as { current?: { fields: Record<string, string> } }).current?.fields;
     expect((await fields({ ...form, email: "a@mailinator.com" }))?.email).toMatch(/Temporary/);
     expect((await fields({ ...form, email: "a@nomail.example" }))?.email).toMatch(/doesn't receive email/);
-    expect((await fields({ ...form, link: "dead.example" }))?.link).toMatch(/didn't answer/);
-    expect((await fields({ ...form, link: "internal.example" }))?.link).toMatch(/can't be used/);
-    expect((await fields({ ...form, place: "Gotham, NY" }))?.place).toMatch(/couldn't find Gotham/);
+    // A link is never visited, and a town the list doesn't know is kept as typed
+    expect((await fields({ ...form, link: "brand-new-site.example" }))?.link).toBeUndefined();
+    expect((await fields({ ...form, place: "Gotham, NY" }))?.place).toBeUndefined();
+    expect((await fields({ ...form, place: "Toronto, Canada" }))?.place).toBeUndefined();
     expect((await signup({ ...form, email: "p@example.com", place: "albany, ny" }, "198.51.100.14")).status).toBe(200);
     const uid = await claimSignup({ repo, cfg }, "p@example.com");
     expect((await repo.getTenant((await repo.membershipsOf(uid!))[0]!.tenantId))!.place).toBe("Albany, NY");

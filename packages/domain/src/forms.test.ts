@@ -4,10 +4,9 @@ import { describe, expect, it } from "vitest";
 import { emailShapeOk, joinPlace, looksLikeJunk, messageProblem, MIN_TEXT, nameProblem, offensive, placeShapeProblem, splitPlace, stateCode, textProblem } from "./forms.ts";
 
 describe("names", () => {
-  it("takes real names from anywhere, and asks for a last name unless they use one", () => {
+  it("takes real names from anywhere, one name included", () => {
     for (const n of ["Dana Kim", "Mary-Jane O'Neil", "José Álvarez", "Nguyễn Văn An", "J. R. Smith", "Dick Cheney", "Raj Dikshit"]) expect(nameProblem(n)).toBeUndefined();
-    expect(nameProblem("Madonna")).toBe("Enter your first and last name.");
-    expect(nameProblem("Madonna", true)).toBeUndefined();
+    expect(nameProblem("Madonna")).toBeUndefined();
   });
   it("refuses numbers, links, junk, and slurs", () => {
     expect(nameProblem("Dana 2")).toMatch(/numbers/);
@@ -58,8 +57,8 @@ describe("places", () => {
 
 describe("minimum lengths", () => {
   it("refuses one-letter names and answers, and keeps real short ones", () => {
-    expect(nameProblem("L", true)).toMatch(/at least 2 letters/);
-    expect(nameProblem("Li", true)).toBeUndefined();
+    expect(nameProblem("L")).toMatch(/at least 2 letters/);
+    expect(nameProblem("Li")).toBeUndefined();
     expect(nameProblem("Li Ng")).toBeUndefined();
     expect(textProblem("x", "your organization's name", MIN_TEXT)).toMatch(/at least 2 characters/);
     expect(textProblem("3M", "your organization's name", MIN_TEXT)).toBeUndefined();

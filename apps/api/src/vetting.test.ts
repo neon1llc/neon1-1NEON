@@ -2,7 +2,7 @@
 // throwaway-domain lists, how place names compare, and which addresses the website check refuses.
 import { describe, expect, it } from "vitest";
 import { placeCheck } from "./lib/vet.ts";
-import { placeKey, privateAddress, RealVetting } from "./vetting/real.ts";
+import { placeKey, RealVetting } from "./vetting/real.ts";
 
 const v = new RealVetting();
 
@@ -23,12 +23,14 @@ describe("places", () => {
     expect(await v.place("Brooklyn Heights Zzz", "NY")).toBeUndefined();
     expect(await v.place("Albany", "HI")).toBeUndefined();
   });
-  it("stores a checked place as City, ST, or the state alone", async () => {
+  it("stores a place as City, ST, the state alone, or a place outside the US as typed", async () => {
     expect(await placeCheck(v, "queens, NY")).toEqual({ place: "Queens, NY" });
     expect(await placeCheck(v, "New York, NY")).toEqual({ place: "New York, NY" });
     expect(await placeCheck(v, "NJ")).toEqual({ place: "New Jersey" });
-    expect(await placeCheck(v, "Albany")).toEqual({ problem: expect.stringMatching(/state/) });
-    expect(await placeCheck(v, "Gotham, NY")).toEqual({ problem: expect.stringMatching(/couldn't find Gotham in New York/) });
+    // Not a US state: a place outside the US, kept as typed; a US town the list misses is kept too
+    expect(await placeCheck(v, "Toronto,  Canada")).toEqual({ place: "Toronto, Canada" });
+    expect(await placeCheck(v, "x")).toEqual({ problem: expect.stringMatching(/at least 2/) });
+    expect(await placeCheck(v, "Gotham, NY")).toEqual({ place: "Gotham, NY" });
   });
   it("compares names without case, accents, punctuation, or Saint/St", () => {
     expect(placeKey("Cañon City")).toBe(placeKey("canon city"));
@@ -46,13 +48,8 @@ describe("throwaway mailboxes", () => {
   });
 });
 
-describe("the website check's guard", () => {
-  it("refuses private, loopback, link-local, and metadata addresses", () => {
-    for (const ip of ["10.0.0.1", "127.0.0.1", "169.254.169.254", "172.20.1.1", "192.168.1.1", "100.64.0.1", "0.0.0.0", "::1", "fd00::1", "fe80::1", "::ffff:10.0.0.1"]) expect(privateAddress(ip)).toBe(true);
-    for (const ip of ["8.8.8.8", "93.184.216.34", "2606:4700::1111", "172.32.0.1"]) expect(privateAddress(ip)).toBe(false);
-  });
-  it("refuses other ports and schemes without asking anyone", async () => {
-    expect(await v.reachable("http://example.com:8080/")).toBe("refused");
-    expect(await v.reachable("ftp://example.com/")).toBe("refused");
+describe("websites", () => {
+  it("are never visited: the checks have no way to fetch an address someone typed", () => {
+    expect("reachable" in v).toBe(false);
   });
 });
