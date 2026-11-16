@@ -12,6 +12,7 @@
   --line: rgba(3, 87, 4, .16); --line-strong: rgba(3, 87, 4, .32); --accent: var(--brand); --accent-ink: #FFFFFF;
   --accent-soft: rgba(3, 87, 4, .08); --focus: var(--brand); --shadow: 0 1px 2px rgba(16, 36, 26, .05);
   /* Layer greens, each at least 4.5:1 against the white letter on its badge */
+  --faint: var(--muted); --field-line: var(--line-strong);
   --l1: #003B00; --l2: #17562A; --l3: #267038; --l4: #3A8550; --badge-ink: #FFFFFF;
   color-scheme: light;
 }
@@ -19,15 +20,17 @@
 /* Matrix (dark) only by choice: data-theme="device" follows a dark device setting, data-theme="matrix"
    always applies, and no choice at all stays awake */
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="device"] { color-scheme: dark; --bg: #0F0A0D; --frame: var(--void); --panel: #15100F; --text: #D6F5DC; --muted: #84A98C;
+  :root[data-theme="device"] { color-scheme: dark; --bg: #0F0A0D; --frame: var(--void); --panel: #15100F; --text: var(--m-ink, #EDF1ED); --muted: var(--m-muted, #CBD1CC);
     --line: rgba(0, 255, 65, .14); --line-strong: rgba(0, 255, 65, .3); --accent: var(--neon); --accent-ink: var(--void);
     --accent-soft: rgba(0, 230, 118, .08); --focus: var(--glow); --shadow: none; --amber: #FFB547; --red: #FF8A80; --ok: #6CFFA8;
-    --l1: #008F11; --l2: #00B84F; --l3: #00E676; --l4: #6CFFA8; --badge-ink: var(--void); }
+    --l1: #008F11; --l2: #00B84F; --l3: #00E676; --l4: #6CFFA8; --badge-ink: var(--void);
+    --faint: var(--m-faint, #B1B8B2); --field-line: rgb(237 241 237 / .45); }
 }
-:root[data-theme="matrix"] { color-scheme: dark; --bg: #0F0A0D; --frame: var(--void); --panel: #15100F; --text: #D6F5DC; --muted: #84A98C;
+:root[data-theme="matrix"] { color-scheme: dark; --bg: #0F0A0D; --frame: var(--void); --panel: #15100F; --text: var(--m-ink, #EDF1ED); --muted: var(--m-muted, #CBD1CC);
   --line: rgba(0, 255, 65, .14); --line-strong: rgba(0, 255, 65, .3); --accent: var(--neon); --accent-ink: var(--void);
   --accent-soft: rgba(0, 230, 118, .08); --focus: var(--glow); --shadow: none; --amber: #FFB547; --red: #FF8A80; --ok: #6CFFA8;
-  --l1: #008F11; --l2: #00B84F; --l3: #00E676; --l4: #6CFFA8; --badge-ink: var(--void); }
+  --l1: #008F11; --l2: #00B84F; --l3: #00E676; --l4: #6CFFA8; --badge-ink: var(--void);
+    --faint: var(--m-faint, #B1B8B2); --field-line: rgb(237 241 237 / .45); }
 
 /* Base elements and utilities */
 * { box-sizing: border-box; }
@@ -65,7 +68,7 @@ h1, h2, h3 { font-family: var(--mono); font-weight: 600; letter-spacing: .01em; 
 /* Form fields */
 label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
 label.field > span { font-family: var(--mono); font-size: 12px; }
-input, textarea, select { font: 16px var(--sans); color: var(--text); background: var(--panel); border: 1px solid var(--line-strong); border-radius: var(--r-sm); padding: 9px 12px; min-height: 40px; width: 100%; }
+input, textarea, select { font: 16px var(--sans); color: var(--text); background: var(--panel); border: 1px solid var(--field-line); border-radius: var(--r-sm); padding: 9px 12px; min-height: 40px; width: 100%; }
 textarea { min-height: 96px; resize: vertical; }
 /* Dropdowns: as wide as their choices (not the whole row), with a small chevron drawn in the text's
    own color right after the words, so it suits both themes and never floats far off to the side */
@@ -75,8 +78,8 @@ select { appearance: none; -webkit-appearance: none; width: auto; max-width: 100
   background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%), linear-gradient(135deg, var(--accent) 50%, transparent 50%);
   background-position: calc(100% - 23px) calc(50% + 1px), calc(100% - 18px) calc(50% + 1px); background-size: 5px 5px; background-repeat: no-repeat; }
 select:disabled { cursor: default; opacity: .7; }
-/* Placeholders at the muted color, which passes contrast in both themes */
-::placeholder { color: var(--muted); opacity: 1; }
+/* Placeholders: muted in awake, the shared faint text (Lc 62) in matrix */
+::placeholder { color: var(--faint); opacity: 1; }
 input:focus, textarea:focus, select:focus { outline: 2px solid var(--focus); outline-offset: 0; border-color: transparent; }
 /* Boxes and dots keep the brand color, and show a ring only for keyboard focus, never a square on click */
 /* Checkboxes and radios keep their own size: the full-width rule above is for text fields */
@@ -308,7 +311,7 @@ table.people td { padding: 10px 8px; border-bottom: 1px solid var(--line); verti
 
 /* Sign-in: the neon1.tech hero */
 /* Focus rings on the dark sign-in surface use the neon, so they stand out from the near-black */
-.signin { position: relative; min-height: 100%; display: grid; place-items: center; background: var(--void); color: #D6F5DC; overflow: hidden; --focus: var(--neon); }
+.signin { position: relative; min-height: 100%; display: grid; place-items: center; background: var(--void); color: var(--m-ink, #EDF1ED); overflow: hidden; --focus: var(--neon); }
 .signin .veil { position: fixed; inset: 0; z-index: 1; background: radial-gradient(60% 50% at 50% 50%, rgba(13, 2, 8, .7), rgba(13, 2, 8, .15) 80%); pointer-events: none; }
 /* The panel is glass like the site's hero: the shared lens shows the rain through it, lightly
    tinted so the form stays readable */
@@ -342,15 +345,15 @@ body:has(.live-bar) .signin .n1-bar { display: none; }
 /* Initials keep the neon and its glow; the rest of each word is a quieter green that still reads */
 .signin .word .seg { display: inline-flex; align-items: flex-start; }
 .signin .word .init { color: #9AFF9A; text-shadow: 0 0 8px rgba(108, 255, 168, .55), 0 0 24px rgba(0, 230, 118, .35); }
-.signin .word .rest { display: inline-block; overflow: hidden; max-width: 0; opacity: 0; color: #A3C2AA; font-weight: 500;
+.signin .word .rest { display: inline-block; overflow: hidden; max-width: 0; opacity: 0; color: var(--m-muted, #CBD1CC); font-weight: 500;
   transition: max-width .6s ease, opacity .45s ease; }
 .signin .word.open .rest { max-width: calc(var(--n) * (1ch + .02em) + 1px); opacity: 1; }
 /* Open, a small gap between the words, so it reads as words and not one long run */
 .signin .word .seg + .seg { transition: margin-left .6s ease; }
 .signin .word.open .seg + .seg { margin-left: .3em; }
-.signin input { background: rgba(255, 255, 255, .04); color: #D6F5DC; border-color: rgba(0, 255, 65, .3); text-align: center; }
+.signin input { background: rgba(255, 255, 255, .04); color: var(--m-ink, #EDF1ED); border-color: rgb(237 241 237 / .45); text-align: center; }
 .signin .btn-primary { background: var(--neon); border-color: var(--neon); color: var(--void); width: 100%; box-shadow: 0 0 18px rgba(108, 255, 168, .3); }
-.signin .fine { font-size: 12px; color: #84A98C; margin: 18px 0 0; }
+.signin .fine { font-size: 12px; color: var(--m-muted, #CBD1CC); margin: 18px 0 0; }
 /* Each sign-in step's lines sit at one even gap */
 .signin form.stack { display: grid; gap: 12px; }
 .signin form.stack > * { margin: 0; }
@@ -358,7 +361,7 @@ body:has(.live-bar) .signin .n1-bar { display: none; }
 .signin .email-row { display: grid; justify-items: end; }
 .signin .email-row input[type="email"] { width: 100%; }
 .signin form .email-row label.remember { display: inline-flex; align-items: center; gap: 8px; max-height: 0; overflow: hidden; opacity: 0; margin-top: 0; padding-right: 2px;
-  font: 12px/1 var(--mono); color: #84A98C; cursor: pointer; transition: max-height .35s ease, opacity .35s ease, margin-top .35s ease; }
+  font: 12px/1 var(--mono); color: var(--m-muted, #CBD1CC); cursor: pointer; transition: max-height .35s ease, opacity .35s ease, margin-top .35s ease; }
 .signin form .email-row.ok label.remember { max-height: 28px; opacity: 1; margin-top: 10px; }
 /* A square neon checkbox, drawn the same in every browser */
 .signin .remember input { appearance: none; -webkit-appearance: none; width: 15px; height: 15px; min-height: 0; margin: 0; padding: 0; flex: none;
@@ -366,30 +369,30 @@ body:has(.live-bar) .signin .n1-bar { display: none; }
 .signin .remember input:checked { background: var(--neon); border-color: var(--neon); }
 .signin .remember input:checked::after { content: ""; width: 4px; height: 8px; border: solid var(--void); border-width: 0 2px 2px 0; transform: translateY(-1px) rotate(45deg); }
 .signin .remember input:focus-visible { outline: 2px solid var(--neon); outline-offset: 2px; }
-.signin .fine a { color: #84A98C; }
+.signin .fine a { color: var(--m-muted, #CBD1CC); }
 .signin .legal-links { margin-top: 8px; white-space: nowrap; }
 /* Who the portal is for, the visible email label, what Continue leads to, and the ways in without an
-   account. Text colors measure 7.8:1 (#84A98C) to 17:1 (#D6F5DC) on the void, and stay above 5.5:1
+   account. Text colors are the shared matrix tokens (--m-muted 12:1, --m-ink 17:1 on the void), and stay above 5.5:1
    with green rain lit behind the glass */
-.signin .signin-h { margin: 4px 0 0; font: 600 16px var(--mono); letter-spacing: .04em; color: #D6F5DC; }
-.signin .signin-lead { margin: 6px 0 20px; font-size: 14px; color: #A3C2AA; }
-.signin .field-label { display: block; font: 12px var(--mono); color: #A3C2AA; margin: 0 0 -4px; }
+.signin .signin-h { margin: 4px 0 0; font: 600 16px var(--mono); letter-spacing: .04em; color: var(--m-ink, #EDF1ED); }
+.signin .signin-lead { margin: 6px 0 20px; font-size: 14px; color: var(--m-muted, #CBD1CC); }
+.signin .field-label { display: block; font: 12px var(--mono); color: var(--m-muted, #CBD1CC); margin: 0 0 -4px; }
 .signin form.stack > .next-hint { margin: -2px 0 0; }
 .signin .signin-more { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px; margin-top: 7px; padding-top: 14px; border-top: 1px solid rgba(0, 255, 65, .16); font-size: 13px; }
-.signin .signin-more a { color: #A3C2AA; }
+.signin .signin-more a { color: var(--m-muted, #CBD1CC); }
 .signin .signin-more a:hover { color: var(--neon); }
-.signin .signin-more .more-sep { color: #84A98C; }
+.signin .signin-more .more-sep { color: var(--m-muted, #CBD1CC); }
 /* Create account's limits: their own line under the lead, in the quieter text */
-.signin .signin-limits { display: block; margin-top: 4px; font-size: 12px; color: #84A98C; }
+.signin .signin-limits { display: block; margin-top: 4px; font-size: 12px; color: var(--m-muted, #CBD1CC); }
 .signin.awake .signin-limits, .signin.awake .signin-more .more-sep { color: var(--muted); }
 /* Sign-in steps: stacked buttons, and a wide, spaced-out code field */
 .signin .steps-col { display: grid; gap: 10px; }
 .signin .steps-col .btn { width: 100%; margin: 0; }
 .signin .btn-ghost { color: var(--neon); border-color: var(--neon); }
 .signin input.code { font: 600 22px var(--mono); letter-spacing: .3em; }
-.signin .linkish { color: #84A98C; }
+.signin .linkish { color: var(--m-muted, #CBD1CC); }
 .signin .dev { margin-top: 18px; display: grid; gap: 6px; }
-.signin .dev button { background: rgba(255, 255, 255, .03); border: 1px solid rgba(0, 255, 65, .18); color: #D6F5DC; border-radius: 8px; padding: 8px; cursor: pointer; font: 13px var(--sans); }
+.signin .dev button { background: rgba(255, 255, 255, .03); border: 1px solid rgba(0, 255, 65, .18); color: var(--m-ink, #EDF1ED); border-radius: 8px; padding: 8px; cursor: pointer; font: 13px var(--sans); }
 .signin .dev button:hover { border-color: var(--neon); }
 /* While the sign-in shows, the whole page is the void and dark, so browsers that tint their toolbars
    from the page (Safari and DuckDuckGo on iOS) draw the bottom bar dark like the top, not white */
@@ -467,9 +470,9 @@ fieldset legend { font: 12px var(--mono); color: var(--muted); }
 /* Lost signal: the sign-in screen's look, with a plain heading and one retry */
 .signin .lost { display: grid; gap: 12px; }
 .signin .lost .word { margin: 0 0 8px; height: auto; font: 600 clamp(40px, 8vw, 60px) var(--mono); color: var(--neon); text-shadow: 0 0 8px rgba(108, 255, 168, .55), 0 0 24px rgba(0, 230, 118, .35); }
-.signin .lost-title { margin: 0; font: 600 16px var(--mono); color: #D6F5DC; }
+.signin .lost-title { margin: 0; font: 600 16px var(--mono); color: var(--m-ink, #EDF1ED); }
 .signin .lost .fine { margin: 0; }
-.signin .lost .fine a { color: #84A98C; }
+.signin .lost .fine a { color: var(--m-muted, #CBD1CC); }
 
 /* Neo sits bottom-right inside the portal (n1chat-right), clear of the side rail; the public screens put it back bottom left (below) */
 
@@ -896,7 +899,7 @@ body:not(:has(.shell:not(.example))) .n1chat-launch.n1chat-right, body:not(:has(
 body:not(:has(.shell:not(.example))) .n1chat-right.n1chat-grow, body:not(:has(.shell:not(.example))) .n1chat-right.n1chat-fold { animation-name: n1chat-grow; }
 
 /* --- The demo (/1NEON/demo): a slim strip above the portal; the frame moves down to make room --- */
-.demo-bar { position: fixed; inset: 0 0 auto 0; z-index: 45; height: var(--demo-h, 36px); display: flex; align-items: center; gap: 12px; padding: 0 16px; background: var(--void, #0d0208); color: #c9f5d6; font: 12px var(--mono); border-bottom: 1px solid rgba(0, 255, 65, .3); }
+.demo-bar { position: fixed; inset: 0 0 auto 0; z-index: 45; height: var(--demo-h, 36px); display: flex; align-items: center; gap: 12px; padding: 0 16px; background: var(--void, #0d0208); color: var(--m-ink-soft, #E3E7E4); font: 12px var(--mono); border-bottom: 1px solid rgba(0, 255, 65, .3); }
 .demo-tag { color: var(--void, #0d0208); background: var(--neon, #6cffa8); border-radius: 99px; padding: 2px 10px; font-weight: 700; letter-spacing: .06em; }
 .demo-note { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .demo-acts { display: flex; gap: 14px; }
@@ -1557,19 +1560,19 @@ ul.md-says { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; 
 /* The sign-up form's hidden field sits far off-screen: out of sight and reach for people, still filled by bots that fill every field */
 .hp { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
 /* The box and its words on one center line: the words' line box is exactly the box's height */
-.signin label.agree { display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 15px; color: #A3C2AA; cursor: pointer; }
+.signin label.agree { display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 15px; color: var(--m-muted, #CBD1CC); cursor: pointer; }
 .signin label.agree > span { display: block; }
 /* The dropdown matches the fields beside it: the same glass, border, and text, its arrow kept; "Choose one"
    reads as a placeholder until something is picked, and the open list is dark too */
-.signin .signup-form select { width: 100%; background-color: rgba(255, 255, 255, .04); color: #D6F5DC; border-color: rgba(0, 255, 65, .3); }
-.signin .signup-form select.unpicked { color: #84A98C; }
-.signin .signup-form select option { background: #0D0208; color: #D6F5DC; }
+.signin .signup-form select { width: 100%; background-color: rgba(255, 255, 255, .04); color: var(--m-ink, #EDF1ED); border-color: rgb(237 241 237 / .45); }
+.signin .signup-form select.unpicked { color: var(--m-muted, #CBD1CC); }
+.signin .signup-form select option { background: #0D0208; color: var(--m-ink, #EDF1ED); }
 
-.signin label.agree a { color: #D6F5DC; }
+.signin label.agree a { color: var(--m-ink, #EDF1ED); }
 .signin .check:empty { display: none; }
 /* "Where can I see your business?": the two fields as one group, spaced like the rest of the form */
 /* Sign-up's optional fields say so after their label, quietly */
-.signin .opt { margin-left: 6px; font-size: 11px; color: #84A98C; }
+.signin .opt { margin-left: 6px; font-size: 11px; color: var(--m-muted, #CBD1CC); }
 .signin .signup-form .f { display: grid; gap: 8px; min-width: 0; }
 .signin .signup-form .f > * { margin: 0; }
 .signin .signup-form .face-hint { margin: -4px 0 0; }
@@ -1717,7 +1720,7 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
   select.unpicked selectedcontent, select.unpicked > button { color: inherit; }
   /* The dark sign-in screen: the neon arrow, a dark list */
   .signin select::picker-icon { background: var(--neon, #00FF41); }
-  .signin ::picker(select) { background: #0D0208; color: #D6F5DC; border-color: rgba(0, 255, 65, .3); }
+  .signin ::picker(select) { background: #0D0208; color: var(--m-ink, #EDF1ED); border-color: rgba(0, 255, 65, .3); }
   .signin select option:is(:hover, :focus-visible) { background: rgba(0, 255, 65, .12); }
   .signin select option:checked { color: #00FF41; }
   /* The board card's small stage menu keeps its compact size */
@@ -1865,3 +1868,20 @@ html:has(.signin.awake), html:has(.signin.awake) body { background: var(--bg); c
 }
 @keyframes soft-off { 0% { opacity: var(--lo-soft); } 35% { opacity: var(--lo-soft); } 100% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { :root.flick-on .signin *, :root.flick-off .signin *, :root.flick-on .pub-page *, :root.flick-off .pub-page * { animation: none !important; } }
+
+
+/* ---- Matrix text: off-white ink, green kept for headings, links, titles, arrows, key numbers, buttons ----
+   The four --m-* names come from neon1.tech's /shared/neon1.css (index.html loads it before this file);
+   the literals are the same values for when that file is old or missing. Light themes are untouched. */
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="device"] .tag.prio-could, :root[data-theme="device"] .demo-pick button span, :root[data-theme="device"] .bell-list .lvl-info .what, :root[data-theme="device"] .strip .day.past, :root[data-theme="device"] .strip.month .day.past, :root[data-theme="device"] select:disabled { opacity: 1; color: var(--faint); }
+  :root[data-theme="device"] :is(.tag.client, .tag.prio-must, .next-step .eyebrow, .bell-new) { color: var(--muted); }
+  :root[data-theme="device"] .tag.prio-must { border-color: var(--line-strong); }
+  :root[data-theme="device"] .content :is(p, li) { letter-spacing: .01em; }
+  :root[data-theme="device"] .content :is(p, li) a:not(.btn, .tab, .linkish, .row, .name) { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: rgb(108 255 168 / .55); }
+}
+:root[data-theme="matrix"] .tag.prio-could, :root[data-theme="matrix"] .demo-pick button span, :root[data-theme="matrix"] .bell-list .lvl-info .what, :root[data-theme="matrix"] .strip .day.past, :root[data-theme="matrix"] .strip.month .day.past, :root[data-theme="matrix"] select:disabled { opacity: 1; color: var(--faint); }
+:root[data-theme="matrix"] :is(.tag.client, .tag.prio-must, .next-step .eyebrow, .bell-new) { color: var(--muted); }
+:root[data-theme="matrix"] .tag.prio-must { border-color: var(--line-strong); }
+:root[data-theme="matrix"] .content :is(p, li) { letter-spacing: .01em; }
+:root[data-theme="matrix"] .content :is(p, li) a:not(.btn, .tab, .linkish, .row, .name) { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: rgb(108 255 168 / .55); }
