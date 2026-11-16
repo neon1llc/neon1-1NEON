@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+## v0.16.3 - 2026-11-16
+
+- On the sign-in and create-account screens, the space from the policies to "Or see how it works" now matches the space below it, with the line between them halfway.
+
 ## v0.16.2 - 2026-11-16
 
 - The sign-in's Continue button takes the neon flicker with the other green parts when the theme changes.

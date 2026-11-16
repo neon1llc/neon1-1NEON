@@ -375,7 +375,7 @@ body:has(.live-bar) .signin .n1-bar { display: none; }
 .signin .signin-lead { margin: 6px 0 20px; font-size: 14px; color: #A3C2AA; }
 .signin .field-label { display: block; font: 12px var(--mono); color: #A3C2AA; margin: 0 0 -4px; }
 .signin form.stack > .next-hint { margin: -2px 0 0; }
-.signin .signin-more { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px; margin-top: 18px; padding-top: 14px; border-top: 1px solid rgba(0, 255, 65, .16); font-size: 13px; }
+.signin .signin-more { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px; margin-top: 7px; padding-top: 14px; border-top: 1px solid rgba(0, 255, 65, .16); font-size: 13px; }
 .signin .signin-more a { color: #A3C2AA; }
 .signin .signin-more a:hover { color: var(--neon); }
 /* Sign-in steps: stacked buttons, and a wide, spaced-out code field */
@@ -1805,7 +1805,8 @@ html:has(.signin.awake), html:has(.signin.awake) body { background: var(--bg); c
 /* Even spacing in the panel: the same gap above and below "Or see how it works", and a calmer top and bottom to match */
 .signin .panel { padding-top: 28px; }
 .signin .word { margin-bottom: 18px; }
-.signin .signin-more { padding-top: 18px; }
+/* The line under the policies sits halfway between them and the link: the space above the link (policies to link) matches the space below it (link to the box's edge) */
+.signin .signin-more { padding-top: 7px; }
 .signin .panel:has(> .signin-more:last-child) { padding-bottom: 18px; }
 
 /* ---- Public screens, second pass ---- */
