@@ -20,7 +20,7 @@ import { fromEdge } from "./lib/edge.ts";
 import { installOutbox } from "./lib/transactions.ts";
 import { authRoutes } from "./routes/auth.ts";
 import { signupRoutes } from "./routes/signup.ts";
-import { prospectRoutes } from "./routes/prospects.ts";
+import { keepRoutes, prospectRoutes } from "./routes/prospects.ts";
 import { accountGuard, prospectGuard } from "./lib/guards.ts";
 import { commentRoutes } from "./routes/comments.ts";
 import { contactRoutes } from "./routes/contact.ts";
@@ -194,6 +194,8 @@ export function createApp(d: Deps) {
   billingRoutes(app, k, pay);
   // Asking neon1 for an assessment or a call, from any account
   requestRoutes(app, k);
+  // A free account's expiry date and its one "keep it"
+  keepRoutes(app, k);
   // The admin's export reads Trash, which every other route treats as gone
   exportRoutes(app, k);
 

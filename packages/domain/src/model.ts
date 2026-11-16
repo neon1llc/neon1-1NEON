@@ -117,6 +117,8 @@ export const Tenant = z.object({
       // Deletion has begun (routes/prospects.ts purgeProspect): its people are shut out, it can't be
       // promoted, and a pass cut short is finished by the next one
       deletingAt: isoDate.optional(),
+      // When its people pressed "Keep it 30 more days"; offered once
+      keptAt: isoDate.optional(),
     })
     .optional(),
   ...versioned,

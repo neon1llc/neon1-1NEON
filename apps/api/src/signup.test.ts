@@ -418,6 +418,32 @@ describe("deleting a free account", () => {
 });
 
 
+describe("a free account's expiry", () => {
+  it("shows when it's deleted, and keeps it 30 more days once", async () => {
+    const { tid } = await prospect();
+    const k = (await (await as(form.email, `/t/${tid}/keep`)).json()) as { free: boolean; deleteOn: string; canKeep: boolean };
+    expect(k).toMatchObject({ free: true, canKeep: true });
+    const since = Date.parse((await repo.getTenant(tid))!.prospect!.since);
+    expect(Math.round((Date.parse(k.deleteOn) - since) / 86_400_000)).toBe(30);
+    // After the final notice, keeping it withdraws the notice and moves the date
+    await sweepQuietProspects({ repo, d: { mailer, storage, directory } as never, cfg }, new Date(since + 21.1 * 86_400_000));
+    expect((await repo.getTenant(tid))!.prospect!.warnedAt).toBeTruthy();
+    expect((await as(form.email, `/t/${tid}/keep`, "POST", {})).status).toBe(200);
+    const t = (await repo.getTenant(tid))!;
+    expect(t.prospect!.warnedAt).toBeUndefined();
+    expect(t.prospect!.keptAt).toBeTruthy();
+    expect((await as(form.email, `/t/${tid}/keep`, "POST", {})).status).toBe(409);
+    expect(((await (await as(form.email, `/t/${tid}/keep`)).json()) as { canKeep: boolean }).canKeep).toBe(false);
+  });
+
+  it("says a client's account doesn't expire", async () => {
+    const { tid } = await prospect();
+    await as(OP, `/prospects/${tid}/promote`, "POST", {});
+    expect(await (await as(form.email, `/t/${tid}/keep`)).json()).toEqual({ free: false });
+  });
+});
+
+
 describe("tidying up", () => {
   it("removes the sign-in account of a sign-up never confirmed within a day", async () => {
     await signup(form);

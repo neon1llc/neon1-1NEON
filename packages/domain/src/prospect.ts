@@ -70,6 +70,15 @@ export const PROSPECT_FINAL_DAYS = 21;
 export const PROSPECT_GRACE_DAYS = 9;
 
 
+/** The day a quiet free account is deleted if nothing changes: PROSPECT_GRACE_DAYS after the final
+ * notice once it's gone out, else PROSPECT_FINAL_DAYS + PROSPECT_GRACE_DAYS (30) after the last change */
+export function prospectDeleteOn(lastActive: string, warnedAt?: string): string {
+  const day = 24 * 60 * 60 * 1000;
+  const from = warnedAt ? Date.parse(warnedAt) + PROSPECT_GRACE_DAYS * day : Date.parse(lastActive) + (PROSPECT_FINAL_DAYS + PROSPECT_GRACE_DAYS) * day;
+  return new Date(from).toISOString();
+}
+
+
 /** Which quiet-prospect email is due, given quiet days and how many have gone out (`sent`):
  * a check-in, the final notice, deletion, or nothing yet */
 export function quietStep(quietDays: number, sent: number, finalAgeDays?: number): "nudge" | "final" | "delete" | undefined {
@@ -141,6 +150,8 @@ const ALLOWED: [method: string, path: RegExp][] = [
   ["POST", /^\/notifications\/seen$/],
   // Asking neon1 for an assessment or a call: the point of a free account
   ["POST", /^\/requests$/],
+  // Keeping a quiet account 30 more days, once (routes/prospects.ts)
+  ["POST", /^\/keep$/],
 ];
 
 

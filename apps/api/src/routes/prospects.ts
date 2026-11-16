@@ -5,10 +5,10 @@
 // are never deleted by it.
 
 
-import { PROSPECT_GRACE_DAYS, can, formatClientId, isProspect, quietStep, type Tenant } from "@1neon/domain";
+import { PROSPECT_GRACE_DAYS, can, formatClientId, isProspect, prospectDeleteOn, quietStep, type Tenant } from "@1neon/domain";
 import type { Context } from "hono";
 import { z } from "zod";
-import { body, check, fail, now, who, type Env } from "../lib/http.ts";
+import { body, check, fail, need, now, who, type Env } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
 import { branded, link } from "../mail.ts";
 import type { WriteOp } from "../store/types.ts";
@@ -300,5 +300,32 @@ export function prospectRoutes(app: App, k: Kit) {
     const { paused } = await body(c, z.object({ paused: z.boolean() }));
     await repo.table.write([{ put: { ...SIGNUP_SWITCH, paused, by: who(c).user.id, at: now() }, guard: { always: true } }]);
     return c.json({ open: await signupOpen(k), paused });
+  });
+}
+
+
+/** A free account's own side of its expiry; registered with the organization routes, after :tid is resolved */
+export function keepRoutes(app: App, k: Kit) {
+  const { repo } = k;
+
+  // A free account's own people: when it's deleted if nothing changes, and whether "Keep it" is still on offer
+  app.get("/t/:tid/keep", async (c) => {
+    need(c, "read");
+    const t = c.get("tenant");
+    if (!isProspect(t)) return c.json({ free: false });
+    const p = t.prospect!;
+    return c.json({ free: true, held: Boolean(p.heldAt), deleteOn: p.heldAt ? undefined : prospectDeleteOn(await lastActive(k, t), p.warnedAt), kept: p.keptAt, canKeep: !p.keptAt && !p.heldAt });
+  });
+
+  // Keep it 30 more days, once: the clock starts again as if they'd made a change, and any notice is withdrawn
+  app.post("/t/:tid/keep", async (c) => {
+    need(c, "write");
+    const t = c.get("tenant");
+    if (!isProspect(t)) fail(400, "not_free", "Only a free account expires.");
+    if (t.prospect!.keptAt) fail(409, "kept", "This account was already kept once. Any change you make keeps it longer, or ask neon1 to keep it.");
+    const at = now();
+    const next: Tenant = { ...t, prospect: { ...t.prospect!, keptAt: at, notices: undefined, noticeAt: undefined, warnedAt: undefined }, version: t.version + 1, updatedAt: at, updatedBy: who(c).user.id };
+    await repo.table.write([repo.tenantOp(next, { version: t.version }), { put: { PK: `T#${t.id}`, SK: "ACTIVE", at }, guard: { always: true } }, repo.auditOp({ tenantId: t.id, actorId: who(c).user.id, action: "prospect.kept", target: t.id, summary: `${t.name} was kept 30 more days` })]);
+    return c.json({ deleteOn: prospectDeleteOn(at) });
   });
 }
