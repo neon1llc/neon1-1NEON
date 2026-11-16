@@ -5,7 +5,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate, useParams } from "react-router";
-import { menuOf } from "@1neon/domain";
+import { menuOf, PROSPECT_FINAL_DAYS, PROSPECT_GRACE_DAYS, PROSPECT_LIMITS } from "@1neon/domain";
 import { api, DEMO as IN_DEMO, LIVE as IN_LIVE, devUser, HttpError, pickPerson, resetDemo, Unconfirmed } from "../lib/api.ts";
 import { failureOf, read } from "../lib/reads.ts";
 import { passkeyAssertion } from "../lib/passkey.ts";
@@ -372,7 +372,10 @@ function SignIn() {
           // Sign-up: who it's for and what happens next, in place of the sign-in note
           <>
             <h2 className="signin-h">Start in 1NEON</h2>
-            <p className="signin-lead">Free. Write down what your project needs, then ask for an assessment or a call from your account.</p>
+            <p className="signin-lead">Free. Write down what your project needs, then ask for an assessment or a call from your account.
+              {/* What a free account holds, before anything is typed: the same numbers the API enforces */}
+              <span className="signin-limits">Up to {PROSPECT_LIMITS.projects} projects and {PROSPECT_LIMITS.files} files ({PROSPECT_LIMITS.totalBytes / (1024 * 1024)} MB), kept {PROSPECT_FINAL_DAYS + PROSPECT_GRACE_DAYS} days after your last change.</span>
+            </p>
           </>
         ) : (
           <>
@@ -452,8 +455,12 @@ function SignIn() {
             <a href="/1NEON/live">Or watch the guided walkthrough</a>
           </nav>
         )}
+        {/* Without an account: the demo to click around in, and the guided walkthrough, side by side on
+            sign-in and create account alike */}
         {!IN_DEMO && (
           <nav className="signin-more" aria-label="Without an account">
+            <a href="/1NEON/demo/">Try it yourself</a>
+            <span className="more-sep" aria-hidden="true">·</span>
             <a href="/1NEON/live">Or see how it works</a>
           </nav>
         )}
