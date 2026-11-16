@@ -1809,3 +1809,44 @@ html:has(.signin.awake), html:has(.signin.awake) body { background: var(--bg); c
 .signin .word { margin-bottom: 18px; }
 .signin .signin-more { padding-top: 18px; }
 .signin .panel:has(> .signin-more:last-child) { padding-bottom: 18px; }
+
+/* ---- Public screens, second pass ---- */
+/* The register and sign-in panel sits over the rain controls where they meet (a short screen, a long form) */
+.signin .panel { z-index: 7; }
+
+/* Awake dropdowns on sign-up: the same fill, border, and text as the other fields, a dark green arrow, and a light list */
+.signin.awake .signup-form select { background-color: var(--bg); color: var(--text); border-color: var(--line-strong); }
+.signin.awake .signup-form select.unpicked { color: var(--muted); }
+.signin.awake .signup-form select option { background: var(--panel); color: var(--text); }
+@supports (appearance: base-select) {
+  .signin.awake select::picker-icon { background: var(--accent); }
+  .signin.awake ::picker(select) { background: var(--panel); color: var(--text); border-color: var(--line-strong); box-shadow: 0 12px 32px rgba(3, 87, 4, .16); }
+  .signin.awake select option:is(:hover, :focus-visible) { background: var(--accent-soft); }
+  .signin.awake select option:checked { color: var(--accent); }
+}
+/* The required asterisk is the theme's green, light or dark (it was red in awake) */
+.signin.awake { --req-color: var(--accent); }
+
+/* Pages in this area change like the site's: one short cross-fade, with the bar holding still */
+@media (prefers-reduced-motion: no-preference) {
+  .pub-bar { view-transition-name: n1-bar; }
+  ::view-transition-group(root), ::view-transition-group(n1-bar) { animation-duration: var(--t-base); animation-timing-function: var(--ease); }
+}
+
+/* The neon flicker also takes the 1NEON mark and word, and, a little softer, the green parts: headings, asterisks, dropdown arrows */
+:root.flick-on .signin :is(.word .rings, .word .wm) { animation: neon-on 2.23s linear both; --lo: .08; }
+:root.flick-off .signin :is(.word .rings, .word .wm) { animation: neon-off .5s ease-out both; --lo: .08; }
+:root.flick-on .signin :is(.signin-h, .req), :root.flick-on .pub-page :is(h1, h2, a) { animation: soft-on 2.23s linear both; --lo-soft: .5; }
+:root.flick-off .signin :is(.signin-h, .req), :root.flick-off .pub-page :is(h1, h2, a) { animation: soft-off .5s ease-out both; --lo-soft: .5; }
+@supports (appearance: base-select) {
+  :root.flick-on .signin select::picker-icon { animation: soft-on 2.23s linear both; --lo-soft: .5; }
+  :root.flick-off .signin select::picker-icon { animation: soft-off .5s ease-out both; --lo-soft: .5; }
+}
+@keyframes soft-on {
+  0% { opacity: var(--lo-soft); } 4% { opacity: 1; } 8% { opacity: var(--lo-soft); } 13% { opacity: var(--lo-soft); }
+  14.5% { opacity: 1; } 19% { opacity: 1; } 22% { opacity: var(--lo-soft); } 28% { opacity: var(--lo-soft); }
+  30% { opacity: 1; } 44% { opacity: 1; } 48% { opacity: var(--lo-soft); } 52% { opacity: var(--lo-soft); }
+  78% { opacity: .8; } 100% { opacity: 1; }
+}
+@keyframes soft-off { 0% { opacity: var(--lo-soft); } 35% { opacity: var(--lo-soft); } 100% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { :root.flick-on .signin *, :root.flick-off .signin *, :root.flick-on .pub-page *, :root.flick-off .pub-page * { animation: none !important; } }
