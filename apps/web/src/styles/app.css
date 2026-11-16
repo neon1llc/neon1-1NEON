@@ -1695,6 +1695,9 @@ dialog.palette[open] { animation-duration: var(--t-fast); }
 /* Questions and folds open to their height instead of jumping */
 details.faq::details-content { height: 0; overflow: clip; transition: height var(--t-open) var(--ease-open), content-visibility var(--t-open) allow-discrete; }
 details.faq[open]::details-content { height: auto; }
+/* An open fold draws a brand rule under its header, like the one under a dropdown's placeholder */
+details.faq[open] > summary, .ag-group.fold[open] > summary { border-bottom: 1.5px solid var(--brand); }
+.ag-group.fold[open] > summary { width: auto; margin-bottom: 4px; }
 /* A cross-fade between sign-in steps, and between sign-in and sign-up (lib/motion.ts fade) */
 html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new(root) { animation-duration: var(--t-base); animation-timing-function: var(--ease); }
 
@@ -1717,12 +1720,14 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
   select option { padding: 8px 12px; border-radius: 6px; min-height: 0; }
   select option::checkmark { display: none; }
   select option:checked { color: var(--accent); font-weight: 600; }
-  select option:is(:hover, :focus-visible) { background: var(--accent-soft); outline: none; }
+  select option:is(:hover, :focus-visible) { background-color: var(--accent-soft); outline: none; }
+  /* The placeholder (the first choice, value "") carries a rule under it in the brand colour, the weight of the arrow and the focus border; hover sets only background-color so it never wipes the line */
+  select option[value=""]:first-child { background-image: linear-gradient(var(--brand), var(--brand)); background-repeat: no-repeat; background-size: calc(100% - 24px) 1.5px; background-position: 12px 100%; margin-bottom: 5px; padding-bottom: 9px; }
   select.unpicked selectedcontent, select.unpicked > button { color: inherit; }
   /* The dark sign-in screen: the neon arrow, a dark list */
   .signin select::picker-icon { background: var(--neon, #00FF41); }
   .signin ::picker(select) { background: #0D0208; color: var(--m-ink, #EDF1ED); border-color: rgba(0, 255, 65, .3); }
-  .signin select option:is(:hover, :focus-visible) { background: rgba(0, 255, 65, .12); }
+  .signin select option:is(:hover, :focus-visible) { background-color: rgba(0, 255, 65, .12); }
   .signin select option:checked { color: #00FF41; }
   /* The board card's small stage menu keeps its compact size */
   .pcard .move select { padding-right: 10px; gap: 6px; }
