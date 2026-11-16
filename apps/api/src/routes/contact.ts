@@ -114,9 +114,8 @@ export function contactRoutes(app: App, k: Kit) {
       note: "Reply to this email to answer them directly.",
       zone: DEFAULT_TIME_ZONE, // goes to neon1, so the sign-off reads in neon1's zone
     });
-    // A message sent from dev.neon1.tech says so in its subject
-    const where = process.env.APP_ENV === "dev" ? "[dev] neon1.tech" : "neon1.tech";
-    await d.mailer.send(CONTACT_TO, `${where}: ${topic} (${m.name})`, text, html, m.email);
+    // From "neon1" (the website); dev's mailer marks sender and subject itself
+    await d.mailer.send(CONTACT_TO, `[request] ${topic} · ${m.name}`, text, html, m.email, undefined, undefined, "requests");
     return c.json({ ok: true });
   });
 }

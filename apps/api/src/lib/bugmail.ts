@@ -43,8 +43,8 @@ const when = (iso: string) => sentAt(new Date(iso)).replace(/^Sent /, "");
 const gist = (s: string, n = 60) => { const t = s.replace(/\s+/g, " ").trim(); return t.length <= n ? t : `${t.slice(0, n).replace(/\s+\S*$/, "")}…`; };
 
 /** The subject: tracker-style, with the reference first and a glance at the description */
-export function bugSubject(r: BugReport, tag: string) {
-  return `[${tag}] ${r.ref} · ${r.where} · ${gist(r.what)}`;
+export function bugSubject(r: BugReport) {
+  return `[bug] ${r.ref} · ${r.where} · ${gist(r.what)}`;
 }
 
 export function bugMail(r: BugReport, shots: Shot[], notes: string[]) {

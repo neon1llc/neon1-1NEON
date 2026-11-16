@@ -18,6 +18,25 @@ const SANS = "Figtree,-apple-system,'Segoe UI',Roboto,sans-serif";
 // the walkthrough's pretend inbox shows the same sender
 export const MAIL_FROM = { name: "1NEON", address: "noreply@notify.neon1.tech" } as const;
 
+// Who a message is from, by the part of neon1 that sends it, so a glance at the sender says what it is:
+// "1NEON" is only the portal; "neon1" is the website (contact and use-case requests, bug reports);
+// "neon1 alerts" is system mail neon1 controls. All send from the one verified notify.neon1.tech domain,
+// so SPF and DKIM stay aligned for every address
+export const SENDERS = {
+  portal: { name: "1NEON", local: "noreply" },
+  requests: { name: "neon1", local: "requests" },
+  bugs: { name: "neon1", local: "bugs" },
+  alerts: { name: "neon1 alerts", local: "alerts" },
+} as const;
+export type SenderKind = keyof typeof SENDERS;
+
+/** A From header for one sender on the sending domain; dev puts "[DEV] " first in the display name */
+export function fromHeader(kind: SenderKind, domain: string, dev = false) {
+  const s = SENDERS[kind];
+  // Quoted, since "[" and "]" are specials in a display name
+  return `"${dev ? "[DEV] " : ""}${s.name}" <${s.local}@${domain}>`;
+}
+
 // The mark the site serves for mail: 96px dark green on transparent, shown at 32px for sharp screens
 export const MARK = "https://neon1.tech/shared/mail/neon1-mark.png";
 // Links read as links without shouting: brand green with a thin underline

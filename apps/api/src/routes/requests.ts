@@ -66,8 +66,8 @@ export function requestRoutes(app: App, k: Kit) {
       note: "Reply to this email to answer them directly.",
       at,
     });
-    const where = process.env.APP_ENV === "dev" ? "[dev] 1NEON" : "1NEON";
-    await d.mailer.send(CONTACT_TO, `${where}: ${t.name} asked for ${what}`, text, html, user.email);
+    // From 1NEON, since it is the portal telling neon1 about a client's request
+    await d.mailer.send(CONTACT_TO, `${t.name} asked for ${what}`, text, html, user.email);
     await repo.table.write([
       { put: { PK: `T#${t.id}`, SK: `REQUEST#${input.kind}`, at: at.toISOString(), by: user.id }, guard: { always: true } },
       repo.auditOp({ tenantId: t.id, actorId: actorId(c), action: `request.${input.kind}`, target: t.id, summary: `Asked neon1 for ${what}${input.note ? `: ${input.note.slice(0, 140)}` : ""}` }),

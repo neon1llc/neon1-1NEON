@@ -183,8 +183,7 @@ async function deliver(d: Pick<Deps, "mailer" | "cfg">, r: BugReport, files: { n
   const attach: Attachment[] = files.map((f, i) => ({ ...f, cid: `shot${i + 1}@neon1` }));
   const shots: Shot[] = attach.map((a) => ({ name: a.name, type: a.type, size: a.bytes.length, cid: a.cid! }));
   const { text, html } = bugMail(r, shots, notes);
-  const tag = d.cfg.env === "dev" ? "dev] [bug" : "bug";
-  await d.mailer.send(CONTACT_TO, bugSubject(r, tag), text, html, r.email || undefined, undefined, attach);
+  await d.mailer.send(d.cfg.bugTo ?? CONTACT_TO, bugSubject(r), text, html, r.email || undefined, undefined, attach, "bugs");
 }
 
 /**

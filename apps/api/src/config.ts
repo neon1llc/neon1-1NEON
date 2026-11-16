@@ -16,6 +16,8 @@ export interface Config {
   publicUrl: string;
   // Sender for invites, on the verified SES domain
   mailFrom?: string;
+  /** Where bug reports go; hello@neon1.tech until a bugs@ alias exists (BUG_TO) */
+  bugTo?: string;
   /** The SES configuration set to send under. The sending identity's default is production's, which dev's role may not use, so each environment names its own */
   sesConfigSet?: string;
   /** The toll-free number (its ARN) texts come from; unset means no texts */
@@ -73,6 +75,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     authDomain: env.AUTH_DOMAIN,
     publicUrl: env.PUBLIC_URL ?? "http://localhost:5173",
     mailFrom: env.MAIL_FROM,
+    bugTo: env.BUG_TO?.trim() || undefined,
     sesConfigSet: env.SES_CONFIGURATION_SET || undefined,
     smsFrom: env.SMS_FROM || undefined,
     operatorEmails: (env.OPERATOR_EMAILS ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean),

@@ -39,3 +39,20 @@ describe("emails take the reader's zone", () => {
     expect(inviteEmail({ orgName: "A", inviter: "B", url: "https://x", at }).text).toContain("Sent Jul 15, 2026, 9:25 AM EDT (13:25 UTC)");
   });
 });
+
+
+describe("who mail is from", () => {
+  it("names the sending part: 1NEON for the portal, neon1 for the site, neon1 alerts for system mail", async () => {
+    const { fromHeader } = await import("./mail.ts");
+    const d = "notify.neon1.tech";
+    expect(fromHeader("portal", d)).toBe('"1NEON" <noreply@notify.neon1.tech>');
+    expect(fromHeader("requests", d)).toBe('"neon1" <requests@notify.neon1.tech>');
+    expect(fromHeader("bugs", d)).toBe('"neon1" <bugs@notify.neon1.tech>');
+    expect(fromHeader("alerts", d)).toBe('"neon1 alerts" <alerts@notify.neon1.tech>');
+  });
+  it("puts [DEV] first in the sender's display name in dev", async () => {
+    const { fromHeader } = await import("./mail.ts");
+    expect(fromHeader("bugs", "notify.neon1.tech", true)).toBe('"[DEV] neon1" <bugs@notify.neon1.tech>');
+    expect(fromHeader("portal", "notify.neon1.tech", true)).toBe('"[DEV] 1NEON" <noreply@notify.neon1.tech>');
+  });
+});

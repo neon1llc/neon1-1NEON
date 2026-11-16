@@ -47,6 +47,7 @@ describe("report a bug", () => {
     expect(t).toMatch(/Window\s+390x844/);
     expect(t).toContain("WHAT HAPPENED");
     expect(mailer.sent[0]!.subject).toMatch(/^\[bug\] BUG-\w{6} · Neo chat · Neo's box stays open/);
+    expect(mailer.sent[0]).toMatchObject({ as: "bugs", to: "hello@neon1.tech" });
   });
   it("needs a place and a description, and checks an email only when one is given", async () => {
     expect((await send({ ...good, where: "moon" })).status).toBe(400);

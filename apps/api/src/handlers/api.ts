@@ -34,7 +34,7 @@ if (!cfg.table || !cfg.userPoolId || !cfg.clientId || !cfg.authDomain || !cfg.ma
 // Production wiring: DynamoDB, Cognito, SES, and S3 behind the same interfaces tests use
 const repo = new Repo(new DynamoTable(cfg.table));
 // In dev (made-up sample data) mail reaches neon1 only; see dev-guard.ts
-const mailer = guardMailer(cfg, new SesMailer(cfg.mailFrom, cfg.sesConfigSet));
+const mailer = guardMailer(cfg, new SesMailer(cfg.mailFrom, cfg.sesConfigSet, cfg.env === "dev"));
 // Texts only once the toll-free number is set up
 const texter = cfg.smsFrom ? new AwsTexter(cfg.smsFrom) : undefined;
 const storage = new S3Storage(cfg.docsBucket, cfg.malwareScan !== false);
