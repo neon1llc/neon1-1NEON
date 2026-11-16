@@ -1,8 +1,8 @@
 {
- "ref": "refactor/engagement-shelf",
- "commit": "139a6065014c9415cdf3ff0bb99490e6b80c06c7",
- "digest": "sha256:3c9db9a3769111eba5ead91f4c8d5a1d1e75139408e78eb75cf1f3a72bcef915",
- "chars": 79332,
+ "ref": "v0.48.0",
+ "commit": "6ab152ac2172afc17e621ba719c628520e72c310",
+ "digest": "sha256:7f6b884ef32a390a134514fe327af19ad96641c3350339a2675380cec2be18ac",
+ "chars": 79591,
  "docs": [
   {
    "id": "company-names",
@@ -12,7 +12,7 @@
   {
    "id": "company-contact",
    "title": "Contact",
-   "text": "# Contact\n\nHow to reach neon1, when, and what the first call covers.\n\nTell me what's on your mind, or ask for an opinion on how your operations run today.\n\n| | |\n|---|---|\n| **Email** | [hello@neon1.tech](mailto:hello@neon1.tech) |\n| **Call or text** | [(424) 32-neon1](tel:+14243263661), that's (424) 326-3661 |\n| **Book a call** | [calendly.com/1isgladtobeofservice/neon1-consultation](https://calendly.com/1isgladtobeofservice/neon1-consultation) |\n| **LinkedIn** | [Pradeep](https://www.linkedin.com/in/pradeep-tathineni/) and [neon1](https://www.linkedin.com/company/neon1llc) |\n| **GitHub** | [neon1llc](https://github.com/neon1llc) |\n\n## What to expect\n\n- **Where:** remote across the US, or on site within about 30 miles of Queens, NY. Outside the US, ask.\n- **When:** Monday to Thursday 6pm to 9pm, Friday 6pm to 8pm, and weekends 8am to 8pm, Eastern time.\n- **Size:** a week or two up to six weeks, with a few clients at a time, so each gets my full attention.\n- **First call:** free and 15 minutes. The main pain points and your options.\n- **After:** a short proposal with options and estimates. Nothing starts until you pick one.\n\n## Availability and urgent issues\n\nI work in planned appointments on weekday evenings and weekends. There's no 24/7 or emergency response. If something can't wait, such as a security incident in progress, an outage, or fraud on an account, contact a provider with emergency coverage, and your bank or the service involved, first. Ongoing care after a project, with any response times, is agreed in writing before it starts.\n\nLeave passwords, health details, and payment information out of any first message.\n"
+   "text": "# Contact\n\nHow to reach neon1, when, and what the first call covers.\n\nTell me what's on your mind, or ask for an opinion on how your operations run today.\n\n| | |\n|---|---|\n| **Email** | [hello@neon1.tech](mailto:hello@neon1.tech) |\n| **Call or text** | [(424) 32-neon1](tel:+14243263661), that's (424) 326-3661 |\n| **Book a call** | [calendly.com/1isgladtobeofservice/neon1-consultation](https://calendly.com/1isgladtobeofservice/neon1-consultation) |\n| **LinkedIn** | [Pradeep](https://www.linkedin.com/in/pradeep-tathineni/) and [neon1](https://www.linkedin.com/company/neon1llc) |\n| **GitHub** | [neon1llc](https://github.com/neon1llc) |\n\n## What to expect\n\n- **Where:** remote across the US, or on site within about 30 miles of Queens, NY. Outside the US, ask.\n- **When:** Monday to Thursday 6pm to 9pm, Friday 6pm to 8pm, and weekends 8am to 8pm, Eastern time.\n- **Size:** a week or two up to six weeks, with a few clients at a time, so each gets my full attention.\n- **First call:** free and 15 minutes. The main pain points and your options.\n- **After:** a short proposal with options and estimates. Nothing starts until you pick one.\n\n## Availability and urgent issues\n\nI work in planned appointments on weekday evenings and weekends. There's no 24/7 or emergency response. If something can't wait, such as a security incident in progress, an outage, or fraud on an account, contact a provider with emergency coverage, and your bank or the service involved, first. Ongoing care after a project, with any response times, is agreed in writing before it starts.\n\n## Report a bug\n\nSomething broken on neon1.tech, 1NEON, or Neo? [Report a bug](https://neon1.tech/report-bug/) says where it happened and what happened, with an optional email and screenshots. Don't include passwords, health details, or payment information.\n\nLeave passwords, health details, and payment information out of any first message.\n"
   },
   {
    "id": "company-process",
