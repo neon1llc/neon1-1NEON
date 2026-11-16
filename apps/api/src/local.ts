@@ -3,6 +3,7 @@
 
 
 import type { Directory, Inspection, Mailer, ScanVerdict, Storage, Texter } from "./services.ts";
+import type { SenderKind } from "./mail.ts";
 
 
 /** Local and test stand-ins */
@@ -76,10 +77,10 @@ export class MemoryDirectory implements Directory {
 // Keeps sent mail in memory so tests can read invites
 export class MemoryMailer implements Mailer {
   // Every message sent, oldest first
-  readonly sent: { to: string; subject: string; text: string; html: string; replyTo?: string; attachments?: { name: string; type: string; size: number }[] }[] = [];
+  readonly sent: { to: string; subject: string; text: string; html: string; replyTo?: string; as?: SenderKind; attachments?: { name: string; type: string; size: number }[] }[] = [];
   // Record the message instead of sending it
-  async send(to: string, subject: string, text: string, html: string, replyTo?: string, _signal?: AbortSignal, attachments?: { name: string; type: string; bytes: Uint8Array }[]) {
-    this.sent.push({ to, subject, text, html, replyTo, ...(attachments?.length ? { attachments: attachments.map((a) => ({ name: a.name, type: a.type, size: a.bytes.length })) } : {}) });
+  async send(to: string, subject: string, text: string, html: string, replyTo?: string, _signal?: AbortSignal, attachments?: { name: string; type: string; bytes: Uint8Array }[], as?: SenderKind) {
+    this.sent.push({ to, subject, text, html, replyTo, as: as ?? "portal", ...(attachments?.length ? { attachments: attachments.map((a) => ({ name: a.name, type: a.type, size: a.bytes.length })) } : {}) });
   }
 }
 

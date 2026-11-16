@@ -3,6 +3,9 @@
 // strip style sheets.
 
 
+import { formatWhen } from "@1neon/domain";
+
+
 // HTML-escape values placed into an email
 export const esc = (s: string) => s.replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
 
@@ -14,6 +17,25 @@ const SANS = "Figtree,-apple-system,'Segoe UI',Roboto,sans-serif";
 // Who 1NEON's mail is from, as infra/modules/mail sets it for production (a test keeps the two equal);
 // the walkthrough's pretend inbox shows the same sender
 export const MAIL_FROM = { name: "1NEON", address: "noreply@notify.neon1.tech" } as const;
+
+// Who a message is from, by the part of neon1 that sends it, so a glance at the sender says what it is:
+// "1NEON" is only the portal; "neon1" is the website (contact and use-case requests, bug reports);
+// "neon1 alerts" is system mail neon1 controls. All send from the one verified notify.neon1.tech domain,
+// so SPF and DKIM stay aligned for every address
+export const SENDERS = {
+  portal: { name: "1NEON", local: "noreply" },
+  requests: { name: "neon1", local: "requests" },
+  bugs: { name: "neon1", local: "bugs" },
+  alerts: { name: "neon1 alerts", local: "alerts" },
+} as const;
+export type SenderKind = keyof typeof SENDERS;
+
+/** A From header for one sender on the sending domain; dev puts "[DEV] " first in the display name */
+export function fromHeader(kind: SenderKind, domain: string, dev = false) {
+  const s = SENDERS[kind];
+  // Quoted, since "[" and "]" are specials in a display name
+  return `"${dev ? "[DEV] " : ""}${s.name}" <${s.local}@${domain}>`;
+}
 
 // The mark the site serves for mail: 96px dark green on transparent, shown at 32px for sharp screens
 export const MARK = "https://neon1.tech/shared/mail/neon1-mark.png";
@@ -27,10 +49,10 @@ export function link(label: string, url: string) {
 }
 
 
-/** When a message was sent, in UTC, for its sign-off */
-export function sentAt(at: Date) {
-  const when = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }).format(at);
-  return `Sent ${when} UTC`;
+/** When a message was sent, for its sign-off: in the reader's zone with UTC beside it (neon1's own
+ * zone when the reader's isn't known) */
+export function sentAt(at: Date, zone?: string) {
+  return `Sent ${formatWhen(at, zone)}`;
 }
 
 
@@ -44,6 +66,7 @@ export interface MailParts {
   button?: { label: string; url: string };
   note?: string; // small print under the button or code
   at?: Date; // send time for the sign-off; defaults to now
+  zone?: string; // the reader's IANA time zone for that time; unknown reads as America/New_York
 }
 
 
@@ -63,7 +86,7 @@ export function branded(p: MailParts) {
   // detail unique to each message keeps the sign-off on screen
   // Each sign-off line stays on one line, centered and small enough to fit a phone's mail view
   const line = `white-space:nowrap;font:11px/1.7 ${MONO};color:${MUTED}`;
-  const signoff = `<div style="margin:22px 0 0;padding-top:18px;border-top:1px solid rgba(18,36,26,.1);text-align:center"><div style="${line}">${link("neon1", "https://neon1.tech/")} · 1 is glad to be of service.</div><div style="${line}">${sentAt(p.at ?? new Date())}</div></div>`;
+  const signoff = `<div style="margin:22px 0 0;padding-top:18px;border-top:1px solid rgba(18,36,26,.1);text-align:center"><div style="${line}">${link("neon1", "https://neon1.tech/")} · 1 is glad to be of service.</div><div style="${line}">${sentAt(p.at ?? new Date(), p.zone)}</div></div>`;
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="color-scheme" content="light only"><meta name="viewport" content="width=device-width"></head>
 <body style="margin:0;background:${PAPER};font:16px/1.6 ${SANS};color:${INK}">
 <span style="display:none;max-height:0;overflow:hidden">${esc(p.preheader)}</span>

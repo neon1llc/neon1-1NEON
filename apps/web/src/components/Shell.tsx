@@ -122,6 +122,17 @@ function App() {
   useEffect(() => {
     if (me.data) applyTheme(me.data.user.theme);
   }, [me.data]);
+  // First sign-in from a browser with no saved time zone: keep the browser's, so email shows times in
+  // the person's own zone. Once per page load; the profile changes it, and a failure is simply skipped
+  const sentZone = useRef(false);
+  useEffect(() => {
+    const u = me.data?.user;
+    if (!u || u.timeZone || sentZone.current || IN_DEMO) return;
+    sentZone.current = true;
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (!zone) return;
+    api("/me", { method: "PATCH", body: { version: u.version, timeZone: zone } }).then(() => qc.invalidateQueries({ queryKey: ["me"] }), () => undefined);
+  }, [me.data, qc]);
   // Remember whether this browser was last signed in, so a reload starts on the right background
   useEffect(() => {
     const state = me.data ? "in" : me.error instanceof HttpError && me.error.status === 401 ? "out" : undefined;

@@ -19,6 +19,7 @@ import { SendEmailCommand, SESv2Client } from "@aws-sdk/client-sesv2";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import type { Records } from "./payments.ts";
 import { rawMessage, type Attachment } from "./lib/mime.ts";
+import { fromHeader, type SenderKind } from "./mail.ts";
 
 
 /** The identity directory: create sign-in accounts for invitees and check strong sign-in */
@@ -76,7 +77,7 @@ export interface Mailer {
   // Send one message with plain text and HTML bodies; replyTo, when given, is where answers go. An
   // aborted signal cancels the request where the provider's SDK supports it
   // With attachments the message goes out raw: the HTML shows images that carry a cid, and every file also attaches
-  send(to: string, subject: string, text: string, html: string, replyTo?: string, signal?: AbortSignal, attachments?: Attachment[]): Promise<void>;
+  send(to: string, subject: string, text: string, html: string, replyTo?: string, signal?: AbortSignal, attachments?: Attachment[], as?: SenderKind): Promise<void>;
 }
 
 
@@ -261,22 +262,25 @@ export class SesMailer implements Mailer {
   // Region and credentials come from the Lambda environment
   private ses = new SESv2Client({});
   // `configSet` names the SES configuration set; without it SES uses the identity's default
-  constructor(private from: string, private configSet?: string) {}
+  // `from` is the portal's From (its address gives the sending domain); `dev` marks every sender and subject "[DEV]"
+  constructor(private from: string, private configSet?: string, private dev = false) {}
 
   // One recipient per message, so addresses never leak between invitees
   // The AWS SDK takes an abort signal per call, so a timed-out send is cancelled rather than left running
-  async send(to: string, subject: string, text: string, html: string, replyTo?: string, signal?: AbortSignal, attachments: Attachment[] = []) {
+  async send(to: string, subject: string, text: string, html: string, replyTo?: string, signal?: AbortSignal, attachments: Attachment[] = [], as: SenderKind = "portal") {
+    const from = fromHeader(as, this.from.slice(this.from.lastIndexOf("@") + 1).replace(/>$/, ""), this.dev);
+    if (this.dev) subject = `[DEV] ${subject}`;
     if (attachments.length) {
-      const data = new TextEncoder().encode(rawMessage({ from: this.from, to, subject, replyTo, text, html, attachments }));
+      const data = new TextEncoder().encode(rawMessage({ from, to, subject, replyTo, text, html, attachments }));
       await this.ses.send(
-        new SendEmailCommand({ FromEmailAddress: this.from, Destination: { ToAddresses: [to] }, ...(this.configSet ? { ConfigurationSetName: this.configSet } : {}), Content: { Raw: { Data: data } } }),
+        new SendEmailCommand({ FromEmailAddress: from, Destination: { ToAddresses: [to] }, ...(this.configSet ? { ConfigurationSetName: this.configSet } : {}), Content: { Raw: { Data: data } } }),
         { abortSignal: signal },
       );
       return;
     }
     await this.ses.send(
       new SendEmailCommand({
-        FromEmailAddress: this.from,
+        FromEmailAddress: from,
         Destination: { ToAddresses: [to] },
         ...(replyTo ? { ReplyToAddresses: [replyTo] } : {}),
         ...(this.configSet ? { ConfigurationSetName: this.configSet } : {}),

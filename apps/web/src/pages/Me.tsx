@@ -33,6 +33,11 @@ const SMS_NOTE: Record<SmsState, string> = {
 
 
 // The signed-in person's own profile, outside any organization
+// The browser's own zone, and the zones it knows (plus UTC, and the current value if the list lacks it)
+const browserZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone || "America/New_York";
+const zoneChoices = (current: string) => [...new Set(["UTC", ...(typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : []), current])].sort();
+
+
 export function MePage() {
   const me = useSession();
   const qc = useQueryClient();
@@ -48,13 +53,13 @@ export function MePage() {
   const [totpOpen, setTotpOpen] = useState(false);
   useTopBar(<span>Your profile</span>, []);
   // Edits stay local until Save
-  const [draft, setDraft] = useState({ name: me.user.name, title: me.user.title, phone: me.user.phone, theme: me.user.theme, menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) });
+  const [draft, setDraft] = useState({ name: me.user.name, title: me.user.title, phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), theme: me.user.theme, menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) });
   const [busy, setBusy] = useState(false);
   // Motion is this browser's choice, not the account's, so it changes at once and isn't part of Save
   const deviceLess = deviceLessMotion();
   const [less, setLess] = useState(() => deviceLess || chosenLessMotion());
   // Anything that differs from what's saved; Save waits for a change
-  const saved = { name: me.user.name, title: me.user.title, phone: me.user.phone, theme: me.user.theme, menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) };
+  const saved = { name: me.user.name, title: me.user.title, phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), theme: me.user.theme, menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) };
   const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
   // A previewed theme that was never saved goes back to the saved one on leaving the page
   const savedTheme = useRef(me.user.theme);
@@ -162,6 +167,14 @@ export function MePage() {
         <div><label htmlFor="nm">Name</label><input id="nm" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} maxLength={80} autoComplete="name" /></div>
         <div><label htmlFor="tt">Title</label><input id="tt" value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} maxLength={80} autoComplete="organization-title" /></div>
         {!noTexts && <div><label htmlFor="ph">Phone (only you see it)</label><input id="ph" type="tel" value={draft.phone} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} maxLength={32} autoComplete="tel" /></div>}
+        {/* The zone email shows times in; the browser's until changed */}
+        <div>
+          <label htmlFor="tz">Time zone (email times)</label>
+          <select id="tz" value={draft.timeZone} onChange={(e) => setDraft({ ...draft, timeZone: e.target.value })}>
+            {zoneChoices(draft.timeZone).map((z) => <option key={z} value={z}>{z.replace(/_/g, " ")}</option>)}
+          </select>
+          <span className="muted">Emails show times in this zone, with UTC beside them. Daylight saving follows it automatically.</span>
+        </div>
         {/* Theme previews immediately; Save keeps it with the account */}
         <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
           <legend style={{ marginBottom: 8 }}>Theme</legend>
