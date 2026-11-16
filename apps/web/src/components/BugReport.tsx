@@ -3,17 +3,17 @@
 // Never in a walkthrough, which plays on its own and links nowhere.
 
 
-import { Icon } from "./ui.tsx";
-import { LIVE } from "../lib/api.ts";
+import { DEMO, LIVE } from "../lib/api.ts";
 
 
-export const REPORT_BUG = "https://neon1.tech/report-bug";
+// ?from= tells the page where the reader came from, so its "where" starts on the right choice
+export const reportBug = () => `https://neon1.tech/report-bug/?from=${DEMO ? "demo" : "1neon"}`;
 
 
-// The bug's line drawing, the menu icons' grid and stroke, for the places without an icon box
+// The bug's line drawing, the one the site's footer link uses (16px grid, outline, currentColor)
 function BugGlyph() {
   return (
-    <svg className="bug-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7.5a3 3 0 0 1 6 0M8 9h8v6a4 4 0 0 1-8 0zM12 9v10M8 12H4M16 12h4M8.5 16.5 5 18.5M15.5 16.5 19 18.5M9 5 7.5 3.5M15 5l1.5-1.5" /></svg>
+    <svg className="bug-glyph" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 5.2V4a2.5 2.5 0 0 1 5 0v1.2M4.4 6.2h7.2v3.6a3.6 3.6 0 0 1-7.2 0zM8 6.4v7M1.8 7.6l2.6.9M14.2 7.6l-2.6.9M2.2 12.2l2.5-1.2M13.8 12.2 11.3 11" /></svg>
   );
 }
 
@@ -23,9 +23,9 @@ function BugGlyph() {
 export function ReportBug({ kind = "link" }: { kind?: "row" | "link" | "button" }) {
   if (LIVE) return null;
   const arrow = <span className="out-arrow" aria-hidden="true">↗</span>;
-  const props = { href: REPORT_BUG, target: "_blank", rel: "noopener noreferrer", title: "Opens in a new tab" } as const;
+  const props = { href: reportBug(), target: "_blank", rel: "noopener noreferrer", title: "Opens in a new tab" } as const;
   return kind === "row" ? (
-    <a className="out bug-link bug-row" {...props}><Icon name="bug" /><span className="lbl">report a bug{arrow}</span></a>
+    <a className="out bug-link bug-row" {...props}><span className="ico" aria-hidden="true"><BugGlyph /></span><span className="lbl">report a bug{arrow}</span></a>
   ) : kind === "button" ? (
     <a className="out btn btn-ghost bug-link" {...props}><BugGlyph />report a bug{arrow}</a>
   ) : (

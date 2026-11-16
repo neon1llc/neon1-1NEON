@@ -392,8 +392,6 @@ const ICONS = {
   insights: "M4 20V10M10 20V4M16 20v-7M22 20H2",
   // An envelope, for Contact
   contact: "M3 6h18v12H3zM3 7l9 6 9-6",
-  // A bug, for "report a bug"
-  bug: "M9 7.5a3 3 0 0 1 6 0M8 9h8v6a4 4 0 0 1-8 0zM12 9v10M8 12H4M16 12h4M8.5 16.5 5 18.5M15.5 16.5 19 18.5M9 5 7.5 3.5M15 5l1.5-1.5",
   // neon1's mark: two arches of nested arcs falling into columns, on its own 64px grid
   site: "M6 6a24 24 0 0 1 24 24v30M6 18a12 12 0 0 1 12 12v30M34 6a24 24 0 0 1 24 24v30M34 18a12 12 0 0 1 12 12v30",
 } as const;
