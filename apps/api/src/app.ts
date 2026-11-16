@@ -21,7 +21,7 @@ import { installOutbox } from "./lib/transactions.ts";
 import { authRoutes } from "./routes/auth.ts";
 import { signupRoutes } from "./routes/signup.ts";
 import { keepRoutes, prospectRoutes } from "./routes/prospects.ts";
-import { accountGuard, prospectGuard } from "./lib/guards.ts";
+import { QUOTA_SK, accountGuard, prospectGuard } from "./lib/guards.ts";
 import { commentRoutes } from "./routes/comments.ts";
 import { contactRoutes } from "./routes/contact.ts";
 import { requestRoutes } from "./routes/requests.ts";
@@ -70,6 +70,11 @@ export function createApp(d: Deps) {
   app.onError((err, c) => {
     if (err instanceof HTTPException) return err.getResponse();
     if (err instanceof ConflictError) {
+      // Lost a race for a prospect quota's last place (lib/guards.ts): nothing was saved, and trying
+      // again counts afresh
+      if (typeof err.current?.SK === "string" && err.current.SK.startsWith(QUOTA_SK)) {
+        return c.json({ error: "quota_busy", message: "Another change was saving at the same moment, so this one wasn't saved. Try again." }, 409);
+      }
       const current = publicConflict(err.current);
       return c.json(current === undefined ? { error: "conflict", message: err.message } : { error: "conflict", message: err.message, current }, 409);
     }

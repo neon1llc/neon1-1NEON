@@ -1,11 +1,12 @@
 // apps/api/src/routes/prospects.ts - neon1's side of sign-up: the prospects list (Pradeep's review
 // queue), promoting a prospect to a client, suspending and resuming one, deleting one, and the switch
 // that pauses sign-up. Operator only; every change needs a confirmed session (manage_orgs). Also the
-// daily quiet-prospect pass: check-ins, a final notice, then deletion (prospect.ts quietStep). Clients
-// are never deleted by it.
+// daily quiet-prospect pass: check-ins, a final notice, then deletion (prospect.ts quietStep), and the
+// two-step deletion itself (startPurge, then finishPurge after requests drain). Clients are never
+// deleted by it, and neither are suspended accounts, which wait on neon1's review list.
 
 
-import { PROSPECT_GRACE_DAYS, can, formatClientId, isProspect, prospectDeleteOn, quietStep, type Tenant } from "@1neon/domain";
+import { PROSPECT_GRACE_DAYS, can, formatClientId, isProspect, prospectClock, prospectDeleteOn, prospectKeepUntil, quietDeletionDue, quietStep, type Tenant } from "@1neon/domain";
 import type { Context } from "hono";
 import { z } from "zod";
 import { body, check, fail, need, now, who, type Env } from "../lib/http.ts";
@@ -45,77 +46,249 @@ export class PurgeIncomplete extends Error {
 }
 
 
-/**
- * Delete a prospect organization for good: its rows, its files (trashed projects' too), and the
- * accounts of people who belong nowhere else. Refuses a client outright, so a mistake can never reach
- * client records. The organization is first marked as being deleted, in one write guarded by its
- * version, so a promotion or another change that lands first stops it, and once marked it can't be
- * promoted and its people are shut out. Files and sign-in accounts go before any row; if one can't be
- * removed, nothing else is deleted, the failure is logged, and PurgeIncomplete is thrown, so the next
- * pass (or neon1 pressing Delete again) finishes it. A pass ends with a small receipt holding no content
- */
-export async function purgeProspect(k: Pick<Kit, "repo" | "d" | "cfg">, tid: string, opts: { quietSince?: string } = {}) {
-  const { repo, d, cfg } = k;
-  let t = await repo.getTenant(tid);
+// --- Deleting a free account -------------------------------------------------
+//
+// Deletion runs in two steps so nothing can slip past it:
+//
+// 1. Start (startPurge). The organization is marked as being deleted and a durable job row is made,
+//    together, in one transaction guarded by the organization's version. A promotion, a hold, a
+//    suspension, or a "Keep it" that lands first makes the guard fail, and for a quiet account every
+//    expiry condition is checked again on the organization as it is now (quietDeletionDue). From the
+//    mark on, its people are refused everything (lib/guards.ts prospectGuard).
+//
+// 2. Finish (finishPurge), at least PURGE_DRAIN_MS later. A request that read the organization just
+//    before the mark can still be running, and an upload link handed out before it can still be used,
+//    so nothing is listed until both have run out. Then a quiet account's last change is checked one
+//    final time (a change that landed during the wait cancels the deletion), and the full inventory
+//    (every partition, file, and sign-in account) is written to the job row before anything is
+//    removed. A pass cut short resumes from that inventory, not from whatever records are left, so a
+//    project whose own record went first is still found. Files and sign-in accounts go before any
+//    row; then every row; then each step is checked. Only when every check passes does one last
+//    transaction remove the organization's own record and the job row and write the receipt.
+
+/** The job rows, one per organization being deleted, outside every partition the deletion removes */
+export const PURGE_PK = "PURGE";
+/** How long to wait after the mark: the longest request (28 s), the life of an upload link (300 s),
+ *  and a minute to spare */
+export const PURGE_DRAIN_MS = (28 + 300 + 60) * 1000;
+
+
+/** What a deletion removes, written once the wait is over and kept until every step is checked */
+interface Inventory {
+  slug: string;
+  // Every partition of the organization's rows
+  pks: string[];
+  // Every stored file's key
+  files: string[];
+  // People who belonged nowhere else when it was taken
+  accounts: { uid: string; email: string }[];
+}
+
+interface PurgeJob {
+  PK: string;
+  SK: string;
+  markedAt: string;
+  reason: "operator" | "quiet";
+  // For a quiet deletion: the last change it was decided on
+  quietSince?: string;
+  inventory?: Inventory;
+  // Progress, so a retry doesn't repeat what's done
+  filesDone?: string[];
+  accountsDone?: string[];
+  attempts?: number;
+  version: number;
+}
+
+type PurgeKit = Pick<Kit, "repo" | "d" | "cfg">;
+
+
+/** Mark a prospect for deletion and make its job row, together. Refuses a client outright, so a
+ * mistake can never reach client records. With `quiet`, the deletion is for being quiet and goes
+ * ahead only if every expiry condition still holds on the organization read fresh here. Returns
+ * whether deletion has begun (an organization already being deleted counts) */
+export async function startPurge(k: PurgeKit, tid: string, opts: { quiet?: boolean; at?: Date } = {}) {
+  const { repo } = k;
+  const at = opts.at ?? new Date();
+  const t = await repo.getTenant(tid);
   if (!t || !isProspect(t)) throw new Error("purgeProspect: not a prospect");
-  if (!t.prospect!.deletingAt) {
-    const marked: Tenant = { ...t, prospect: { ...t.prospect!, deletingAt: new Date().toISOString() }, version: t.version + 1, updatedAt: new Date().toISOString() };
-    await repo.saveTenant(marked, t.version);
-    t = marked;
-    // A deletion for being quiet stops if the prospect made a change before the mark landed
-    if (opts.quietSince) {
-      const last = await lastActive(k, t);
-      if (last > opts.quietSince) {
-        await repo.saveTenant({ ...t, prospect: { ...t.prospect!, deletingAt: undefined }, version: t.version + 1 }, t.version);
-        return { deleted: false as const };
-      }
-    }
+  const job = await repo.table.get(PURGE_PK, tid);
+  if (t.prospect!.deletingAt) {
+    // Marked by an earlier version that kept no job row: make one, counting the wait from the mark
+    if (!job) await repo.table.write([{ put: { PK: PURGE_PK, SK: tid, markedAt: t.prospect!.deletingAt, reason: "operator", version: 1 }, guard: { create: true } }]);
+    return { started: true as const };
   }
+  const last = await lastActive(k, t);
+  if (opts.quiet && !quietDeletionDue(t.prospect!, last, at)) return { started: false as const };
+  const ts = at.toISOString();
+  const marked: Tenant = { ...t, prospect: { ...t.prospect!, deletingAt: ts }, version: t.version + 1, updatedAt: ts };
+  const row: PurgeJob = { PK: PURGE_PK, SK: tid, markedAt: ts, reason: opts.quiet ? "quiet" : "operator", ...(opts.quiet ? { quietSince: last } : {}), version: 1 };
+  await repo.table.write([repo.tenantOp(marked, { version: t.version }), { put: { ...row }, guard: { create: true } }]);
+  return { started: true as const };
+}
+
+
+/** Every partition, file, and leaving person of an organization, as it is now */
+async function take(k: PurgeKit, t: Tenant): Promise<Inventory> {
+  const { repo, cfg } = k;
+  const tid = t.id;
   const projects = await repo.listProjectsWithTrash(tid);
-  const partitions = [`T#${tid}#P#_`, ...projects.map((p) => `T#${tid}#P#${p.id}`)];
-  const failed: string[] = [];
-  let files = 0;
-  // Files first, so no stored bytes outlive their records
-  for (const pid of [undefined, ...projects.map((p) => p.id)]) {
-    for (const x of await repo.listDocs(tid, pid)) await retried(() => d.storage.remove(x.key)).then(() => files++, () => failed.push(`file ${x.id}`));
-  }
-  // People who belong to no other organization lose their account too
-  const members = await repo.listMembers(tid);
-  const leaving: { uid: string; email: string }[] = [];
-  for (const m of members) {
+  const pks = [`T#${tid}`, `T#${tid}#AUDIT`, `T#${tid}#P#_`, ...projects.map((p) => `T#${tid}#P#${p.id}`)];
+  const files: string[] = [];
+  for (const pid of [undefined, ...projects.map((p) => p.id)]) files.push(...(await repo.listDocs(tid, pid)).map((x) => x.key));
+  const accounts: Inventory["accounts"] = [];
+  for (const m of await repo.listMembers(tid)) {
     if (cfg.operatorEmails.includes(m.email.toLowerCase())) continue;
-    const elsewhere = (await repo.membershipsOf(m.userId)).some((x) => x.tenantId !== tid);
-    if (!elsewhere) leaving.push({ uid: m.userId, email: m.email });
+    if (!(await repo.membershipsOf(m.userId)).some((x) => x.tenantId !== tid)) accounts.push({ uid: m.userId, email: m.email });
   }
-  for (const p of leaving) if (d.directory.removeUser) await retried(() => d.directory.removeUser!(p.email)).catch(() => failed.push(`account ${p.uid}`));
+  return { slug: t.slug, pks, files, accounts };
+}
+
+
+/** Save the job row's progress under its version, returning the saved copy */
+async function saveJob(k: PurgeKit, job: PurgeJob, change: Partial<PurgeJob>): Promise<PurgeJob> {
+  const next = { ...job, ...change, version: job.version + 1 };
+  await k.repo.table.write([{ put: { ...next }, guard: { version: job.version } }]);
+  return next;
+}
+
+
+/**
+ * Finish a deletion that has begun: after the wait, take the inventory (once), remove files and
+ * sign-in accounts, then rows, check every step, and only then write the receipt. Throws
+ * PurgeIncomplete when a step fails or a check doesn't pass; the job row stays and the next pass
+ * (every minute) carries on from it. Returns `pending` while the wait isn't over
+ */
+export async function finishPurge(k: PurgeKit, tid: string, at = new Date()): Promise<{ deleted: boolean; pending?: string; cancelled?: boolean }> {
+  const { repo, d } = k;
+  let row = await repo.table.get(PURGE_PK, tid);
+  let t = await repo.getTenant(tid);
+  if (!row) {
+    // Nothing begun here, unless an earlier version marked it without a job row
+    if (!t?.prospect?.deletingAt) return { deleted: false };
+    await startPurge(k, tid, { at });
+    row = await repo.table.get(PURGE_PK, tid);
+    if (!row) return { deleted: false };
+  }
+  let job = row as unknown as PurgeJob;
+  const ready = Date.parse(job.markedAt) + PURGE_DRAIN_MS;
+  if (at.getTime() < ready) return { deleted: false, pending: new Date(ready).toISOString() };
+
+  if (!job.inventory) {
+    // A client never reaches here (promotion refuses a marked organization), but never delete one
+    if (t && !isProspect(t)) {
+      await repo.table.write([{ delete: { PK: PURGE_PK, SK: tid }, guard: { version: job.version } }]);
+      return { deleted: false, cancelled: true };
+    }
+    // The last word for a quiet deletion: a change that landed while requests drained keeps it
+    if (t && job.reason === "quiet" && job.quietSince && (await lastActive(k, t)) > job.quietSince) {
+      await repo.table.write([
+        repo.tenantOp({ ...t, prospect: { ...t.prospect!, deletingAt: undefined }, version: t.version + 1, updatedAt: at.toISOString() }, { version: t.version }),
+        { delete: { PK: PURGE_PK, SK: tid }, guard: { version: job.version } },
+      ]);
+      console.log(JSON.stringify({ level: "info", message: "quiet deletion cancelled by a late change", tenant: tid }));
+      return { deleted: false, cancelled: true };
+    }
+    if (!t) throw new PurgeIncomplete(tid, ["organization record missing before inventory"]);
+    job = await saveJob(k, job, { inventory: await take(k, t) });
+  }
+  const inv = job.inventory!;
+  // Anything the organization's remaining records still point to joins the inventory (nothing should,
+  // after the wait, but it costs one read to be sure)
+  t = await repo.getTenant(tid);
+  if (t) {
+    const now = await take(k, t);
+    const pks = [...new Set([...inv.pks, ...now.pks])];
+    const files = [...new Set([...inv.files, ...now.files])];
+    if (pks.length > inv.pks.length || files.length > inv.files.length) job = await saveJob(k, job, { inventory: { ...inv, pks, files } });
+  }
+  const { pks, files, accounts, slug } = job.inventory!;
+  const failed: string[] = [];
+
+  // Files first, so no stored bytes outlive their records
+  const filesDone = new Set(job.filesDone ?? []);
+  for (const key of files) {
+    if (filesDone.has(key)) continue;
+    await retried(() => d.storage.remove(key)).then(() => filesDone.add(key), () => failed.push(`file ${key.split("/").at(-1)}`));
+  }
+  // Sign-in accounts of people who belong nowhere else; someone who has since joined another
+  // organization keeps theirs, and only this organization's membership goes
+  const accountsDone = new Set(job.accountsDone ?? []);
+  const leaving: Inventory["accounts"] = [];
+  for (const p of accounts) {
+    if ((await repo.membershipsOf(p.uid)).some((x) => x.tenantId !== tid)) continue;
+    leaving.push(p);
+    if (accountsDone.has(p.uid) || !d.directory.removeUser) continue;
+    await retried(() => d.directory.removeUser!(p.email)).then(() => accountsDone.add(p.uid), () => failed.push(`account ${p.uid}`));
+  }
+  job = await saveJob(k, job, { filesDone: [...filesDone], accountsDone: [...accountsDone], attempts: (job.attempts ?? 0) + 1 });
   if (failed.length) {
     console.error(JSON.stringify({ level: "error", message: "prospect deletion incomplete", tenant: tid, failed }));
     throw new PurgeIncomplete(tid, failed);
   }
-  // Every row: the organization's partitions, its audit trail, its address, and the leaving people's rows
-  const gather = async () => {
-    const rows: { PK: string; SK: string }[] = [];
-    for (const pk of [`T#${tid}`, `T#${tid}#AUDIT`, ...partitions]) rows.push(...(await repo.table.query(pk)).map((r) => ({ PK: String(r.PK), SK: String(r.SK) })));
-    return rows.filter((r) => !(r.PK === `T#${tid}` && r.SK === "META"));
+
+  // Every row: the organization's partitions (read fresh, so late rows go too), its address, and the
+  // leaving people's rows. The organization's own record stays until the very end
+  const rowsOf = async () => {
+    const out: { PK: string; SK: string }[] = [];
+    for (const pk of pks) out.push(...(await repo.table.query(pk)).map((r) => ({ PK: String(r.PK), SK: String(r.SK) })));
+    for (const p of leaving) out.push(...(await repo.table.query(`USER#${p.uid}`)).map((r) => ({ PK: String(r.PK), SK: String(r.SK) })));
+    return out.filter((r) => !(r.PK === `T#${tid}` && r.SK === "META"));
   };
-  const rows = await gather();
-  rows.push({ PK: `SLUG#${t.slug}`, SK: "META" });
-  for (const p of leaving) {
-    rows.push(...(await repo.table.query(`USER#${p.uid}`)).map((r) => ({ PK: String(r.PK), SK: String(r.SK) })));
-    rows.push({ PK: `EMAIL#${p.email.toLowerCase()}`, SK: "USER" });
-  }
-  // In small transactions; the tenant's own row goes last, so a pass cut short can be run again
+  const extra = async () => {
+    const out: { PK: string; SK: string }[] = [];
+    if (await repo.table.get(`SLUG#${slug}`, "META")) out.push({ PK: `SLUG#${slug}`, SK: "META" });
+    for (const p of leaving) if (await repo.table.get(`EMAIL#${p.email.toLowerCase()}`, "USER")) out.push({ PK: `EMAIL#${p.email.toLowerCase()}`, SK: "USER" });
+    return out;
+  };
+  const rows = [...(await rowsOf()), ...(await extra())];
   for (let i = 0; i < rows.length; i += 25) await repo.table.write(rows.slice(i, i + 25).map((r): WriteOp => ({ delete: r })));
-  // Anything written while the rows went (a request already under way) goes too
-  const late = await gather();
-  for (let i = 0; i < late.length; i += 25) await repo.table.write(late.slice(i, i + 25).map((r): WriteOp => ({ delete: r })));
-  // The receipt: that it happened and how much went, nothing that was in it
+
+  // Check every step before the receipt: no rows left, no files left
+  const left = [...(await rowsOf()), ...(await extra())];
+  for (const key of files) {
+    const seen = await d.storage.inspect(key);
+    if (seen.kind === "present" || seen.kind === "error") left.push({ PK: "FILE", SK: key });
+  }
+  if (left.length) {
+    console.error(JSON.stringify({ level: "error", message: "prospect deletion check failed", tenant: tid, left: left.length }));
+    throw new PurgeIncomplete(tid, left.map((r) => `left ${r.PK.split("#")[0]}`));
+  }
+
+  // The receipt, the organization's own record, and the job row, together
+  const total = rows.length + 1;
   await repo.table.write([
     { delete: { PK: `T#${tid}`, SK: "META" } },
-    { put: { PK: "DELETED", SK: tid, at: new Date().toISOString(), rows: rows.length + late.length + 1, accounts: leaving.length, files }, guard: { always: true } },
+    { delete: { PK: PURGE_PK, SK: tid }, guard: { version: job.version } },
+    { put: { PK: "DELETED", SK: tid, at: at.toISOString(), rows: total, accounts: leaving.length, files: files.length }, guard: { always: true } },
   ]);
-  console.log(JSON.stringify({ level: "info", message: "prospect deleted", tenant: tid, rows: rows.length + late.length + 1, accounts: leaving.length }));
-  return { deleted: true as const };
+  console.log(JSON.stringify({ level: "info", message: "prospect deleted", tenant: tid, rows: total, accounts: leaving.length, files: files.length }));
+  return { deleted: true };
+}
+
+
+/** Start a deletion and finish it if the wait allows (it does only for one begun long enough ago) */
+export async function purgeProspect(k: PurgeKit, tid: string, opts: { quiet?: boolean; at?: Date } = {}) {
+  const { started } = await startPurge(k, tid, opts);
+  if (!started) return { deleted: false as const };
+  return finishPurge(k, tid, opts.at);
+}
+
+
+/** Every deletion under way, carried on by the once-a-minute pass until each is done */
+export async function finishPurges(k: PurgeKit, opts: { at?: Date; deadline?: number } = {}) {
+  let deleted = 0, waiting = 0, failed = 0, cancelled = 0;
+  for (const row of await k.repo.table.query(PURGE_PK)) {
+    if (opts.deadline && Date.now() > opts.deadline) break;
+    try {
+      const r = await finishPurge(k, String(row.SK), opts.at);
+      if (r.deleted) deleted++;
+      else if (r.pending) waiting++;
+      else if (r.cancelled) cancelled++;
+    } catch {
+      failed++;
+    }
+  }
+  return { deleted, waiting, failed, cancelled };
 }
 
 
@@ -147,9 +320,9 @@ export async function sweepQuietProspects(k: Pick<Kit, "repo" | "d" | "cfg">, at
   try {
     await repo.table.write([{ put: { PK: "CONFIG", SK: `QUIET#${at.toISOString().slice(0, 10)}`, ttl: Math.floor(at.getTime() / 1000) + 3 * 86_400 }, guard: { create: true } }]);
   } catch {
-    return { nudged: 0, warned: 0, deleted: 0, failed: 0, skipped: true };
+    return { nudged: 0, warned: 0, deleting: 0, failed: 0, skipped: true };
   }
-  let nudged = 0, warned = 0, deleted = 0, failed = 0;
+  let nudged = 0, warned = 0, deleting = 0, failed = 0;
   const ts = at.toISOString();
   for (let t of (await repo.listTenants()).filter(isProspect)) {
     const last = await lastActive(k, t);
@@ -161,22 +334,18 @@ export async function sweepQuietProspects(k: Pick<Kit, "repo" | "d" | "cfg">, at
       t = next;
     }
     const q = t.prospect!;
-    // A deletion that stopped short: finish it
-    if (q.deletingAt) {
-      try {
-        if ((await purgeProspect(k, t.id)).deleted) deleted++;
-      } catch {
-        failed++;
-      }
-      continue;
-    }
-    // Held by neon1, or suspended: no emails and no deletion
+    // Being deleted: the once-a-minute pass (finishPurges) carries it on
+    if (q.deletingAt) continue;
+    // Held by neon1, or suspended: no emails and no deletion. Suspended accounts wait on neon1's
+    // review list instead (Pradeep, 2026-11-16)
     if (q.heldAt || q.suspendedAt) continue;
-    const step = quietStep((at.getTime() - Date.parse(last)) / DAY_MS, q.notices ?? 0, q.warnedAt ? (at.getTime() - Date.parse(q.warnedAt)) / DAY_MS : undefined);
+    const clock = prospectClock(last, q.keptUntil);
+    const step = quietStep((at.getTime() - Date.parse(clock)) / DAY_MS, q.notices ?? 0, q.warnedAt ? (at.getTime() - Date.parse(q.warnedAt)) / DAY_MS : undefined);
     if (!step) continue;
     if (step === "delete") {
+      // Started here, with every condition checked again on a fresh read; finished after the wait
       try {
-        if ((await purgeProspect(k, t.id, { quietSince: last })).deleted) deleted++;
+        if ((await startPurge(k, t.id, { quiet: true, at })).started) deleting++;
       } catch {
         failed++;
       }
@@ -207,7 +376,7 @@ export async function sweepQuietProspects(k: Pick<Kit, "repo" | "d" | "cfg">, at
     if (step === "nudge") nudged++;
     else warned++;
   }
-  return { nudged, warned, deleted, failed };
+  return { nudged, warned, deleting, failed };
 }
 
 
@@ -219,6 +388,13 @@ export function prospectRoutes(app: App, k: Kit) {
     check(can(who(c).actor, "manage_orgs", undefined));
     const t = await repo.getTenant(c.req.param("tid")!);
     if (!t || !isProspect(t)) fail(404, "not_found", "That prospect doesn't exist, or is already a client.");
+    return t;
+  }
+
+  /** The same, for a change that makes no sense once deletion has begun (only Delete itself does) */
+  async function live(c: Context<Env>) {
+    const t = await prospect(c);
+    if (t.prospect!.deletingAt) fail(409, "deleting", `${t.name} is being deleted.`);
     return t;
   }
 
@@ -235,9 +411,18 @@ export function prospectRoutes(app: App, k: Kit) {
     const rows = await Promise.all(tenants.map(async (t) => {
       const [members, projects] = await Promise.all([repo.listMembers(t.id), repo.listProjects(t.id)]);
       const people = members.filter((m) => !k.cfg.operatorEmails.includes(m.email.toLowerCase())).map((m) => ({ name: m.name, email: m.email }));
-      const live = projects.filter((p) => !p.deletedAt);
-      const files = (await Promise.all([repo.listDocs(t.id, undefined), ...live.map((p) => repo.listDocs(t.id, p.id))])).flat().length;
-      return { id: t.id, slug: t.slug, name: t.name, clientId: t.clientId, place: t.place, link: t.link, prospect: t.prospect, people, projects: live.length, files, lastActive: await lastActive(k, t) };
+      // Projects as the project quota counts them (live only); files as the file quota counts them,
+      // across every project including trashed ones, which keep their files until deleted
+      const all = await repo.listProjectsWithTrash(t.id);
+      const files = (await Promise.all([repo.listDocs(t.id, undefined), ...all.map((p) => repo.listDocs(t.id, p.id))])).flat();
+      const last = await lastActive(k, t);
+      const p = t.prospect!;
+      return {
+        id: t.id, slug: t.slug, name: t.name, clientId: t.clientId, place: t.place, link: t.link, prospect: p, people,
+        projects: projects.filter((x) => !x.deletedAt).length, files: files.length, bytes: files.reduce((n, x) => n + (x.size ?? 0), 0), lastActive: last,
+        // When the clock deletes it if nothing changes; none while held, suspended, or being deleted
+        deleteOn: p.heldAt || p.suspendedAt || p.deletingAt ? undefined : prospectDeleteOn(prospectClock(last, p.keptUntil), p.warnedAt),
+      };
     }));
     const pending = (await repo.table.query(SIGNUP_PK)).length;
     return c.json({ prospects: rows.sort((a, b) => b.prospect!.since.localeCompare(a.prospect!.since)), signup: { open: await signupOpen(k), configured: Boolean(k.cfg.signup), paused: Boolean((await repo.table.get(SIGNUP_SWITCH.PK, SIGNUP_SWITCH.SK))?.paused), pending } });
@@ -254,26 +439,26 @@ export function prospectRoutes(app: App, k: Kit) {
 
   // Suspend: its people are refused everything until it's resumed; nothing is deleted
   app.post("/prospects/:tid/suspend", async (c) => {
-    const t = await prospect(c);
+    const t = await live(c);
     const next: Tenant = { ...t, prospect: { ...t.prospect!, suspendedAt: now() }, version: t.version + 1, updatedAt: now(), updatedBy: who(c).user.id };
     return c.json(await save(c, t, next, "prospect.suspended", `${t.name} was suspended`));
   });
 
   app.post("/prospects/:tid/resume", async (c) => {
-    const t = await prospect(c);
+    const t = await live(c);
     const next: Tenant = { ...t, prospect: { ...t.prospect!, suspendedAt: undefined }, version: t.version + 1, updatedAt: now(), updatedBy: who(c).user.id };
     return c.json(await save(c, t, next, "prospect.resumed", `${t.name} was resumed`));
   });
 
   // Keep: neon1 is talking with them elsewhere, so no quiet-prospect emails or deletion until released
   app.post("/prospects/:tid/hold", async (c) => {
-    const t = await prospect(c);
+    const t = await live(c);
     const next: Tenant = { ...t, prospect: { ...t.prospect!, heldAt: now(), notices: undefined, noticeAt: undefined, warnedAt: undefined }, version: t.version + 1, updatedAt: now(), updatedBy: who(c).user.id };
     return c.json(await save(c, t, next, "prospect.held", `${t.name} is kept: no reminders or deletion`));
   });
 
   app.post("/prospects/:tid/release", async (c) => {
-    const t = await prospect(c);
+    const t = await live(c);
     const next: Tenant = { ...t, prospect: { ...t.prospect!, heldAt: undefined }, version: t.version + 1, updatedAt: now(), updatedBy: who(c).user.id };
     // The clock restarts from now, so releasing never triggers an email straight away
     await repo.table.write([{ put: { PK: `T#${t.id}`, SK: "ACTIVE", at: now() }, guard: { always: true } }]);
@@ -285,13 +470,17 @@ export function prospectRoutes(app: App, k: Kit) {
     const t = await prospect(c);
     const { confirm } = await body(c, z.object({ confirm: z.string().max(80) }));
     if (confirm.trim() !== t.name) fail(400, "confirm", "Type the organization's name exactly to delete it.");
+    // Its people are shut out at once; the rest goes once requests already under way have finished
+    // (finishPurge), which the once-a-minute pass sees to
+    let r: Awaited<ReturnType<typeof purgeProspect>>;
     try {
-      await purgeProspect(k, t.id);
+      r = await purgeProspect(k, t.id);
     } catch (e) {
-      if (e instanceof PurgeIncomplete) fail(502, "delete_incomplete", `Some of ${t.name}'s files or sign-ins couldn't be removed yet. It's shut out and marked for deletion; press Delete again, or the daily pass will finish it.`);
+      if (e instanceof PurgeIncomplete) fail(502, "delete_incomplete", `Some of ${t.name}'s files or sign-ins couldn't be removed yet. It's shut out and marked for deletion, and 1NEON keeps trying every minute.`);
       throw e;
     }
-    return c.json({ ok: true });
+    if (r.deleted) return c.json({ ok: true, deleted: true });
+    return c.json({ ok: true, deleted: false, finishesBy: "pending" in r ? r.pending : undefined }, 202);
   });
 
   // Pause or reopen sign-up. Configuration (SIGNUP=on) still has to allow it
@@ -314,18 +503,23 @@ export function keepRoutes(app: App, k: Kit) {
     const t = c.get("tenant");
     if (!isProspect(t)) return c.json({ free: false });
     const p = t.prospect!;
-    return c.json({ free: true, held: Boolean(p.heldAt), deleteOn: p.heldAt ? undefined : prospectDeleteOn(await lastActive(k, t), p.warnedAt), kept: p.keptAt, canKeep: !p.keptAt && !p.heldAt });
+    return c.json({ free: true, held: Boolean(p.heldAt), deleteOn: p.heldAt ? undefined : prospectDeleteOn(prospectClock(await lastActive(k, t), p.keptUntil), p.warnedAt), kept: p.keptAt, canKeep: !p.keptAt && !p.heldAt });
   });
 
-  // Keep it 30 more days, once: the clock starts again as if they'd made a change, and any notice is withdrawn
+  // Keep it 30 more days, once: 30 days past the date shown now (Pradeep, 2026-11-16), so pressing it
+  // early never loses days, and any notice is withdrawn. Once ever, so it can't be stacked
   app.post("/t/:tid/keep", async (c) => {
     need(c, "write");
     const t = c.get("tenant");
     if (!isProspect(t)) fail(400, "not_free", "Only a free account expires.");
-    if (t.prospect!.keptAt) fail(409, "kept", "This account was already kept once. Any change you make keeps it longer, or ask neon1 to keep it.");
+    const p = t.prospect!;
+    if (p.keptAt) fail(409, "kept", "This account was already kept once. Any change you make keeps it longer, or ask neon1 to keep it.");
     const at = now();
-    const next: Tenant = { ...t, prospect: { ...t.prospect!, keptAt: at, notices: undefined, noticeAt: undefined, warnedAt: undefined }, version: t.version + 1, updatedAt: at, updatedBy: who(c).user.id };
-    await repo.table.write([repo.tenantOp(next, { version: t.version }), { put: { PK: `T#${t.id}`, SK: "ACTIVE", at }, guard: { always: true } }, repo.auditOp({ tenantId: t.id, actorId: who(c).user.id, action: "prospect.kept", target: t.id, summary: `${t.name} was kept 30 more days` })]);
-    return c.json({ deleteOn: prospectDeleteOn(at) });
+    const shown = prospectDeleteOn(prospectClock(await lastActive(k, t), p.keptUntil), p.warnedAt);
+    const keptUntil = prospectKeepUntil(shown, new Date(at));
+    const next: Tenant = { ...t, prospect: { ...p, keptAt: at, keptUntil, notices: undefined, noticeAt: undefined, warnedAt: undefined }, version: t.version + 1, updatedAt: at, updatedBy: who(c).user.id };
+    // Guarded by the organization's version, so it can't cross a deletion that began meanwhile
+    await repo.table.write([repo.tenantOp(next, { version: t.version }), repo.auditOp({ tenantId: t.id, actorId: who(c).user.id, action: "prospect.kept", target: t.id, summary: `${t.name} was kept 30 more days, until ${keptUntil.slice(0, 10)}` })]);
+    return c.json({ deleteOn: keptUntil });
   });
 }

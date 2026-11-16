@@ -25,10 +25,11 @@ export function prospectEverywhere(orgs: (Pick<Tenant, "prospect"> | undefined)[
 
 
 /** Where a prospect stands, for the operator's list */
-export type ProspectState = "suspended" | "kept" | "final" | "checked" | "active";
+export type ProspectState = "deleting" | "suspended" | "kept" | "final" | "checked" | "active";
 /** In this order: suspended is what the person sees, kept means no reminders or deletion, then the
  * quiet-prospect emails (the final notice, then check-ins), which a real change by them clears */
 export function prospectState(p: NonNullable<Tenant["prospect"]>): ProspectState {
+  if (p.deletingAt) return "deleting";
   if (isSuspended({ prospect: p })) return "suspended";
   if (p.heldAt) return "kept";
   if (p.warnedAt) return "final";
@@ -39,7 +40,7 @@ export function prospectState(p: NonNullable<Tenant["prospect"]>): ProspectState
 export function stateLabel(p: NonNullable<Tenant["prospect"]>) {
   const s = prospectState(p);
   if (s === "checked") return p.notices === 1 ? "Checked in once" : `Checked in ${p.notices} times`;
-  return { suspended: "Suspended", kept: "Kept", final: "Final notice sent", active: "Active" }[s];
+  return { deleting: "Being deleted", suspended: "Suspended", kept: "Kept", final: "Final notice sent", active: "Active" }[s];
 }
 
 
@@ -55,8 +56,12 @@ export interface ProspectRow {
   prospect: NonNullable<Tenant["prospect"]>;
   people: { name: string; email: string }[];
   projects: number;
+  // Files and their bytes as the quota counts them, trashed projects included
   files: number;
+  bytes?: number;
   lastActive?: string;
+  // When the clock deletes it if nothing changes; none while kept, suspended, or being deleted
+  deleteOn?: string;
 }
 
 

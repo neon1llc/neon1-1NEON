@@ -70,12 +70,51 @@ export const PROSPECT_FINAL_DAYS = 21;
 export const PROSPECT_GRACE_DAYS = 9;
 
 
-/** The day a quiet free account is deleted if nothing changes: PROSPECT_GRACE_DAYS after the final
- * notice once it's gone out, else PROSPECT_FINAL_DAYS + PROSPECT_GRACE_DAYS (30) after the last change */
-export function prospectDeleteOn(lastActive: string, warnedAt?: string): string {
+/** The day a quiet free account's clock counts from: its last real change, unless "Keep it 30 more
+ * days" pushed the expiry further out. Keeping it (Pradeep, 2026-11-16) adds 30 days to the date
+ * already shown, so pressing it early never loses days; `keptUntil` is that new date, and the clock
+ * runs as if the last change were PROSPECT_FINAL_DAYS + PROSPECT_GRACE_DAYS before it */
+export function prospectClock(lastActive: string, keptUntil?: string): string {
+  if (!keptUntil) return lastActive;
   const day = 24 * 60 * 60 * 1000;
-  const from = warnedAt ? Date.parse(warnedAt) + PROSPECT_GRACE_DAYS * day : Date.parse(lastActive) + (PROSPECT_FINAL_DAYS + PROSPECT_GRACE_DAYS) * day;
+  const fromKeep = new Date(Date.parse(keptUntil) - (PROSPECT_FINAL_DAYS + PROSPECT_GRACE_DAYS) * day).toISOString();
+  return fromKeep > lastActive ? fromKeep : lastActive;
+}
+
+
+/** The day a quiet free account is deleted if nothing changes: PROSPECT_GRACE_DAYS after the final
+ * notice once it's gone out, else PROSPECT_FINAL_DAYS + PROSPECT_GRACE_DAYS (30) after the clock's
+ * start (prospectClock) */
+export function prospectDeleteOn(clock: string, warnedAt?: string): string {
+  const day = 24 * 60 * 60 * 1000;
+  const from = warnedAt ? Date.parse(warnedAt) + PROSPECT_GRACE_DAYS * day : Date.parse(clock) + (PROSPECT_FINAL_DAYS + PROSPECT_GRACE_DAYS) * day;
   return new Date(from).toISOString();
+}
+
+
+/** "Keep it 30 more days": the new expiry, 30 days past the one shown now (never earlier than 30
+ * days from `at`, in case the shown date has already slipped past) */
+export function prospectKeepUntil(currentDeleteOn: string, at: Date): string {
+  const day = 24 * 60 * 60 * 1000;
+  const keep = (PROSPECT_FINAL_DAYS + PROSPECT_GRACE_DAYS) * day;
+  return new Date(Math.max(Date.parse(currentDeleteOn), at.getTime()) + keep).toISOString();
+}
+
+
+/**
+ * Is a quiet free account due for deletion right now? Every condition the daily pass decided on,
+ * checked again on the organization as it is now, so a hold, a suspension, a keep, or a change that
+ * landed after the pass read it stops the deletion. Suspended accounts are never deleted by the
+ * clock (Pradeep, 2026-11-16): they wait on neon1's review list until it resumes or deletes them
+ */
+export function quietDeletionDue(p: NonNullable<Tenant["prospect"]>, lastActive: string, at: Date): boolean {
+  if (p.heldAt || p.suspendedAt || p.deletingAt) return false;
+  // A real change after the last email restarts the emails, so it can't be due
+  if (p.noticeAt && lastActive > p.noticeAt) return false;
+  const day = 24 * 60 * 60 * 1000;
+  const clock = prospectClock(lastActive, p.keptUntil);
+  const step = quietStep((at.getTime() - Date.parse(clock)) / day, p.notices ?? 0, p.warnedAt ? (at.getTime() - Date.parse(p.warnedAt)) / day : undefined);
+  return step === "delete";
 }
 
 

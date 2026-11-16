@@ -7,7 +7,7 @@ import { PROSPECT_LIMITS, type User } from "@1neon/domain";
 import { createApp } from "./app.ts";
 import { claimSignup, SIGNUP_LIMITS, SIGNUP_PK, sweepSignups } from "./routes/signup.ts";
 import { WRITE_LIMITS } from "./lib/guards.ts";
-import { PurgeIncomplete, purgeProspect, sweepQuietProspects } from "./routes/prospects.ts";
+import { PURGE_DRAIN_MS, PURGE_PK, PurgeIncomplete, finishPurge, finishPurges, purgeProspect, startPurge, sweepQuietProspects } from "./routes/prospects.ts";
 import { MemoryDirectory, MemoryMailer, MemoryStorage } from "./services.ts";
 import { MemoryTable } from "./store/memory.ts";
 import { Repo } from "./store/repo.ts";
@@ -306,7 +306,11 @@ describe("neon1's review queue", () => {
   it("deletes a prospect only when its name is typed, and never a client", async () => {
     const { tid, uid } = await prospect();
     expect((await as(OP, `/prospects/${tid}/delete`, "POST", { confirm: "wrong" })).status).toBe(400);
-    expect((await as(OP, `/prospects/${tid}/delete`, "POST", { confirm: "Kim Dental" })).status).toBe(200);
+    // Shut out at once; the rest goes once requests already under way have finished
+    expect((await as(OP, `/prospects/${tid}/delete`, "POST", { confirm: "Kim Dental" })).status).toBe(202);
+    expect((await as(form.email, `/t/${tid}/projects`)).status).toBe(403);
+    expect(await repo.getTenant(tid)).toBeTruthy();
+    expect(await finishPurges({ repo, d: { mailer, storage, directory } as never, cfg }, { at: afterDrain() })).toMatchObject({ deleted: 1 });
     expect(await repo.getTenant(tid)).toBeUndefined();
     expect(await repo.getUser(uid)).toBeUndefined();
     expect(await repo.userIdForEmail(form.email)).toBeUndefined();
@@ -330,6 +334,10 @@ describe("neon1's review queue", () => {
 });
 
 
+/** A moment after every request and upload link that began before a deletion has run out */
+const afterDrain = (from = Date.now()) => new Date(from + PURGE_DRAIN_MS + 1000);
+
+
 /** A prospect with a general file and a trashed project holding a file of its own */
 async function withTrashedFile() {
   const p = await prospect();
@@ -351,10 +359,13 @@ describe("deleting a free account", () => {
     const { tid, pid, keys } = await withTrashedFile();
     expect(keys).toHaveLength(2);
     await purgeProspect(kit(), tid);
+    await finishPurge(kit(), tid, afterDrain());
     for (const key of keys) expect(storage.files.has(key)).toBe(false);
     expect(await repo.table.query(`T#${tid}#P#${pid}`)).toHaveLength(0);
     expect(await repo.table.query(`T#${tid}`)).toHaveLength(0);
     expect(await repo.table.get("DELETED", tid)).toMatchObject({ files: 2, accounts: 1 });
+    // The job row goes with the receipt
+    expect(await repo.table.get(PURGE_PK, tid)).toBeUndefined();
   });
 
   it("counts a trashed project's files toward the storage limit", async () => {
@@ -363,19 +374,82 @@ describe("deleting a free account", () => {
     expect((await as(form.email, `/t/${tid}/docs`, "POST", { name: "more.png", contentType: "image/png", size: 1000, layer: "needs" })).status).toBe(409);
   });
 
-  it("stops before any row goes when a file can't be removed, keeps it shut out, and finishes on the next pass", async () => {
+  it("removes nothing until requests already under way have run out", async () => {
+    const { tid, keys } = await withTrashedFile();
+    expect(await purgeProspect(kit(), tid)).toMatchObject({ deleted: false, pending: expect.any(String) });
+    expect(await finishPurge(kit(), tid, new Date(Date.now() + PURGE_DRAIN_MS - 5000))).toMatchObject({ deleted: false, pending: expect.any(String) });
+    for (const key of keys) expect(storage.files.has(key)).toBe(true);
+    expect((await repo.getTenant(tid))!.prospect!.deletingAt).toBeTruthy();
+    expect((await as(form.email, `/t/${tid}/projects`)).status).toBe(403);
+  });
+
+  it("also removes what a request already under way wrote after the mark", async () => {
+    const { tid, pid } = await withTrashedFile();
+    await startPurge(kit(), tid);
+    // A request that read the organization just before the mark lands its writes during the wait: a
+    // file in a new project, and the project itself
+    const ts = new Date().toISOString();
+    const late = { tenantId: tid, id: "p_late", key: "LATE-1", name: "Late", template: "blank", stageId: "s", stageEnteredAt: ts, health: "not_started", rank: "m", people: [], flags: [], archived: false, version: 1, createdAt: ts, updatedAt: ts, updatedBy: "x" };
+    await repo.table.write([{ put: { PK: `T#${tid}`, SK: "PROJ#p_late", type: "project", ...late }, guard: { create: true } }]);
+    const doc = (await repo.listDocs(tid, pid))[0]!;
+    const key = doc.key.replace(doc.id, "d_late").replace(pid, "p_late");
+    await repo.table.write([{ put: { PK: `T#${tid}#P#p_late`, SK: "DOC#d_late", type: "doc", ...doc, id: "d_late", projectId: "p_late", key }, guard: { create: true } }]);
+    storage.files.set(key, { type: "application/pdf", bytes: new Uint8Array(10) });
+    expect(await finishPurge(kit(), tid, afterDrain())).toEqual({ deleted: true });
+    expect(storage.files.has(key)).toBe(false);
+    expect(await repo.table.query(`T#${tid}#P#p_late`)).toHaveLength(0);
+  });
+
+  it("keeps its inventory until every step is checked, so a pass cut short still finds every partition", async () => {
+    const { tid, pid, keys } = await withTrashedFile();
+    await startPurge(kit(), tid);
+    const remove = storage.remove.bind(storage);
+    storage.remove = async (key: string) => { if (key === keys[1]) throw new Error("SlowDown"); return remove(key); };
+    await expect(finishPurge(kit(), tid, afterDrain())).rejects.toBeInstanceOf(PurgeIncomplete);
+    const job = (await repo.table.get(PURGE_PK, tid))!;
+    expect((job.inventory as { pks: string[] }).pks).toContain(`T#${tid}#P#${pid}`);
+    // The pass was cut short after the project's own record went: its partition can no longer be found
+    // from the organization's records, only from the inventory
+    await repo.table.write([{ delete: { PK: `T#${tid}`, SK: `PROJ#${pid}` } }]);
+    expect((await repo.listProjectsWithTrash(tid)).map((p) => p.id)).not.toContain(pid);
+    storage.remove = remove;
+    expect(await finishPurge(kit(), tid, afterDrain())).toEqual({ deleted: true });
+    expect(await repo.table.query(`T#${tid}#P#${pid}`)).toHaveLength(0);
+    for (const key of keys) expect(storage.files.has(key)).toBe(false);
+    expect(await repo.table.get(PURGE_PK, tid)).toBeUndefined();
+  });
+
+  it("doesn't write the receipt while anything is left, and tries again", async () => {
+    const { tid, keys } = await withTrashedFile();
+    await startPurge(kit(), tid);
+    // The store says it removed a file but it's still there
+    const remove = storage.remove.bind(storage);
+    storage.remove = async () => undefined;
+    await expect(finishPurge(kit(), tid, afterDrain())).rejects.toBeInstanceOf(PurgeIncomplete);
+    expect(await repo.table.get("DELETED", tid)).toBeUndefined();
+    expect(await repo.table.get(PURGE_PK, tid)).toBeTruthy();
+    expect(await repo.getTenant(tid)).toBeTruthy();
+    storage.remove = remove;
+    // Files marked done were removed once already; the check finds them and the retry has to clear them
+    const job = (await repo.table.get(PURGE_PK, tid))!;
+    await repo.table.write([{ put: { ...job, filesDone: [], version: Number(job.version) + 1 }, guard: { version: Number(job.version) } }]);
+    expect(await finishPurges(kit(), { at: afterDrain() })).toMatchObject({ deleted: 1 });
+    for (const key of keys) expect(storage.files.has(key)).toBe(false);
+  });
+
+  it("stops before any row goes when a file can't be removed, keeps it shut out, and finishes on a later pass", async () => {
     const { tid, keys } = await withTrashedFile();
     const remove = storage.remove.bind(storage);
     storage.remove = async () => { throw new Error("SlowDown"); };
-    await expect(purgeProspect(kit(), tid)).rejects.toBeInstanceOf(PurgeIncomplete);
+    await purgeProspect(kit(), tid);
+    await expect(finishPurge(kit(), tid, afterDrain())).rejects.toBeInstanceOf(PurgeIncomplete);
     const t = (await repo.getTenant(tid))!;
     expect(t.prospect!.deletingAt).toBeTruthy();
     expect((await repo.listDocs(tid, undefined)).length).toBe(1);
     expect(await repo.userIdForEmail(form.email)).toBeTruthy();
     expect((await as(form.email, `/t/${tid}/projects`)).status).toBe(403);
-    expect((await as(OP, `/prospects/${tid}/delete`, "POST", { confirm: "Kim Dental" })).status).toBe(502);
     storage.remove = remove;
-    expect(await sweepQuietProspects(kit())).toMatchObject({ deleted: 1, failed: 0 });
+    expect(await finishPurges(kit(), { at: afterDrain() })).toMatchObject({ deleted: 1, failed: 0 });
     expect(await repo.getTenant(tid)).toBeUndefined();
     for (const key of keys) expect(storage.files.has(key)).toBe(false);
   });
@@ -383,16 +457,30 @@ describe("deleting a free account", () => {
   it("keeps a person's data when their sign-in account can't be removed", async () => {
     const { tid } = await prospect();
     directory.removeUser = async () => { throw new Error("TooManyRequests"); };
-    await expect(purgeProspect(kit(), tid)).rejects.toBeInstanceOf(PurgeIncomplete);
+    await purgeProspect(kit(), tid);
+    await expect(finishPurge(kit(), tid, afterDrain())).rejects.toBeInstanceOf(PurgeIncomplete);
     expect(await repo.userIdForEmail(form.email)).toBeTruthy();
     expect(await repo.getTenant(tid)).toBeTruthy();
   });
 
+  it("keeps the sign-in of someone who joined another organization during the wait", async () => {
+    const a = await prospect();
+    const b = await prospect("b@example.com");
+    await startPurge(kit(), a.tid);
+    // Dana joins B's organization before the wait is over
+    const m = (await repo.listMembers(b.tid))[0]!;
+    await repo.table.write([repo.memberOp({ ...m, userId: a.uid, email: form.email, name: "Dana" }, { create: true })]);
+    expect(await finishPurge(kit(), a.tid, afterDrain())).toEqual({ deleted: true });
+    expect(await repo.userIdForEmail(form.email)).toBe(a.uid);
+    expect(directory.users.has(form.email)).toBe(true);
+  });
+
   it("can't promote an organization being deleted, and a promotion that lands first stops the deletion", async () => {
     const a = await prospect();
-    const t = (await repo.getTenant(a.tid))!;
-    await repo.saveTenant({ ...t, prospect: { ...t.prospect!, deletingAt: new Date().toISOString() }, version: t.version + 1 }, t.version);
+    await startPurge(kit(), a.tid);
     expect((await as(OP, `/prospects/${a.tid}/promote`, "POST", {})).status).toBe(409);
+    // Nor hold, suspend, or resume it
+    for (const verb of ["hold", "suspend", "resume", "release"]) expect((await as(OP, `/prospects/${a.tid}/${verb}`, "POST", {})).status).toBe(409);
     // The other order: the purge read the prospect, then the promotion landed before its mark
     const b = await prospect("b@example.com");
     const stale = (await repo.getTenant(b.tid))!;
@@ -403,17 +491,116 @@ describe("deleting a free account", () => {
     repo.getTenant = get;
     const after = (await repo.getTenant(b.tid))!;
     expect(after.prospect).toBeUndefined();
+    expect(await repo.table.get(PURGE_PK, b.tid)).toBeUndefined();
     expect(await repo.userIdForEmail("b@example.com")).toBeTruthy();
   });
+});
 
-  it("doesn't delete for being quiet when a change lands just before deletion starts", async () => {
-    const { tid } = await prospect();
-    const since = (await repo.getTenant(tid))!.prospect!.since;
-    const late = new Date(Date.parse(since) + 1000).toISOString();
-    await repo.table.write([{ put: { PK: `T#${tid}`, SK: "ACTIVE", at: late }, guard: { always: true } }]);
-    expect(await purgeProspect(kit(), tid, { quietSince: since })).toEqual({ deleted: false });
+
+describe("deleting a quiet free account", () => {
+  const kit = () => ({ repo, d: { mailer, storage, directory } as never, cfg });
+  const day = 24 * 3600 * 1000;
+  /** A prospect whose final notice went out `ago` days before now */
+  async function warned(ago = 10) {
+    const p = await prospect();
+    const t = (await repo.getTenant(p.tid))!;
+    const at = (n: number) => new Date(Date.now() - n * day).toISOString();
+    await repo.table.write([{ put: { PK: `T#${p.tid}`, SK: "ACTIVE", at: at(ago + 21) }, guard: { always: true } }]);
+    await repo.saveTenant({ ...t, prospect: { ...t.prospect!, since: at(ago + 21), notices: 2, noticeAt: at(ago), warnedAt: at(ago) }, version: t.version + 1 }, t.version);
+    return p;
+  }
+
+  for (const change of ["heldAt", "suspendedAt", "keptUntil"] as const) {
+    it(`checks every condition again on a fresh read: ${change} set after the pass decided stops it`, async () => {
+      const { tid } = await warned();
+      const stale = (await repo.getTenant(tid))!;
+      const t = { ...stale, prospect: { ...stale.prospect!, ...(change === "keptUntil" ? { keptAt: new Date().toISOString(), keptUntil: new Date(Date.now() + 40 * day).toISOString(), notices: undefined, noticeAt: undefined, warnedAt: undefined } : { [change]: new Date().toISOString() }) }, version: stale.version + 1 };
+      await repo.saveTenant(t, stale.version);
+      // The pass read the organization before the change
+      const list = repo.listTenants.bind(repo);
+      repo.listTenants = async () => (await list()).map((x) => (x.id === tid ? stale : x));
+      expect(await sweepQuietProspects(kit(), new Date())).toMatchObject({ deleting: 0 });
+      repo.listTenants = list;
+      expect((await repo.getTenant(tid))!.prospect!.deletingAt).toBeUndefined();
+      expect(await repo.table.get(PURGE_PK, tid)).toBeUndefined();
+    });
+  }
+
+  it("is due on the same fresh read when nothing changed", async () => {
+    const { tid } = await warned();
+    expect(await sweepQuietProspects(kit(), new Date())).toMatchObject({ deleting: 1 });
+    expect(await repo.table.get(PURGE_PK, tid)).toMatchObject({ reason: "quiet" });
+  });
+
+  it("is cancelled by a change that lands while requests drain", async () => {
+    const { tid } = await warned();
+    expect(await startPurge(kit(), tid, { quiet: true })).toEqual({ started: true });
+    // A request already under way when the mark landed records a real change
+    await repo.table.write([{ put: { PK: `T#${tid}`, SK: "ACTIVE", at: new Date(Date.now() + 1000).toISOString() }, guard: { always: true } }]);
+    expect(await finishPurge(kit(), tid, afterDrain())).toEqual({ deleted: false, cancelled: true });
+    expect((await repo.getTenant(tid))!.prospect!.deletingAt).toBeUndefined();
+    expect(await repo.table.get(PURGE_PK, tid)).toBeUndefined();
+    expect((await as(form.email, `/t/${tid}/projects`)).status).toBe(200);
+  });
+
+  it("never deletes a suspended account, and lists it for review", async () => {
+    const { tid } = await warned(40);
     const t = (await repo.getTenant(tid))!;
-    expect(t.prospect!.deletingAt).toBeUndefined();
+    await repo.saveTenant({ ...t, prospect: { ...t.prospect!, suspendedAt: new Date(Date.now() - 50 * day).toISOString() }, version: t.version + 1 }, t.version);
+    expect(await sweepQuietProspects(kit(), new Date())).toMatchObject({ deleting: 0, nudged: 0, warned: 0 });
+    expect(await startPurge(kit(), tid, { quiet: true })).toEqual({ started: false });
+    const r = (await (await as(OP, "/prospects")).json()) as { prospects: { id: string; deleteOn?: string; prospect: { suspendedAt?: string } }[] };
+    const row = r.prospects.find((x) => x.id === tid)!;
+    expect(row.prospect.suspendedAt).toBeTruthy();
+    expect(row.deleteOn).toBeUndefined();
+  });
+});
+
+
+describe("neon1's Potentials view", () => {
+  it("counts files as the quota does, trashed projects included", async () => {
+    const { tid } = await withTrashedFile();
+    const r = (await (await as(OP, "/prospects")).json()) as { prospects: { id: string; files: number; bytes: number; projects: number; deleteOn?: string }[] };
+    const row = r.prospects.find((x) => x.id === tid)!;
+    expect(row).toMatchObject({ files: 2, bytes: 2000, projects: 0, deleteOn: expect.any(String) });
+  });
+});
+
+
+describe("prospect quotas under concurrent requests", () => {
+  it("lets only one of many simultaneous creates take the last project place", async () => {
+    const { tid } = await prospect();
+    for (let i = 0; i < PROSPECT_LIMITS.projects - 1; i++) expect((await as(form.email, `/t/${tid}/projects`, "POST", { name: `Need ${i}` })).status).toBe(201);
+    const statuses = await Promise.all(Array.from({ length: 6 }, async (_, i) => (await as(form.email, `/t/${tid}/projects`, "POST", { name: `Race ${i}` })).status));
+    expect(statuses.filter((x: number) => x === 201)).toHaveLength(1);
+    expect(statuses.every((x: number) => x === 201 || x === 409)).toBe(true);
+    expect((await repo.listProjects(tid)).filter((p) => !p.deletedAt)).toHaveLength(PROSPECT_LIMITS.projects);
+  });
+
+  it("lets only one of many simultaneous uploads take the last file place", async () => {
+    const { tid } = await prospect();
+    for (let i = 0; i < PROSPECT_LIMITS.files - 1; i++) expect((await as(form.email, `/t/${tid}/docs`, "POST", { name: `f${i}.png`, contentType: "image/png", size: 1000, layer: "needs" })).status).toBe(201);
+    const statuses = await Promise.all(Array.from({ length: 6 }, async (_, i) => (await as(form.email, `/t/${tid}/docs`, "POST", { name: `r${i}.png`, contentType: "image/png", size: 1000, layer: "needs" })).status));
+    expect(statuses.filter((x: number) => x === 201)).toHaveLength(1);
+    expect((await repo.listDocs(tid, undefined))).toHaveLength(PROSPECT_LIMITS.files);
+  });
+
+  it("lets only one of many simultaneous items take a project's last place", async () => {
+    const { tid } = await prospect();
+    const pr = (await (await as(form.email, `/t/${tid}/projects`, "POST", { name: "Need" })).json()) as { id: string };
+    const have = (await repo.listItems(tid, pr.id)).length;
+    for (let i = have; i < PROSPECT_LIMITS.itemsPerProject - 1; i++) {
+      await repo.table.write([{ put: { PK: `T#${tid}#P#${pr.id}`, SK: `ITEM#i_fill${i}`, type: "item", id: `i_fill${i}`, tenantId: tid, projectId: pr.id, kind: "request", title: "x", status: "open", body: "", fields: {}, rank: "m", version: 1, createdAt: "", updatedAt: "", updatedBy: "" }, guard: { create: true } }]);
+    }
+    const statuses = await Promise.all(Array.from({ length: 6 }, async (_, i) => (await as(form.email, `/t/${tid}/projects/${pr.id}/items`, "POST", { kind: "request", title: `Race ${i}` })).status));
+    expect(statuses.filter((x: number) => x === 201)).toHaveLength(1);
+    expect(await repo.listItems(tid, pr.id)).toHaveLength(PROSPECT_LIMITS.itemsPerProject);
+  });
+
+  it("never limits neon1 inside a prospect organization", async () => {
+    const { tid } = await prospect();
+    const statuses = await Promise.all(Array.from({ length: PROSPECT_LIMITS.projects + 2 }, async (_, i) => (await as(OP, `/t/${tid}/projects`, "POST", { name: `Op ${i}` })).status));
+    expect(statuses.every((x: number) => x === 201)).toBe(true);
   });
 });
 
@@ -428,12 +615,32 @@ describe("a free account's expiry", () => {
     // After the final notice, keeping it withdraws the notice and moves the date
     await sweepQuietProspects({ repo, d: { mailer, storage, directory } as never, cfg }, new Date(since + 21.1 * 86_400_000));
     expect((await repo.getTenant(tid))!.prospect!.warnedAt).toBeTruthy();
-    expect((await as(form.email, `/t/${tid}/keep`, "POST", {})).status).toBe(200);
+    const shown = ((await (await as(form.email, `/t/${tid}/keep`)).json()) as { deleteOn: string }).deleteOn;
+    const kept = (await as(form.email, `/t/${tid}/keep`, "POST", {}));
+    expect(kept.status).toBe(200);
+    // 30 days past the date that was shown, not 30 days from today
+    expect(Math.round((Date.parse(((await kept.json()) as { deleteOn: string }).deleteOn) - Date.parse(shown)) / 86_400_000)).toBe(30);
     const t = (await repo.getTenant(tid))!;
     expect(t.prospect!.warnedAt).toBeUndefined();
     expect(t.prospect!.keptAt).toBeTruthy();
     expect((await as(form.email, `/t/${tid}/keep`, "POST", {})).status).toBe(409);
     expect(((await (await as(form.email, `/t/${tid}/keep`)).json()) as { canKeep: boolean }).canKeep).toBe(false);
+  });
+
+  it("adds 30 days to the shown date even when pressed on day one, and the emails follow the new date", async () => {
+    const { tid } = await prospect();
+    const day = 24 * 3600 * 1000;
+    const since = Date.parse((await repo.getTenant(tid))!.prospect!.since);
+    const r = (await (await as(form.email, `/t/${tid}/keep`, "POST", {})).json()) as { deleteOn: string };
+    expect(Math.round((Date.parse(r.deleteOn) - since) / day)).toBe(60);
+    expect(((await (await as(form.email, `/t/${tid}/keep`)).json()) as { deleteOn: string }).deleteOn).toBe(r.deleteOn);
+    const pass = (days: number) => sweepQuietProspects({ repo, d: { mailer, storage, directory } as never, cfg }, new Date(since + days * day));
+    expect(await pass(8)).toMatchObject({ nudged: 0 });
+    expect(await pass(30.2)).toMatchObject({ nudged: 0, warned: 0, deleting: 0 });
+    expect(await pass(37.2)).toMatchObject({ nudged: 1 });
+    expect(await pass(51.2)).toMatchObject({ warned: 1 });
+    expect(await pass(59)).toMatchObject({ deleting: 0 });
+    expect(await pass(60.3)).toMatchObject({ deleting: 1 });
   });
 
   it("says a client's account doesn't expire", async () => {
@@ -469,8 +676,9 @@ describe("tidying up", () => {
     expect(await pass(14.1)).toMatchObject({ nudged: 1 });
     expect(await pass(21.1)).toMatchObject({ warned: 1 });
     expect(toDana()[2]!.text).toContain("sign up again");
-    expect(await pass(25)).toMatchObject({ deleted: 0 });
-    expect(await pass(30.2)).toMatchObject({ deleted: 1 });
+    expect(await pass(25)).toMatchObject({ deleting: 0 });
+    expect(await pass(30.2)).toMatchObject({ deleting: 1 });
+    expect(await finishPurges({ repo, d: { mailer, storage, directory } as never, cfg }, { at: afterDrain(since + 30.2 * day) })).toMatchObject({ deleted: 1 });
     expect(await repo.getTenant(tid)).toBeUndefined();
     expect(toDana()).toHaveLength(3);
   });
@@ -487,7 +695,7 @@ describe("tidying up", () => {
     expect(await pass(21.1)).toMatchObject({ warned: 0, failed: 1 });
     expect((await repo.getTenant(tid))!.prospect!.warnedAt).toBeUndefined();
     // Still no final notice that went out, so day 30 deletes nothing
-    expect(await pass(30.2)).toMatchObject({ deleted: 0 });
+    expect(await pass(30.2)).toMatchObject({ deleting: 0 });
     mailer.send = send;
     expect(await pass(31.2)).toMatchObject({ warned: 1 });
     expect(await repo.getTenant(tid)).toBeTruthy();
@@ -512,7 +720,7 @@ describe("tidying up", () => {
     expect((await repo.getTenant(tid))!.prospect!.warnedAt).toBeTruthy();
     // A change the prospect makes, recorded as if it happened on day 25
     await repo.table.write([{ put: { PK: `T#${tid}`, SK: "ACTIVE", at: new Date(since + 25 * day).toISOString() }, guard: { always: true } }]);
-    expect(await pass(30.2)).toMatchObject({ deleted: 0 });
+    expect(await pass(30.2)).toMatchObject({ deleting: 0 });
     expect((await repo.getTenant(tid))!.prospect!.warnedAt).toBeUndefined();
   });
 

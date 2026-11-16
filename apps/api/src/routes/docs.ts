@@ -95,7 +95,7 @@ export function docRoutes(app: App, k: Kit) {
     const t = c.get("tenant");
     const input = await body(c, CreateDocInput);
     // A prospect adds only documents and pictures, within a count and size (lib/guards.ts)
-    await fileQuota(k, c, input);
+    const quota = await fileQuota(k, c, input);
     if (input.projectId) {
       const p = await repo.getProject(t.id, input.projectId);
       if (!p || p.deletedAt) fail(404, "not_found", "That project doesn't exist.");
@@ -111,7 +111,7 @@ export function docRoutes(app: App, k: Kit) {
     x.key = docKey(x);
     x.state = "receiving";
     // The watch row lets the sweep finish this file even if the browser never reports back
-    await repo.table.write([repo.docOp(x, { create: true }), watchOp(x)]);
+    await repo.table.write([repo.docOp(x, { create: true }), watchOp(x), ...quota]);
     return c.json({ doc: x, upload: await d.storage.putUrl(x.key, x.contentType, x.size) }, 201);
   });
 

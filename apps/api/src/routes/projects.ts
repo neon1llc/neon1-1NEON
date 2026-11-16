@@ -33,7 +33,7 @@ export function projectRoutes(app: App, k: Kit) {
     const earlier = await replay();
     if (earlier) return c.json(earlier, 201);
     // A prospect keeps a few live projects (lib/guards.ts)
-    await projectQuota(k, c);
+    const quota = await projectQuota(k, c);
     await activeMembers(t.id, input.people.map((p) => p.userId));
     const named = await deciderChange(c, [], input.people);
     const tpl = templateById(input.template);
@@ -90,6 +90,8 @@ export function projectRoutes(app: App, k: Kit) {
       repo.auditOp({ tenantId: t.id, actorId: by, action: "project.created", target: project.id, summary: `Created ${project.key} ${project.name}` }),
       ...(named ? [repo.auditOp({ tenantId: t.id, actorId: by, action: "project.decider_changed", target: project.id, summary: `${project.key} decision maker: ${named}` })] : []),
       ...(input.idempotencyKey ? [repo.idempotencyOp(t.id, input.idempotencyKey, by, project.id)] : []),
+      // The quota's lock, so two creates can't both take the last place (lib/guards.ts)
+      ...quota,
     ];
     if (ops.length > MAX_TRANSACTION) fail(400, "too_large", "That template has too many starter items to create at once.");
     try {
