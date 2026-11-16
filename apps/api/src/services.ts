@@ -99,6 +99,8 @@ export interface Storage {
   scan(key: string): Promise<ScanVerdict>;
   // Remove the file
   remove(key: string): Promise<void>;
+  // Store bytes the server itself received (a bug report's screenshot); the scan treats them like any upload
+  put(key: string, bytes: Uint8Array, contentType: string): Promise<void>;
 }
 
 
@@ -160,6 +162,11 @@ export class S3Storage implements Storage {
 
   async remove(key: string) {
     await this.s3.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
+  }
+
+  // Bytes that came through the API, not a presigned link; the bucket encrypts them and GuardDuty tags them like any other object
+  async put(key: string, bytes: Uint8Array, contentType: string) {
+    await this.s3.send(new PutObjectCommand({ Bucket: this.bucket, Key: key, Body: bytes, ContentType: contentType, ContentLength: bytes.length }));
   }
 }
 
