@@ -327,6 +327,8 @@ resource "aws_lambda_function" "api" {
       AUTH_DOMAIN                         = var.auth_domain
       PUBLIC_URL                          = var.public_url
       MAIL_FROM                           = var.mail_from
+      # Bug reports go to the bugs@ alias on neon1's Workspace (the API falls back to hello@ when unset)
+      BUG_TO                              = "bugs@neon1.tech"
       SES_CONFIGURATION_SET               = var.ses_configuration_set
       SMS_FROM                            = var.texts_live ? var.sms_number_arn : ""
       OPERATOR_EMAILS                     = var.operator_emails
