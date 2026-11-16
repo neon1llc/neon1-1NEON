@@ -212,7 +212,7 @@ export function SignUp({ info: known, email: start, remember, onStep, onBack, lo
           </Field>
         )}
       </div>
-      {/* One line on a wide screen; narrower, the second sentence moves down whole (styles: .face-hint .whole) */}
+      {/* One line on a wide screen; narrower, the second sentence moves down whole (styles: .whole) */}
       <p className="fine face-hint" id="su-face-hint"><span>Helps me see who I'd be working with. <span className="whole">You can add these later.</span></span></p>
       {/* Off-screen, not display:none, since some bots skip hidden fields; people and screen readers never reach it */}
       <div className="hp" aria-hidden="true">
@@ -226,7 +226,8 @@ export function SignUp({ info: known, email: start, remember, onStep, onBack, lo
       {/* Turnstile draws here only if Cloudflare needs the person to do something */}
       <div ref={box} className="check full su-end1" />
       <button className="btn btn-primary full su-end2" type="submit" disabled={!ready || busy || waiting}>{busy || waiting ? "One moment…" : "Create account"}</button>
-      <p className="fine next-hint full su-end3">You'll get a code by email to finish. No password. <a href="/knowledge/guides/free-accounts/" target="_blank" rel="noopener">How free accounts work</a></p>
+      {/* The link moves to the next line as a whole when the line runs out (styles: .whole) */}
+      <p className="fine next-hint full su-end3">You'll get a code by email to finish. No password. <a className="whole" href="/knowledge/guides/free-accounts/" target="_blank" rel="noopener">How free accounts work</a></p>
       <p className="fine full su-end4"><button className="linkish" type="button" onClick={onBack}>Back to sign-in</button></p>
     </form>
   );

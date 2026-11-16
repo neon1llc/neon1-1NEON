@@ -1573,8 +1573,8 @@ ul.md-says { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; 
 .signin .signup-form .f { display: grid; gap: 8px; min-width: 0; }
 .signin .signup-form .f > * { margin: 0; }
 .signin .signup-form .face-hint { margin: -4px 0 0; }
-/* The hint's second sentence never splits: when the line runs out it wraps as a whole */
-.signin .signup-form .face-hint .whole { white-space: nowrap; }
+/* The hint's second sentence, and the free-accounts link under Create account, never split: when the line runs out they wrap as a whole */
+.signin .signup-form :is(.face-hint, .next-hint) .whole { white-space: nowrap; }
 /* Sign-up's two columns, stacked on a phone: each a column of fields with the form's own spacing.
    City and state share a row at any width, the state narrower */
 .signin .signup-form .su-col { display: grid; gap: 12px; align-content: start; min-width: 0; }
