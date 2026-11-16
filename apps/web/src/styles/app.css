@@ -1705,7 +1705,7 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
   select { appearance: base-select; background-image: none; padding-right: 14px; display: inline-flex; align-items: center; gap: 12px; }
   /* The same drawn arrow as .arr, centered on the line beside sentence-case choices */
   /* --arr-t: the stroke of regular-weight text, so the arrow matches the choice beside it */
-  select::picker-icon { --arr-t: .09em; content: ""; width: .95em; height: .75em; font: 15px var(--sans); background: var(--accent); clip-path: var(--arr-shape, polygon(0 50%, 31% 12%, 40% 20%, 24% 43%, 100% 43%, 100% 57%, 24% 57%, 40% 80%, 31% 88%)); align-self: center; margin-left: auto; margin-right: 2px; transition: rotate var(--t-base) var(--ease); }
+  select::picker-icon { --arr-t: .156em; content: ""; width: .95em; height: .75em; font: 15px var(--sans); background: var(--accent); clip-path: var(--arr-shape, polygon(0 50%, 31% 12%, 40% 20%, 24% 43%, 100% 43%, 100% 57%, 24% 57%, 40% 80%, 31% 88%)); align-self: center; margin-left: auto; margin-right: 2px; transition: rotate var(--t-base) var(--ease); }
   select:open::picker-icon { rotate: -90deg; }
   ::picker(select) { appearance: base-select; border: 1px solid var(--line-strong); border-radius: var(--r-sm); background: var(--panel); color: var(--text); box-shadow: 0 12px 32px rgba(0, 0, 0, .16); padding: 4px; margin-top: 4px; max-height: var(--picker-max, min(320px, 60vh)); position-try-fallbacks: none; }
   /* The list unrolls in the same time the arrow takes to turn, so both finish together */
