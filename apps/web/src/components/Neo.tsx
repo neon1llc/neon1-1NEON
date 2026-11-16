@@ -52,14 +52,14 @@ function useLight() {
 }
 
 
-// --- Reply text: paragraphs, lists, bold, and links (inside 1NEON through the router) ---
+// --- Reply text: paragraphs, lists, bold, and links (inside 1NEON through the router; links that leave the app open a new tab and take the site's northeast arrow, n1chat-ext) ---
 
 function Line({ parts }: { parts: Piece[] }) {
   return (
     <>
       {parts.map((p, i) =>
         "href" in p ? (
-          p.inside ? <Link key={i} className="n1chat-link" to={p.href.slice("/1NEON".length) || "/"}>{p.text}</Link> : <a key={i} className="n1chat-link" href={p.href}>{p.text}</a>
+          p.inside ? <Link key={i} className="n1chat-link" to={p.href.slice("/1NEON".length) || "/"}>{p.text}</Link> : <a key={i} className="n1chat-link n1chat-ext" href={p.href} target="_blank" rel="noopener">{p.text}</a>
         ) : p.bold ? <strong key={i}>{p.text}</strong> : <span key={i}>{p.text}</span>,
       )}
     </>

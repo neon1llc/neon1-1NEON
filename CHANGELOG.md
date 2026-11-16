@@ -7,7 +7,7 @@
 - The interactive demo's landing has the sign-in's top bar (the neon1 logo on the left, the theme switch on the right) and opens in the awake or matrix theme you chose on neon1.tech. Neo sits at the bottom left there, and at the bottom right once you pick a person.
 - The report form's "Where" list includes "1NEON live walkthrough".
 - **Report a bug** in the menu, on your profile, in Settings, and under the sign-in links, in the demo too. It opens the site's report page in a new tab, on dev from dev and on production from production, and each takes its neighbours' look.
-- Dropdowns show their focus border from the moment they are pressed or opened until focus leaves, and show the hand pointer over the whole box. The arrow uses the same heavier stroke as the neon1 site.
+- Dropdowns show their focus border from the moment they are pressed or opened until focus leaves, and show the hand pointer over the whole box. The arrow uses the same heavier stroke as the neon1 site. Neo's links that leave the app open in a new tab with the northeast arrow.
 - The profile, Settings, and Contact show two columns on a wide window and one below about 760 px.
 - On the profile, a changed theme or menu style says "Showing this now. Press Save to keep it.", the menu style previews at once, and leaving without saving puts both back.
 - Links from 1NEON to the site are paths, never the production address, and a test fails the build on a new hardcoded one.
