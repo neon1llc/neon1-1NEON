@@ -23,7 +23,7 @@ const send = (b: unknown, ip = "203.0.113.7") =>
 const png = () => new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3, 4]);
 const jpg = () => new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3, 4]);
 const image = (ref: string, token: string, bytes: Uint8Array, type = "image/png", ip = "203.0.113.7") =>
-  app.request(`/1NEON/api/bug/${ref}/image`, { method: "POST", headers: { "content-type": type, "x-1neon": "1", "x-bug-token": token, "x-forwarded-for": ip }, body: bytes });
+  app.request(`/1NEON/api/bug/${ref}/${token}/image`, { method: "POST", headers: { "content-type": type, "x-1neon": "1", "x-forwarded-for": ip }, body: bytes });
 
 describe("report a bug", () => {
   it("mails neon1 with a reference, the captured context, and no query string from the page", async () => {

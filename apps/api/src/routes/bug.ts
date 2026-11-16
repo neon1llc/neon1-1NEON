@@ -1,7 +1,7 @@
 // apps/api/src/routes/bug.ts - The report-a-bug form on neon1.tech. Two public routes with the contact form's
 // gates (a hidden field, per-sender and daily counters, a real email when one is given):
 //   POST /bug            the report as JSON; mails neon1 and answers with a reference and an upload token
-//   POST /bug/:ref/image one screenshot's raw bytes, sent after the report (the site's policy lets the page
+//   POST /bug/:ref/:token/image one screenshot's raw bytes, sent after the report (the site's policy lets the page
 //                        talk only to neon1.tech, so images pass through here, not straight to S3)
 // A screenshot must be a PNG or JPEG by its first bytes (the declared type isn't trusted), under a size cap,
 // within a count cap fixed when the report was made. It is stored under t/_bugs/<ref>/ in the documents
@@ -147,9 +147,10 @@ export function bugRoutes(app: App, k: Kit) {
     return c.json({ ok: true, ref, token, images: m.images });
   });
 
-  app.post("/bug/:ref/image", async (c) => {
+  // The token rides in the path: CloudFront forwards only a short list of headers to the API, and a path always arrives
+  app.post("/bug/:ref/:token/image", async (c) => {
     const ref = c.req.param("ref");
-    const token = c.req.header("x-bug-token") ?? "";
+    const token = c.req.param("token");
     // The session row exists only for a report that declared screenshots, for two hours
     const session = /^BUG-[A-Z0-9]{6}$/.test(ref) && token ? await repo.table.get("BUGSESSION", ref) : undefined;
     if (!session || session.tokenHash !== (await sha(token))) fail(403, "no_session", "That report can't take a screenshot. Send the report again.");
