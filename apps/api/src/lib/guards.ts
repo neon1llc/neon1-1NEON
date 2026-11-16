@@ -8,6 +8,7 @@ import { PROSPECT_LIMITS, isProspect, isSuspended, prospectFileAllowed, prospect
 import type { Context } from "hono";
 import { fail, who, type Env } from "./http.ts";
 import type { Kit } from "./kit.ts";
+import type { WriteOp } from "../store/types.ts";
 
 
 // Changes one person may make, for everyone and, tighter, for a prospect's own people
@@ -108,28 +109,54 @@ const QUOTA_NEXT = "Email hello@neon1.tech, and we'll make room once we're worki
 const limited = (c: Context<Env>) => isProspect(c.get("tenant")) && !who(c).actor.operator;
 
 
-/** Before a new project: a prospect keeps at most PROSPECT_LIMITS.projects live */
-export async function projectQuota(k: Pick<Kit, "repo">, c: Context<Env>) {
-  if (!limited(c)) return;
-  const live = (await k.repo.listProjects(c.get("tenant").id)).filter((p) => !p.deletedAt);
+/**
+ * The quota's lock: one row per counted thing, read before counting and bumped in the same
+ * transaction as the create. Two creates racing for the last place both count the same number, but
+ * only the first one's bump matches the version both read, so the second fails as a whole (no row
+ * lands) and is answered "try again" (app.ts), when its recount sees the quota full. Reads are
+ * consistent (store/dynamo.ts), so a create that committed before the lock was read is always counted
+ */
+async function lock(k: Pick<Kit, "repo">, tid: string, what: string): Promise<WriteOp> {
+  const SK = `${QUOTA_SK}${what}`;
+  const row = await k.repo.table.get(`T#${tid}`, SK);
+  const v = typeof row?.version === "number" ? row.version : undefined;
+  return { put: { PK: `T#${tid}`, SK, version: (v ?? 0) + 1 }, guard: v === undefined ? { create: true } : { version: v } };
+}
+/** The sort-key prefix of quota locks, which app.ts recognizes in a conflict */
+export const QUOTA_SK = "QUOTA#";
+
+
+/** Before a new project: a prospect keeps at most PROSPECT_LIMITS.projects live. Returns the write
+ * that must go in the create's own transaction (none for anyone unlimited) */
+export async function projectQuota(k: Pick<Kit, "repo">, c: Context<Env>): Promise<WriteOp[]> {
+  if (!limited(c)) return [];
+  const tid = c.get("tenant").id;
+  const op = await lock(k, tid, "projects");
+  const live = (await k.repo.listProjects(tid)).filter((p) => !p.deletedAt);
   if (live.length >= PROSPECT_LIMITS.projects) fail(409, "quota_projects", `A new account holds up to ${PROSPECT_LIMITS.projects} projects. ${QUOTA_NEXT}`);
+  return [op];
 }
 
 
-/** Before a new item: at most PROSPECT_LIMITS.itemsPerProject in one project */
-export async function itemQuota(k: Pick<Kit, "repo">, c: Context<Env>, pid: string) {
-  if (!limited(c)) return;
-  const items = await k.repo.listItems(c.get("tenant").id, pid);
+/** Before a new item: at most PROSPECT_LIMITS.itemsPerProject in one project (same lock pattern) */
+export async function itemQuota(k: Pick<Kit, "repo">, c: Context<Env>, pid: string): Promise<WriteOp[]> {
+  if (!limited(c)) return [];
+  const tid = c.get("tenant").id;
+  const op = await lock(k, tid, `items#${pid}`);
+  const items = await k.repo.listItems(tid, pid);
   if (items.length >= PROSPECT_LIMITS.itemsPerProject) fail(409, "quota_items", `A new account holds up to ${PROSPECT_LIMITS.itemsPerProject} items in a project. ${QUOTA_NEXT}`);
+  return [op];
 }
 
 
-/** Before a new file: an allowed kind, at most the size, the count, and the total across the organization */
-export async function fileQuota(k: Pick<Kit, "repo">, c: Context<Env>, f: { name: string; contentType: string; size: number }) {
-  if (!limited(c)) return;
+/** Before a new file: an allowed kind, at most the size, the count, and the total across the
+ * organization (same lock pattern) */
+export async function fileQuota(k: Pick<Kit, "repo">, c: Context<Env>, f: { name: string; contentType: string; size: number }): Promise<WriteOp[]> {
+  if (!limited(c)) return [];
   if (!prospectFileAllowed(f.name, f.contentType)) fail(400, "file_type", "A new account can add PDFs, pictures, text, CSV, and Word, Excel, or PowerPoint files.");
   if (f.size > PROSPECT_LIMITS.fileBytes) fail(400, "file_size", `A new account can add files up to ${PROSPECT_LIMITS.fileBytes / 1024 / 1024} MB.`);
   const tid = c.get("tenant").id;
+  const op = await lock(k, tid, "files");
   // Trashed projects still hold their files until deleted, so they count too
   const projects = await k.repo.listProjectsWithTrash(tid);
   // Every file record counts, uploading or failed included, so starting many at once can't slip past
@@ -137,4 +164,5 @@ export async function fileQuota(k: Pick<Kit, "repo">, c: Context<Env>, f: { name
   if (docs.length >= PROSPECT_LIMITS.files) fail(409, "quota_files", `A new account holds up to ${PROSPECT_LIMITS.files} files. ${QUOTA_NEXT}`);
   const total = docs.reduce((n, x) => n + (x.size ?? 0), 0);
   if (total + f.size > PROSPECT_LIMITS.totalBytes) fail(409, "quota_bytes", `A new account holds up to ${PROSPECT_LIMITS.totalBytes / 1024 / 1024} MB of files. ${QUOTA_NEXT}`);
+  return [op];
 }

@@ -9,6 +9,17 @@
 - Create account on a phone shows a faint horizontal line between the needed fields and the optional ones, the same line the wide layout runs between its two columns.
 - In the light theme, "I agree to the terms of use" reads in the page's text color with the link in the brand green; the link had been pale green on white.
 
+### Changed
+- **Keep it 30 more days** adds 30 days to the date already shown, so pressing it early no longer gives fewer days. It's still offered once.
+- Deleting a free account happens in two steps. Its people are shut out at once; everything else goes a few minutes later, once any request or upload link already under way has run out. Pressing Delete says so, and Potentials shows "Being deleted" until it's done.
+- Suspended free accounts are never deleted by the 30-day clock. Potentials lists them first, with how long each has been suspended, until neon1 resumes or deletes them.
+- Potentials counts files (and their size) the way the file limit does, trashed projects included, and shows the date a quiet account would be deleted.
+
+### Fixed
+- A deletion keeps a record of everything it has to remove until every step is checked, so a pass cut short resumes from that record instead of from whatever rows are left.
+- A quiet account's deletion checks every condition again on a fresh read (a hold, a suspension, a keep, or a change since the daily pass), and a change that lands while requests drain cancels it.
+- Free-account limits (projects, items per project, files) hold under simultaneous requests: only one of several creates racing for the last place lands, and the others are asked to try again.
+
 ## v0.16.3 - 2026-11-16
 
 - On the sign-in and create-account screens, the space from the policies to "Or see how it works" now matches the space below it, with the line between them halfway.

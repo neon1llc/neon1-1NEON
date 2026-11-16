@@ -78,6 +78,44 @@ describe("quietStep", () => {
 });
 
 
+describe("free-account expiry", () => {
+  const day = 24 * 60 * 60 * 1000;
+  const t0 = Date.parse("2026-11-01T12:00:00Z");
+  const iso = (d: number) => new Date(t0 + d * day).toISOString();
+
+  it("keeps an account 30 days past the date shown, even when pressed early", async () => {
+    const { prospectDeleteOn, prospectKeepUntil, prospectClock } = await import("./prospect.ts");
+    const shown = prospectDeleteOn(iso(0));
+    expect(shown).toBe(iso(30));
+    // Pressed on day 2: the new date is day 60, not day 32
+    const until = prospectKeepUntil(shown, new Date(t0 + 2 * day));
+    expect(until).toBe(iso(60));
+    expect(prospectDeleteOn(prospectClock(iso(2), until))).toBe(iso(60));
+    // A real change later than the kept date's clock wins
+    expect(prospectClock(iso(45), until)).toBe(iso(45));
+  });
+
+  it("never gives less than 30 days from the press", async () => {
+    const { prospectKeepUntil } = await import("./prospect.ts");
+    expect(prospectKeepUntil(iso(0), new Date(t0 + 5 * day))).toBe(iso(35));
+  });
+
+  it("is due for quiet deletion only when nothing stops it", async () => {
+    const { quietDeletionDue } = await import("./prospect.ts");
+    const p = { since: iso(0), terms: "x", notices: 2, noticeAt: iso(21), warnedAt: iso(21) } as never as Parameters<typeof quietDeletionDue>[0];
+    const at = new Date(t0 + 30.5 * day);
+    expect(quietDeletionDue(p, iso(0), at)).toBe(true);
+    expect(quietDeletionDue({ ...p, heldAt: iso(25) }, iso(0), at)).toBe(false);
+    expect(quietDeletionDue({ ...p, suspendedAt: iso(25) }, iso(0), at)).toBe(false);
+    expect(quietDeletionDue({ ...p, deletingAt: iso(30) }, iso(0), at)).toBe(false);
+    // A change after the final notice
+    expect(quietDeletionDue(p, iso(26), at)).toBe(false);
+    // Not yet nine days after the final notice
+    expect(quietDeletionDue(p, iso(0), new Date(t0 + 28 * day))).toBe(false);
+  });
+});
+
+
 describe("normalizeLink", () => {
   it("makes typed addresses into full https links and refuses anything else", () => {
     expect(normalizeLink("kimbakery.com")).toBe("https://kimbakery.com/");

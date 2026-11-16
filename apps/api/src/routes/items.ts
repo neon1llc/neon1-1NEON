@@ -54,7 +54,7 @@ export function itemRoutes(app: App, k: Kit) {
     need(c, input.kind === "request" ? "comment" : "write");
     if (input.kind === "decision") fail(400, "invalid", "Decisions are recorded by approving an option.");
     // A prospect's projects hold a limited number of items (lib/guards.ts)
-    await itemQuota(k, c, p.id);
+    const quota = await itemQuota(k, c, p.id);
     if (input.kind === "proposal") fail(400, "invalid", "Proposal revisions are made by issuing the proposal.");
     if (input.kind === "invoice" || input.kind === "payment") fail(400, "invalid", "Invoices and payments are made through Billing.");
     // Agreements and acceptances are recorded by their own routes, by the people allowed to give them
@@ -109,7 +109,7 @@ export function itemRoutes(app: App, k: Kit) {
     const health = item.kind === "update" ? (item.fields as { health?: Project["health"] }).health : undefined;
     const healthOp = health ? [repo.projectOp({ ...p, health, ...assessed(health, actorId(c), ts), version: p.version + 1, updatedAt: ts, updatedBy: actorId(c) }, { version: p.version })] : [];
     try {
-      await repo.table.write([repo.itemOp(item, { create: true }), ...healthOp, repo.auditOp({ tenantId: p.tenantId, actorId: actorId(c), action: `${item.kind}.created`, target: item.id, summary: `${p.key}: added ${label(item.kind)} "${item.title}"` })]);
+      await repo.table.write([repo.itemOp(item, { create: true }), ...healthOp, ...quota, repo.auditOp({ tenantId: p.tenantId, actorId: actorId(c), action: `${item.kind}.created`, target: item.id, summary: `${p.key}: added ${label(item.kind)} "${item.title}"` })]);
     } catch (e) {
       // Two copies of the same request racing: the one that lost answers with the winner's item
       const made = replayId ? await repo.getItem(p.tenantId, p.id, replayId) : undefined;
