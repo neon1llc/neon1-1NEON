@@ -5,8 +5,8 @@
 ## Unreleased
 
 ### Changed
-- Create account says what a free account holds before anything is typed: up to 3 projects, up to 10 documents or photos (50 MB in all), and kept 30 days after the last change, with emails before anything is deleted. The numbers come from the same limits the API enforces.
-- Create account asks only what's needed. Website, location, and how you found neon1 wait behind one optional button, and open on their own if one of them needs a fix.
+- Create account says what a free account holds before anything is typed, on one quiet line under the heading: up to 3 projects and 10 files (50 MB), kept 30 days after the last change. The numbers come from the same limits the API enforces.
+- Sign-in and create account both end with "Try it yourself · Or see how it works": the demo and the guided walkthrough, side by side.
 - Create account on a phone shows a faint horizontal line between the needed fields and the optional ones, the same line the wide layout runs between its two columns.
 - In the light theme, "I agree to the terms of use" reads in the page's text color with the link in the brand green; the link had been pale green on white.
 - **Keep it 30 more days** adds 30 days to the date already shown, so pressing it early no longer gives fewer days. It's still offered once.
