@@ -250,7 +250,8 @@ export class CognitoDirectory implements Directory {
 export class SesMailer implements Mailer {
   // Region and credentials come from the Lambda environment
   private ses = new SESv2Client({});
-  constructor(private from: string) {}
+  // `configSet` names the SES configuration set; without it SES uses the identity's default
+  constructor(private from: string, private configSet?: string) {}
 
   // One recipient per message, so addresses never leak between invitees
   // The AWS SDK takes an abort signal per call, so a timed-out send is cancelled rather than left running
@@ -260,6 +261,7 @@ export class SesMailer implements Mailer {
         FromEmailAddress: this.from,
         Destination: { ToAddresses: [to] },
         ...(replyTo ? { ReplyToAddresses: [replyTo] } : {}),
+        ...(this.configSet ? { ConfigurationSetName: this.configSet } : {}),
         Content: { Simple: { Subject: { Data: subject }, Body: { Text: { Data: text }, Html: { Data: html } } } },
       }),
       { abortSignal: signal },

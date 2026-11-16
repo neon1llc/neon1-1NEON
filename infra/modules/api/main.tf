@@ -327,6 +327,7 @@ resource "aws_lambda_function" "api" {
       AUTH_DOMAIN                         = var.auth_domain
       PUBLIC_URL                          = var.public_url
       MAIL_FROM                           = var.mail_from
+      SES_CONFIGURATION_SET               = var.ses_configuration_set
       SMS_FROM                            = var.texts_live ? var.sms_number_arn : ""
       OPERATOR_EMAILS                     = var.operator_emails
       NEO_MODEL                           = var.neo_model
