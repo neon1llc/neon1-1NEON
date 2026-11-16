@@ -1885,3 +1885,29 @@ html:has(.signin.awake), html:has(.signin.awake) body { background: var(--bg); c
 :root[data-theme="matrix"] .tag.prio-must { border-color: var(--line-strong); }
 :root[data-theme="matrix"] .content :is(p, li) { letter-spacing: .01em; }
 :root[data-theme="matrix"] .content :is(p, li) a:not(.btn, .tab, .linkish, .row, .name) { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: rgb(108 255 168 / .55); }
+
+
+/* ---- Matrix controls: native and custom controls follow the dark theme ----
+   One block per way of being dark (matrix, and device on a dark device), written from the same tokens: the browser's
+   own controls (range, progress, meter) take the accent, selected text takes a green wash, the list of an unstyled
+   dropdown takes the panel, autofill keeps the field's dark fill (Chrome paints it pale blue), disabled fields read
+   as faint text (never fainter than --faint), disabled buttons stay at .6 or above, the All clients banner takes the
+   amber as a tint instead of a bright stripe, and Neo's window uses the shared text levels. Awake is untouched. */
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="device"] { accent-color: var(--accent); }
+  :root[data-theme="device"] ::selection { background: rgb(108 255 168 / .3); color: var(--text); }
+  :where(:root[data-theme="device"]) :is(option, optgroup) { background-color: var(--panel); color: var(--text); }
+  :root[data-theme="device"] :is(input, textarea, select):-webkit-autofill, :root[data-theme="device"] :is(input, textarea, select):-webkit-autofill:is(:hover, :focus) { -webkit-text-fill-color: var(--text); caret-color: var(--text); box-shadow: 0 0 0 100px var(--panel) inset; transition: background-color 9999s; }
+  :root[data-theme="device"] :is(input, textarea):disabled { color: var(--faint); cursor: not-allowed; }
+  :root[data-theme="device"] .btn:disabled { opacity: .6; }
+  :root[data-theme="device"] .readonly-bar { color: var(--text); background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--amber) 14%, var(--bg)) 0 12px, color-mix(in srgb, var(--amber) 20%, var(--bg)) 12px 24px); border-bottom-color: var(--amber); }
+  :root[data-theme="device"] .n1chat:not(.n1chat-light) { --fg: var(--m-ink, #EDF1ED); --muted: var(--m-muted, #CBD1CC); }
+}
+:root[data-theme="matrix"] { accent-color: var(--accent); }
+:root[data-theme="matrix"] ::selection { background: rgb(108 255 168 / .3); color: var(--text); }
+:where(:root[data-theme="matrix"]) :is(option, optgroup) { background-color: var(--panel); color: var(--text); }
+:root[data-theme="matrix"] :is(input, textarea, select):-webkit-autofill, :root[data-theme="matrix"] :is(input, textarea, select):-webkit-autofill:is(:hover, :focus) { -webkit-text-fill-color: var(--text); caret-color: var(--text); box-shadow: 0 0 0 100px var(--panel) inset; transition: background-color 9999s; }
+:root[data-theme="matrix"] :is(input, textarea):disabled { color: var(--faint); cursor: not-allowed; }
+:root[data-theme="matrix"] .btn:disabled { opacity: .6; }
+:root[data-theme="matrix"] .readonly-bar { color: var(--text); background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--amber) 14%, var(--bg)) 0 12px, color-mix(in srgb, var(--amber) 20%, var(--bg)) 12px 24px); border-bottom-color: var(--amber); }
+:root[data-theme="matrix"] .n1chat:not(.n1chat-light) { --fg: var(--m-ink, #EDF1ED); --muted: var(--m-muted, #CBD1CC); }
