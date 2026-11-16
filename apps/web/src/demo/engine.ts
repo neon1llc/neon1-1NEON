@@ -149,8 +149,9 @@ async function save() {
 
 // The live playback's signed-in session, when a short demo signs in for real (none in the whole project)
 let session: LiveSession | undefined;
-// Sign-up is open only in the walkthrough of starting a free account
-const cfg = { env: "local", publicUrl: location.origin, operatorEmails: ["pradeep@neon1.tech"], devAuth: true, signup: live && PLAY.show === "free" } as Config;
+// Sign-up is open in every walkthrough, as it is on the real sign-in, so "Start for free" works wherever a
+// visitor pauses and tries it; the demo's picker has no sign-up
+const cfg: Config = { env: "local", publicUrl: location.origin, operatorEmails: ["pradeep@neon1.tech"], devAuth: true, signup: live };
 const ready = (async () => {
   const saved = live ? undefined : await load();
   if (live) {
@@ -199,8 +200,10 @@ export async function demoFetch(url: string, init: RequestInit = {}): Promise<Re
     // Sign-up (the free-account walkthrough): the API's own route checks the form and keeps it, and the
     // code that proves the address comes from here, as Cognito's would
     if (req.method === "POST" && new URL(req.url).pathname === "/1NEON/api/auth/signup") {
-      const sent = (await req.clone().json().catch(() => ({}))) as { email?: string };
-      const res = await app.fetch(req);
+      const sent = (await req.clone().json().catch(() => ({}))) as { email?: string; elapsed?: number };
+      // The walkthrough types faster than a person (and instantly while catching up), so the minimum fill
+      // time a real visitor passes is counted as passed here; every other check runs as it would for real
+      const res = await app.fetch(new Request(req.url, { method: "POST", headers: req.headers, body: JSON.stringify({ ...sent, elapsed: Math.max(sent.elapsed ?? 0, 60_000) }) }));
       if (res.ok && sent.email) {
         const { liveSignupCode } = await import("../live/signin.ts");
         await liveSignupCode(sent.email, mailer);

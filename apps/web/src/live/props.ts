@@ -25,7 +25,7 @@ const ago = (at: number) => {
 };
 
 /**
- * Maria's mail app: the message list on the left, the open message on the right (one at a time on a
+ * The mail app of whoever the walkthrough follows: the message list on the left, the open message on the right (one at a time on a
  * phone). The message body sits in a shadow root, so the email's own inline styles show exactly as
  * sent and nothing from the portal leaks in.
  */
@@ -39,7 +39,7 @@ export class MailWindow {
     this.el = document.createElement("div");
     this.el.className = "live-prop live-mail";
     this.el.setAttribute("role", "region");
-    this.el.setAttribute("aria-label", "Maria's email (part of the demo)");
+    this.el.setAttribute("aria-label", `Email for ${owner} (part of the demo)`);
     this.el.innerHTML = `
       <div class="mail-top"><span class="mail-dots"><i></i><i></i><i></i></span><b>Mail</b><span class="mail-me"></span></div>
       <div class="mail-cols">

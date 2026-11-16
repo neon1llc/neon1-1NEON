@@ -31,7 +31,6 @@ import { SignUp } from "./SignUp.tsx";
 import { gate, Stale, type Read } from "./Reads.tsx";
 import { Avatar, Icon, initials, LayerBadge, LAYERS, layerHint, layerName, layerSlug, Rings, useAsk } from "./ui.tsx";
 import { prefs } from "../lib/prefs.ts";
-import { PLAY } from "../live/where.ts";
 import type { SignUpInfo } from "../lib/signup.ts";
 
 
@@ -177,10 +176,9 @@ const PEOPLE = [
 // The demo signs in by picking a person; the live playback always shows the real sign-in instead
 // (email, then a code from her email), answered in the browser
 const PICKER = IN_DEMO && !IN_LIVE;
-// Sign-up shows in the real portal, and in the walkthrough of starting a free account, where the in-browser
-// API answers it (live/signin.ts); the rest of the demo has no accounts to make
-const FREE_TOUR = IN_LIVE && PLAY.show === "free";
-const SIGNUP_HERE = !IN_DEMO || FREE_TOUR;
+// Sign-up shows in the real portal and in every walkthrough, so a walkthrough's sign-in reads exactly as the
+// real one does; the in-browser API answers it there (live/signin.ts). The demo's picker has no accounts to make
+const SIGNUP_HERE = !PICKER;
 
 
 // What the API answers at each sign-in step
@@ -263,7 +261,7 @@ function SignIn() {
   // Asked once by the real portal; while closed (production until neon1 opens it) neither shows
   // The last answer is kept in this browser and used at once, so the page doesn't draw the closed
   // wording and then switch; with no answer yet (a first visit) that wording waits, hidden, for it
-  const [signupOpen, setSignupOpen] = useState<boolean | undefined>(() => (FREE_TOUR ? undefined : !SIGNUP_HERE ? false : SIGNUP_SEEN()));
+  const [signupOpen, setSignupOpen] = useState<boolean | undefined>(() => (!SIGNUP_HERE ? false : IN_LIVE ? true : SIGNUP_SEEN()));
   // The whole answer (with Turnstile's site key) is kept too and handed to the form, so "Start a free
   // account" draws the form at once instead of "One moment…" while it asks again
   const [signupInfo, setSignupInfo] = useState<SignUpInfo | undefined>(undefined);
@@ -275,7 +273,7 @@ function SignIn() {
       setSignupInfo(r);
       setSignupOpen(r.open === true);
       // The walkthrough's answer is its own, never the real portal's
-      if (!FREE_TOUR) prefs.set(SIGNUP_KEY, r.open === true ? "open" : "closed");
+      if (!IN_LIVE) prefs.set(SIGNUP_KEY, r.open === true ? "open" : "closed");
     }, () => live && setSignupOpen((v) => v ?? false));
     return () => { live = false; };
   }, []);
@@ -342,7 +340,8 @@ function SignIn() {
     fade(() => { setAt(r); setSigningUp(false); });
   };
   // The real sign-in shares neon1.tech's awake or matrix choice (awake until picked); the demo's picker keeps its rain
-  const publicLook = !IN_DEMO && !PICKER;
+  // A walkthrough's sign-in looks the same (its own bar takes the top, so the site's bar stays hidden there)
+  const publicLook = !PICKER;
   const [look, setLook] = useSiteTheme(publicLook);
   const awake = publicLook && look === "awake";
   return (
@@ -401,7 +400,7 @@ function SignIn() {
         )}
         {/* Step 1: the email */}
         {!PICKER && signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
-          <SignUp info={signupInfo} email={email} remember={remember} onStep={signedUp} onBack={() => fade(() => setSigningUp(false))} local={pickPerson && !FREE_TOUR} />
+          <SignUp info={signupInfo} email={email} remember={remember} onStep={signedUp} onBack={() => fade(() => setSigningUp(false))} local={pickPerson && !IN_LIVE} />
         )}
         {!PICKER && !signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
           <form className="stack" name="signin" onSubmit={(e) => { e.preventDefault(); keepEmail(email.trim(), remember); void send({ op: "start", email: email.trim(), remember }); }}>
@@ -458,7 +457,7 @@ function SignIn() {
             <a href="/1NEON/live">Or watch the guided walkthrough</a>
           </nav>
         )}
-        {!IN_DEMO && (
+        {!PICKER && (
           <nav className="signin-more" aria-label="Without an account">
             <a href="/1NEON/live">Or see how it works</a>
           </nav>
