@@ -1,4 +1,4 @@
-// apps/web/src/components/BugReport.tsx - "report a bug": an external link to neon1.tech/report-bug in a new tab, with the
+// apps/web/src/components/BugReport.tsx - "report a bug": a link to the site's /report-bug page (the same origin, so dev opens dev's and production opens production's) in a new tab, with the
 // northeast arrow, from the menu, the profile, Settings, and the public screens. The page and its form live on the site.
 // Never in a walkthrough, which plays on its own and links nowhere.
 
@@ -7,7 +7,7 @@ import { DEMO, LIVE } from "../lib/api.ts";
 
 
 // ?from= tells the page where the reader came from; no noreferrer, since the page also reads document.referrer
-export const reportBug = () => `https://neon1.tech/report-bug/?from=${DEMO ? "demo" : "1neon"}`;
+export const reportBug = () => `/report-bug/?from=${DEMO ? "demo" : "1neon"}`;
 
 
 // The bug's line drawing, the one the site's footer link uses (16px grid, outline, currentColor)
@@ -25,10 +25,10 @@ export function ReportBug({ kind = "link" }: { kind?: "row" | "link" | "button" 
   const arrow = <span className="out-arrow" aria-hidden="true">↗</span>;
   const props = { href: reportBug(), target: "_blank", rel: "noopener", title: "Opens in a new tab" } as const;
   return kind === "row" ? (
-    <a className="out bug-link bug-row" {...props}><span className="ico" aria-hidden="true"><BugGlyph /></span><span className="lbl">report a bug{arrow}</span></a>
+    <a className="out bug-link bug-row" {...props}><span className="ico" aria-hidden="true"><BugGlyph /></span><span className="lbl">Report a bug{arrow}</span></a>
   ) : kind === "button" ? (
-    <a className="out btn btn-ghost bug-link" {...props}><BugGlyph />report a bug{arrow}</a>
+    <a className="out btn btn-ghost bug-link" {...props}><BugGlyph />Report a bug{arrow}</a>
   ) : (
-    <a className="out bug-link" {...props}><BugGlyph />report a bug{arrow}</a>
+    <a className="out bug-link" {...props}><BugGlyph />Report a bug{arrow}</a>
   );
 }

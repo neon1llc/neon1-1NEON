@@ -6,7 +6,10 @@
 
 - The interactive demo's landing has the sign-in's top bar (the neon1 logo on the left, the theme switch on the right) and opens in the awake or matrix theme you chose on neon1.tech. Neo sits at the bottom left there, and at the bottom right once you pick a person.
 - The report form's "Where" list includes "1NEON live walkthrough".
-- **report a bug** in the menu, on your profile, in Settings, and under the sign-in links, in the demo too. It opens neon1.tech/report-bug in a new tab.
+- **Report a bug** in the menu, on your profile, in Settings, and under the sign-in links, in the demo too. It opens the site's report page in a new tab, on dev from dev and on production from production, and each takes its neighbours' look.
+- The profile, Settings, and Contact show two columns on a wide window and one below about 760 px.
+- On the profile, a changed theme or menu style says "Showing this now. Press Save to keep it.", the menu style previews at once, and leaving without saving puts both back.
+- Links from 1NEON to the site are paths, never the production address, and a test fails the build on a new hardcoded one.
 - The API names its SES configuration set when it sends mail (`SES_CONFIGURATION_SET`, set by Terraform to each environment's own). The sending identity's default set is production's, which dev's role may not use, so mail sent from dev was refused.
 - Email shows times in the reader's own zone with UTC beside it, such as "Nov 15, 2026, 8:25 AM EST (13:25 UTC)". The zone is an IANA name from the browser, so daylight saving and leap days follow the calendar; the abbreviation flips between EST and EDT on its own. The contact form's mail to neon1 reads in New York time and shows the sender's local time. Anyone without a saved zone reads in New York time.
 - Email now says who it is from by what sends it: "1NEON" only for the portal, "neon1" for the website (contact form, use-case requests, bug reports, from `requests@` and `bugs@` on notify.neon1.tech), and "neon1 alerts" kept for system mail. In dev the sender and the subject both start with "[DEV] " (replacing "1NEON dev"). Subjects carry one short tag and don't repeat the sender: `[request] Workflows · Dana`, `[bug] BUG-ABC123 · Neo chat · …`. Bug reports go to bugs@neon1.tech (set as `BUG_TO` in both environments; the API falls back to hello@ when it is unset).

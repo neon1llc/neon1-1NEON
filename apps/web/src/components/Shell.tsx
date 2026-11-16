@@ -26,6 +26,7 @@ import { ConfirmDialog } from "./Confirm.tsx";
 import { HelpProvider, useHelp } from "./Help.tsx";
 import { Neo } from "./Neo.tsx";
 import { ReportBug } from "./BugReport.tsx";
+import { usePreviewedMenu } from "../lib/preview.ts";
 import { useProspectEverywhere } from "./Prospect.tsx";
 import { Palette } from "./Palette.tsx";
 import { SignUp } from "./SignUp.tsx";
@@ -656,7 +657,9 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
   const help = useHelp();
   // The person's choice: default opens the full menu from a button; mini also keeps the icon rail
   // on screen at every size. Either way the full menu opens over the page from the menu buttons
-  const mini = menuOf(me.user.menu) === "mini";
+  // (the profile previews its pick here before it is saved: lib/preview.ts)
+  const previewed = usePreviewedMenu();
+  const mini = (previewed ?? menuOf(me.user.menu)) === "mini";
   // A new account never gets Neo; until that's known it stays away
   const newAccount = useProspectEverywhere(me);
   // The organization in view, when this frame is inside one, for hiding what a new account can't do

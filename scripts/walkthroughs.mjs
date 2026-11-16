@@ -177,7 +177,7 @@ const SCENARIOS = {
     await page.waitForTimeout(800);
     if ((await side()) !== "right") throw new Error("Neo isn't bottom right inside the demo");
     const href = await page.locator("a.bug-link").first().getAttribute("href", { timeout: 5000 }).catch(() => null);
-    if (!href || !href.startsWith("https://neon1.tech/report-bug/")) throw new Error("the demo's menu has no 'report a bug' link to neon1.tech/report-bug");
+    if (!href || !href.startsWith("/report-bug/")) throw new Error("the demo menu has no Report a bug link to the same origin's /report-bug/ page");
   },
 
   /** Press Start and watch it to the end */

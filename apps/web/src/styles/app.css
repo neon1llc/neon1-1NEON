@@ -1912,17 +1912,26 @@ html:has(.signin.awake), html:has(.signin.awake) body { background: var(--bg); c
 :root[data-theme="matrix"] .readonly-bar { color: var(--text); background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--amber) 14%, var(--bg)) 0 12px, color-mix(in srgb, var(--amber) 20%, var(--bg)) 12px 24px); border-bottom-color: var(--amber); }
 :root[data-theme="matrix"] .n1chat:not(.n1chat-light) { --fg: var(--m-ink, #EDF1ED); --muted: var(--m-muted, #CBD1CC); }
 
-/* "report a bug": the same look as the link in neon1.tech's footer, so the two read as one thing: Figtree 700 13px in the
-   ink colour, lowercase, a 15px outline bug on the site's own drawing, then the northeast arrow. Shared tokens only */
-.bug-link { font: 700 13px/1 var(--sans); letter-spacing: .01em; text-transform: lowercase; color: var(--text); text-decoration: none; }
-.bug-link:hover, .bug-link:focus-visible { color: var(--accent); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
+/* "Report a bug" takes its neighbours' look wherever it sits: in the menu it is a row like Settings and Contact (the same
+   type, with the bug in an icon tile), on the profile and Settings a ghost button like its peers, and under the sign-in
+   links a link like them. Only the small bug drawing and the northeast arrow are its own */
 .bug-glyph { width: 15px; height: 15px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; margin-right: 6px; vertical-align: -2px; }
 .btn.bug-link { display: inline-flex; align-items: center; text-decoration: none; }
-.btn.bug-link:hover { text-decoration: none; }
 .btn.bug-link .bug-glyph { vertical-align: 0; }
-.fine .bug-link { font-size: inherit; }
-/* In the full menu: the row's icon box holds the bug, and the label keeps the link's own type */
-.side .nav a.bug-row { color: var(--text); font: 700 13px var(--sans); letter-spacing: .01em; }
 .side .nav a.bug-row .ico { color: var(--accent); }
 .side .nav a.bug-row .bug-glyph { margin: 0; vertical-align: 0; }
 .side .nav a.bug-row:hover .out-arrow, .side .nav a.bug-row:focus-visible .out-arrow { transform: translate(2px, -2px); }
+
+
+/* Two columns for the pages that were one narrow column (profile, Settings, Contact). The columns shrink with the window,
+   which keeps their cards comfortable down to about two phone widths; below that it is one column, as on a phone */
+.cols2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; align-items: start; }
+.cols2 > * { min-width: 0; }
+.cols2 .form, .cols2 .card { max-width: none; }
+.cols2 .stack { display: grid; gap: 16px; align-content: start; }
+.cols2 .stack > h2 { margin: 0; }
+@media (max-width: 760px) { .cols2 { grid-template-columns: minmax(0, 1fr); } }
+.card-h { font-size: 15px; margin: 0 0 12px; }
+/* The unsaved note and the marks beside a choice that is only shown, not kept: the page's ink at a heavier weight, nothing new */
+.unsaved { color: var(--text); font-weight: 600; margin: 6px 0 0; }
+.actions .unsaved { margin: 0; }
