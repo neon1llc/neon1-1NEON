@@ -348,8 +348,8 @@ export function MePage() {
         {/* Something broken or confusing: straight to neon1, with the page and theme */}
         <div className="card small" style={{ display: "grid", gap: 8, justifyItems: "start" }}>
           <b>Something not working?</b>
-          <span className="muted">Tell me what happened, on a page that opens in a new tab.</span>
-          <div className="actions"><ReportBug kind="button" /></div>
+          <span className="muted">Tell me what happened, or what you think, on a page that opens in a new tab.</span>
+          <div className="actions"><ReportBug kind="buttons" /></div>
         </div>
         <div className="actions">
           <button className="btn btn-ghost" type="button" onClick={() => void signOut()}>Sign out</button>

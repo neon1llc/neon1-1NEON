@@ -25,6 +25,7 @@ import { QUOTA_SK, accountGuard, prospectGuard } from "./lib/guards.ts";
 import { commentRoutes } from "./routes/comments.ts";
 import { contactRoutes } from "./routes/contact.ts";
 import { bugRoutes } from "./routes/bug.ts";
+import { feedbackRoutes } from "./routes/feedback.ts";
 import { requestRoutes } from "./routes/requests.ts";
 import { devFileRoutes, docRoutes } from "./routes/docs.ts";
 import { exportRoutes } from "./routes/export.ts";
@@ -119,6 +120,9 @@ export function createApp(d: Deps) {
 
   // --- The report-a-bug form on neon1.tech: the same public gates, plus screenshots ---
   bugRoutes(app, k);
+
+  // --- The feedback form on neon1.tech: comments, complaints, and concerns, with the bug form's gates and no screenshots ---
+  feedbackRoutes(app, k);
 
   // --- Identity: every route below needs a signed-in, invited person ------
 

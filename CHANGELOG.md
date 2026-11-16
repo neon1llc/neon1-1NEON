@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- "Feedback" sits beside "report a bug" everywhere it appears: the corner of sign-in and create account reads "report bug \ feedback" (the bug between the words, the speech bubble before "feedback"), the menu has a Feedback row under Report a bug, and the profile and Settings have a Feedback button beside Report a bug. Each opens neon1.tech's feedback page in a new tab.
+- A feedback route takes comments, complaints, concerns, and suggestions from that page: a kind, where it is about, what they wrote, and an optional email, with the report form's gates. It mails feedback@neon1.tech with a reference (FDB-) and no screenshots.
+
 ## v0.18.0 - 2026-11-16
 
 - Sign-in and create account carry "report a bug" in the page's bottom right corner, centered on Neo's button with its right edge on the theme switch's, as on neon1.tech's footer, and no longer in the links inside the form. In the dark theme the rain controls sit one row above it. The bug mark's gap to the text is the arrow's gap to the text, everywhere.

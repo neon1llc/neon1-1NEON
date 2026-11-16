@@ -783,6 +783,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
           <Item to="/contact" icon={<Icon name="contact" />} label="Contact neon1" tour="nav-contact" />
           {/* On every signed-in screen, in the full menu: the neon1 way to say something is broken */}
           <li><ReportBug kind="row" /></li>
+          <li><ReportBug kind="feedbackRow" /></li>
         </ul>
         {/* Back to the neon1.tech site, outside the app's routes, then the signed-in person */}
         <a className="site-link" href="/" title="neon1.tech">
