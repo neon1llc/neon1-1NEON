@@ -12,8 +12,8 @@ import { MemoryTable } from "./store/memory.ts";
 import { Repo } from "./store/repo.ts";
 
 
-// A synthetic secret; never a deployed one
-const SECRET = "test-edge-secret-0123456789";
+// An obviously fake value; never a deployed one
+const SECRET = "fake-edge-value-for-tests";
 
 function appWith(originLock: boolean) {
   return createApp({

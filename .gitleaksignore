@@ -1,0 +1,4 @@
+# .gitleaksignore - Findings gitleaks reports that are known not to be secrets, one fingerprint per line.
+
+# A fake test value in an earlier version of apps/api/src/edge.test.ts (now "fake-edge-value-for-tests")
+529b5c660698b991aab7d0ee11e65b4a4d9c4fba:apps/api/src/edge.test.ts:generic-api-key:16
