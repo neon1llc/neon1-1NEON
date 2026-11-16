@@ -318,15 +318,15 @@ resource "aws_lambda_function" "api" {
   # Everything config.ts reads; connection reuse keeps SDK calls fast between invocations
   environment {
     variables = {
-      APP_ENV                             = var.env
-      TABLE_NAME                          = var.table_name
-      DOCS_BUCKET                         = var.docs_bucket
-      MALWARE_SCAN                        = var.malware_scan ? "on" : "off"
-      USER_POOL_ID                        = var.user_pool_id
-      USER_POOL_CLIENT_ID                 = var.client_id
-      AUTH_DOMAIN                         = var.auth_domain
-      PUBLIC_URL                          = var.public_url
-      MAIL_FROM                           = var.mail_from
+      APP_ENV             = var.env
+      TABLE_NAME          = var.table_name
+      DOCS_BUCKET         = var.docs_bucket
+      MALWARE_SCAN        = var.malware_scan ? "on" : "off"
+      USER_POOL_ID        = var.user_pool_id
+      USER_POOL_CLIENT_ID = var.client_id
+      AUTH_DOMAIN         = var.auth_domain
+      PUBLIC_URL          = var.public_url
+      MAIL_FROM           = var.mail_from
       # Bug reports go to the bugs@ alias on neon1's Workspace (the API falls back to hello@ when unset)
       BUG_TO                              = "bugs@neon1.tech"
       SES_CONFIGURATION_SET               = var.ses_configuration_set
