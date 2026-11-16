@@ -1,19 +1,15 @@
 // apps/api/src/vetting/real.ts - The production checks behind Vetting: DNS for mail domains, the bundled
-// throwaway-domain and places lists (scripts/vetting-data.mjs writes them), and a website check that
-// refuses to look inside a private network. Imported only by the Lambda handler, so the lists never reach
-// the browser demo.
+// throwaway-domain and places lists (scripts/vetting-data.mjs writes them). Nothing here visits a
+// website someone typed. Imported only by the Lambda handler, so the lists never reach the browser demo.
 
 
-import { lookup, resolve4, resolve6, resolveMx } from "node:dns/promises";
-import { isIP } from "node:net";
+import { resolve4, resolve6, resolveMx } from "node:dns/promises";
 import { gunzipSync } from "node:zlib";
 import type { Vetting } from "./types.ts";
 
 
-// How long one DNS answer or one web request may take before the check gives up
+// How long one DNS answer may take before the check gives up
 const DNS_MS = 3000;
-const FETCH_MS = 6000;
-const MAX_REDIRECTS = 4;
 
 
 /** A promise that loses to a timer: undefined if it takes too long */
@@ -33,20 +29,6 @@ export function placeKey(name: string): string {
     .replace(/\bsaint\b/g, "st").replace(/\bsainte\b/g, "ste").replace(/\bmount\b/g, "mt").replace(/\bfort\b/g, "ft")
     .replace(/^the /, "")
     .trim();
-}
-
-
-/** Is this IP address one the website check must never reach: loopback, private, link-local (which
- * includes the cloud metadata address), carrier-grade NAT, multicast, or unspecified? */
-export function privateAddress(ip: string): boolean {
-  if (isIP(ip) === 4) {
-    const [a, b] = ip.split(".").map(Number) as [number, number];
-    return a === 0 || a === 10 || a === 127 || a >= 224 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) || (a === 192 && b === 0) || (a === 198 && (b === 18 || b === 19));
-  }
-  const v6 = ip.toLowerCase();
-  const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(v6);
-  if (mapped) return privateAddress(mapped[1]!);
-  return v6 === "::" || v6 === "::1" || v6.startsWith("fc") || v6.startsWith("fd") || v6.startsWith("fe8") || v6.startsWith("fe9") || v6.startsWith("fea") || v6.startsWith("feb") || v6.startsWith("ff");
 }
 
 
@@ -82,37 +64,6 @@ export class RealVetting implements Vetting {
     const parts = domain.toLowerCase().split(".");
     for (let i = 0; i < parts.length - 1; i++) if (this.disposableSet.has(parts.slice(i).join("."))) return true;
     return false;
-  }
-
-  async reachable(url: string): Promise<"ok" | "unreachable" | "refused"> {
-    let at = url;
-    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
-      let u: URL;
-      try { u = new URL(at); } catch { return "unreachable"; }
-      if ((u.protocol !== "https:" && u.protocol !== "http:") || (u.port && u.port !== "80" && u.port !== "443")) return "refused";
-      // Every address the name points to must be public, checked before each request and each redirect
-      const addrs = await within(lookup(u.hostname, { all: true }).catch(() => []), DNS_MS);
-      if (!addrs?.length) return "unreachable";
-      if (addrs.some((a) => privateAddress(a.address))) return "refused";
-      const r = await fetch(u, {
-        method: "GET",
-        redirect: "manual",
-        signal: AbortSignal.timeout(FETCH_MS),
-        headers: { "user-agent": "Mozilla/5.0 (compatible; neon1-linkcheck/1.0; +https://neon1.tech/1NEON/privacy)", accept: "text/html,*/*;q=0.5" },
-      }).catch(() => undefined);
-      if (!r) return "unreachable";
-      // Only the status matters; the page itself is never read
-      await r.body?.cancel().catch(() => {});
-      const next = r.headers.get("location");
-      if (r.status >= 300 && r.status < 400 && next) {
-        at = new URL(next, u).toString();
-        continue;
-      }
-      // Any answer, even "forbidden" (LinkedIn answers bots that way), means the address is real
-      return "ok";
-    }
-    // Too many redirects still means something answered
-    return "ok";
   }
 
   async place(city: string, state: string): Promise<string | undefined> {

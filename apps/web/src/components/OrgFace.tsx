@@ -5,7 +5,7 @@
 
 
 import { HttpError } from "../lib/api.ts";
-import { joinPlace, normalizeLink, placeShapeProblem, splitPlace, US_STATES, type Tenant } from "@1neon/domain";
+import { joinPlace, normalizeLink, OUTSIDE_US, placeShapeProblem, splitPlace, US_STATES, type Tenant } from "@1neon/domain";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "../lib/api.ts";
@@ -50,7 +50,7 @@ export function FaceForm({ ask = false, onDone }: { ask?: boolean; onDone?: () =
   const [link, setLink] = useState(org.link ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  // The API's answers by field (a link that didn't answer, a place it couldn't find), shown under each
+  // The API's answers by field (a link or place it can't take), shown under each
   const [fieldErrs, setFieldErrs] = useState<Record<string, string>>({});
   const place = joinPlace(city, state);
   const linkBad = link.trim() !== "" && normalizeLink(link) === undefined;
@@ -94,14 +94,15 @@ export function FaceForm({ ask = false, onDone }: { ask?: boolean; onDone?: () =
       {/* City and state side by side, the state narrower */}
       <div className="face-pair">
         <div>
-          <label className="field-label" htmlFor="face-city">City</label>
-          <input id="face-city" maxLength={60} autoComplete="address-level2" placeholder="Albany" aria-invalid={placeMsg ? true : undefined} aria-describedby={placeMsg ? "face-place-error" : undefined} value={city} onChange={(e) => { setCity(e.target.value); setFieldErrs(({ place: _p, ...r }) => r); }} />
+          <label className="field-label" htmlFor="face-city">{state === OUTSIDE_US ? "City and country" : "City"}</label>
+          <input id="face-city" maxLength={80} autoComplete={state === OUTSIDE_US ? "off" : "address-level2"} placeholder={state === OUTSIDE_US ? "Toronto, Canada" : "Albany"} aria-invalid={placeMsg ? true : undefined} aria-describedby={placeMsg ? "face-place-error" : undefined} value={city} onChange={(e) => { setCity(e.target.value); setFieldErrs(({ place: _p, ...r }) => r); }} />
         </div>
         <div>
           <label className="field-label" htmlFor="face-state">State</label>
           <select id="face-state" autoComplete="address-level1" aria-invalid={placeMsg ? true : undefined} value={state} onChange={(e) => { setState(e.target.value); setFieldErrs(({ place: _p, ...r }) => r); }}>
             <option value="">State</option>
             {Object.entries(US_STATES).map(([code, n]) => <option key={code} value={code}>{n}</option>)}
+            <option value={OUTSIDE_US}>Outside the US</option>
           </select>
         </div>
       </div>

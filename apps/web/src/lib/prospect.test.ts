@@ -61,8 +61,9 @@ describe("sign-up form", () => {
     expect(signUpReady({ ...ok, found: "other", foundOther: "A podcast" })).toBe(true);
   });
   it("speaks field by field about what was typed", () => {
-    expect(signUpProblems({ ...ok, name: "Ana" })).toEqual({ name: "Enter your first and last name." });
-    expect(signUpProblems({ ...ok, name: "Ana", oneName: true })).toEqual({});
+    expect(signUpProblems({ ...ok, name: "Ana" })).toEqual({});
+    expect(signUpProblems({ ...ok, city: "Toronto, Canada", state: "intl" })).toEqual({});
+    expect(signUpProblems({ ...ok, city: "", state: "intl" })).toHaveProperty("place");
     expect(signUpProblems({ ...ok, city: "Albany", state: "" })).toHaveProperty("place");
     expect(signUpProblems({ ...ok, link: "not a link" })).toHaveProperty("link");
     expect(signUpProblems({ ...ok, email: "a@b" })).toHaveProperty("email");

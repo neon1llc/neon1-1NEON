@@ -82,3 +82,43 @@ export function NextStep({ orgId }: { orgId: string }) {
     </section>
   );
 }
+
+
+// A free account's expiry, as routes/prospects.ts keepRoutes tells it
+type Keep = { free: boolean; held?: boolean; deleteOn?: string; kept?: string; canKeep?: boolean };
+
+
+/** On a free account's Home: the day it's deleted if nothing changes, one "Keep it 30 more days", and a
+ * way to download everything first. Held accounts (neon1 is talking with them) show nothing */
+export function KeepCard({ orgId, slug, canKeep: mayKeep }: { orgId: string; slug: string; canKeep: boolean }) {
+  const qc = useQueryClient();
+  const toast = useToast();
+  const keep = useQuery({ queryKey: ["keep", orgId], queryFn: () => read<Keep>(`/t/${orgId}/keep`, {}) });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const k = keep.data;
+  if (!k?.free || k.held || !k.deleteOn) return null;
+  const extend = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      await api(`/t/${orgId}/keep`, { method: "POST", body: {} });
+      await qc.invalidateQueries({ queryKey: ["keep", orgId] });
+      toast("Kept for 30 more days.");
+    } catch (e) {
+      setError(problem(e));
+    }
+    setBusy(false);
+  };
+  return (
+    <section className="card keep-card" aria-labelledby="keep-h">
+      <h2 className="section-h" id="keep-h">Your free account</h2>
+      <p className="small">Kept until <strong>{dateLabel(k.deleteOn)}</strong>. Any change you make here keeps it longer, and I'll email you before anything is deleted.</p>
+      {error && <p className="notice" role="alert">{error}</p>}
+      <div className="actions">
+        {k.canKeep && mayKeep && <button type="button" className="btn btn-sm" disabled={busy} onClick={() => void extend()}>{busy ? "Keeping…" : "Keep it 30 more days"}</button>}
+        <Link className="btn btn-sm" to={`/o/${slug}/settings#your-data`}>Download a copy</Link>
+      </div>
+    </section>
+  );
+}

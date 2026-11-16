@@ -3,7 +3,7 @@
 // can show its message beside that field. A check that can't decide never refuses anyone.
 
 
-import { emailDomain, emailShapeOk, nameProblem, placeShapeProblem, splitPlace, stateCode, textProblem, US_STATES } from "@1neon/domain";
+import { emailDomain, emailShapeOk, MIN_TEXT, nameProblem, OUTSIDE_US, placeShapeProblem, splitPlace, stateCode, textProblem, US_STATES } from "@1neon/domain";
 import type { Vetting } from "../vetting/types.ts";
 import { fail } from "./http.ts";
 
@@ -33,12 +33,9 @@ export async function emailProblem(v: Vetting | undefined, email: string): Promi
 }
 
 
-/** A website or public page, already shaped by the domain rules: it has to answer */
-export async function linkProblem(v: Vetting | undefined, link: string): Promise<string | undefined> {
-  if (!link || !v) return undefined;
-  const r = await v.reachable(link);
-  if (r === "refused") return "That address can't be used. Enter a public website or page.";
-  if (r === "unreachable") return "That address didn't answer. Check it, or leave it empty.";
+/** A website or public page: only its shape is checked (the domain rules, before this). The server never
+ * visits it, so nothing typed here can make it reach anywhere, and a new or private site is never refused */
+export async function linkProblem(_v: Vetting | undefined, _link: string): Promise<string | undefined> {
   return undefined;
 }
 
@@ -51,21 +48,26 @@ const PLACE_ALIASES: Record<string, Record<string, string>> = {
 
 
 /**
- * A place as stored ("City, ST" or a state's name): a city needs its state, and (with Vetting) must be a
- * populated place in that state. Returns the place in its proper spelling, or the message to show
+ * A place as stored ("City, ST", a state's name, or a place outside the US as typed). A US city is
+ * given its proper spelling when the places list (Vetting) knows it, and kept as typed when it doesn't,
+ * since the list misses small towns. Returns the place, or the message to show
  */
 export async function placeCheck(v: Vetting | undefined, place: string): Promise<{ place: string } | { problem: string }> {
   if (!place.trim()) return { place: "" };
   const { city, state } = splitPlace(place);
   const shape = placeShapeProblem(city, state);
   if (shape) return { problem: shape };
+  if (state === OUTSIDE_US) {
+    const t = textProblem(city, "where you're based", MIN_TEXT);
+    return t ? { problem: t } : { place: city.trim().replace(/\s+/g, " ") };
+  }
   const code = stateCode(state)!;
   if (!city) return { place: US_STATES[code] };
   const alias = PLACE_ALIASES[code]?.[city.trim().toLowerCase().replace(/\./g, "")];
   if (alias) return { place: `${alias}, ${code}` };
   if (!v) return { place: `${city.trim()}, ${code}` };
   const found = await v.place(city, code);
-  return found ? { place: `${found}, ${code}` } : { problem: `We couldn't find ${city.trim()} in ${US_STATES[code]}. Check the spelling, or choose only the state.` };
+  return { place: `${found ?? city.trim()}, ${code}` };
 }
 
 

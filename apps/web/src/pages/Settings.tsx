@@ -114,7 +114,7 @@ export function Settings() {
       )}
       {error && <p className="notice" role="alert">{error}</p>}
       {/* The organization's own copy of everything, any time, without asking neon1 */}
-      <h2 className="section-h">Your data</h2>
+      <h2 className="section-h" id="your-data">Your data</h2>
       <ExportData />
     </>
   );
