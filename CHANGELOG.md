@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+### Changed
+- **Sign-in and public pages follow the site theme.** A sun/moon switch sits at the top right of the sign-in, FAQs, Cookies, Privacy, Terms, and agreement pages. It shares the neon1.tech choice, defaults to awake, and flickers on like the site. Awake sign-in uses paper with soft green rings instead of rain. The portal, demo, and live, are untouched.
+- Those pages get the site bar: logo and word on the left, a "← 1NEON" button and the switch on the right.
+- Even spacing on the sign-in around "Or see how it works".
+- Phone: the Menu tab always sits at the far right of the bottom bar.
+
 ### Security
 - **Origin lock.** CloudFront now adds a secret header to every API request (`/1neon/<env>/origin_secret` in SSM), and with `origin_lock` on the API refuses anything that skipped CloudFront. On for dev; off in production until neon1.tech sends the header, then switched on in the next release.
 - The visitor's address for sign-up and contact limits, and on signature records, comes from CloudFront's own viewer-address header (`apps/api/src/lib/edge.ts`) instead of the first forwarded-for entry, which a caller could write.

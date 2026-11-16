@@ -19,6 +19,8 @@ import { limitedProspect, prospectEverywhere } from "../lib/prospect.ts";
 import { Bell } from "./Bell.tsx";
 import { Offline } from "./Glitch.tsx";
 import { Rain } from "./Rain.tsx";
+import { PublicBar } from "./PublicBar.tsx";
+import { useSiteTheme } from "../lib/sitetheme.ts";
 import { FileText as FileIcon, Folder as FolderIcon, Home as HomeIcon, Kanban as KanbanIcon, Menu as MenuIcon, Search as SearchIcon } from "lucide-react";
 import { ConfirmDialog } from "./Confirm.tsx";
 import { HelpProvider, useHelp } from "./Help.tsx";
@@ -333,22 +335,30 @@ function SignIn() {
     if (r.step === "choose" || r.step === "code" || r.step === "totp") saveStep(session(), { email: mail, step: r.step, methods: r.methods });
     fade(() => { setAt(r); setSigningUp(false); });
   };
+  // The real sign-in shares neon1.tech's awake or matrix choice (awake until picked); the demo's picker keeps its rain
+  const publicLook = !IN_DEMO && !PICKER;
+  const [look, setLook] = useSiteTheme(publicLook);
+  const awake = publicLook && look === "awake";
   return (
-    <main className="signin">
-      <Rain panes=".signin .panel, .signin .n1-logo, .rainctl button" />
-      <div className="veil" />
-      {/* Back to neon1.tech, in the site's own top bar so the logo sits exactly where the site's does */}
-      <header className="n1-bar">
-        <div className="n1-inner">
-          <a className="n1-logo glass" href="/" aria-label="neon1.tech home">
-            <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
-              <path d="M6 6a24 24 0 0 1 24 24v30M6 12a18 18 0 0 1 18 18v30M6 18a12 12 0 0 1 12 12v30M6 24a6 6 0 0 1 6 6v30" />
-              <path d="M34 6a24 24 0 0 1 24 24v30M34 12a18 18 0 0 1 18 18v30M34 18a12 12 0 0 1 12 12v30M34 24a6 6 0 0 1 6 6v30" />
-            </svg>
-            <span><span className="ne">neon</span><span className="one">1</span></span>
-          </a>
-        </div>
-      </header>
+    <main className={`signin${awake ? " awake" : ""}`}>
+      {!awake && <Rain panes=".signin .panel, .signin .n1-logo, .rainctl button" />}
+      {!awake && <div className="veil" />}
+      {publicLook ? (
+        <PublicBar theme={look} onChange={setLook} />
+      ) : (
+        /* Back to neon1.tech, in the site's own top bar so the logo sits exactly where the site's does */
+        <header className="n1-bar">
+          <div className="n1-inner">
+            <a className="n1-logo glass" href="/" aria-label="neon1.tech home">
+              <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+                <path d="M6 6a24 24 0 0 1 24 24v30M6 12a18 18 0 0 1 18 18v30M6 18a12 12 0 0 1 12 12v30M6 24a6 6 0 0 1 6 6v30" />
+                <path d="M34 6a24 24 0 0 1 24 24v30M34 12a18 18 0 0 1 18 18v30M34 18a12 12 0 0 1 12 12v30M34 24a6 6 0 0 1 6 6v30" />
+              </svg>
+              <span><span className="ne">neon</span><span className="one">1</span></span>
+            </a>
+          </div>
+        </header>
+      )}
       {/* Signing up widens the panel on a wide screen, so the form fits without scrolling */}
       <div className={`panel glass${signingUp ? " signing-up" : ""}`}>
         <Wordmark />

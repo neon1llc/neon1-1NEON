@@ -35,6 +35,7 @@ The portal also saves, on your device only:
 | `1neon.email` (local storage) | With Remember me ticked, the email you signed in with, so it's filled in next time. Unticked, it's cleared | Until you sign in with Remember me unticked, or clear it |
 | `1neon.lastOrg` (local storage) | The organization you last had open, so pages outside one (your profile, the FAQs) keep its menu | Until you clear it |
 | `1neon.signup` (local storage) | Whether free-account sign-up was open when you last opened sign-in, so the page shows the right wording at once | Until you clear it |
+| `neon1.theme` (local storage) | That you chose the dark (matrix) or light (awake) look with the switch on sign-in and the public pages. Shared with neon1.tech | Until you clear it |
 | `1neon.motion` (local storage) | That you chose **Reduced** motion on your profile, which turns 1NEON's animations off in this browser | Until you choose **Smooth** again, or clear it |
 | `1neon.face-ask.` and an organization's ID (local storage) | Admins only: that you chose **Not now** when Home asked where to see your business, so it stops asking in this browser | Until you clear it |
 | `1neon.signin` (session storage) | Your email and the sign-in step in progress, so a reload mid sign-in returns to the code step. The code itself is never saved | 5 minutes, or until the tab closes |

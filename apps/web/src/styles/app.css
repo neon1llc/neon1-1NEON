@@ -501,6 +501,8 @@ fieldset legend { font: 12px var(--mono); color: var(--muted); }
   .tabbar { --under: 40vh; }
   .tabbar a, .tabbar button { display: grid; justify-items: center; gap: 2px; padding: 6px 0; border: 0; background: none; color: var(--muted); font: 11px var(--mono); text-decoration: none; border-radius: var(--r-sm); cursor: pointer; }
   .tabbar a.active { color: var(--accent); background: var(--accent-soft); }
+  /* Menu is always the last column, under the right thumb, however few places the bar has (Home alone, or all of them) */
+  .tabbar .menu-btn { grid-column: 5; }
   .page-title { font-size: 22px; }
   .page-title::before { content: none; }
   .search-btn { padding: 0; width: 36px; justify-content: center; }
@@ -1724,3 +1726,84 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
 @media (prefers-reduced-motion: reduce) {
   ::backdrop, select::picker-icon { animation: none !important; transition: none !important; }
 }
+
+
+/* ==== Public screens: sign-in, FAQs, legal pages (components/PublicBar.tsx, lib/sitetheme.ts) ====
+   They share neon1.tech's awake or matrix choice, awake until picked. Awake shows paper with a green wash and quiet rings
+   (the 1NEON mark's shape) instead of the rain; matrix keeps the rain. The portal, the demo, and the walkthroughs are untouched. */
+
+/* The bar: the site's light bar over awake, its dark glass over matrix. The logo, the switch, and the back button follow the site's layout */
+.pub-bar { background: color-mix(in srgb, var(--bg) 80%, transparent); -webkit-backdrop-filter: saturate(1.8) blur(20px); backdrop-filter: saturate(1.8) blur(20px); border-bottom: 1px solid var(--line); }
+.pub-bar .n1-logo { color: var(--accent); text-shadow: none; }
+:root[data-theme="matrix"] .pub-bar .n1-logo { color: #D9FFE8; text-shadow: 0 0 2px #E9FFEE, 0 0 6px rgba(108, 255, 168, .95), 0 0 14px rgba(108, 255, 168, .75), 0 0 30px rgba(0, 230, 118, .55); }
+:root[data-theme="matrix"] .pub-bar .n1-logo svg { filter: drop-shadow(0 0 2px #E9FFEE) drop-shadow(0 0 6px rgba(108, 255, 168, .95)) drop-shadow(0 0 14px rgba(0, 230, 118, .65)); }
+.pub-bar a, .pub-bar button { -webkit-tap-highlight-color: transparent; }
+.theme-sw { position: relative; flex: none; width: 52px; height: 28px; margin-left: auto; padding: 0; border-radius: 99px; cursor: pointer;
+  background: var(--panel); border: 1px solid var(--line-strong); color: var(--muted); }
+.theme-sw svg { position: absolute; top: 50%; width: 14px; height: 14px; margin-top: -7px; z-index: 1; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: color .25s, opacity .25s; }
+.theme-sun { left: 6px; } .theme-moon { right: 6px; }
+.theme-moon path { fill: currentColor; stroke: none; }
+.theme-knob { position: absolute; top: 2px; left: 2px; width: 22px; height: 22px; border-radius: 50%; background: var(--accent-soft); transition: transform .3s cubic-bezier(.2, .8, .2, 1); }
+.theme-sw[aria-checked="true"] .theme-knob { transform: translateX(24px); }
+.theme-sw[aria-checked="false"] .theme-sun, .theme-sw[aria-checked="true"] .theme-moon { color: var(--accent); }
+.theme-sw[aria-checked="false"] .theme-moon, .theme-sw[aria-checked="true"] .theme-sun { opacity: .6; }
+.theme-sw:active { background: var(--accent-soft); }
+@media (hover: hover) { .theme-sw:hover { border-color: var(--accent); } }
+@media (forced-colors: active) { .theme-knob { border: 1px solid ButtonText; } .theme-sw svg { color: ButtonText; opacity: 1; } }
+/* The way back beside the sign-in: the site's right-arrow button at the right edge, the arrow turned to point left */
+.pub-back { display: inline-flex; align-items: center; gap: 8px; margin-left: 10px; padding: 7px 14px; border-radius: 10px; font: 500 14px var(--mono); letter-spacing: .02em; text-decoration: none;
+  color: var(--accent); background: var(--panel); border: 1px solid var(--line-strong); }
+.pub-back .arr { width: .95em; height: .8em; background: currentColor; flex: none; clip-path: var(--arr-shape); transition: transform .2s; }
+@media (hover: hover) { .pub-back:hover { border-color: var(--accent); } .pub-back:hover .arr { transform: translateX(-2px); } }
+.pub-back:active { background: var(--accent-soft); }
+/* Desktop (over the width the site folds its links): the button is at the right edge, the switch right after it, then, from 1320px,
+   alone in the page margin beyond the row, as on neon1.tech. The sign-in has no button, so its switch stays at the row's right edge */
+@media (min-width: 1041px) {
+  .pub-bar:not(.alone) .theme-sw { order: 3; margin-left: 12px; }
+  .pub-bar:not(.alone) .pub-back { margin-left: auto; }
+}
+@media (min-width: 1320px) {
+  .pub-bar:not(.alone) .theme-sw { position: absolute; margin: 0; top: calc(env(safe-area-inset-top) + 32px); right: calc((100% - 1200px) / 4 + 12px); transform: translate(50%, -50%); }
+}
+/* The FAQs and legal pages sit under the fixed bar */
+.pub-page { padding-top: calc(64px + env(safe-area-inset-top) + 28px); }
+
+/* The neon flicker as the choice changes: the logo goes dark in one flick, and lights up with two quick flickers, a longer one, then a slow on */
+:root.flick-on .pub-bar .n1-logo { animation: neon-on 2.23s linear both; --lo: .08; }
+:root.flick-off .pub-bar .n1-logo { animation: neon-off .5s ease-out both; --lo: .08; }
+@keyframes neon-on {
+  0% { opacity: var(--lo); } 4% { opacity: 1; } 8% { opacity: var(--lo); } 13% { opacity: var(--lo); }
+  14.5% { opacity: 1; } 19% { opacity: 1; } 22% { opacity: var(--lo); } 28% { opacity: var(--lo); }
+  30% { opacity: 1; } 44% { opacity: 1; } 48% { opacity: var(--lo); } 52% { opacity: var(--lo); }
+  78% { opacity: .4; } 100% { opacity: 1; }
+}
+@keyframes neon-off { 0% { opacity: var(--lo); } 35% { opacity: var(--lo); } 100% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { :root.flick-on .pub-bar .n1-logo, :root.flick-off .pub-bar .n1-logo { animation: none; } }
+
+/* The awake sign-in: paper under a green wash, with rings like the mark's, and a white panel */
+html:has(.signin.awake), html:has(.signin.awake) body { background: var(--bg); color-scheme: light; }
+.signin.awake { color: var(--text); --focus: var(--accent);
+  background: radial-gradient(75% 46% at 50% -6%, rgba(3, 87, 4, .2), transparent 70%), radial-gradient(55% 40% at 100% 100%, rgba(3, 87, 4, .1), transparent 72%),
+    repeating-radial-gradient(circle at 50% 42%, rgba(3, 87, 4, .07) 0 1px, transparent 1px 52px), var(--bg); }
+.signin.awake .panel { background: var(--panel); border: 1px solid var(--line-strong); border-radius: 14px; box-shadow: 0 22px 60px -28px rgba(3, 87, 4, .45), var(--shadow); }
+.signin.awake .signin-h, .signin.awake .lost-title { color: var(--text); }
+.signin.awake .signin-lead, .signin.awake .field-label { color: var(--muted); }
+.signin.awake .fine, .signin.awake .fine a, .signin.awake .linkish { color: var(--muted); }
+.signin.awake input { background: var(--bg); color: var(--text); border-color: var(--line-strong); }
+.signin.awake .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); box-shadow: none; }
+.signin.awake .btn-ghost { color: var(--accent); border-color: var(--accent); }
+.signin.awake .signin-more { border-top-color: var(--line); }
+.signin.awake .signin-more a { color: var(--muted); }
+.signin.awake .signin-more a:hover { color: var(--accent); }
+.signin.awake .remember input:checked { background: var(--accent); border-color: var(--accent); }
+.signin.awake .remember input:checked::after { border-color: #fff; }
+.signin.awake .word .init { color: var(--accent); text-shadow: none; }
+.signin.awake .word .rest { color: var(--muted); }
+.signin.awake .dev button { background: var(--bg); border: 1px solid var(--line); color: var(--text); }
+.signin.awake { --req-color: var(--red); }
+
+/* Even spacing in the panel: the same gap above and below "Or see how it works", and a calmer top and bottom to match */
+.signin .panel { padding-top: 28px; }
+.signin .word { margin-bottom: 18px; }
+.signin .signin-more { padding-top: 18px; }
+.signin .panel:has(> .signin-more:last-child) { padding-bottom: 18px; }

@@ -6,6 +6,8 @@
 import { AGREEMENT_TEXT } from "@1neon/domain";
 import { Link } from "react-router";
 import { Markdown } from "../components/Markdown.tsx";
+import { PublicBar } from "../components/PublicBar.tsx";
+import { useSiteTheme } from "../lib/sitetheme.ts";
 import cookies from "../legal/cookie-notice.md?raw";
 import privacy from "../legal/privacy-policy.md?raw";
 import terms from "../legal/terms-of-use.md?raw";
@@ -19,14 +21,17 @@ const DOCS = { privacy, terms, cookies, agreement: AGREEMENT_TEXT } as const;
 
 /** One legal document, with links to the others */
 export function Legal({ doc }: { doc: keyof typeof DOCS }) {
+  const [look, setLook] = useSiteTheme();
   return (
-    <main className="content legal" style={{ maxWidth: 760, margin: "0 auto" }}>
-      <p className="small"><Link to="/">← 1NEON</Link></p>
+    <>
+    <PublicBar theme={look} onChange={setLook} back />
+    <main className="content legal pub-page" style={{ maxWidth: 760, margin: "0 auto" }}>
       {/* Rendered from Markdown, then links to the other two documents */}
       <Markdown source={DOCS[doc]} />
       <p className="small muted" style={{ marginTop: 40 }}>
         <Link to="/privacy">Privacy</Link> · <Link to="/terms">Terms</Link> · <Link to="/cookies">Cookies</Link> · <Link to="/agreement">Service agreement</Link> · <Link to="/faqs">FAQs</Link>
       </p>
     </main>
+    </>
   );
 }

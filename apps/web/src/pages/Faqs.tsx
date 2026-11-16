@@ -6,6 +6,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { Markdown } from "../components/Markdown.tsx";
+import { PublicBar } from "../components/PublicBar.tsx";
+import { useSiteTheme } from "../lib/sitetheme.ts";
 import source from "../help/faqs.md?raw";
 import { matches, parse, type Question } from "../lib/faq.ts";
 
@@ -38,6 +40,7 @@ function CopyLink({ item }: { item: Question }) {
 
 /** The FAQs page, readable without signing in */
 export function Faqs() {
+  const [look, setLook] = useSiteTheme();
   const [q, setQ] = useState("");
   // The question a link points at (#id) opens on arrival and scrolls into view
   const { hash } = useLocation();
@@ -58,8 +61,9 @@ export function Faqs() {
     return () => window.clearTimeout(t);
   }, [q, topics]);
   return (
-    <main className="content legal faqs" style={{ maxWidth: 760, margin: "0 auto" }}>
-      <p className="small"><Link to="/">← 1NEON</Link></p>
+    <>
+    <PublicBar theme={look} onChange={setLook} back />
+    <main className="content legal pub-page faqs" style={{ maxWidth: 760, margin: "0 auto" }}>
       <h1 className="page-title">FAQs</h1>
       <Markdown source={FAQ.intro} />
       <input type="search" aria-label="Search the FAQs" placeholder="Search the FAQs" value={q} onChange={(e) => setQ(e.target.value)} className="faq-search" />
@@ -82,5 +86,6 @@ export function Faqs() {
         <Link to="/privacy">Privacy</Link> · <Link to="/terms">Terms</Link> · <Link to="/cookies">Cookies</Link> · <Link to="/faqs">FAQs</Link>
       </p>
     </main>
+    </>
   );
 }
