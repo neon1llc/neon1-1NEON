@@ -6,7 +6,7 @@
 import { DEMO, LIVE } from "../lib/api.ts";
 
 
-// ?from= tells the page where the reader came from, so its "where" starts on the right choice
+// ?from= tells the page where the reader came from; no noreferrer, since the page also reads document.referrer
 export const reportBug = () => `https://neon1.tech/report-bug/?from=${DEMO ? "demo" : "1neon"}`;
 
 
@@ -23,7 +23,7 @@ function BugGlyph() {
 export function ReportBug({ kind = "link" }: { kind?: "row" | "link" | "button" }) {
   if (LIVE) return null;
   const arrow = <span className="out-arrow" aria-hidden="true">↗</span>;
-  const props = { href: reportBug(), target: "_blank", rel: "noopener noreferrer", title: "Opens in a new tab" } as const;
+  const props = { href: reportBug(), target: "_blank", rel: "noopener", title: "Opens in a new tab" } as const;
   return kind === "row" ? (
     <a className="out bug-link bug-row" {...props}><span className="ico" aria-hidden="true"><BugGlyph /></span><span className="lbl">report a bug{arrow}</span></a>
   ) : kind === "button" ? (
