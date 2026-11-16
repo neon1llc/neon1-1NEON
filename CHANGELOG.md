@@ -4,9 +4,12 @@
 
 ## Unreleased
 
+## v0.15.1 - 2026-11-16
+
 ### Changed
 - Sign-up: the organization's name is optional for **Something else**. Without one, the account is named for the person.
-- Arriving from neon1.tech is the browser's one cross-fade; the portal's own arrival fade and the `neon1.handoff` key are gone.
+- Opening 1NEON from neon1.tech is one smooth fade.
+- Legal pages and Neo's guide from neon1-corpus v0.46.1.
 
 ## v0.15.0 - 2026-11-15
 
