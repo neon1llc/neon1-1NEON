@@ -4,15 +4,16 @@
 
 ## Unreleased
 
+### Added
 - New walkthrough, **From free account to client** (`/1NEON/live?play=free`): a made-up florist starts a free account, writes down a project, keeps the account 30 more days, and asks for an assessment; Pradeep reads the request, asks a question in her project, and promotes the account to a client from Potentials. The FAQs link it.
 - Every walkthrough's sign-in now reads exactly as the real one: the site's awake or matrix theme, "New here? Start for free.", **Start for free** opening the real create-account form, and "Try it yourself · Or see how it works" under the panel.
 - The walkthrough's pretend mail window names whose inbox it is, not always Maria's.
+
+### Changed
 - Create account says what a free account holds before anything is typed, on one quiet line under the heading: up to 3 projects, kept 30 days after the last change. The numbers come from the same limits the API enforces.
 - Sign-in and create account both end with "Try it yourself · Or see how it works": the demo and the guided walkthrough, side by side.
 - Create account on a phone shows a faint horizontal line between the needed fields and the optional ones, the same line the wide layout runs between its two columns.
 - In the light theme, "I agree to the terms of use" reads in the page's text color with the link in the brand green; the link had been pale green on white.
-
-### Changed
 - **Keep it 30 more days** adds 30 days to the date already shown, so pressing it early no longer gives fewer days. It's still offered once.
 - Deleting a free account happens in two steps. Its people are shut out at once; everything else goes a few minutes later, once any request or upload link already under way has run out. Pressing Delete says so, and Potentials shows "Being deleted" until it's done.
 - Suspended free accounts are never deleted by the 30-day clock. Potentials lists them first, with how long each has been suspended, until neon1 resumes or deletes them.
