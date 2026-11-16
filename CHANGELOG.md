@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+- The site's report-a-bug form has a backend: `POST /1NEON/api/bug` mails hello@ with a reference id, and `POST /1NEON/api/bug/:ref/image` takes up to three PNG or JPEG screenshots (3 MB each, checked by their first bytes). Screenshots are kept under `t/_bugs/<reference>/` in the private, malware-scanned documents bucket and are never deleted. The form has the contact form's hidden field and hourly and daily limits.
+
 ## v0.17.1 - 2026-11-16
 
 - Switching the public screens to the dark theme, the bar's logo and Neo's button ease up smoothly to full brightness once instead of flickering, as on neon1.tech; the 1NEON mark and the other green parts keep their flicker.

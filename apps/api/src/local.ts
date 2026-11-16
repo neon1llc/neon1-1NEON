@@ -30,6 +30,9 @@ export class MemoryStorage implements Storage {
   async remove(key: string) {
     this.files.delete(key);
   }
+  async put(key: string, bytes: Uint8Array, type: string) {
+    this.files.set(key, { type, bytes });
+  }
 }
 
 
