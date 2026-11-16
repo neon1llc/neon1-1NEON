@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+## v0.16.1 - 2026-11-16
+
+### Security
+- The origin lock is on in production. neon1.tech sends the API's secret header, so requests to the API's own AWS address are refused.
+
 ## v0.16.0 - 2026-11-16
 
 ### Added
