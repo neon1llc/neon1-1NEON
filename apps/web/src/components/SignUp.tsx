@@ -1,11 +1,13 @@
 // apps/web/src/components/SignUp.tsx - Sign-up on the sign-in screen: someone from the site makes their
 // own account. It asks the API whether sign-up is open, shows the form (with the invisible Turnstile
 // check and a hidden field for bots), and hands the answer back to sign-in, which carries on with the
-// same emailed code as everyone. On a wide screen the needed fields sit left and the optional ones right.
+// same emailed code as everyone. What a free account holds shows before anything is typed, and the
+// optional fields wait behind one button. On a wide screen the needed fields sit left, with the limits and
+// the optional fields right.
 
 
 import { useEffect, useRef, useState } from "react";
-import { DESCRIBES, FOUND_VIA, OUTSIDE_US, US_STATES } from "@1neon/domain";
+import { DESCRIBES, FOUND_VIA, OUTSIDE_US, PROSPECT_FINAL_DAYS, PROSPECT_GRACE_DAYS, PROSPECT_LIMITS, US_STATES } from "@1neon/domain";
 import { Link } from "react-router";
 import { api, HttpError, Unconfirmed } from "../lib/api.ts";
 import { elapsedSince, needsOrg, orgRequired, signUpBody, signUpProblems, signUpReady, type SignUpInfo } from "../lib/signup.ts";
@@ -33,6 +35,9 @@ export function SignUp({ info: known, email: start, remember, onStep, onBack, lo
   // How they found neon1: optional, one answer from FOUND_VIA, with their words for "Somewhere else"
   const [found, setFound] = useState("");
   const [foundOther, setFoundOther] = useState("");
+  // The optional fields stay folded behind one button until someone asks for them (or the API has
+  // something to say about one of them)
+  const [more, setMore] = useState(false);
   // Fields someone has left (a problem shows once they move on), and the API's answers by field
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [fieldErrs, setFieldErrs] = useState<Record<string, string>>({});
@@ -113,7 +118,9 @@ export function SignUp({ info: known, email: start, remember, onStep, onBack, lo
         setError("");
         // Keyboard and screen reader users land on the first field that needs a look
         const first = ["email", "name", "kind", "kindOther", "org", "link", "place", "found", "foundOther"].find((f) => byField[f]);
-        if (first) document.getElementById(`su-${first === "place" ? "city" : first}`)?.focus();
+        // A problem in an optional field unfolds them first, so the field is there to focus
+        if (["link", "place", "found", "foundOther"].some((f) => byField[f])) setMore(true);
+        if (first) setTimeout(() => document.getElementById(`su-${first === "place" ? "city" : first}`)?.focus(), 0);
       } else
       // The API's own words (a limit reached, a failed check, sign-up paused), or a note that it may have gone through
       setError(e instanceof HttpError ? e.body.message : e instanceof Unconfirmed ? "We couldn't confirm whether this finished. If a code arrives by email, go back and use it, or try again." : "Couldn't reach 1NEON. Check your connection and try again.");
@@ -150,6 +157,8 @@ export function SignUp({ info: known, email: start, remember, onStep, onBack, lo
   return (
     <form className="stack signup-form" name="signup" onSubmit={(e) => { e.preventDefault(); submit(); }}>
       {error && <p className="notice full su-error" role="alert">{error}</p>}
+      {/* What a free account holds, read before anything is typed: first on a phone, top right on a wide screen */}
+      <Limits />
       {/* Two columns on a wide screen (styles: "Sign-up, wide"): what's needed, marked with a green
           asterisk, on the left; what's optional on the right, past a faint line. One column on a phone */}
       <div className="su-col su-need">
@@ -176,8 +185,14 @@ export function SignUp({ info: known, email: start, remember, onStep, onBack, lo
           </Field>
         )}
       </div>
-      {/* Where the business can be seen: optional, since some people would rather stay private until we talk */}
+      {/* Where the business can be seen and how they found neon1: optional, since some people would rather
+          stay private until we talk, so folded behind one button */}
       <div className="su-col su-opt">
+        {/* Once open they stay open, so nothing typed there is ever out of sight */}
+        {!more && <button type="button" className="linkish su-more" onClick={() => { setMore(true); setTimeout(() => document.getElementById("su-link")?.focus(), 0); }}>
+          Add your website, location, or how you found neon1 <span className="opt">optional</span>
+        </button>}
+        {more && <div className="su-col su-more-fields">
         <Field id="link" label="Website or public page" problem={problem("link")}>
           <input id="su-link" name="url" inputMode="url" maxLength={200} autoComplete="url" placeholder="yourbusiness.com" value={link} onChange={(e) => edit("link", setLink)(e.target.value)} onBlur={leave("link")} {...invalid("link", problem("link"), "su-face-hint")} />
         </Field>
@@ -211,8 +226,9 @@ export function SignUp({ info: known, email: start, remember, onStep, onBack, lo
             <input id="su-foundOther" name="foundOther" required maxLength={80} placeholder="A podcast, a newsletter, an event" value={foundOther} onChange={(e) => edit("foundOther", setFoundOther)(e.target.value)} onBlur={leave("foundOther")} {...invalid("foundOther", problem("foundOther"))} />
           </Field>
         )}
+        </div>}
       </div>
-      <p className="fine face-hint" id="su-face-hint">Helps me see who I'd be working with. You can add it later.</p>
+      {more && <p className="fine face-hint" id="su-face-hint">Helps me see who I'd be working with. You can add it later.</p>}
       {/* Off-screen, not display:none, since some bots skip hidden fields; people and screen readers never reach it */}
       <div className="hp" aria-hidden="true">
         <input name="website" type="text" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
@@ -228,6 +244,23 @@ export function SignUp({ info: known, email: start, remember, onStep, onBack, lo
       <p className="fine next-hint full su-end3">You'll get a code by email to finish. No password. <a href="/knowledge/guides/free-accounts/" target="_blank" rel="noopener">How free accounts work</a></p>
       <p className="fine full su-end4"><button className="linkish" type="button" onClick={onBack}>Back to sign-in</button></p>
     </form>
+  );
+}
+
+
+/** What a free account holds and how long it's kept, from the same numbers the API enforces
+ * (packages/domain/src/prospect.ts) */
+function Limits() {
+  const mb = PROSPECT_LIMITS.totalBytes / (1024 * 1024);
+  return (
+    <section className="su-limits" aria-labelledby="su-limits-h">
+      <h3 className="su-limits-h" id="su-limits-h">A free account holds</h3>
+      <ul className="fine">
+        <li>Up to {PROSPECT_LIMITS.projects} projects, with what each one needs</li>
+        <li>Up to {PROSPECT_LIMITS.files} documents or photos, {mb} MB in all</li>
+        <li>Kept {PROSPECT_FINAL_DAYS + PROSPECT_GRACE_DAYS} days after your last change, with emails before anything is deleted. Download a copy any time.</li>
+      </ul>
+    </section>
   );
 }
 
