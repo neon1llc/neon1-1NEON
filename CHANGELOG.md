@@ -25,6 +25,7 @@
 - A deletion keeps a record of everything it has to remove until every step is checked, so a pass cut short resumes from that record instead of from whatever rows are left.
 - A quiet account's deletion checks every condition again on a fresh read (a hold, a suspension, a keep, or a change since the daily pass), and a change that lands while requests drain cancels it.
 - Free-account limits (projects, items per project, files) hold under simultaneous requests: only one of several creates racing for the last place lands, and the others are asked to try again.
+- On a phone, opening Neo or tapping its box no longer moves the page behind it.
 
 ## v0.16.3 - 2026-11-16
 
