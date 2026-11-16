@@ -1,6 +1,6 @@
 # Cookies and browser storage
 
-*Last updated November 15, 2026.* This update adds `1neon.signup`, which keeps whether free-account sign-up was open so the sign-in page draws the right wording at once, the note that remembers an admin's **Not now** on Home, and `1neon.motion`, which keeps the profile's **Reduced** motion choice. There's no new tracking.
+*Last updated November 16, 2026.* This update adds `neon1.theme`, which keeps the dark or light look you chose on the sign-in and public pages, shared with neon1.tech. There's no new tracking.
 
 This notice is part of the [privacy and data policy](https://neon1.tech/1NEON/privacy) and lists, in detail, every cookie and item neon1 saves in your browser. Neither neon1.tech nor the 1NEON portal uses analytics, advertising, or tracking of any kind.
 

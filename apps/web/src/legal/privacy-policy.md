@@ -1,6 +1,6 @@
 # Privacy and data policy
 
-*Last updated November 15, 2026.* This edition adds free accounts: what I collect when you make your own 1NEON account (including where your business is based, a link to it, and how you found neon1, all optional), the bot check on the sign-up form (Cloudflare Turnstile), the check-in emails, and that a free account is deleted 30 days after its last change. Nothing changes for clients.
+*Last updated November 16, 2026.* This edition adds free accounts: what I collect when you make your own 1NEON account (including where your business is based, a link to it, and how you found neon1, all optional), the bot check on the sign-up form (Cloudflare Turnstile), the check-in emails, and that a free account is deleted 30 days after its last change. Nothing changes for clients.
 
 neon1 LLC ("neon1", "I", "me") runs the website neon1.tech, Neo (the assistant on the website), and the 1NEON client portal at neon1.tech/1NEON, and does technology work for clients. This policy covers all of them. The [cookie and browser storage notice](https://neon1.tech/1NEON/cookies) is part of it and lists every cookie and saved item in detail. How the systems themselves are built is described in [How neon1 is built](https://neon1.tech/knowledge/company/architecture/).
 

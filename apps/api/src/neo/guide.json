@@ -1,13 +1,13 @@
 {
- "ref": "fix/free-account-audit",
- "commit": "ccdd7d603af481e4e2db2378ffaac901d613b6f4",
- "digest": "sha256:188e587b7f93519e2224ce96b396d047fbddbfb6a9193492e7c803b471b6c549",
- "chars": 80100,
+ "ref": "v0.46.2",
+ "commit": "5380c33dd2e0a6251025772fedd3f7ed8f966167",
+ "digest": "sha256:807ba4e13652f3f4dac8d14af09959c85a465c215416c714bc0871f9ed31af07",
+ "chars": 80121,
  "docs": [
   {
    "id": "company-contact",
    "title": "Contact",
-   "text": "# Contact\n\nHow to reach neon1, when, and what the first call covers.\n\nTell me what's on your mind, or ask for an opinion on how your operations run today.\n\n| | |\n|---|---|\n| **Email** | [hello@neon1.tech](mailto:hello@neon1.tech) |\n| **Call or text** | [(424) 32-neon1](tel:+14243263661), that's (424) 326-3661 |\n| **Book a call** | [calendly.com/1isgladtobeofservice/neon1-consultation](https://calendly.com/1isgladtobeofservice/neon1-consultation) |\n| **LinkedIn** | [Pradeep](https://www.linkedin.com/in/pradeep-tathineni/) and [neon1](https://www.linkedin.com/company/neon1llc) |\n| **GitHub** | [neon1llc](https://github.com/neon1llc) |\n\n## What to expect\n\n- **Where:** remote from anywhere, or on site within about 30 miles of Queens, NY.\n- **When:** weekends 8am to 8pm and weekday evenings 6pm to 9pm, Eastern time.\n- **Size:** a week or two up to six weeks, with at most two clients at a time.\n- **First call:** free and 15 minutes. The main pain points and your options.\n- **After:** a short proposal with options and estimates. Nothing starts until you pick one.\n\n## Availability and urgent issues\n\nI work in planned appointments on weekday evenings and weekends. There's no 24/7 or emergency response. If something can't wait, such as a security incident in progress, an outage, or fraud on an account, contact a provider with emergency coverage, and your bank or the service involved, first. Ongoing care after a project, with any response times, is agreed in writing before it starts.\n\nLeave passwords, health details, and payment information out of any first message.\n"
+   "text": "# Contact\n\nHow to reach neon1, when, and what the first call covers.\n\nTell me what's on your mind, or ask for an opinion on how your operations run today.\n\n| | |\n|---|---|\n| **Email** | [hello@neon1.tech](mailto:hello@neon1.tech) |\n| **Call or text** | [(424) 32-neon1](tel:+14243263661), that's (424) 326-3661 |\n| **Book a call** | [calendly.com/1isgladtobeofservice/neon1-consultation](https://calendly.com/1isgladtobeofservice/neon1-consultation) |\n| **LinkedIn** | [Pradeep](https://www.linkedin.com/in/pradeep-tathineni/) and [neon1](https://www.linkedin.com/company/neon1llc) |\n| **GitHub** | [neon1llc](https://github.com/neon1llc) |\n\n## What to expect\n\n- **Where:** remote across the US, or on site within about 30 miles of Queens, NY. Outside the US, ask.\n- **When:** weekends 8am to 8pm and weekday evenings 6pm to 9pm, Eastern time.\n- **Size:** a week or two up to six weeks, with at most two clients at a time.\n- **First call:** free and 15 minutes. The main pain points and your options.\n- **After:** a short proposal with options and estimates. Nothing starts until you pick one.\n\n## Availability and urgent issues\n\nI work in planned appointments on weekday evenings and weekends. There's no 24/7 or emergency response. If something can't wait, such as a security incident in progress, an outage, or fraud on an account, contact a provider with emergency coverage, and your bank or the service involved, first. Ongoing care after a project, with any response times, is agreed in writing before it starts.\n\nLeave passwords, health details, and payment information out of any first message.\n"
   },
   {
    "id": "company-names",

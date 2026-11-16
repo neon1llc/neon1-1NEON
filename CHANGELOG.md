@@ -4,27 +4,26 @@
 
 ## Unreleased
 
-### Fixed
-- Deleting a free account reaches its trashed projects and their files. If a file or sign-in can't be removed, nothing else is deleted: the account stays shut out and marked, and the daily pass (or **Delete** again) finishes it. A small receipt with no content records each deletion.
-- A free account can't be promoted while it's being deleted, and a promotion or change that lands first stops the deletion.
-- A free account's file limit counts files in trashed projects.
-- A reminder or final notice the mail service refuses doesn't move the deletion clock; it's sent again the next day.
+## v0.16.0 - 2026-11-16
+
+### Added
+- A free account's Home shows the date it's kept until, with **Keep it 30 more days** (once) and **Download a copy**.
+- Sign-in and the public pages (FAQs, Cookies, Privacy, Terms, agreement) follow neon1.tech's light or dark look, with the site's bar and a sun/moon switch, and move between each other with one short cross-fade.
 
 ### Changed
-- Sign-up takes one name, any website as typed (the server never visits it), a US town not on the places list, and places outside the US.
+- Sign-up takes one name, a website as typed (never visited by the server), any US town, and places outside the US.
 - Sign-in reads "Sign in to your 1NEON account. New here? Start for free." The FAQ says how to start a free account.
-- A free account's Home shows the date it's kept until, with **Keep it 30 more days** (once) and **Download a copy**.
-- **Sign-in and public pages follow the site theme.** A sun/moon switch sits at the top right of the sign-in, FAQs, Cookies, Privacy, Terms, and agreement pages. It shares the neon1.tech choice, defaults to awake, and flickers on like the site. Awake sign-in uses paper with soft green rings instead of rain. The portal, demo, and live, are untouched.
-- Those pages get the site bar: logo and word on the left, a "← 1NEON" button and the switch on the right.
-- The 1NEON mark and word flicker with the theme switch, and the green parts (headings, asterisks, dropdown arrows) flicker softer. Awake dropdowns match the other fields: dark green arrow, light list, green asterisks. The sign-in panel sits over the rain controls where they meet.
-- Moving between the sign-in and the FAQs, Cookies, Privacy, Terms, and agreement pages is one short cross-fade, like neon1.tech, with the bar holding still.
-- Even spacing on the sign-in around "Or see how it works".
-- The sign-in panel has the same gap below the bar and above Neo's button, on every step. Awake shows Neo's light button as on the site; matrix glows green.
 - Phone: the Menu tab always sits at the far right of the bottom bar.
+- Legal pages and Neo's guide from neon1-corpus v0.46.2.
+
+### Fixed
+- Deleting a free account reaches its trashed projects and their files, stops without deleting anything else if a file or sign-in can't be removed, and finishes on the next daily pass. Each deletion leaves a receipt with no content.
+- A free account being deleted can't be promoted, and a promotion or change that lands first stops the deletion.
+- A free account's file limit counts files in trashed projects.
+- A reminder the mail service refuses doesn't move the deletion clock; it's sent again the next day.
 
 ### Security
-- **Origin lock.** CloudFront now adds a secret header to every API request (`/1neon/<env>/origin_secret` in SSM), and with `origin_lock` on the API refuses anything that skipped CloudFront. On for dev; off in production until neon1.tech sends the header, then switched on in the next release.
-- The visitor's address for sign-up and contact limits, and on signature records, comes from CloudFront's own viewer-address header (`apps/api/src/lib/edge.ts`) instead of the first forwarded-for entry, which a caller could write.
+- The API can refuse requests that skip CloudFront (a secret header, off in production for now), and visitor addresses come from CloudFront's own header instead of one a caller could write.
 
 ## v0.15.1 - 2026-11-16
 
