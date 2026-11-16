@@ -42,11 +42,12 @@ export function ReportBug({ kind = "link" }: { kind?: "row" | "feedbackRow" | "l
   ) : kind === "feedbackRow" ? (
     <a className="out bug-link bug-row" {...fprops}><span className="ico" aria-hidden="true"><FeedbackGlyph /></span><span className="lbl">Feedback{arrow}</span></a>
   ) : kind === "corner" ? (
-    // "report bug \ feedback": the bug sits between the words, as on the site's footer
+    // "report" leads both links, a plain muted word, as on the site's footer: "report bug \ feedback"
     <span className="bug-corner">
-      <a className="out bug-link" {...props}>report <BugGlyph />bug{arrow}</a>
+      <span className="bug-lead">report</span>
+      <a className="out bug-link" {...props} aria-label="report a bug"><BugGlyph />bug{arrow}</a>
       <span className="bug-sep" aria-hidden="true">\</span>
-      <a className="out bug-link" {...fprops}><FeedbackGlyph />feedback{arrow}</a>
+      <a className="out bug-link" {...fprops} aria-label="report feedback"><FeedbackGlyph />feedback{arrow}</a>
     </span>
   ) : kind === "buttons" ? (
     <span className="bug-buttons">
