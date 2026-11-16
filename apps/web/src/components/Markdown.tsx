@@ -3,6 +3,7 @@
 // strings, so nothing is injected.
 
 
+import { ownSite } from "../lib/site.ts";
 import { Fragment, type ReactNode } from "react";
 
 
@@ -17,7 +18,7 @@ function inline(text: string, key = 0): ReactNode[] {
     const k = `${key}-${m.index}`;
     if (m[1]) out.push(<code key={k}>{m[1].slice(1, -1)}</code>);
     // Only plain web, mail, and same-site links; anything else renders as text
-    else if (m[2] && m[3]) out.push(/^(https:|mailto:|\/)/.test(m[3]) ? <a key={k} href={m[3]}>{m[2]}</a> : m[2]);
+    else if (m[2] && m[3]) out.push(/^(https:|mailto:|\/)/.test(m[3]) ? <a key={k} href={ownSite(m[3])}>{m[2]}</a> : m[2]);
     else if (m[4]) out.push(<b key={k}>{inline(m[4], key + 1)}</b>);
     else if (m[5]) out.push(<em key={k}>{inline(m[5], key + 1)}</em>);
     last = m.index + m[0].length;

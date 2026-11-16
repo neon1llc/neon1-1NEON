@@ -17,7 +17,7 @@ import { useToast } from "./ui.tsx";
 
 /** A link that leaves neon1: a new tab, no referrer, and the northeast arrow */
 export function OutLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return <a className="out" href={href} target="_blank" rel="noopener noreferrer">{children}<span className="out-arrow" aria-hidden="true">↗</span></a>;
+  return <a className="out" href={href} target="_blank" rel="noopener noreferrer">{children}<span className="out-arrow" aria-hidden="true" /></a>;
 }
 
 

@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { FaceFacts, FaceForm } from "../components/OrgFace.tsx";
 import { useOrg, useTopBar } from "../components/Shell.tsx";
+import { ReportBug } from "../components/BugReport.tsx";
 import { LayerBadge, LAYERS, layerName, useToast } from "../components/ui.tsx";
 import { api } from "../lib/api.ts";
 import { ExportCancelled, exportOrganization, type ExportResult } from "../lib/export.ts";
@@ -66,8 +67,12 @@ export function Settings() {
   return (
     <>
       <h1 className="page-title">Settings</h1>
+      {/* Two columns on a wide screen: the organization's details beside its data and the way to report a bug;
+          the stages need the full width, so they follow below */}
+      <div className="cols2">
+        <div className="stack">
       {/* The organization's handles and the caller's access */}
-      <div className="card" style={{ display: "grid", gap: 6, maxWidth: 520 }}>
+      <div className="card" style={{ display: "grid", gap: 6, }}>
         <div><span className="muted small">Organization</span> <b>{org.name}</b></div>
         <div><span className="muted small">Client ID</span> <span className="mono">{org.clientId}</span></div>
         {/* Where the business can be seen from outside; any admin may change it */}
@@ -77,6 +82,19 @@ export function Settings() {
         <div hidden={prospect}><span className="muted small">Service agreement</span> {org.agreements?.length ? <>signed by {org.agreements.at(-1)!.typedName}, edition {org.agreements.at(-1)!.ref}. </> : "not signed yet. "}<Link to={`/o/${summary.slug}/agreement`}>{org.agreements?.length ? "Read it" : "Read and sign"}</Link></div>
         <div><span className="muted small">Address</span> <span className="mono">neon1.tech/1NEON/o/{org.slug}</span></div>
         <div><span className="muted small">Your access</span> <span className="tag">{access}</span></div>
+      </div>
+        </div>
+        <div className="stack">
+      {/* The organization's own copy of everything, any time, without asking neon1 */}
+      <h2 className="section-h" id="your-data" style={{ marginTop: 0 }}>Your data</h2>
+      <ExportData />
+      {/* Same entry as the menu and the profile, where people look for it */}
+      <h2 className="section-h">Something not working?</h2>
+      <div className="card small" style={{ display: "grid", gap: 8, justifyItems: "start" }}>
+        <span className="muted">Tell me what happened, on a page that opens in a new tab.</span>
+        <ReportBug kind="button" />
+      </div>
+        </div>
       </div>
       <h2 className="section-h">Board stages</h2>
       <p className="muted small">Each row is a board column, in order: name, layer, when it's done, and an optional project limit. A hidden stage still shows while projects are in it.</p>
@@ -113,9 +131,6 @@ export function Settings() {
         </div>
       )}
       {error && <p className="notice" role="alert">{error}</p>}
-      {/* The organization's own copy of everything, any time, without asking neon1 */}
-      <h2 className="section-h" id="your-data">Your data</h2>
-      <ExportData />
     </>
   );
 }

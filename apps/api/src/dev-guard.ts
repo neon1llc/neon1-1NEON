@@ -29,9 +29,9 @@ function held(what: string, email: string) {
 export function guardMailer(cfg: Pick<Config, "env" | "operatorEmails">, mailer: Mailer): Mailer {
   if (!isDev(cfg)) return mailer;
   return {
-    async send(to, subject, text, html, replyTo, signal) {
+    async send(to, subject, text, html, replyTo, signal, attachments, as) {
       if (!neon1Only(cfg, to)) return held("mail", to);
-      await mailer.send(to, subject, text, html, replyTo, signal);
+      await mailer.send(to, subject, text, html, replyTo, signal, attachments, as);
     },
   };
 }

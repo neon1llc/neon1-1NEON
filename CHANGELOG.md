@@ -4,9 +4,28 @@
 
 ## Unreleased
 
+## v0.18.0 - 2026-11-16
+
+- Sign-in and create account carry "report a bug" in the page's bottom right corner, centered on Neo's button with its right edge on the theme switch's, as on neon1.tech's footer, and no longer in the links inside the form. In the dark theme the rain controls sit one row above it. The bug mark's gap to the text is the arrow's gap to the text, everywhere.
+- Neo's 1NEON guide takes in the corpus's new hours (Monday to Thursday 6pm to 9pm, Friday 6pm to 8pm, weekends 8am to 8pm, Eastern) and "a few clients at a time", and the Engagement links, read from neon1-corpus v0.48.0.
+- The interactive demo's landing has the sign-in's top bar (the neon1 logo on the left, the theme switch on the right) and opens in the awake or matrix theme you chose on neon1.tech. Neo sits at the bottom left there, and at the bottom right once you pick a person.
+- The report form's "Where" list includes "1NEON live walkthrough".
+- **Report a bug** in the menu, on your profile, in Settings, and under the sign-in links, in the demo too. It opens the site's report page in a new tab, on dev from dev and on production from production, and each takes its neighbours' look.
+- Dropdowns show their focus border from the moment they are pressed or opened until focus leaves, and show the hand pointer over the whole box. The arrow uses the same heavier stroke as the neon1 site. Neo's links that leave the app open in a new tab with the northeast arrow. Dropdowns carry a brand-colour rule under their placeholder, and open folds under their header. Report a bug's mark is centred on the line and the outbound arrow is drawn exactly like the site's.
+- The profile, Settings, and Contact show two columns on a wide window and one below about 760 px.
+- On the profile, a changed theme or menu style says "Showing this now. Press Save to keep it.", the menu style previews at once, and leaving without saving puts both back.
+- Links from 1NEON to the site are paths, never the production address, and a test fails the build on a new hardcoded one.
+- The API names its SES configuration set when it sends mail (`SES_CONFIGURATION_SET`, set by Terraform to each environment's own). The sending identity's default set is production's, which dev's role may not use, so mail sent from dev was refused.
+- Email shows times in the reader's own zone with UTC beside it, such as "Nov 15, 2026, 8:25 AM EST (13:25 UTC)". The zone is an IANA name from the browser, so daylight saving and leap days follow the calendar; the abbreviation flips between EST and EDT on its own. The contact form's mail to neon1 reads in New York time and shows the sender's local time. Anyone without a saved zone reads in New York time.
+- Email now says who it is from by what sends it: "1NEON" only for the portal, "neon1" for the website (contact form, use-case requests, bug reports, from `requests@` and `bugs@` on notify.neon1.tech), and "neon1 alerts" kept for system mail. In dev the sender and the subject both start with "[DEV] " (replacing "1NEON dev"). Subjects carry one short tag and don't repeat the sender: `[request] Workflows · Dana`, `[bug] BUG-ABC123 · Neo chat · …`. Bug reports go to bugs@neon1.tech (set as `BUG_TO` in both environments; the API falls back to hello@ when it is unset).
+- The profile has a Time zone setting; the browser's zone is saved at the first sign-in.
+
 ## v0.17.1 - 2026-11-16
 
 - Switching the public screens to the dark theme, the bar's logo and Neo's button ease up smoothly to full brightness once instead of flickering, as on neon1.tech; the 1NEON mark and the other green parts keep their flicker.
+- Dark theme: text is off-white with green kept for headings and links, links are underlined in running text, and fields and focus rings are easier to see.
+- Dark theme: dropdowns, menus, and other controls now follow the dark theme.
+- The site's report-a-bug form has a backend: `POST /1NEON/api/bug` mails hello@ with a reference id, and `POST /1NEON/api/bug/:ref/image` takes up to three PNG or JPEG screenshots (3 MB each, checked by their first bytes). Screenshots are kept under `t/_bugs/<reference>/` in the private, malware-scanned documents bucket and are never deleted. The report email reads like a tracker's issue (a left-aligned table of reference, where, time, reporter, page, theme, browser, and window, then what happened), with the screenshots shown inline and attached once the scan passes: a report with screenshots goes out within a minute or so of the scan, at most 15 minutes after it was made, with any screenshot that didn't scan clean named instead of attached. The form has the contact form's hidden field and hourly and daily limits.
 
 ## v0.17.0 - 2026-11-16
 

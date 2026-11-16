@@ -6,6 +6,7 @@ import { InvoiceLine, InvoiceType, PaymentMethod, SignInput } from "./billing.ts
 import { z } from "zod";
 import { AccessLevel, CalEventKind, CalRepeat, Health, ItemKind, Layer, Pricing, ProjectRole, Theme, Tour, email, id } from "./model.ts";
 import { QUICK_FIX_MAX_HOURS } from "./defaults.ts";
+import { isTimeZone } from "./timing.ts";
 
 
 // Organizations (operator only)
@@ -232,6 +233,8 @@ export const UpdateMeInput = z.object({
   title: z.string().trim().max(80).optional(),
   phone: z.string().trim().max(32).optional(),
   theme: Theme.optional(),
+  // An IANA zone name; anything the engine does not know is refused
+  timeZone: z.string().max(64).refine(isTimeZone, "Pick a time zone from the list.").optional(),
   menu: z.enum(["default", "mini"]).optional(),
   tour: Tour.optional(),
   notify: NotifyPrefs.optional(),

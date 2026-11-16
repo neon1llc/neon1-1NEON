@@ -167,8 +167,9 @@ createRoot(document.getElementById("root")!).render(
 // can't load, the portal works without it
 const CHAT = "/shared/chat.js";
 type ChatOptions = { className?: string; light?: () => boolean; watch?: Element[] };
-// The demo makes no calls at all, so it leaves Neo out
-if (!DEMO) import(/* @vite-ignore */ CHAT)
+// The demo's data never leaves the browser, so Neo (which answers from neon1's public pages only) shows in the demo
+// but not in the walkthrough, which makes no calls at all: bottom left on the picker, bottom right once a person is picked
+if (!LIVE) import(/* @vite-ignore */ CHAT)
   .then((m: { chat(opts: ChatOptions): unknown }) =>
     m.chat({
       className: "n1chat-portal n1chat-right",

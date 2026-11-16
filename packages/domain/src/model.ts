@@ -162,6 +162,9 @@ export const User = z.object({
   // authorized from it; factor changes read the live inventory and admin actions read the session
   strongAuth: z.boolean().default(false),
   theme: Theme.default("awake"),
+  // The IANA zone this person reads times in (from their browser, changeable on the profile); email shows
+  // times in it. Missing reads as America/New_York
+  timeZone: z.string().max(64).optional(),
   // "default" opens the full menu from a button; "mini" keeps a slim icon menu on screen as well.
   // Older records say "rail" or "hidden" (from before 2026-11-09); both read as default (menuOf)
   menu: z.enum(["default", "mini", "rail", "hidden"]).default("default"),
@@ -553,9 +556,6 @@ export const HandoffFields = z.object({
   accepted: z.object({ by: id, name: z.string().max(80), at: isoDate, note: z.string().max(500).default(""), signature: Signature.optional() }).optional(),
 });
 
-
-// A request on a decided project says whether it changes what was agreed
-export const RequestScope = z.enum(["yes", "no", "unsure"]);
 
 
 // Which kinds validate their fields, and with which schema

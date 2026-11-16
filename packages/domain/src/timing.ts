@@ -8,7 +8,6 @@ export const DEFAULT_TIME_ZONE = "America/New_York";
 
 /** The words people chose, by the key the request form stores */
 export const TIMING_WORDS = { soon: "this month", quarter: "this quarter" } as const;
-export type TimingKey = keyof typeof TIMING_WORDS;
 
 
 /** Today's calendar date (YYYY-MM-DD) in a time zone; an unknown zone falls back to the default */
@@ -56,4 +55,43 @@ export function periodEnd(period: "month" | "quarter", now = new Date(), timeZon
 export function resolveTiming(key: unknown, now = new Date(), timeZone?: string): { dueDate: string; requestedTiming: string } | undefined {
   if (key !== "soon" && key !== "quarter") return undefined;
   return { dueDate: periodEnd(key === "soon" ? "month" : "quarter", now, timeZone || DEFAULT_TIME_ZONE), requestedTiming: TIMING_WORDS[key] };
+}
+
+
+/** Whether a string names a real IANA time zone, such as America/Chicago or Europe/Berlin */
+export function isTimeZone(zone: unknown): zone is string {
+  if (typeof zone !== "string" || !zone || zone.length > 64) return false;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: zone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+
+/**
+ * An instant for an email, in the reader's zone with UTC beside it: "Nov 15, 2026, 8:25 AM EST (13:25 UTC)".
+ * Email can't run scripts, so the sender picks the zone. The IANA zone (never a fixed offset) means the
+ * abbreviation and offset follow daylight saving, and leap days need nothing extra since the engine's
+ * calendar already has them. A missing or unknown zone reads as neon1's own (America/New_York). When the
+ * local date and the UTC date differ, the UTC part carries its date too
+ */
+export function formatWhen(at: Date, zone?: string): string {
+  const tz = isTimeZone(zone) ? zone : DEFAULT_TIME_ZONE;
+  const parts = (timeZone: string, opts: Intl.DateTimeFormatOptions) => {
+    const out: Record<string, string> = {};
+    for (const p of new Intl.DateTimeFormat("en-US", { timeZone, ...opts }).formatToParts(at)) out[p.type] = p.value;
+    return out;
+  };
+  // Newer engines put a narrow no-break space before AM/PM; mail clients render it unevenly
+  const plain = (s: string) => s.replace(/[  ]/g, " ");
+  const date = (p: Record<string, string>) => `${p.month} ${p.day}, ${p.year}`;
+  const local = parts(tz, { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", hour12: true, timeZoneName: "short" });
+  const utc = parts("UTC", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const clock = `${local.hour}:${local.minute} ${plain(local.dayPeriod ?? "")}`.trim();
+  const head = `${date(local)}, ${clock}`;
+  if (tz === "UTC") return plain(`${head} UTC`);
+  const sameDay = date(local) === date(utc);
+  return plain(`${head} ${local.timeZoneName} (${utc.hour}:${utc.minute} UTC${sameDay ? "" : `, ${utc.month} ${utc.day}`})`);
 }

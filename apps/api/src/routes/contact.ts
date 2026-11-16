@@ -2,7 +2,7 @@
 // message to neon1, with the sender as Reply-To. It mails only neon1's own inbox, never the address a
 // visitor types, so it can't be used to send mail to anyone else. A hidden field catches simple bots,
 // and counters cap messages per sender each hour and in total each day. The counters expire after a day.
-import { FOUND_KEYS, foundLabel, messageProblem, MIN_TEXT } from "@1neon/domain";
+import { DEFAULT_TIME_ZONE, FOUND_KEYS, foundLabel, formatWhen, isTimeZone, messageProblem, MIN_TEXT } from "@1neon/domain";
 import { emailProblem, failFields, nameProblem, textProblem, type FieldProblems } from "../lib/vet.ts";
 import { z } from "zod";
 import { body, fail } from "../lib/http.ts";
@@ -51,6 +51,8 @@ const Message = z.object({
   found: z.enum(FOUND_KEYS).optional(),
   // Their words for "Somewhere else"
   foundOther: z.string().trim().max(80).optional().default(""),
+  // The sender's time zone from their browser (IANA name); junk is ignored
+  timeZone: z.string().trim().max(64).optional(),
   // Hidden from people; a bot that fills every field fills this one too
   website: z.string().max(200).optional().default(""),
 });
@@ -100,6 +102,8 @@ export function contactRoutes(app: App, k: Kit) {
       ...(m.better ? [["What would be better", m.better] as [string, string]] : []),
       ...(m.timing ? [["Timing", m.timing] as [string, string]] : []),
       ...(m.found ? [["Found neon1 through", foundLabel(m)] as [string, string]] : []),
+      // Their clock when they sent it, from their browser's zone, so a reply can pick a sensible hour
+      ...(isTimeZone(m.timeZone) ? [["Their local time", `${formatWhen(new Date(), m.timeZone)}, ${m.timeZone}`] as [string, string]] : []),
     ];
     const text = rows.map(([k2, v]) => `${k2}: ${v}`).join("\n\n");
     const html = branded({
@@ -108,10 +112,10 @@ export function contactRoutes(app: App, k: Kit) {
       heading: `Message from ${m.name}`,
       body: rows.map(([k2, v]) => `<p style="margin:0 0 14px"><b>${esc(k2)}</b><br>${esc(v).replace(/\n/g, "<br>")}</p>`).join(""),
       note: "Reply to this email to answer them directly.",
+      zone: DEFAULT_TIME_ZONE, // goes to neon1, so the sign-off reads in neon1's zone
     });
-    // A message sent from dev.neon1.tech says so in its subject
-    const where = process.env.APP_ENV === "dev" ? "[dev] neon1.tech" : "neon1.tech";
-    await d.mailer.send(CONTACT_TO, `${where}: ${topic} (${m.name})`, text, html, m.email);
+    // From "neon1" (the website); dev's mailer marks sender and subject itself
+    await d.mailer.send(CONTACT_TO, `[request] ${topic} · ${m.name}`, text, html, m.email, undefined, undefined, "requests");
     return c.json({ ok: true });
   });
 }

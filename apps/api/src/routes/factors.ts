@@ -36,7 +36,7 @@ export function factorRoutes(app: App, k: Kit) {
     });
     await repo.securityEvent(user.id, "passkey.added", "A passkey was added");
     // Tell the person by email, so a passkey they didn't add doesn't go unnoticed
-    await notice(user, passkeyEmail({ url: `${cfg.publicUrl}/1NEON/me` }));
+    await notice(user, passkeyEmail({ zone: user.timeZone, url: `${cfg.publicUrl}/1NEON/me` }));
     return c.json({ ok: true });
   });
 
@@ -85,7 +85,7 @@ export function factorRoutes(app: App, k: Kit) {
         if (replaced) await factorChanged(c, "totp.replaced", "The authenticator app was replaced");
         else await repo.securityEvent(user.id, "totp.added", "An authenticator app was added");
         await refreshEnrolled(user, { totp: true, sms: smsFactorOn(user), passkey: user.passkey ?? "unknown", cognitoTotp: "unknown", any: true }).catch(() => undefined);
-        await notice(user, replaced ? factorRemovedEmail({ url: `${cfg.publicUrl}/1NEON/me`, what: "Your authenticator app", how: "replaced" }) : passkeyEmail({ url: `${cfg.publicUrl}/1NEON/me`, what: "An authenticator app" }));
+        await notice(user, replaced ? factorRemovedEmail({ zone: user.timeZone, url: `${cfg.publicUrl}/1NEON/me`, what: "Your authenticator app", how: "replaced" }) : passkeyEmail({ zone: user.timeZone, url: `${cfg.publicUrl}/1NEON/me`, what: "An authenticator app" }));
         return c.json({ ok: true });
       } catch (e) {
         // Someone else's try or setup landed first: read again and decide afresh, never echo a row
@@ -108,7 +108,7 @@ export function factorRoutes(app: App, k: Kit) {
     const fresh = (await repo.getUser(user.id))!;
     await repo.saveUser({ ...fresh, smsFactorAt: now(), strongAuth: true, version: fresh.version + 1, updatedAt: now(), updatedBy: user.id }, fresh.version);
     await repo.securityEvent(user.id, "sms.added", "Text-message codes were turned on");
-    await notice(user, passkeyEmail({ url: `${cfg.publicUrl}/1NEON/me`, what: "Text-message confirmation" }));
+    await notice(user, passkeyEmail({ zone: user.timeZone, url: `${cfg.publicUrl}/1NEON/me`, what: "Text-message confirmation" }));
     return c.json({ ok: true });
   });
 
@@ -121,7 +121,7 @@ export function factorRoutes(app: App, k: Kit) {
     await factorChanged(c, "sms.removed", "Text-message codes were turned off");
     const after = (await repo.getUser(user.id))!;
     await refreshEnrolled(after, await factorInventory(repo, d.directory, after, tokenOf(c))).catch(() => undefined);
-    await notice(user, factorRemovedEmail({ url: `${cfg.publicUrl}/1NEON/me`, what: "Text-message confirmation", how: "removed" }));
+    await notice(user, factorRemovedEmail({ zone: user.timeZone, url: `${cfg.publicUrl}/1NEON/me`, what: "Text-message confirmation", how: "removed" }));
     return c.json({ ok: true });
   });
 
@@ -167,7 +167,7 @@ export function factorRoutes(app: App, k: Kit) {
     await repo.deleteTotp(user.id);
     await factorChanged(c, "totp.removed", "The authenticator app was removed");
     await refreshEnrolled(user, await factorInventory(repo, d.directory, user, tokenOf(c))).catch(() => undefined);
-    await notice(user, factorRemovedEmail({ url: `${cfg.publicUrl}/1NEON/me`, what: "Your authenticator app", how: "removed" }));
+    await notice(user, factorRemovedEmail({ zone: user.timeZone, url: `${cfg.publicUrl}/1NEON/me`, what: "Your authenticator app", how: "removed" }));
     return c.json({ ok: true });
   });
 }

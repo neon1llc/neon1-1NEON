@@ -27,6 +27,18 @@ describe("contact form", () => {
     expect(mailer.sent).toHaveLength(1);
     expect(mailer.sent[0]).toMatchObject({ to: CONTACT_TO, replyTo: "dana@example.com" });
     expect(mailer.sent[0]!.text).toContain("Orders land in the sheet");
+    // From "neon1" the website, with one short tag and no sender name repeated in the subject
+    expect(mailer.sent[0]).toMatchObject({ as: "requests", subject: "[request] Business workflows and technology · Dana Kim" });
+  });
+  it("shows the sender's local time when their browser gave a real zone, and ignores junk", async () => {
+    await send({ ...good, timeZone: "America/Chicago" });
+    expect(mailer.sent[0]!.text).toMatch(/Their local time: .+ C[SD]T \(\d\d:\d\d UTC.*\), America\/Chicago/);
+    // The sign-off to neon1 reads in New York time
+    expect(mailer.sent[0]!.html).toMatch(/Sent .+ E[SD]T \(/);
+    await send({ ...good, timeZone: "Mars/Olympus" });
+    expect(mailer.sent[1]!.text).not.toContain("Their local time");
+    await send({ ...good, timeZone: "" });
+    expect(mailer.sent[2]!.text).not.toContain("Their local time");
   });
   it("names every topic picked and the visitor's own, or says none was picked", async () => {
     await send({ ...good, topic: undefined, topics: ["cloud", "security"], other: "Printer setup" });

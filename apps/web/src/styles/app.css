@@ -12,6 +12,7 @@
   --line: rgba(3, 87, 4, .16); --line-strong: rgba(3, 87, 4, .32); --accent: var(--brand); --accent-ink: #FFFFFF;
   --accent-soft: rgba(3, 87, 4, .08); --focus: var(--brand); --shadow: 0 1px 2px rgba(16, 36, 26, .05);
   /* Layer greens, each at least 4.5:1 against the white letter on its badge */
+  --faint: var(--muted); --field-line: var(--line-strong);
   --l1: #003B00; --l2: #17562A; --l3: #267038; --l4: #3A8550; --badge-ink: #FFFFFF;
   color-scheme: light;
 }
@@ -19,15 +20,17 @@
 /* Matrix (dark) only by choice: data-theme="device" follows a dark device setting, data-theme="matrix"
    always applies, and no choice at all stays awake */
 @media (prefers-color-scheme: dark) {
-  :root[data-theme="device"] { color-scheme: dark; --bg: #0F0A0D; --frame: var(--void); --panel: #15100F; --text: #D6F5DC; --muted: #84A98C;
+  :root[data-theme="device"] { color-scheme: dark; --bg: #0F0A0D; --frame: var(--void); --panel: #15100F; --text: var(--m-ink, #EDF1ED); --muted: var(--m-muted, #CBD1CC);
     --line: rgba(0, 255, 65, .14); --line-strong: rgba(0, 255, 65, .3); --accent: var(--neon); --accent-ink: var(--void);
     --accent-soft: rgba(0, 230, 118, .08); --focus: var(--glow); --shadow: none; --amber: #FFB547; --red: #FF8A80; --ok: #6CFFA8;
-    --l1: #008F11; --l2: #00B84F; --l3: #00E676; --l4: #6CFFA8; --badge-ink: var(--void); }
+    --l1: #008F11; --l2: #00B84F; --l3: #00E676; --l4: #6CFFA8; --badge-ink: var(--void);
+    --faint: var(--m-faint, #B1B8B2); --field-line: rgb(237 241 237 / .45); }
 }
-:root[data-theme="matrix"] { color-scheme: dark; --bg: #0F0A0D; --frame: var(--void); --panel: #15100F; --text: #D6F5DC; --muted: #84A98C;
+:root[data-theme="matrix"] { color-scheme: dark; --bg: #0F0A0D; --frame: var(--void); --panel: #15100F; --text: var(--m-ink, #EDF1ED); --muted: var(--m-muted, #CBD1CC);
   --line: rgba(0, 255, 65, .14); --line-strong: rgba(0, 255, 65, .3); --accent: var(--neon); --accent-ink: var(--void);
   --accent-soft: rgba(0, 230, 118, .08); --focus: var(--glow); --shadow: none; --amber: #FFB547; --red: #FF8A80; --ok: #6CFFA8;
-  --l1: #008F11; --l2: #00B84F; --l3: #00E676; --l4: #6CFFA8; --badge-ink: var(--void); }
+  --l1: #008F11; --l2: #00B84F; --l3: #00E676; --l4: #6CFFA8; --badge-ink: var(--void);
+    --faint: var(--m-faint, #B1B8B2); --field-line: rgb(237 241 237 / .45); }
 
 /* Base elements and utilities */
 * { box-sizing: border-box; }
@@ -65,7 +68,7 @@ h1, h2, h3 { font-family: var(--mono); font-weight: 600; letter-spacing: .01em; 
 /* Form fields */
 label.field { display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
 label.field > span { font-family: var(--mono); font-size: 12px; }
-input, textarea, select { font: 16px var(--sans); color: var(--text); background: var(--panel); border: 1px solid var(--line-strong); border-radius: var(--r-sm); padding: 9px 12px; min-height: 40px; width: 100%; }
+input, textarea, select { font: 16px var(--sans); color: var(--text); background: var(--panel); border: 1px solid var(--field-line); border-radius: var(--r-sm); padding: 9px 12px; min-height: 40px; width: 100%; }
 textarea { min-height: 96px; resize: vertical; }
 /* Dropdowns: as wide as their choices (not the whole row), with a small chevron drawn in the text's
    own color right after the words, so it suits both themes and never floats far off to the side */
@@ -75,9 +78,10 @@ select { appearance: none; -webkit-appearance: none; width: auto; max-width: 100
   background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%), linear-gradient(135deg, var(--accent) 50%, transparent 50%);
   background-position: calc(100% - 23px) calc(50% + 1px), calc(100% - 18px) calc(50% + 1px); background-size: 5px 5px; background-repeat: no-repeat; }
 select:disabled { cursor: default; opacity: .7; }
-/* Placeholders at the muted color, which passes contrast in both themes */
-::placeholder { color: var(--muted); opacity: 1; }
-input:focus, textarea:focus, select:focus { outline: 2px solid var(--focus); outline-offset: 0; border-color: transparent; }
+/* Placeholders: muted in awake, the shared faint text (Lc 62) in matrix */
+::placeholder { color: var(--faint); opacity: 1; }
+/* A dropdown shows its focus from the moment it is pressed or opened (:open, for browsers that move focus into the list) until focus leaves, as the text fields do */
+input:focus, textarea:focus, select:focus, select:open { outline: 2px solid var(--focus); outline-offset: 0; border-color: transparent; }
 /* Boxes and dots keep the brand color, and show a ring only for keyboard focus, never a square on click */
 /* Checkboxes and radios keep their own size: the full-width rule above is for text fields */
 input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); width: 18px; height: 18px; min-height: 0; padding: 0; flex: none; }
@@ -308,7 +312,7 @@ table.people td { padding: 10px 8px; border-bottom: 1px solid var(--line); verti
 
 /* Sign-in: the neon1.tech hero */
 /* Focus rings on the dark sign-in surface use the neon, so they stand out from the near-black */
-.signin { position: relative; min-height: 100%; display: grid; place-items: center; background: var(--void); color: #D6F5DC; overflow: hidden; --focus: var(--neon); }
+.signin { position: relative; min-height: 100%; display: grid; place-items: center; background: var(--void); color: var(--m-ink, #EDF1ED); overflow: hidden; --focus: var(--neon); }
 .signin .veil { position: fixed; inset: 0; z-index: 1; background: radial-gradient(60% 50% at 50% 50%, rgba(13, 2, 8, .7), rgba(13, 2, 8, .15) 80%); pointer-events: none; }
 /* The panel is glass like the site's hero: the shared lens shows the rain through it, lightly
    tinted so the form stays readable */
@@ -342,15 +346,15 @@ body:has(.live-bar) .signin .n1-bar { display: none; }
 /* Initials keep the neon and its glow; the rest of each word is a quieter green that still reads */
 .signin .word .seg { display: inline-flex; align-items: flex-start; }
 .signin .word .init { color: #9AFF9A; text-shadow: 0 0 8px rgba(108, 255, 168, .55), 0 0 24px rgba(0, 230, 118, .35); }
-.signin .word .rest { display: inline-block; overflow: hidden; max-width: 0; opacity: 0; color: #A3C2AA; font-weight: 500;
+.signin .word .rest { display: inline-block; overflow: hidden; max-width: 0; opacity: 0; color: var(--m-muted, #CBD1CC); font-weight: 500;
   transition: max-width .6s ease, opacity .45s ease; }
 .signin .word.open .rest { max-width: calc(var(--n) * (1ch + .02em) + 1px); opacity: 1; }
 /* Open, a small gap between the words, so it reads as words and not one long run */
 .signin .word .seg + .seg { transition: margin-left .6s ease; }
 .signin .word.open .seg + .seg { margin-left: .3em; }
-.signin input { background: rgba(255, 255, 255, .04); color: #D6F5DC; border-color: rgba(0, 255, 65, .3); text-align: center; }
+.signin input { background: rgba(255, 255, 255, .04); color: var(--m-ink, #EDF1ED); border-color: rgb(237 241 237 / .45); text-align: center; }
 .signin .btn-primary { background: var(--neon); border-color: var(--neon); color: var(--void); width: 100%; box-shadow: 0 0 18px rgba(108, 255, 168, .3); }
-.signin .fine { font-size: 12px; color: #84A98C; margin: 18px 0 0; }
+.signin .fine { font-size: 12px; color: var(--m-muted, #CBD1CC); margin: 18px 0 0; }
 /* Each sign-in step's lines sit at one even gap */
 .signin form.stack { display: grid; gap: 12px; }
 .signin form.stack > * { margin: 0; }
@@ -358,7 +362,7 @@ body:has(.live-bar) .signin .n1-bar { display: none; }
 .signin .email-row { display: grid; justify-items: end; }
 .signin .email-row input[type="email"] { width: 100%; }
 .signin form .email-row label.remember { display: inline-flex; align-items: center; gap: 8px; max-height: 0; overflow: hidden; opacity: 0; margin-top: 0; padding-right: 2px;
-  font: 12px/1 var(--mono); color: #84A98C; cursor: pointer; transition: max-height .35s ease, opacity .35s ease, margin-top .35s ease; }
+  font: 12px/1 var(--mono); color: var(--m-muted, #CBD1CC); cursor: pointer; transition: max-height .35s ease, opacity .35s ease, margin-top .35s ease; }
 .signin form .email-row.ok label.remember { max-height: 28px; opacity: 1; margin-top: 10px; }
 /* A square neon checkbox, drawn the same in every browser */
 .signin .remember input { appearance: none; -webkit-appearance: none; width: 15px; height: 15px; min-height: 0; margin: 0; padding: 0; flex: none;
@@ -366,30 +370,30 @@ body:has(.live-bar) .signin .n1-bar { display: none; }
 .signin .remember input:checked { background: var(--neon); border-color: var(--neon); }
 .signin .remember input:checked::after { content: ""; width: 4px; height: 8px; border: solid var(--void); border-width: 0 2px 2px 0; transform: translateY(-1px) rotate(45deg); }
 .signin .remember input:focus-visible { outline: 2px solid var(--neon); outline-offset: 2px; }
-.signin .fine a { color: #84A98C; }
+.signin .fine a { color: var(--m-muted, #CBD1CC); }
 .signin .legal-links { margin-top: 8px; white-space: nowrap; }
 /* Who the portal is for, the visible email label, what Continue leads to, and the ways in without an
-   account. Text colors measure 7.8:1 (#84A98C) to 17:1 (#D6F5DC) on the void, and stay above 5.5:1
+   account. Text colors are the shared matrix tokens (--m-muted 12:1, --m-ink 17:1 on the void), and stay above 5.5:1
    with green rain lit behind the glass */
-.signin .signin-h { margin: 4px 0 0; font: 600 16px var(--mono); letter-spacing: .04em; color: #D6F5DC; }
-.signin .signin-lead { margin: 6px 0 20px; font-size: 14px; color: #A3C2AA; }
-.signin .field-label { display: block; font: 12px var(--mono); color: #A3C2AA; margin: 0 0 -4px; }
+.signin .signin-h { margin: 4px 0 0; font: 600 16px var(--mono); letter-spacing: .04em; color: var(--m-ink, #EDF1ED); }
+.signin .signin-lead { margin: 6px 0 20px; font-size: 14px; color: var(--m-muted, #CBD1CC); }
+.signin .field-label { display: block; font: 12px var(--mono); color: var(--m-muted, #CBD1CC); margin: 0 0 -4px; }
 .signin form.stack > .next-hint { margin: -2px 0 0; }
 .signin .signin-more { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px; margin-top: 7px; padding-top: 14px; border-top: 1px solid rgba(0, 255, 65, .16); font-size: 13px; }
-.signin .signin-more a { color: #A3C2AA; }
+.signin .signin-more a { color: var(--m-muted, #CBD1CC); }
 .signin .signin-more a:hover { color: var(--neon); }
-.signin .signin-more .more-sep { color: #84A98C; }
+.signin .signin-more .more-sep { color: var(--m-muted, #CBD1CC); }
 /* Create account's limits: their own line under the lead, in the quieter text */
-.signin .signin-limits { display: block; margin-top: 4px; font-size: 12px; color: #84A98C; }
+.signin .signin-limits { display: block; margin-top: 4px; font-size: 12px; color: var(--m-muted, #CBD1CC); }
 .signin.awake .signin-limits, .signin.awake .signin-more .more-sep { color: var(--muted); }
 /* Sign-in steps: stacked buttons, and a wide, spaced-out code field */
 .signin .steps-col { display: grid; gap: 10px; }
 .signin .steps-col .btn { width: 100%; margin: 0; }
 .signin .btn-ghost { color: var(--neon); border-color: var(--neon); }
 .signin input.code { font: 600 22px var(--mono); letter-spacing: .3em; }
-.signin .linkish { color: #84A98C; }
+.signin .linkish { color: var(--m-muted, #CBD1CC); }
 .signin .dev { margin-top: 18px; display: grid; gap: 6px; }
-.signin .dev button { background: rgba(255, 255, 255, .03); border: 1px solid rgba(0, 255, 65, .18); color: #D6F5DC; border-radius: 8px; padding: 8px; cursor: pointer; font: 13px var(--sans); }
+.signin .dev button { background: rgba(255, 255, 255, .03); border: 1px solid rgba(0, 255, 65, .18); color: var(--m-ink, #EDF1ED); border-radius: 8px; padding: 8px; cursor: pointer; font: 13px var(--sans); }
 .signin .dev button:hover { border-color: var(--neon); }
 /* While the sign-in shows, the whole page is the void and dark, so browsers that tint their toolbars
    from the page (Safari and DuckDuckGo on iOS) draw the bottom bar dark like the top, not white */
@@ -467,9 +471,9 @@ fieldset legend { font: 12px var(--mono); color: var(--muted); }
 /* Lost signal: the sign-in screen's look, with a plain heading and one retry */
 .signin .lost { display: grid; gap: 12px; }
 .signin .lost .word { margin: 0 0 8px; height: auto; font: 600 clamp(40px, 8vw, 60px) var(--mono); color: var(--neon); text-shadow: 0 0 8px rgba(108, 255, 168, .55), 0 0 24px rgba(0, 230, 118, .35); }
-.signin .lost-title { margin: 0; font: 600 16px var(--mono); color: #D6F5DC; }
+.signin .lost-title { margin: 0; font: 600 16px var(--mono); color: var(--m-ink, #EDF1ED); }
 .signin .lost .fine { margin: 0; }
-.signin .lost .fine a { color: #84A98C; }
+.signin .lost .fine a { color: var(--m-muted, #CBD1CC); }
 
 /* Neo sits bottom-right inside the portal (n1chat-right), clear of the side rail; the public screens put it back bottom left (below) */
 
@@ -778,8 +782,6 @@ details.history summary { cursor: pointer; font: 12px var(--mono); color: var(--
 
 /* --- Home: Coming up --- */
 .home-main { display: grid; gap: 16px; align-content: start; }
-.coming-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-.coming-head .section-h { margin: 0; }
 .strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin: 12px 0 14px; }
 .strip .dow { font: 11px var(--mono); color: var(--muted); text-align: center; }
 .strip .day { display: grid; gap: 4px; justify-items: center; align-content: start; min-height: 44px; padding: 5px 2px; border-radius: var(--r-sm); background: var(--bg); border: 1px solid transparent; }
@@ -893,10 +895,9 @@ html[data-slide="back"]::view-transition-new(stage) { animation: .42s cubic-bezi
 
 /* Neo: bottom left on the public screens (sign-in, FAQs, legal), exactly as on neon1.tech; bottom right once inside the portal */
 body:not(:has(.shell:not(.example))) .n1chat-launch.n1chat-right, body:not(:has(.shell:not(.example))) .n1chat.n1chat-right { left: 16px; right: auto; }
-body:not(:has(.shell:not(.example))) .n1chat-right.n1chat-grow, body:not(:has(.shell:not(.example))) .n1chat-right.n1chat-fold { animation-name: n1chat-grow; }
 
 /* --- The demo (/1NEON/demo): a slim strip above the portal; the frame moves down to make room --- */
-.demo-bar { position: fixed; inset: 0 0 auto 0; z-index: 45; height: var(--demo-h, 36px); display: flex; align-items: center; gap: 12px; padding: 0 16px; background: var(--void, #0d0208); color: #c9f5d6; font: 12px var(--mono); border-bottom: 1px solid rgba(0, 255, 65, .3); }
+.demo-bar { position: fixed; inset: 0 0 auto 0; z-index: 45; height: var(--demo-h, 36px); display: flex; align-items: center; gap: 12px; padding: 0 16px; background: var(--void, #0d0208); color: var(--m-ink-soft, #E3E7E4); font: 12px var(--mono); border-bottom: 1px solid rgba(0, 255, 65, .3); }
 .demo-tag { color: var(--void, #0d0208); background: var(--neon, #6cffa8); border-radius: 99px; padding: 2px 10px; font-weight: 700; letter-spacing: .06em; }
 .demo-note { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .demo-acts { display: flex; gap: 14px; }
@@ -1229,7 +1230,6 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 .cal-day-head .btn { white-space: nowrap; }
 
 /* --- Proposal (pages/Proposal.tsx): a paper page in neon1's letter look, in either theme --- */
-.proposal-link { margin: 4px 0 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .proposal { --pp-green: #035704; --pp-ink: #16201a; --pp-muted: #55655b; --pp-line: #cfdcd2;
   max-width: 860px; margin: 0 auto 32px; padding: 36px 40px 28px; background: #fff; color: var(--pp-ink);
   border: 1px solid var(--line); border-radius: var(--r-sm, 8px); font-size: 14.5px; line-height: 1.5; font-family: var(--sans, inherit); }
@@ -1557,19 +1557,19 @@ ul.md-says { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; 
 /* The sign-up form's hidden field sits far off-screen: out of sight and reach for people, still filled by bots that fill every field */
 .hp { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
 /* The box and its words on one center line: the words' line box is exactly the box's height */
-.signin label.agree { display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 15px; color: #A3C2AA; cursor: pointer; }
+.signin label.agree { display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 15px; color: var(--m-muted, #CBD1CC); cursor: pointer; }
 .signin label.agree > span { display: block; }
 /* The dropdown matches the fields beside it: the same glass, border, and text, its arrow kept; "Choose one"
    reads as a placeholder until something is picked, and the open list is dark too */
-.signin .signup-form select { width: 100%; background-color: rgba(255, 255, 255, .04); color: #D6F5DC; border-color: rgba(0, 255, 65, .3); }
-.signin .signup-form select.unpicked { color: #84A98C; }
-.signin .signup-form select option { background: #0D0208; color: #D6F5DC; }
+.signin .signup-form select { width: 100%; background-color: rgba(255, 255, 255, .04); color: var(--m-ink, #EDF1ED); border-color: rgb(237 241 237 / .45); }
+.signin .signup-form select.unpicked { color: var(--m-muted, #CBD1CC); }
+.signin .signup-form select option { background-color: #0D0208; color: var(--m-ink, #EDF1ED); }
 
-.signin label.agree a { color: #D6F5DC; }
+.signin label.agree a { color: var(--m-ink, #EDF1ED); }
 .signin .check:empty { display: none; }
 /* "Where can I see your business?": the two fields as one group, spaced like the rest of the form */
 /* Sign-up's optional fields say so after their label, quietly */
-.signin .opt { margin-left: 6px; font-size: 11px; color: #84A98C; }
+.signin .opt { margin-left: 6px; font-size: 11px; color: var(--m-muted, #CBD1CC); }
 .signin .signup-form .f { display: grid; gap: 8px; min-width: 0; }
 .signin .signup-form .f > * { margin: 0; }
 .signin .signup-form .face-hint { margin: -4px 0 0; }
@@ -1629,8 +1629,9 @@ ul.md-says { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; 
 .prospect-facts .wide { grid-column: 1 / -1; }
 .prospect-facts dd { overflow-wrap: anywhere; }
 /* A link that leaves neon1: the northeast arrow, nudged further northeast on hover */
-a.out .out-arrow { display: inline-block; margin-left: 2px; transition: transform .15s ease; }
-a.out:hover .out-arrow, a.out:focus-visible .out-arrow { transform: translate(2px, -2px); }
+/* Drawn exactly as the site's (css/frame.css a.ext): .7em square, 2.2/16 stroke, .18em from the words, .02em above the baseline */
+a.out .out-arrow { display: inline-block; width: .7em; height: .7em; margin-left: .18em; vertical-align: .02em; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.8 12.2 12 4M5.2 4H12v6.8'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.8 12.2 12 4M5.2 4H12v6.8'/%3E%3C/svg%3E") center / contain no-repeat; transition: transform .15s ease; }
+a.out:hover .out-arrow, a.out:focus-visible .out-arrow { transform: translate(1px, -1px); }
 @media (prefers-reduced-motion: reduce) { a.out .out-arrow { transition: none; } }
 /* The place-and-link form, in Settings and on Home */
 /* Contact: one row per way to reach neon1 */
@@ -1691,6 +1692,9 @@ dialog.palette[open] { animation-duration: var(--t-fast); }
 /* Questions and folds open to their height instead of jumping */
 details.faq::details-content { height: 0; overflow: clip; transition: height var(--t-open) var(--ease-open), content-visibility var(--t-open) allow-discrete; }
 details.faq[open]::details-content { height: auto; }
+/* An open fold draws a brand rule under its header, like the one under a dropdown's placeholder */
+details.faq[open] > summary, .ag-group.fold[open] > summary { border-bottom: 1.5px solid var(--brand); }
+.ag-group.fold[open] > summary { width: auto; margin-bottom: 4px; }
 /* A cross-fade between sign-in steps, and between sign-in and sign-up (lib/motion.ts fade) */
 html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new(root) { animation-duration: var(--t-base); animation-timing-function: var(--ease); }
 
@@ -1701,7 +1705,7 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
   select { appearance: base-select; background-image: none; padding-right: 14px; display: inline-flex; align-items: center; gap: 12px; }
   /* The same drawn arrow as .arr, centered on the line beside sentence-case choices */
   /* --arr-t: the stroke of regular-weight text, so the arrow matches the choice beside it */
-  select::picker-icon { --arr-t: .09em; content: ""; width: .95em; height: .75em; font: 15px var(--sans); background: var(--accent); clip-path: var(--arr-shape, polygon(0 50%, 31% 12%, 40% 20%, 24% 43%, 100% 43%, 100% 57%, 24% 57%, 40% 80%, 31% 88%)); align-self: center; margin-left: auto; margin-right: 2px; transition: rotate var(--t-base) var(--ease); }
+  select::picker-icon { --arr-t: .156em; content: ""; width: .95em; height: .75em; font: 15px var(--sans); background: var(--accent); clip-path: var(--arr-shape, polygon(0 50%, 31% 12%, 40% 20%, 24% 43%, 100% 43%, 100% 57%, 24% 57%, 40% 80%, 31% 88%)); align-self: center; margin-left: auto; margin-right: 2px; transition: rotate var(--t-base) var(--ease); }
   select:open::picker-icon { rotate: -90deg; }
   ::picker(select) { appearance: base-select; border: 1px solid var(--line-strong); border-radius: var(--r-sm); background: var(--panel); color: var(--text); box-shadow: 0 12px 32px rgba(0, 0, 0, .16); padding: 4px; margin-top: 4px; max-height: var(--picker-max, min(320px, 60vh)); position-try-fallbacks: none; }
   /* The list unrolls in the same time the arrow takes to turn, so both finish together */
@@ -1713,13 +1717,16 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
   select option { padding: 8px 12px; border-radius: 6px; min-height: 0; }
   select option::checkmark { display: none; }
   select option:checked { color: var(--accent); font-weight: 600; }
-  select option:is(:hover, :focus-visible) { background: var(--accent-soft); outline: none; }
+  select option:is(:hover, :focus-visible) { background-color: var(--accent-soft); outline: none; }
+  /* The first choice (the placeholder, whatever its value) carries a rule under it in the brand colour, the weight of the arrow and the focus border; hover sets only background-color so it never wipes the line */
+  select option:first-child { background-image: linear-gradient(var(--accent), var(--accent)); background-repeat: no-repeat; background-size: calc(100% - 24px) 1.5px; background-position: 12px 100%; margin-bottom: 5px; padding-bottom: 9px; }
   select.unpicked selectedcontent, select.unpicked > button { color: inherit; }
   /* The dark sign-in screen: the neon arrow, a dark list */
   .signin select::picker-icon { background: var(--neon, #00FF41); }
-  .signin ::picker(select) { background: #0D0208; color: #D6F5DC; border-color: rgba(0, 255, 65, .3); }
-  .signin select option:is(:hover, :focus-visible) { background: rgba(0, 255, 65, .12); }
+  .signin ::picker(select) { background: #0D0208; color: var(--m-ink, #EDF1ED); border-color: rgba(0, 255, 65, .3); }
+  .signin select option:is(:hover, :focus-visible) { background-color: rgba(0, 255, 65, .12); }
   .signin select option:checked { color: #00FF41; }
+  .signin select option:first-child { background-image: linear-gradient(var(--neon, #00FF41), var(--neon, #00FF41)); }
   /* The board card's small stage menu keeps its compact size */
   .pcard .move select { padding-right: 10px; gap: 6px; }
   .pcard .move select::picker-icon { font-size: 12px; }
@@ -1832,11 +1839,12 @@ html:has(.signin.awake), html:has(.signin.awake) body { background: var(--bg); c
 /* Awake dropdowns on sign-up: the same fill, border, and text as the other fields, a dark green arrow, and a light list */
 .signin.awake .signup-form select { background-color: var(--bg); color: var(--text); border-color: var(--line-strong); }
 .signin.awake .signup-form select.unpicked { color: var(--muted); }
-.signin.awake .signup-form select option { background: var(--panel); color: var(--text); }
+.signin.awake .signup-form select option { background-color: var(--panel); color: var(--text); }
 @supports (appearance: base-select) {
   .signin.awake select::picker-icon { background: var(--accent); }
   .signin.awake ::picker(select) { background: var(--panel); color: var(--text); border-color: var(--line-strong); box-shadow: 0 12px 32px rgba(3, 87, 4, .16); }
-  .signin.awake select option:is(:hover, :focus-visible) { background: var(--accent-soft); }
+  .signin.awake select option:is(:hover, :focus-visible) { background-color: var(--accent-soft); }
+  .signin.awake select option:first-child { background-image: linear-gradient(var(--accent), var(--accent)); }
   .signin.awake select option:checked { color: var(--accent); }
 }
 /* The required asterisk is the theme's green, light or dark (it was red in awake) */
@@ -1865,3 +1873,84 @@ html:has(.signin.awake), html:has(.signin.awake) body { background: var(--bg); c
 }
 @keyframes soft-off { 0% { opacity: var(--lo-soft); } 35% { opacity: var(--lo-soft); } 100% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { :root.flick-on .signin *, :root.flick-off .signin *, :root.flick-on .pub-page *, :root.flick-off .pub-page * { animation: none !important; } }
+
+
+/* ---- Matrix text: off-white ink, green kept for headings, links, titles, arrows, key numbers, buttons ----
+   The four --m-* names come from neon1.tech's /shared/neon1.css (index.html loads it before this file);
+   the literals are the same values for when that file is old or missing. Light themes are untouched. */
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="device"] .tag.prio-could, :root[data-theme="device"] .demo-pick button span, :root[data-theme="device"] .bell-list .lvl-info .what, :root[data-theme="device"] .strip .day.past, :root[data-theme="device"] .strip.month .day.past, :root[data-theme="device"] select:disabled { opacity: 1; color: var(--faint); }
+  :root[data-theme="device"] :is(.tag.client, .tag.prio-must, .next-step .eyebrow, .bell-new) { color: var(--muted); }
+  :root[data-theme="device"] .tag.prio-must { border-color: var(--line-strong); }
+  :root[data-theme="device"] .content :is(p, li) { letter-spacing: .01em; }
+  :root[data-theme="device"] .content :is(p, li) a:not(.btn, .tab, .linkish, .row, .name) { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: rgb(108 255 168 / .55); }
+}
+:root[data-theme="matrix"] .tag.prio-could, :root[data-theme="matrix"] .demo-pick button span, :root[data-theme="matrix"] .bell-list .lvl-info .what, :root[data-theme="matrix"] .strip .day.past, :root[data-theme="matrix"] .strip.month .day.past, :root[data-theme="matrix"] select:disabled { opacity: 1; color: var(--faint); }
+:root[data-theme="matrix"] :is(.tag.client, .tag.prio-must, .next-step .eyebrow, .bell-new) { color: var(--muted); }
+:root[data-theme="matrix"] .tag.prio-must { border-color: var(--line-strong); }
+:root[data-theme="matrix"] .content :is(p, li) { letter-spacing: .01em; }
+:root[data-theme="matrix"] .content :is(p, li) a:not(.btn, .tab, .linkish, .row, .name) { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: rgb(108 255 168 / .55); }
+
+
+/* ---- Matrix controls: native and custom controls follow the dark theme ----
+   One block per way of being dark (matrix, and device on a dark device), written from the same tokens: the browser's
+   own controls (range, progress, meter) take the accent, selected text takes a green wash, the list of an unstyled
+   dropdown takes the panel, autofill keeps the field's dark fill (Chrome paints it pale blue), disabled fields read
+   as faint text (never fainter than --faint), disabled buttons stay at .6 or above, the All clients banner takes the
+   amber as a tint instead of a bright stripe, and Neo's window uses the shared text levels. Awake is untouched. */
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="device"] { accent-color: var(--accent); }
+  :root[data-theme="device"] ::selection { background: rgb(108 255 168 / .3); color: var(--text); }
+  :where(:root[data-theme="device"]) :is(option, optgroup) { background-color: var(--panel); color: var(--text); }
+  :root[data-theme="device"] :is(input, textarea, select):-webkit-autofill, :root[data-theme="device"] :is(input, textarea, select):-webkit-autofill:is(:hover, :focus) { -webkit-text-fill-color: var(--text); caret-color: var(--text); box-shadow: 0 0 0 100px var(--panel) inset; transition: background-color 9999s; }
+  :root[data-theme="device"] :is(input, textarea):disabled { color: var(--faint); cursor: not-allowed; }
+  :root[data-theme="device"] .btn:disabled { opacity: .6; }
+  :root[data-theme="device"] .readonly-bar { color: var(--text); background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--amber) 14%, var(--bg)) 0 12px, color-mix(in srgb, var(--amber) 20%, var(--bg)) 12px 24px); border-bottom-color: var(--amber); }
+  :root[data-theme="device"] .n1chat:not(.n1chat-light) { --fg: var(--m-ink, #EDF1ED); --muted: var(--m-muted, #CBD1CC); }
+}
+:root[data-theme="matrix"] { accent-color: var(--accent); }
+:root[data-theme="matrix"] ::selection { background: rgb(108 255 168 / .3); color: var(--text); }
+:where(:root[data-theme="matrix"]) :is(option, optgroup) { background-color: var(--panel); color: var(--text); }
+:root[data-theme="matrix"] :is(input, textarea, select):-webkit-autofill, :root[data-theme="matrix"] :is(input, textarea, select):-webkit-autofill:is(:hover, :focus) { -webkit-text-fill-color: var(--text); caret-color: var(--text); box-shadow: 0 0 0 100px var(--panel) inset; transition: background-color 9999s; }
+:root[data-theme="matrix"] :is(input, textarea):disabled { color: var(--faint); cursor: not-allowed; }
+:root[data-theme="matrix"] .btn:disabled { opacity: .6; }
+:root[data-theme="matrix"] .readonly-bar { color: var(--text); background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--amber) 14%, var(--bg)) 0 12px, color-mix(in srgb, var(--amber) 20%, var(--bg)) 12px 24px); border-bottom-color: var(--amber); }
+:root[data-theme="matrix"] .n1chat:not(.n1chat-light) { --fg: var(--m-ink, #EDF1ED); --muted: var(--m-muted, #CBD1CC); }
+
+/* "Report a bug" takes its neighbours' look wherever it sits: in the menu it is a row like Settings and Contact (the same
+   type, with the bug in an icon tile), on the profile and Settings a ghost button like its peers, and under the sign-in
+   links a link like them. Only the small bug drawing and the northeast arrow are its own */
+.bug-glyph { width: 1.17em; height: 1.17em; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; margin-right: .18em; /* the gap equals the text-to-arrow gap, .18em */ /* the mark's middle sits on the x-height middle, as in the site footer's link */ vertical-align: -.335em; }
+.btn.bug-link { display: inline-flex; align-items: center; text-decoration: none; }
+.btn.bug-link .bug-glyph { vertical-align: 0; }
+/* The sign-in and sign-up screens' link: at the bottom right of the page (it scrolls with a tall form, so it never floats over it), its right edge on the bar's rightmost item (the theme switch, 24px
+   in, or the row's edge on a wide screen) and its middle on Neo's button (48px tall, 16px from the bottom), as the site's footer has it */
+.signin a.bug-corner { position: absolute; z-index: 3; right: max(24px, env(safe-area-inset-right), calc((100% - 1200px) / 2 + 24px)); bottom: calc(max(16px, env(safe-area-inset-bottom)) + 24px); translate: 0 50%;
+  display: inline-flex; align-items: center; font: 600 12px var(--mono); color: var(--accent); text-decoration: none; }
+.signin:not(.awake) a.bug-corner { color: var(--neon); }
+/* In matrix the rain controls (grid, text, pause) would sit on the same corner: they rise one row above the link, and the page grows by that row so the form never meets them */
+.signin:not(.awake) .rainctl { bottom: calc(max(16px, env(safe-area-inset-bottom)) * 2 + 48px); }
+.signin:not(.awake) { padding-bottom: calc(48px + max(16px, env(safe-area-inset-bottom)) + 20px + 40px); }
+.signin a.bug-corner .bug-glyph { vertical-align: 0; width: 14px; height: 14px; }
+.signin a.bug-corner:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.side .nav a.bug-row .ico { color: var(--accent); }
+.side .nav a.bug-row .bug-glyph { margin: 0; vertical-align: 0; }
+.side .nav a.bug-row:hover .out-arrow, .side .nav a.bug-row:focus-visible .out-arrow { transform: translate(1px, -1px); }
+
+
+/* Two columns for the pages that were one narrow column (profile, Settings, Contact). The columns shrink with the window,
+   which keeps their cards comfortable down to about two phone widths; below that it is one column, as on a phone */
+.cols2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; align-items: start; }
+.cols2 > * { min-width: 0; }
+.cols2 .form, .cols2 .card { max-width: none; }
+.cols2 .stack { display: grid; gap: 16px; align-content: start; }
+.cols2 .stack > h2 { margin: 0; }
+@media (max-width: 760px) { .cols2 { grid-template-columns: minmax(0, 1fr); } }
+.card-h { font-size: 15px; margin: 0 0 12px; }
+/* The unsaved note and the marks beside a choice that is only shown, not kept: the page's ink at a heavier weight, nothing new */
+.unsaved { color: var(--text); font-weight: 600; margin: 6px 0 0; }
+.actions .unsaved { margin: 0; }
+
+
+/* Dropdowns say they are clickable: the hand over the whole box, the arrow, and the choices */
+select:not(:disabled), select:not(:disabled)::picker-icon, select:not(:disabled) > button, select option { cursor: pointer; }

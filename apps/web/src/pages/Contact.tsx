@@ -26,15 +26,22 @@ export function ContactPage() {
     <>
       <h1 className="page-title">Contact neon1</h1>
       <p className="lead">Reach me whichever way suits you.</p>
-      <section className="card contact-ways">
-        <dl className="facts">
-          <div><dt>Email</dt><dd><a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a></dd></div>
-          <div><dt>Call or text</dt><dd><a href={`tel:${CONTACT.phone}`} title={CONTACT.phoneDigits}>{CONTACT.phoneLabel}</a> <span className="muted small">{CONTACT.phoneDigits}</span></dd></div>
-          <div><dt>Talk it through</dt><dd><OutLink href={BOOK_A_CALL}>Book a free 15-minute call</OutLink></dd></div>
-          <div><dt>When I answer</dt><dd>Weekends 8am to 8pm and weekday evenings 6pm to 9pm, Eastern time, usually within a day</dd></div>
-        </dl>
-        <p className="muted small">About a project? Write in the project itself, so everything stays together. More answers in the <Link to="/faqs">FAQs</Link>.</p>
-      </section>
+      {/* Two cards side by side on a wide screen: the ways in, then when to expect an answer */}
+      <div className="cols2">
+        <section className="card contact-ways">
+          <h2 className="card-h">Ways to reach me</h2>
+          <dl className="facts">
+            <div><dt>Email</dt><dd><a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a></dd></div>
+            <div><dt>Call or text</dt><dd><a href={`tel:${CONTACT.phone}`} title={CONTACT.phoneDigits}>{CONTACT.phoneLabel}</a> <span className="muted small">{CONTACT.phoneDigits}</span></dd></div>
+            <div><dt>Talk it through</dt><dd><OutLink href={BOOK_A_CALL}>Book a free 15-minute call</OutLink></dd></div>
+          </dl>
+        </section>
+        <section className="card contact-ways">
+          <h2 className="card-h">When I answer</h2>
+          <p style={{ margin: 0 }}>Weekends 8am to 8pm and weekday evenings 6pm to 9pm, Eastern time, usually within a day.</p>
+          <p className="muted small">About a project? Write in the project itself, so everything stays together. More answers in the <Link to="/faqs">FAQs</Link>.</p>
+        </section>
+      </div>
     </>
   );
 }

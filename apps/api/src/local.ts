@@ -3,6 +3,7 @@
 
 
 import type { Directory, Inspection, Mailer, ScanVerdict, Storage, Texter } from "./services.ts";
+import type { SenderKind } from "./mail.ts";
 
 
 /** Local and test stand-ins */
@@ -29,6 +30,14 @@ export class MemoryStorage implements Storage {
   }
   async remove(key: string) {
     this.files.delete(key);
+  }
+  async put(key: string, bytes: Uint8Array, type: string) {
+    this.files.set(key, { type, bytes });
+  }
+  async get(key: string) {
+    const f = this.files.get(key);
+    if (!f) throw new Error("NoSuchKey");
+    return f.bytes;
   }
 }
 
@@ -68,10 +77,10 @@ export class MemoryDirectory implements Directory {
 // Keeps sent mail in memory so tests can read invites
 export class MemoryMailer implements Mailer {
   // Every message sent, oldest first
-  readonly sent: { to: string; subject: string; text: string; html: string; replyTo?: string }[] = [];
+  readonly sent: { to: string; subject: string; text: string; html: string; replyTo?: string; as?: SenderKind; attachments?: { name: string; type: string; size: number }[] }[] = [];
   // Record the message instead of sending it
-  async send(to: string, subject: string, text: string, html: string, replyTo?: string) {
-    this.sent.push({ to, subject, text, html, replyTo });
+  async send(to: string, subject: string, text: string, html: string, replyTo?: string, _signal?: AbortSignal, attachments?: { name: string; type: string; bytes: Uint8Array }[], as?: SenderKind) {
+    this.sent.push({ to, subject, text, html, replyTo, as: as ?? "portal", ...(attachments?.length ? { attachments: attachments.map((a) => ({ name: a.name, type: a.type, size: a.bytes.length })) } : {}) });
   }
 }
 

@@ -16,6 +16,8 @@ import { problem } from "../lib/hooks.ts";
 import { passkeyCreation } from "../lib/passkey.ts";
 import { useProspectEverywhere } from "../components/Prospect.tsx";
 import { useHelp } from "../components/Help.tsx";
+import { previewMenu } from "../lib/preview.ts";
+import { ReportBug } from "../components/BugReport.tsx";
 import { askToConfirm, TotpSetup } from "../components/Confirm.tsx";
 import { chosenLessMotion, deviceLessMotion, setLessMotion } from "../lib/motion.ts";
 
@@ -32,6 +34,11 @@ const SMS_NOTE: Record<SmsState, string> = {
 
 
 // The signed-in person's own profile, outside any organization
+// The browser's own zone, and the zones it knows (plus UTC, and the current value if the list lacks it)
+const browserZone = () => Intl.DateTimeFormat().resolvedOptions().timeZone || "America/New_York";
+const zoneChoices = (current: string) => [...new Set(["UTC", ...(typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : []), current])].sort();
+
+
 export function MePage() {
   const me = useSession();
   const qc = useQueryClient();
@@ -47,18 +54,19 @@ export function MePage() {
   const [totpOpen, setTotpOpen] = useState(false);
   useTopBar(<span>Your profile</span>, []);
   // Edits stay local until Save
-  const [draft, setDraft] = useState({ name: me.user.name, title: me.user.title, phone: me.user.phone, theme: me.user.theme, menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) });
+  const [draft, setDraft] = useState({ name: me.user.name, title: me.user.title, phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), theme: me.user.theme, menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) });
   const [busy, setBusy] = useState(false);
   // Motion is this browser's choice, not the account's, so it changes at once and isn't part of Save
   const deviceLess = deviceLessMotion();
   const [less, setLess] = useState(() => deviceLess || chosenLessMotion());
   // Anything that differs from what's saved; Save waits for a change
-  const saved = { name: me.user.name, title: me.user.title, phone: me.user.phone, theme: me.user.theme, menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) };
+  const saved = { name: me.user.name, title: me.user.title, phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), theme: me.user.theme, menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) };
   const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
   // A previewed theme that was never saved goes back to the saved one on leaving the page
   const savedTheme = useRef(me.user.theme);
   savedTheme.current = me.user.theme;
-  useEffect(() => () => applyTheme(savedTheme.current), []);
+  // Leaving the profile unsaved puts the saved theme and menu style back
+  useEffect(() => () => { applyTheme(savedTheme.current); previewMenu(undefined); }, []);
   // The phone check: a code is texted, then typed here
   const [code, setCode] = useState<string | undefined>(undefined);
   // A new account has no texts: no number to add, no text notices, no text codes
@@ -152,15 +160,25 @@ export function MePage() {
     location.href = r.redirect;
   };
   return (
-    <div style={{ maxWidth: 720 }}>
+    <div>
       {/* Who this is */}
       <h1 className="page-title" style={{ display: "flex", gap: 12, alignItems: "center" }}><Avatar id={me.user.id} name={me.user.name || me.user.email} size={40} />Your profile</h1>
       <p className="lead">{me.user.email}{me.operator ? " · neon1 operator" : ""}</p>
       {/* Name, title, and mobile number */}
-      <form className="form" onSubmit={(e) => { e.preventDefault(); void save(); }}>
+      {/* Two columns on a wide screen: who you are and how it looks, beside notifications; one column when narrow */}
+      <div className="cols2">
+      <form id="profile" className="form" onSubmit={(e) => { e.preventDefault(); void save(); }}>
         <div><label htmlFor="nm">Name</label><input id="nm" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} maxLength={80} autoComplete="name" /></div>
         <div><label htmlFor="tt">Title</label><input id="tt" value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} maxLength={80} autoComplete="organization-title" /></div>
         {!noTexts && <div><label htmlFor="ph">Phone (only you see it)</label><input id="ph" type="tel" value={draft.phone} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} maxLength={32} autoComplete="tel" /></div>}
+        {/* The zone email shows times in; the browser's until changed */}
+        <div>
+          <label htmlFor="tz">Time zone (email times)</label>
+          <select id="tz" value={draft.timeZone} onChange={(e) => setDraft({ ...draft, timeZone: e.target.value })}>
+            {zoneChoices(draft.timeZone).map((z) => <option key={z} value={z}>{z.replace(/_/g, " ")}</option>)}
+          </select>
+          <span className="muted">Emails show times in this zone, with UTC beside them. Daylight saving follows it automatically.</span>
+        </div>
         {/* Theme previews immediately; Save keeps it with the account */}
         <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
           <legend style={{ marginBottom: 8 }}>Theme</legend>
@@ -172,6 +190,7 @@ export function MePage() {
               </label>
             ))}
           </div>
+          {draft.theme !== me.user.theme && <p className="unsaved small" role="status">Showing this now. Press Save to keep it.</p>}
         </fieldset>
         {/* Motion: smooth by default; Reduced turns every animation off in this browser at once, and a device
             that asks for less motion keeps it reduced (lib/motion.ts) */}
@@ -193,13 +212,16 @@ export function MePage() {
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {(["default", "mini"] as const).map((m) => (
               <label key={m} className={`chip${draft.menu === m ? " on" : ""}`} style={{ cursor: "pointer" }}>
-                <input type="radio" name="menu" className="sr" checked={draft.menu === m} onChange={() => setDraft({ ...draft, menu: m })} />
+                <input type="radio" name="menu" className="sr" checked={draft.menu === m} onChange={() => { setDraft({ ...draft, menu: m }); previewMenu(m); }} />
                 {m === "default" ? "Default" : "Mini"}
               </label>
             ))}
           </div>
           <p className="muted small" style={{ margin: "6px 0 0" }}>{draft.menu === "mini" ? "A slim menu of icons stays on the left. The menu button opens the full menu over it." : "The menu button opens the full menu. A tap outside it, or the button again, closes it."}</p>
+          {draft.menu !== menuOf(me.user.menu) && <p className="unsaved small" role="status">Showing this now. Press Save to keep it.</p>}
         </fieldset>
+      </form>
+      <div className="form">
         {/* Notifications: every kind shows under the bell; choose which also email you */}
         <div className="card small notify" id="notifications">
           <b>Notifications</b>
@@ -266,14 +288,16 @@ export function MePage() {
             </ul>
           </fieldset>}
         </div>
-        {/* Save covers everything above; it opens only when something changed */}
-        <div className="actions">
-          <button className="btn btn-primary" disabled={busy || !dirty}>{busy ? "Saving…" : "Save"}</button>
-          {dirty && <span className="muted small" role="status">Unsaved changes</span>}
+      </div>
+      </div>
+        {/* Save covers the profile and the notifications; it opens only when something changed */}
+        <div className="actions" style={{ marginTop: 20 }}>
+          <button className="btn btn-primary" form="profile" disabled={busy || !dirty}>{busy ? "Saving…" : "Save"}</button>
+          {dirty && <span className="unsaved small" role="status">Unsaved changes. Press Save to keep them.</span>}
         </div>
-      </form>
       {/* Everything below takes effect right away, so it sits outside the profile form */}
-      <div className="form" style={{ marginTop: 28 }}>
+      <div className="cols2" style={{ marginTop: 28 }}>
+      <div className="form">
         {/* Two-step verification: any one of these confirms it's you before admin actions */}
         <div className="card small security" data-tour="passkey" id="security">
           <b>Two-step verification</b>
@@ -310,6 +334,8 @@ export function MePage() {
             {me.strongSession ? "This session is confirmed. Admin actions are open." : me.factors?.any ? <>To use admin actions, <button type="button" className="link" onClick={askToConfirm}>confirm it's you</button>.</> : "Add one of these to use admin actions."}
           </span>
         </div>
+      </div>
+      <div className="form">
         {/* The tutorial: replay the welcome tour, or read the FAQs */}
         <div className="card small" style={{ display: "grid", gap: 8, justifyItems: "start" }}>
           <b>Tutorial</b>
@@ -319,9 +345,16 @@ export function MePage() {
             <Link className="btn btn-ghost" to="/faqs">FAQs</Link>
           </div>
         </div>
+        {/* Something broken or confusing: straight to neon1, with the page and theme */}
+        <div className="card small" style={{ display: "grid", gap: 8, justifyItems: "start" }}>
+          <b>Something not working?</b>
+          <span className="muted">Tell me what happened, on a page that opens in a new tab.</span>
+          <div className="actions"><ReportBug kind="button" /></div>
+        </div>
         <div className="actions">
           <button className="btn btn-ghost" type="button" onClick={() => void signOut()}>Sign out</button>
         </div>
+      </div>
       </div>
       {/* The authenticator setup has its own form, so it lives outside the profile form: Enter there
           checks the code instead of saving the profile */}

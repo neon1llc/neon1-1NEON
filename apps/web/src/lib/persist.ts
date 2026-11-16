@@ -29,9 +29,3 @@ export function usePersisting() {
     persisting,
   );
 }
-
-
-/** Forget a failure (tests only) */
-export function resetPersist() {
-  failed = false;
-}
