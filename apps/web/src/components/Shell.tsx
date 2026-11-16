@@ -373,8 +373,8 @@ function SignIn() {
           <>
             <h2 className="signin-h">Start in 1NEON</h2>
             <p className="signin-lead">Free. Write down what your project needs, then ask for an assessment or a call from your account.
-              {/* What a free account holds, before anything is typed: the same numbers the API enforces */}
-              <span className="signin-limits">Up to {PROSPECT_LIMITS.projects} projects and {PROSPECT_LIMITS.files} files ({PROSPECT_LIMITS.totalBytes / (1024 * 1024)} MB), kept {PROSPECT_FINAL_DAYS + PROSPECT_GRACE_DAYS} days after your last change.</span>
+              {/* Before anything is typed: the project limit and how long it's kept (Pradeep: the other limits show in use) */}
+              <span className="signin-limits">Up to {PROSPECT_LIMITS.projects} projects, kept {PROSPECT_FINAL_DAYS + PROSPECT_GRACE_DAYS} days after your last change.</span>
             </p>
           </>
         ) : (
