@@ -94,6 +94,16 @@ describe("theme", () => {
     const old = await call("dana@acmedental.example", "PATCH", "/me", { version: saved.json.version, theme: "system" });
     expect(old.status).toBe(400);
   });
+
+  it("keeps a person's time zone, refusing a name the engine doesn't know", async () => {
+    const me = await call("dana@acmedental.example", "GET", "/me");
+    expect(me.json.user.timeZone).toBeUndefined();
+    const bad = await call("dana@acmedental.example", "PATCH", "/me", { version: me.json.user.version, timeZone: "Mars/Olympus" });
+    expect(bad.status).toBe(400);
+    const saved = await call("dana@acmedental.example", "PATCH", "/me", { version: me.json.user.version, timeZone: "America/Denver" });
+    expect(saved.json.timeZone).toBe("America/Denver");
+    expect((await call("dana@acmedental.example", "GET", "/me")).json.user.timeZone).toBe("America/Denver");
+  });
 });
 
 
@@ -107,7 +117,7 @@ describe("email", () => {
     expect(mail.html).toContain("your invitation");
     expect(mail.html).toContain('href="https://neon1.tech/1NEON/"');
     expect(mail.html).toContain('href="https://neon1.tech/"');
-    expect(mail.html).toMatch(/1 is glad to be of service\.<\/div><div style="white-space:nowrap[^"]*">Sent .+ UTC<\/div>/);
+    expect(mail.html).toMatch(/1 is glad to be of service\.<\/div><div style="white-space:nowrap[^"]*">Sent .+ E[SD]T \(\d\d:\d\d UTC\)<\/div>/);
     expect(mail.text).toContain("how it becomes routine");
   });
 
@@ -117,11 +127,17 @@ describe("email", () => {
     expect(out.response.emailSubject).toBe("Your 1NEON sign-in code");
     expect(out.response.emailMessage).toMatch(/user-select:all">\{####\}<\/span>/);
     expect(out.response.emailMessage).toContain('sign in to <a href="https://neon1.tech/1NEON/"');
-    expect(out.response.emailMessage).toContain("Sent Nov 6, 2026, 8:22 PM UTC");
+    expect(out.response.emailMessage).toContain("Sent Nov 6, 2026, 3:22 PM EST (20:22 UTC)");
     expect(out.response.emailMessage).toContain("neon1 · your sign-in code");
     // The link finishes sign-in with the code in the fragment, never in a server-visible query
     expect(out.response.emailMessage).toContain('href="https://neon1.tech/1NEON/#code={####}"');
     expect(out.response.emailMessage).not.toContain("<h1");
+  });
+
+  it("shows the sign-in code's time in the person's own zone when 1NEON has one", () => {
+    const event = { triggerSource: "CustomMessage_Authentication", request: { codeParameter: "{####}", userAttributes: {} }, response: {} } as unknown as CustomMessageTriggerEvent;
+    const out = message(event, new Date("2026-11-06T20:22:00Z"), "Europe/Berlin");
+    expect(out.response.emailMessage).toContain("Sent Nov 6, 2026, 9:22 PM GMT+1 (20:22 UTC)");
   });
 
   it("leaves messages it doesn't brand to Cognito", () => {

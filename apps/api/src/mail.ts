@@ -3,6 +3,9 @@
 // strip style sheets.
 
 
+import { formatWhen } from "@1neon/domain";
+
+
 // HTML-escape values placed into an email
 export const esc = (s: string) => s.replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
 
@@ -27,10 +30,10 @@ export function link(label: string, url: string) {
 }
 
 
-/** When a message was sent, in UTC, for its sign-off */
-export function sentAt(at: Date) {
-  const when = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }).format(at);
-  return `Sent ${when} UTC`;
+/** When a message was sent, for its sign-off: in the reader's zone with UTC beside it (neon1's own
+ * zone when the reader's isn't known) */
+export function sentAt(at: Date, zone?: string) {
+  return `Sent ${formatWhen(at, zone)}`;
 }
 
 
@@ -44,6 +47,7 @@ export interface MailParts {
   button?: { label: string; url: string };
   note?: string; // small print under the button or code
   at?: Date; // send time for the sign-off; defaults to now
+  zone?: string; // the reader's IANA time zone for that time; unknown reads as America/New_York
 }
 
 
@@ -63,7 +67,7 @@ export function branded(p: MailParts) {
   // detail unique to each message keeps the sign-off on screen
   // Each sign-off line stays on one line, centered and small enough to fit a phone's mail view
   const line = `white-space:nowrap;font:11px/1.7 ${MONO};color:${MUTED}`;
-  const signoff = `<div style="margin:22px 0 0;padding-top:18px;border-top:1px solid rgba(18,36,26,.1);text-align:center"><div style="${line}">${link("neon1", "https://neon1.tech/")} · 1 is glad to be of service.</div><div style="${line}">${sentAt(p.at ?? new Date())}</div></div>`;
+  const signoff = `<div style="margin:22px 0 0;padding-top:18px;border-top:1px solid rgba(18,36,26,.1);text-align:center"><div style="${line}">${link("neon1", "https://neon1.tech/")} · 1 is glad to be of service.</div><div style="${line}">${sentAt(p.at ?? new Date(), p.zone)}</div></div>`;
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="color-scheme" content="light only"><meta name="viewport" content="width=device-width"></head>
 <body style="margin:0;background:${PAPER};font:16px/1.6 ${SANS};color:${INK}">
 <span style="display:none;max-height:0;overflow:hidden">${esc(p.preheader)}</span>

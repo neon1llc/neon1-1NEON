@@ -5,7 +5,7 @@ import { branded, esc, link, sentAt } from "./mail.ts";
 
 
 /** The invite email: plain text plus the branded HTML version */
-export function inviteEmail(opts: { orgName: string; inviter: string; url: string; at?: Date }) {
+export function inviteEmail(opts: { orgName: string; inviter: string; url: string; at?: Date; zone?: string }) {
   const at = opts.at ?? new Date();
   const subject = `You're invited to ${opts.orgName} on 1NEON`;
   const about = "1NEON keeps your projects with neon1 in one place: what you need, the work, the results, and how it becomes routine.";
@@ -19,7 +19,7 @@ export function inviteEmail(opts: { orgName: string; inviter: string; url: strin
     "Ignore this if you weren't expecting it.",
     "",
     "neon1 · 1 is glad to be of service.",
-    sentAt(at),
+    sentAt(at, opts.zone),
   ].join("\n");
   const html = branded({
     label: "your invitation",
@@ -29,6 +29,7 @@ export function inviteEmail(opts: { orgName: string; inviter: string; url: strin
     button: { label: `Join ${opts.orgName}`, url: opts.url },
     note: "You'll sign in with a code sent to this email. Ignore this if you weren't expecting it.",
     at,
+    zone: opts.zone,
   });
   return { subject, text, html };
 }
@@ -36,7 +37,7 @@ export function inviteEmail(opts: { orgName: string; inviter: string; url: strin
 
 /** The sign-in code email Cognito sends through the custom message trigger. `code` may be Cognito's
  * {####} placeholder; the browser demo passes a real one */
-export function signInCodeEmail(opts: { code: string; portal: string; at?: Date }) {
+export function signInCodeEmail(opts: { code: string; portal: string; at?: Date; zone?: string }) {
   // Mail apps that offer to copy a code (Gmail's "Code requested") look for a plain sentence naming the
   // code; the preheader and the first line both say it that way. Cognito fills in the code in the body
   // only, so the subject can't carry it
@@ -52,13 +53,14 @@ export function signInCodeEmail(opts: { code: string; portal: string; at?: Date 
     button: { label: "Sign in with this code", url: `${opts.portal}#code=${opts.code}` },
     note: "The link works in the browser where you asked for the code. Either way, the code works for a few minutes. Ignore this email if you didn't ask for it.",
     at: opts.at,
+    zone: opts.zone,
   });
   return { subject, text: `Your 1NEON sign-in code is ${opts.code}. It works for a few minutes.`, html };
 }
 
 
 /** Notice that a passkey was added, with where to check */
-export function passkeyEmail(opts: { url: string; what?: string; at?: Date }) {
+export function passkeyEmail(opts: { url: string; what?: string; at?: Date; zone?: string }) {
   const at = opts.at ?? new Date();
   const what = opts.what ?? "A passkey";
   const subject = `${what} was added to your 1NEON account`;
@@ -68,7 +70,7 @@ export function passkeyEmail(opts: { url: string; what?: string; at?: Date }) {
     `If this wasn't you, reply to this email now. Your profile: ${opts.url}`,
     "",
     "neon1 · 1 is glad to be of service.",
-    sentAt(at),
+    sentAt(at, opts.zone),
   ].join("\n");
   const html = branded({
     label: "a sign-in method was added",
@@ -78,13 +80,14 @@ export function passkeyEmail(opts: { url: string; what?: string; at?: Date }) {
     button: { label: "Open your profile", url: opts.url },
     note: "If this wasn't you, reply to this email now.",
     at,
+    zone: opts.zone,
   });
   return { subject, text, html };
 }
 
 
 /** Notice that a sign-in method was removed or replaced; it goes out even when the person did it */
-export function factorRemovedEmail(opts: { url: string; what: string; how: "removed" | "replaced"; at?: Date }) {
+export function factorRemovedEmail(opts: { url: string; what: string; how: "removed" | "replaced"; at?: Date; zone?: string }) {
   const at = opts.at ?? new Date();
   const subject = `${opts.what} was ${opts.how} on your 1NEON account`;
   const after = opts.how === "replaced" ? "Codes from the old one no longer work." : "It can no longer confirm admin actions.";
@@ -94,7 +97,7 @@ export function factorRemovedEmail(opts: { url: string; what: string; how: "remo
     `If this wasn't you, reply to this email now. Your profile: ${opts.url}`,
     "",
     "neon1 · 1 is glad to be of service.",
-    sentAt(at),
+    sentAt(at, opts.zone),
   ].join("\n");
   const html = branded({
     label: "a sign-in method changed",
@@ -104,13 +107,14 @@ export function factorRemovedEmail(opts: { url: string; what: string; how: "remo
     button: { label: "Open your profile", url: opts.url },
     note: "If this wasn't you, reply to this email now.",
     at,
+    zone: opts.zone,
   });
   return { subject, text, html };
 }
 
 
 /** A notification by email: who did what, where, with a link to look */
-export function noticeEmail(opts: { orgName: string; by: string; summary: string; url: string; button?: string; important?: boolean; at?: Date }) {
+export function noticeEmail(opts: { orgName: string; by: string; summary: string; url: string; button?: string; important?: boolean; at?: Date; zone?: string }) {
   const at = opts.at ?? new Date();
   const subject = `${opts.orgName}: ${opts.summary}`.slice(0, 140);
   const text = [
@@ -119,7 +123,7 @@ export function noticeEmail(opts: { orgName: string; by: string; summary: string
     `${opts.button ?? "Open 1NEON"}: ${opts.url}`,
     "",
     "Choose which of these reach you in your 1NEON profile, under Notifications.",
-    sentAt(at),
+    sentAt(at, opts.zone),
   ].join("\n");
   const html = branded({
     label: opts.important ? "something important changed" : "something changed",
@@ -129,6 +133,7 @@ export function noticeEmail(opts: { orgName: string; by: string; summary: string
     button: { label: opts.button ?? "Open 1NEON", url: opts.url },
     note: "Choose which of these reach you in your 1NEON profile, under Notifications.",
     at,
+    zone: opts.zone,
   });
   return { subject, text, html };
 }
