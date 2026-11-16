@@ -1778,7 +1778,9 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
 .pub-page { padding-top: calc(64px + env(safe-area-inset-top) + 28px); }
 
 /* The neon flicker as the choice changes: the logo goes dark in one flick, and lights up with two quick flickers, a longer one, then a slow on */
-:root.flick-on :is(.pub-bar .n1-logo, body:has(.pub-bar) .n1chat-launch) { animation: neon-on 2.23s linear both; --lo: .08; }
+/* The bar's logo and Neo's launcher ease up once from off to full and hold rather than flicker, as on neon1.tech (Pradeep, 2026-11-16) */
+:root.flick-on :is(.pub-bar .n1-logo, body:has(.pub-bar) .n1chat-launch) { animation: glow-in 2.23s ease-in-out both; --lo: .08; }
+@keyframes glow-in { 0% { opacity: var(--lo); } 100% { opacity: 1; } }
 :root.flick-off :is(.pub-bar .n1-logo, body:has(.pub-bar) .n1chat-launch) { animation: neon-off .5s ease-out both; --lo: .08; }
 @keyframes neon-on {
   0% { opacity: var(--lo); } 4% { opacity: 1; } 8% { opacity: var(--lo); } 13% { opacity: var(--lo); }
