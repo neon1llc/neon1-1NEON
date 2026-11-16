@@ -10,7 +10,7 @@ import { loadConfig } from "../config.ts";
 import { GetParametersCommand, SSMClient } from "@aws-sdk/client-ssm";
 import { AwsTexter, CognitoDirectory, S3Records, S3Storage, SesMailer, TurnstileCheck } from "../services.ts";
 import { sweepSignups } from "../routes/signup.ts";
-import { sweepQuietProspects } from "../routes/prospects.ts";
+import { finishPurges, sweepQuietProspects } from "../routes/prospects.ts";
 import { StripePayments } from "../payments.ts";
 import { beforeDeadline, drainOutbox } from "../outbox.ts";
 import { sweepFiles } from "../files.ts";
@@ -122,11 +122,13 @@ export const handler = async (event: Parameters<typeof http>[0] | { source?: str
     // (and, at the end, deletion) once a day. Neither may hold up the next pass
     const signups = await beforeDeadline(sweepSignups({ repo, d: deps }, { deadline: end - 300 }), end).catch((e) => ({ removed: 0, error: (e as Error).name }));
     const quiet = Date.now() < end - 1_000 ? await beforeDeadline(sweepQuietProspects({ repo, d: deps, cfg }), end).catch((e) => ({ error: (e as Error).name })) : undefined;
+    // Free-account deletions under way go on every minute until each is done and checked
+    const purges = Date.now() < end - 1_000 ? await beforeDeadline(finishPurges({ repo, d: deps, cfg }, { deadline: end - 500 }), end).catch((e) => ({ error: (e as Error).name })) : undefined;
     // One line per pass in CloudWatch's embedded metric format: counts and queue age only, never
     // addresses or bodies. Written to stdout directly, because the JSON log wrapper would hide the
     // metric directive inside its message field
-    process.stdout.write(`${JSON.stringify({ ...outboxMetrics(result, cfg.env), files, signups, quiet })}\n`);
-    return { ...result, files, signups, quiet };
+    process.stdout.write(`${JSON.stringify({ ...outboxMetrics(result, cfg.env), files, signups, quiet, purges })}\n`);
+    return { ...result, files, signups, quiet, purges };
   }
   return http(event as Parameters<typeof http>[0], context);
 };

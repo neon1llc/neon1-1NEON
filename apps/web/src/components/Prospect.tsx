@@ -102,9 +102,10 @@ export function KeepCard({ orgId, slug, canKeep: mayKeep }: { orgId: string; slu
     setBusy(true);
     setError("");
     try {
-      await api(`/t/${orgId}/keep`, { method: "POST", body: {} });
+      // 30 days past the date shown, so pressing it early never loses days (routes/prospects.ts)
+      const r = await api<{ deleteOn: string }>(`/t/${orgId}/keep`, { method: "POST", body: {} });
       await qc.invalidateQueries({ queryKey: ["keep", orgId] });
-      toast("Kept for 30 more days.");
+      toast(r?.deleteOn ? `Kept until ${dateLabel(r.deleteOn)}.` : "Kept for 30 more days.");
     } catch (e) {
       setError(problem(e));
     }
@@ -116,7 +117,7 @@ export function KeepCard({ orgId, slug, canKeep: mayKeep }: { orgId: string; slu
       <p className="small">Kept until <strong>{dateLabel(k.deleteOn)}</strong>. Any change you make here keeps it longer, and I'll email you before anything is deleted.</p>
       {error && <p className="notice" role="alert">{error}</p>}
       <div className="actions">
-        {k.canKeep && mayKeep && <button type="button" className="btn btn-sm" disabled={busy} onClick={() => void extend()}>{busy ? "Keeping…" : "Keep it 30 more days"}</button>}
+        {k.canKeep && mayKeep && <button type="button" className="btn btn-sm" disabled={busy} title={`Adds 30 days to ${dateLabel(k.deleteOn)}`} onClick={() => void extend()}>{busy ? "Keeping…" : "Keep it 30 more days"}</button>}
         <Link className="btn btn-sm" to={`/o/${slug}/settings#your-data`}>Download a copy</Link>
       </div>
     </section>
