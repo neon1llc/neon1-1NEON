@@ -8,6 +8,7 @@
 - **Sign-in and public pages follow the site theme.** A sun/moon switch sits at the top right of the sign-in, FAQs, Cookies, Privacy, Terms, and agreement pages. It shares the neon1.tech choice, defaults to awake, and flickers on like the site. Awake sign-in uses paper with soft green rings instead of rain. The portal, demo, and live, are untouched.
 - Those pages get the site bar: logo and word on the left, a "← 1NEON" button and the switch on the right.
 - Even spacing on the sign-in around "Or see how it works".
+- The sign-in panel has the same gap below the bar and above Neo's button, on every step. Awake shows Neo's light button as on the site; matrix glows green.
 - Phone: the Menu tab always sits at the far right of the bottom bar.
 
 ### Security

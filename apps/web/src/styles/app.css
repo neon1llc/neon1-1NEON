@@ -315,9 +315,8 @@ table.people td { padding: 10px 8px; border-bottom: 1px solid var(--line); verti
 .signin .panel { position: relative; z-index: 2; width: min(420px, calc(100% - 32px)); text-align: center; padding: 36px 28px; background: rgba(13, 2, 8, .6); border: 1px solid rgba(0, 255, 65, .16); }
 /* Phones: the panel sits between the top bar and the bottom row (Neo at the left, the rain controls at
    the right, 48px tall at 16px or the home indicator's inset), so neither covers the form or its border */
-@media (max-width: 640px) {
-  .signin { padding: calc(64px + env(safe-area-inset-top)) 0 calc(80px + env(safe-area-inset-bottom)); }
-}
+/* The same gap (20px) sits between the bar and the panel and between the panel and the top of Neo's launcher, on every screen and step */
+.signin { padding: calc(64px + env(safe-area-inset-top) + 20px) 0 calc(48px + max(16px, env(safe-area-inset-bottom)) + 20px); }
 /* Under a walkthrough's bar: the sign-in fills only the screen below it, so the panel centers in what
    shows instead of running off the bottom, and the site's top bar (hidden behind it) takes no room */
 body:has(.live-bar) .signin { min-height: calc(100dvh - var(--live-top, var(--demo-h))); }
@@ -327,7 +326,6 @@ body:has(.live-bar) .signin .n1-bar { display: none; }
 }
 /* Short or zoomed screens: the rain controls drop below the panel instead of floating over the form */
 @media (max-height: 560px), (max-width: 360px) {
-  .signin { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
   .signin .rainctl { position: absolute; }
 }
 /* Wordmark: 1NEON folds out to "1portal Needs Execute Observe Normalize". The box keeps the short
@@ -1735,8 +1733,12 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
 /* The bar: the site's light bar over awake, its dark glass over matrix. The logo, the switch, and the back button follow the site's layout */
 .pub-bar { background: color-mix(in srgb, var(--bg) 80%, transparent); -webkit-backdrop-filter: saturate(1.8) blur(20px); backdrop-filter: saturate(1.8) blur(20px); border-bottom: 1px solid var(--line); }
 .pub-bar .n1-logo { color: var(--accent); text-shadow: none; }
-:root[data-theme="matrix"] .pub-bar .n1-logo { color: #D9FFE8; text-shadow: 0 0 2px #E9FFEE, 0 0 6px rgba(108, 255, 168, .95), 0 0 14px rgba(108, 255, 168, .75), 0 0 30px rgba(0, 230, 118, .55); }
-:root[data-theme="matrix"] .pub-bar .n1-logo svg { filter: drop-shadow(0 0 2px #E9FFEE) drop-shadow(0 0 6px rgba(108, 255, 168, .95)) drop-shadow(0 0 14px rgba(0, 230, 118, .65)); }
+:root[data-theme="matrix"] .pub-bar .n1-logo { color: #8CFFBE; text-shadow: 0 0 2px #C4FFDC, 0 0 7px rgba(108, 255, 168, .95), 0 0 16px rgba(60, 255, 140, .8), 0 0 34px rgba(0, 230, 118, .6); }
+:root[data-theme="matrix"] .pub-bar .n1-logo svg { filter: drop-shadow(0 0 2px #C4FFDC) drop-shadow(0 0 7px rgba(108, 255, 168, .95)) drop-shadow(0 0 16px rgba(0, 230, 118, .7)); }
+/* Neo's launcher glows the same way over matrix on these screens (the portal itself is untouched) */
+:root[data-theme="matrix"] body:has(.pub-bar) .n1chat-launch:not(.n1chat-light) { border-color: #6CFFA8; color: #8CFFBE; background: rgb(15 10 13 / .94);
+  box-shadow: 0 0 3px rgba(196, 255, 220, .9), 0 0 11px rgba(108, 255, 168, .85), 0 0 26px rgba(0, 230, 118, .55), inset 0 0 9px rgba(108, 255, 168, .4); }
+:root[data-theme="matrix"] body:has(.pub-bar) .n1chat-launch:not(.n1chat-light) svg { filter: drop-shadow(0 0 2px #C4FFDC) drop-shadow(0 0 7px rgba(108, 255, 168, .95)) drop-shadow(0 0 14px rgba(0, 230, 118, .6)); }
 .pub-bar a, .pub-bar button { -webkit-tap-highlight-color: transparent; }
 .theme-sw { position: relative; flex: none; width: 52px; height: 28px; margin-left: auto; padding: 0; border-radius: 99px; cursor: pointer;
   background: var(--panel); border: 1px solid var(--line-strong); color: var(--muted); }
@@ -1769,8 +1771,8 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
 .pub-page { padding-top: calc(64px + env(safe-area-inset-top) + 28px); }
 
 /* The neon flicker as the choice changes: the logo goes dark in one flick, and lights up with two quick flickers, a longer one, then a slow on */
-:root.flick-on .pub-bar .n1-logo { animation: neon-on 2.23s linear both; --lo: .08; }
-:root.flick-off .pub-bar .n1-logo { animation: neon-off .5s ease-out both; --lo: .08; }
+:root.flick-on :is(.pub-bar .n1-logo, body:has(.pub-bar) .n1chat-launch) { animation: neon-on 2.23s linear both; --lo: .08; }
+:root.flick-off :is(.pub-bar .n1-logo, body:has(.pub-bar) .n1chat-launch) { animation: neon-off .5s ease-out both; --lo: .08; }
 @keyframes neon-on {
   0% { opacity: var(--lo); } 4% { opacity: 1; } 8% { opacity: var(--lo); } 13% { opacity: var(--lo); }
   14.5% { opacity: 1; } 19% { opacity: 1; } 22% { opacity: var(--lo); } 28% { opacity: var(--lo); }
@@ -1778,14 +1780,14 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
   78% { opacity: .4; } 100% { opacity: 1; }
 }
 @keyframes neon-off { 0% { opacity: var(--lo); } 35% { opacity: var(--lo); } 100% { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { :root.flick-on .pub-bar .n1-logo, :root.flick-off .pub-bar .n1-logo { animation: none; } }
+@media (prefers-reduced-motion: reduce) { :root.flick-on :is(.pub-bar .n1-logo, body:has(.pub-bar) .n1chat-launch), :root.flick-off :is(.pub-bar .n1-logo, body:has(.pub-bar) .n1chat-launch) { animation: none; } }
 
 /* The awake sign-in: paper under a green wash, with rings like the mark's, and a white panel */
 html:has(.signin.awake), html:has(.signin.awake) body { background: var(--bg); color-scheme: light; }
 .signin.awake { color: var(--text); --focus: var(--accent);
   background: radial-gradient(75% 46% at 50% -6%, rgba(3, 87, 4, .2), transparent 70%), radial-gradient(55% 40% at 100% 100%, rgba(3, 87, 4, .1), transparent 72%),
     repeating-radial-gradient(circle at 50% 42%, rgba(3, 87, 4, .07) 0 1px, transparent 1px 52px), var(--bg); }
-.signin.awake .panel { background: var(--panel); border: 1px solid var(--line-strong); border-radius: 14px; box-shadow: 0 22px 60px -28px rgba(3, 87, 4, .45), var(--shadow); }
+.signin.awake .panel { background: var(--panel); border: 1px solid var(--line-strong); border-radius: var(--glass-r); box-shadow: 0 22px 60px -28px rgba(3, 87, 4, .45), var(--shadow); }
 .signin.awake .signin-h, .signin.awake .lost-title { color: var(--text); }
 .signin.awake .signin-lead, .signin.awake .field-label { color: var(--muted); }
 .signin.awake .fine, .signin.awake .fine a, .signin.awake .linkish { color: var(--muted); }

@@ -172,7 +172,7 @@ if (!DEMO) import(/* @vite-ignore */ CHAT)
   .then((m: { chat(opts: ChatOptions): unknown }) =>
     m.chat({
       className: "n1chat-portal n1chat-right",
-      light: () => !document.querySelector(".signin") && !document.documentElement.classList.contains("n1-dark"),
+      light: () => (document.querySelector(".signin") ? !!document.querySelector(".signin.awake") : !document.documentElement.classList.contains("n1-dark")),
       watch: [document.documentElement],
     }),
   )
