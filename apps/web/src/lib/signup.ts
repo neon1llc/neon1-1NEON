@@ -10,7 +10,6 @@ import { emailShapeOk, joinPlace, MIN_TEXT, nameProblem, normalizeLink, placeSha
 export interface SignUpFields {
   email: string;
   name: string;
-  oneName?: boolean;
   kind: string;
   kindOther?: string;
   org: string;
@@ -47,7 +46,7 @@ export const orgRequired = (kind: string) => needsOrg(kind) && kind !== "other";
 export function signUpProblems(f: SignUpFields): Record<string, string> {
   const out: Record<string, string> = {};
   if (f.email.trim() && !emailShapeOk(f.email)) out.email = "Enter a full email address, like you@company.com.";
-  const name = f.name.trim() ? nameProblem(f.name, f.oneName) : undefined;
+  const name = f.name.trim() ? nameProblem(f.name) : undefined;
   if (name) out.name = name;
   const kindOther = f.kind === "other" ? textProblem(f.kindOther ?? "", "what describes you") : undefined;
   if (kindOther) out.kindOther = kindOther;
@@ -85,7 +84,6 @@ export function signUpBody(f: SignUpFields, extra: { check: string; website: str
   return {
     email: f.email.trim(),
     name: f.name.trim().replace(/\s+/g, " "),
-    ...(f.oneName ? { oneName: true } : {}),
     kind: f.kind,
     ...(f.kind === "other" ? { kindOther: (f.kindOther ?? "").trim() } : {}),
     org: needsOrg(f.kind) ? f.org.trim() : "",

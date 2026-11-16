@@ -130,7 +130,8 @@ export async function fileQuota(k: Pick<Kit, "repo">, c: Context<Env>, f: { name
   if (!prospectFileAllowed(f.name, f.contentType)) fail(400, "file_type", "A new account can add PDFs, pictures, text, CSV, and Word, Excel, or PowerPoint files.");
   if (f.size > PROSPECT_LIMITS.fileBytes) fail(400, "file_size", `A new account can add files up to ${PROSPECT_LIMITS.fileBytes / 1024 / 1024} MB.`);
   const tid = c.get("tenant").id;
-  const projects = await k.repo.listProjects(tid);
+  // Trashed projects still hold their files until deleted, so they count too
+  const projects = await k.repo.listProjectsWithTrash(tid);
   // Every file record counts, uploading or failed included, so starting many at once can't slip past
   const docs = (await Promise.all([k.repo.listDocs(tid, undefined), ...projects.map((p) => k.repo.listDocs(tid, p.id))])).flat();
   if (docs.length >= PROSPECT_LIMITS.files) fail(409, "quota_files", `A new account holds up to ${PROSPECT_LIMITS.files} files. ${QUOTA_NEXT}`);

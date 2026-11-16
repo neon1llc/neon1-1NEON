@@ -45,16 +45,23 @@ export function stateCode(typed: string): StateCode | undefined {
 }
 
 
-/** A place as stored: "City, ST", or the state's name alone. Empty when neither is given */
+/** The state picker's choice for anywhere outside the US: the place is then typed freely ("Toronto,
+ * Canada"). neon1 works in the US first, and others are welcome to ask */
+export const OUTSIDE_US = "intl";
+
+
+/** A place as stored: "City, ST", the state's name alone, or a place outside the US as typed. Empty
+ * when nothing is given */
 export function joinPlace(city: string, state: string): string {
   const code = stateCode(state);
-  if (!code) return city.trim() ? city.trim() : "";
+  if (!code) return city.trim() ? city.trim().replace(/\s+/g, " ") : "";
   return city.trim() ? `${city.trim()}, ${code}` : US_STATES[code];
 }
 
 
-/** A stored or typed place split back into its city and state code, for the two fields that edit it */
-export function splitPlace(place: string): { city: string; state: StateCode | "" } {
+/** A stored or typed place split back into its city and state code, for the two fields that edit it.
+ * Anything that doesn't end in a US state is a place outside the US, kept whole */
+export function splitPlace(place: string): { city: string; state: StateCode | typeof OUTSIDE_US | "" } {
   const p = place.trim();
   if (!p) return { city: "", state: "" };
   const alone = stateCode(p);
@@ -64,13 +71,14 @@ export function splitPlace(place: string): { city: string; state: StateCode | ""
     const code = stateCode(p.slice(i + 1));
     if (code) return { city: p.slice(0, i).trim(), state: code };
   }
-  return { city: p, state: "" };
+  return { city: p, state: OUTSIDE_US };
 }
 
 
 /** What's wrong with a place's two parts before anyone looks it up: a city needs its state */
 export function placeShapeProblem(city: string, state: string): string | undefined {
-  if (city.trim() && !stateCode(state)) return "Choose the state too, or leave the city empty.";
+  if (state === OUTSIDE_US) return !city.trim() ? "Enter your city and country." : !/\p{L}/u.test(city) ? "Enter a place, like Toronto, Canada." : undefined;
+  if (city.trim() && !stateCode(state)) return "Choose the state too (or Outside the US), or leave the city empty.";
   if (city.trim() && !/\p{L}/u.test(city)) return "Enter a city, like Albany.";
   return undefined;
 }
@@ -93,16 +101,15 @@ export function looksLikeJunk(text: string): boolean {
 
 
 /** A person's name: letters (any language), spaces, apostrophes, hyphens, and periods; a first and last
- * name unless they said they use one name. Returns what to tell them, or undefined when it's fine */
-export function nameProblem(name: string, oneName = false): string | undefined {
+ * one name is fine, since many people go by one. Returns what to tell them, or undefined when it's fine */
+export function nameProblem(name: string): string | undefined {
   const t = name.trim().replace(/\s+/g, " ");
   if (!t) return "Enter your name.";
   if (/[@/\\:]|https?|www\./i.test(t) || /\d/.test(t)) return "Enter your name without numbers, links, or email addresses.";
   if (!/^[\p{L}\p{M}][\p{L}\p{M}' .’-]*$/u.test(t)) return "Use letters, spaces, apostrophes, hyphens, or periods.";
   if ((t.match(/\p{L}/gu) ?? []).length < MIN_TEXT) return `Enter at least ${MIN_TEXT} letters of your name.`;
   if (looksLikeJunk(t) || offensive(t)) return "Enter your real name.";
-  const parts = t.split(" ").filter((w) => /\p{L}/u.test(w));
-  if (parts.length < 2 && !oneName) return "Enter your first and last name.";
+  // One name is a real name too (many people go by one), so a last name is never required
   return undefined;
 }
 

@@ -5,7 +5,7 @@
 
 
 import { useEffect, useRef, useState } from "react";
-import { DESCRIBES, FOUND_VIA, US_STATES } from "@1neon/domain";
+import { DESCRIBES, FOUND_VIA, OUTSIDE_US, US_STATES } from "@1neon/domain";
 import { Link } from "react-router";
 import { api, HttpError, Unconfirmed } from "../lib/api.ts";
 import { elapsedSince, needsOrg, orgRequired, signUpBody, signUpProblems, signUpReady, type SignUpInfo } from "../lib/signup.ts";
@@ -21,8 +21,6 @@ export function SignUp({ info: known, email: start, remember, onStep, onBack, lo
   const [info, setInfo] = useState<SignUpInfo | null | undefined>(known);
   const [email, setEmail] = useState(start);
   const [name, setName] = useState("");
-  // They go by one name, so a last name isn't asked for; offered once the name check asks for one
-  const [oneName, setOneName] = useState(false);
   // "Which describes you best?", their words for "Something else", and the organization's name (not
   // asked of an individual)
   const [kind, setKind] = useState("");
@@ -88,7 +86,7 @@ export function SignUp({ info: known, email: start, remember, onStep, onBack, lo
     };
   }, [siteKey]);
 
-  const fields = { email, name, oneName, kind, kindOther, org, city, state, link, found, foundOther, terms };
+  const fields = { email, name, kind, kindOther, org, city, state, link, found, foundOther, terms };
   const ready = signUpReady(fields);
   const own = signUpProblems(fields);
   // What shows beside a field: the API's answer for it, else the form's own once the field was left
@@ -158,12 +156,8 @@ export function SignUp({ info: known, email: start, remember, onStep, onBack, lo
         <Field id="email" label="Email address" required problem={problem("email")}>
           <input id="su-email" name="username" type="email" required autoComplete="username" placeholder="you@company.com" value={email} onChange={(e) => edit("email", setEmail)(e.target.value)} onBlur={leave("email")} {...invalid("email", problem("email"))} />
         </Field>
-        <Field id="name" label="Full name" required problem={problem("name")}>
-          <input id="su-name" name="name" required maxLength={80} autoComplete="name" placeholder="First and last name" value={name} onChange={(e) => edit("name", setName)(e.target.value)} onBlur={leave("name")} {...invalid("name", problem("name"))} />
-          {/* Offered only once a last name was asked for, so it doesn't invite skipping it */}
-          {(oneName || /last name/.test(problem("name") ?? "")) && (
-            <label className="remember agree one-name"><input type="checkbox" checked={oneName} onChange={(e) => edit("name", setOneName)(e.target.checked)} /><span>I go by one name</span></label>
-          )}
+        <Field id="name" label="Your name" required problem={problem("name")}>
+          <input id="su-name" name="name" required maxLength={80} autoComplete="name" value={name} onChange={(e) => edit("name", setName)(e.target.value)} onBlur={leave("name")} {...invalid("name", problem("name"))} />
         </Field>
         <Field id="kind" label="Which describes you best?" required problem={problem("kind")}>
           <select id="su-kind" name="kind" required className={kind ? undefined : "unpicked"} value={kind} onChange={(e) => edit("kind", setKind)(e.target.value)} {...invalid("kind", problem("kind"))}>
@@ -191,14 +185,16 @@ export function SignUp({ info: known, email: start, remember, onStep, onBack, lo
         <div className="f f-place">
           <div className="su-pair">
             <div className="f">
-              <label className="field-label" htmlFor="su-city">City</label>
-              <input id="su-city" name="city" maxLength={60} autoComplete="address-level2" placeholder="Albany" value={city} onChange={(e) => edit("place", setCity)(e.target.value)} onBlur={leave("place")} {...invalid("place", problem("place"), "su-face-hint")} />
+              <label className="field-label" htmlFor="su-city">{state === OUTSIDE_US ? "City and country" : "City"}</label>
+              <input id="su-city" name="city" maxLength={80} autoComplete={state === OUTSIDE_US ? "off" : "address-level2"} placeholder={state === OUTSIDE_US ? "Toronto, Canada" : "Albany"} value={city} onChange={(e) => edit("place", setCity)(e.target.value)} onBlur={leave("place")} {...invalid("place", problem("place"), "su-face-hint")} />
             </div>
             <div className="f">
               <label className="field-label" htmlFor="su-state">State</label>
               <select id="su-state" name="state" autoComplete="address-level1" className={state ? undefined : "unpicked"} value={state} onChange={(e) => edit("place", setState)(e.target.value)} onBlur={leave("place")} {...invalid("place", problem("place"), "su-face-hint")}>
                 <option value="">State</option>
                 {Object.entries(US_STATES).map(([code, n]) => <option key={code} value={code}>{n}</option>)}
+                {/* US first; anywhere else is welcome to ask */}
+                <option value={OUTSIDE_US}>Outside the US</option>
               </select>
             </div>
           </div>

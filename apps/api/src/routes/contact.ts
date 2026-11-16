@@ -71,7 +71,7 @@ export function contactRoutes(app: App, k: Kit) {
     if (today) problems.today = today;
     const email = await emailProblem(d.vetting, m.email);
     if (email) problems.email = email;
-    const name = nameProblem(m.name, true);
+    const name = nameProblem(m.name);
     if (name) problems.name = name;
     const company = textProblem(m.company, "the organization's name", MIN_TEXT);
     if (company) problems.company = company;

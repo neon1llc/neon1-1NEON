@@ -1,6 +1,6 @@
 // apps/api/src/vetting/types.ts - What the form checks ask of the outside world: does an email domain
-// take mail and isn't a throwaway, does a website answer, does a place exist. Production uses
-// RealVetting (real.ts: DNS, a guarded fetch, and the bundled lists); tests pass a fake; the browser
+// take mail and isn't a throwaway, does a place exist. Production uses
+// RealVetting (real.ts: DNS and the bundled lists); tests pass a fake; the browser
 // demo and local runs pass none, and only the checks that need nothing from outside run.
 
 
@@ -11,9 +11,6 @@ export interface Vetting {
   mailDomain(domain: string): Promise<"ok" | "no_mail" | "unknown">;
   /** Is this domain a known throwaway-mailbox service? */
   disposable(domain: string): Promise<boolean>;
-  /** Does this address answer? Any HTTP response counts; "unreachable" is no DNS, no connection, or no
-   * answer in time; "refused" is an address that points inside a private network */
-  reachable(url: string): Promise<"ok" | "unreachable" | "refused">;
   /** The place's proper spelling if this city is a populated place in this state, else undefined */
   place(city: string, state: string): Promise<string | undefined>;
 }

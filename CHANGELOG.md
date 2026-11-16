@@ -4,7 +4,16 @@
 
 ## Unreleased
 
+### Fixed
+- Deleting a free account reaches its trashed projects and their files. If a file or sign-in can't be removed, nothing else is deleted: the account stays shut out and marked, and the daily pass (or **Delete** again) finishes it. A small receipt with no content records each deletion.
+- A free account can't be promoted while it's being deleted, and a promotion or change that lands first stops the deletion.
+- A free account's file limit counts files in trashed projects.
+- A reminder or final notice the mail service refuses doesn't move the deletion clock; it's sent again the next day.
+
 ### Changed
+- Sign-up takes one name, any website as typed (the server never visits it), a US town not on the places list, and places outside the US.
+- Sign-in reads "Sign in to your 1NEON account. New here? Start for free." The FAQ says how to start a free account.
+- A free account's Home shows the date it's kept until, with **Keep it 30 more days** (once) and **Download a copy**.
 - **Sign-in and public pages follow the site theme.** A sun/moon switch sits at the top right of the sign-in, FAQs, Cookies, Privacy, Terms, and agreement pages. It shares the neon1.tech choice, defaults to awake, and flickers on like the site. Awake sign-in uses paper with soft green rings instead of rain. The portal, demo, and live, are untouched.
 - Those pages get the site bar: logo and word on the left, a "← 1NEON" button and the switch on the right.
 - The 1NEON mark and word flicker with the theme switch, and the green parts (headings, asterisks, dropdown arrows) flicker softer. Awake dropdowns match the other fields: dark green arrow, light list, green asterisks. The sign-in panel sits over the rain controls where they meet.

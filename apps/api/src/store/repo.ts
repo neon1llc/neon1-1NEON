@@ -370,7 +370,13 @@ export class Repo {
     return (await this.table.query(`T#${tid}`, "PROJ#")).map((r) => entity<Project>(r)!).filter((p) => !p.deletedAt);
   }
 
-  /** An organization's trashed projects, for the admin's export; nothing else reads Trash */
+  /** Every project an organization still holds, trashed ones included: what counts toward a
+   * prospect's storage and what deleting an organization must reach */
+  async listProjectsWithTrash(tid: string) {
+    return (await this.table.query(`T#${tid}`, "PROJ#")).map((r) => entity<Project>(r)!);
+  }
+
+  /** An organization's trashed projects, for the admin's export */
   async listTrashedProjects(tid: string) {
     return (await this.table.query(`T#${tid}`, "PROJ#")).map((r) => entity<Project>(r)!).filter((p) => p.deletedAt);
   }
