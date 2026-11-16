@@ -19,13 +19,15 @@ function BugGlyph() {
 
 
 /** The entry. `row` is the menu's own look (icon box, label), `link` a plain word for a line of links, `button` a bordered
- * button for the profile and Settings */
-export function ReportBug({ kind = "link" }: { kind?: "row" | "link" | "button" }) {
+ * button for the profile and Settings, `corner` the lowercase link fixed at the bottom right of the sign-in and sign-up screens */
+export function ReportBug({ kind = "link" }: { kind?: "row" | "link" | "button" | "corner" }) {
   if (LIVE) return null;
   const arrow = <span className="out-arrow" aria-hidden="true" />;
   const props = { href: reportBug(), target: "_blank", rel: "noopener", title: "Opens in a new tab" } as const;
   return kind === "row" ? (
     <a className="out bug-link bug-row" {...props}><span className="ico" aria-hidden="true"><BugGlyph /></span><span className="lbl">Report a bug{arrow}</span></a>
+  ) : kind === "corner" ? (
+    <a className="out bug-link bug-corner" {...props}><BugGlyph />report a bug{arrow}</a>
   ) : kind === "button" ? (
     <a className="out btn btn-ghost bug-link" {...props}><BugGlyph />Report a bug{arrow}</a>
   ) : (

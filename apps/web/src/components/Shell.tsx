@@ -447,7 +447,7 @@ function SignIn() {
         )}
         {/* The three policies on one line of their own */}
         <p className="fine legal-links">
-          <Link to="/faqs" viewTransition>FAQs</Link> · <Link to="/cookies" viewTransition>Cookies</Link> · <Link to="/privacy" viewTransition>Privacy</Link> · <Link to="/terms" viewTransition>Terms</Link> · <ReportBug />
+          <Link to="/faqs" viewTransition>FAQs</Link> · <Link to="/cookies" viewTransition>Cookies</Link> · <Link to="/privacy" viewTransition>Privacy</Link> · <Link to="/terms" viewTransition>Terms</Link>
         </p>
         {/* Not a client yet: one door, the guided walkthrough, with no sign-in to attempt. The sample
             project and the demo stay reachable from inside it (its end card) and from the FAQs.
@@ -476,6 +476,8 @@ function SignIn() {
           </div>
         )}
       </div>
+      {/* "report a bug" in the page's bottom right corner, centered on Neo's button, as the site's footer has it */}
+      <ReportBug kind="corner" />
     </main>
   );
 }
