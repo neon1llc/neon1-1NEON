@@ -9,6 +9,7 @@ import { opening } from "./opening.ts";
 import { fakePasskeys, MailWindow, Phone } from "./props.ts";
 import { PREVIEW } from "./preview.ts";
 import { MARIA, SAM } from "./seed.ts";
+import { JOURNEY } from "./journey.ts";
 
 
 // The bakery's pages
@@ -494,4 +495,4 @@ const calendar: Show = {
 };
 
 
-export const SHORTS: Show[] = [PREVIEW, invite, passkey, authenticator, texts, calendar];
+export const SHORTS: Show[] = [PREVIEW, JOURNEY, invite, passkey, authenticator, texts, calendar];

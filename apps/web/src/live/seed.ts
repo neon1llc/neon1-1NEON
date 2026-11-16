@@ -16,6 +16,8 @@ import { PLAY } from "./where.ts";
 export const PRADEEP = "pradeep@neon1.tech";
 export const MARIA = "maria@maplestreetbakery.example";
 export const SAM = "sam@maplestreetbakery.example";
+// The free-account walkthrough's visitor, who isn't a client of anyone yet
+export const LENA = "lena@riversideflorist.example";
 
 
 /**
@@ -34,6 +36,15 @@ export async function liveSeed(repo: Repo, mailer: MemoryMailer): Promise<LiveSe
     version: 1, createdAt: t0, updatedAt: t0, updatedBy: "seed",
   });
   const pradeep = { ...user(PRADEEP, "Pradeep", "Lead engineer"), strongAuth: true };
+  // Starting a free account: only neon1 exists, so the sign-up makes Lena's account from nothing and
+  // Pradeep joins it as he does in real use. Nobody is signed in
+  if (PLAY.show === "free") {
+    await repo.createUser(pradeep);
+    const t: Tenant = { id: newId("t"), slug: "neon1", clientId: formatClientId(await repo.nextClientNumber()), name: "neon1", place: "Albany, NY", status: "active", stages: DEFAULT_STAGES, version: 1, createdAt: t0, updatedAt: t0, updatedBy: pradeep.id };
+    await repo.createTenant(t);
+    await repo.saveMember({ tenantId: t.id, userId: pradeep.id, email: pradeep.email, name: pradeep.name, title: pradeep.title, access: "admin", status: "joined", invitedBy: pradeep.id, invitedAt: t0, joinedAt: t0, version: 1, createdAt: t0, updatedAt: t0, updatedBy: pradeep.id }, { create: true });
+    return undefined;
+  }
   // An invitee has no name yet, so the welcome asks for it the first time she signs in
   const maria = { ...user(MARIA, "Maria Lopez", "Owner", invite), ...(invite ? { name: "" } : {}) };
   for (const u of [pradeep, maria]) await repo.createUser(u);

@@ -176,6 +176,9 @@ const PEOPLE = [
 // The demo signs in by picking a person; the live playback always shows the real sign-in instead
 // (email, then a code from her email), answered in the browser
 const PICKER = IN_DEMO && !IN_LIVE;
+// Sign-up shows in the real portal and in every walkthrough, so a walkthrough's sign-in reads exactly as the
+// real one does; the in-browser API answers it there (live/signin.ts). The demo's picker has no accounts to make
+const SIGNUP_HERE = !PICKER;
 
 
 // What the API answers at each sign-in step
@@ -258,18 +261,19 @@ function SignIn() {
   // Asked once by the real portal; while closed (production until neon1 opens it) neither shows
   // The last answer is kept in this browser and used at once, so the page doesn't draw the closed
   // wording and then switch; with no answer yet (a first visit) that wording waits, hidden, for it
-  const [signupOpen, setSignupOpen] = useState<boolean | undefined>(() => (IN_DEMO || PICKER ? false : SIGNUP_SEEN()));
+  const [signupOpen, setSignupOpen] = useState<boolean | undefined>(() => (!SIGNUP_HERE ? false : IN_LIVE ? true : SIGNUP_SEEN()));
   // The whole answer (with Turnstile's site key) is kept too and handed to the form, so "Start a free
   // account" draws the form at once instead of "One moment…" while it asks again
   const [signupInfo, setSignupInfo] = useState<SignUpInfo | undefined>(undefined);
   useEffect(() => {
-    if (IN_DEMO || PICKER) return;
+    if (!SIGNUP_HERE) return;
     let live = true;
     api<SignUpInfo>("/auth/signup").then((r) => {
       if (!live) return;
       setSignupInfo(r);
       setSignupOpen(r.open === true);
-      prefs.set(SIGNUP_KEY, r.open === true ? "open" : "closed");
+      // The walkthrough's answer is its own, never the real portal's
+      if (!IN_LIVE) prefs.set(SIGNUP_KEY, r.open === true ? "open" : "closed");
     }, () => live && setSignupOpen((v) => v ?? false));
     return () => { live = false; };
   }, []);
@@ -336,7 +340,8 @@ function SignIn() {
     fade(() => { setAt(r); setSigningUp(false); });
   };
   // The real sign-in shares neon1.tech's awake or matrix choice (awake until picked); the demo's picker keeps its rain
-  const publicLook = !IN_DEMO && !PICKER;
+  // A walkthrough's sign-in looks the same (its own bar takes the top, so the site's bar stays hidden there)
+  const publicLook = !PICKER;
   const [look, setLook] = useSiteTheme(publicLook);
   const awake = publicLook && look === "awake";
   return (
@@ -398,7 +403,7 @@ function SignIn() {
         )}
         {/* Step 1: the email */}
         {!PICKER && signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
-          <SignUp info={signupInfo} email={email} remember={remember} onStep={signedUp} onBack={() => fade(() => setSigningUp(false))} local={pickPerson} />
+          <SignUp info={signupInfo} email={email} remember={remember} onStep={signedUp} onBack={() => fade(() => setSigningUp(false))} local={pickPerson && !IN_LIVE} />
         )}
         {!PICKER && !signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
           <form className="stack" name="signin" onSubmit={(e) => { e.preventDefault(); keepEmail(email.trim(), remember); void send({ op: "start", email: email.trim(), remember }); }}>
@@ -440,7 +445,7 @@ function SignIn() {
         )}
         {at.step !== "email" && <p className="fine"><button className="linkish" onClick={restart}>Use a different email</button></p>}
         {/* Not a client yet: start in 1NEON on your own, as a new account */}
-        {!IN_DEMO && signupOpen && !signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
+        {SIGNUP_HERE && signupOpen && !signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
           <p className="fine"><button className="linkish" onClick={() => fade(() => setSigningUp(true))}>Start for free</button></p>
         )}
         {/* The three policies on one line of their own */}
@@ -457,7 +462,7 @@ function SignIn() {
         )}
         {/* Without an account: the demo to click around in, and the guided walkthrough, side by side on
             sign-in and create account alike */}
-        {!IN_DEMO && (
+        {!PICKER && (
           <nav className="signin-more" aria-label="Without an account">
             <a href="/1NEON/demo/">Try it yourself</a>
             <span className="more-sep" aria-hidden="true">·</span>
