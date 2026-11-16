@@ -1834,8 +1834,8 @@ html:has(.signin.awake), html:has(.signin.awake) body { background: var(--bg); c
 /* The neon flicker also takes the 1NEON mark and word, and, a little softer, the green parts: headings, asterisks, dropdown arrows */
 :root.flick-on .signin :is(.word .rings, .word .wm) { animation: neon-on 2.23s linear both; --lo: .08; }
 :root.flick-off .signin :is(.word .rings, .word .wm) { animation: neon-off .5s ease-out both; --lo: .08; }
-:root.flick-on .signin :is(.signin-h, .req), :root.flick-on .pub-page :is(h1, h2, a) { animation: soft-on 2.23s linear both; --lo-soft: .5; }
-:root.flick-off .signin :is(.signin-h, .req), :root.flick-off .pub-page :is(h1, h2, a) { animation: soft-off .5s ease-out both; --lo-soft: .5; }
+:root.flick-on .signin :is(.signin-h, .req, .btn-primary), :root.flick-on .pub-page :is(h1, h2, a) { animation: soft-on 2.23s linear both; --lo-soft: .5; }
+:root.flick-off .signin :is(.signin-h, .req, .btn-primary), :root.flick-off .pub-page :is(h1, h2, a) { animation: soft-off .5s ease-out both; --lo-soft: .5; }
 @supports (appearance: base-select) {
   :root.flick-on .signin select::picker-icon { animation: soft-on 2.23s linear both; --lo-soft: .5; }
   :root.flick-off .signin select::picker-icon { animation: soft-off .5s ease-out both; --lo-soft: .5; }

@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+## v0.16.2 - 2026-11-16
+
+- The sign-in's Continue button takes the neon flicker with the other green parts when the theme changes.
+
 ## v0.16.1 - 2026-11-16
 
 ### Security
