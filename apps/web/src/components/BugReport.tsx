@@ -22,7 +22,7 @@ function BugGlyph() {
  * button for the profile and Settings */
 export function ReportBug({ kind = "link" }: { kind?: "row" | "link" | "button" }) {
   if (LIVE) return null;
-  const arrow = <span className="out-arrow" aria-hidden="true">↗</span>;
+  const arrow = <span className="out-arrow" aria-hidden="true" />;
   const props = { href: reportBug(), target: "_blank", rel: "noopener", title: "Opens in a new tab" } as const;
   return kind === "row" ? (
     <a className="out bug-link bug-row" {...props}><span className="ico" aria-hidden="true"><BugGlyph /></span><span className="lbl">Report a bug{arrow}</span></a>

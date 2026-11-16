@@ -1567,7 +1567,7 @@ ul.md-says { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; 
    reads as a placeholder until something is picked, and the open list is dark too */
 .signin .signup-form select { width: 100%; background-color: rgba(255, 255, 255, .04); color: var(--m-ink, #EDF1ED); border-color: rgb(237 241 237 / .45); }
 .signin .signup-form select.unpicked { color: var(--m-muted, #CBD1CC); }
-.signin .signup-form select option { background: #0D0208; color: var(--m-ink, #EDF1ED); }
+.signin .signup-form select option { background-color: #0D0208; color: var(--m-ink, #EDF1ED); }
 
 .signin label.agree a { color: var(--m-ink, #EDF1ED); }
 .signin .check:empty { display: none; }
@@ -1633,8 +1633,9 @@ ul.md-says { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; 
 .prospect-facts .wide { grid-column: 1 / -1; }
 .prospect-facts dd { overflow-wrap: anywhere; }
 /* A link that leaves neon1: the northeast arrow, nudged further northeast on hover */
-a.out .out-arrow { display: inline-block; margin-left: 2px; transition: transform .15s ease; }
-a.out:hover .out-arrow, a.out:focus-visible .out-arrow { transform: translate(2px, -2px); }
+/* Drawn exactly as the site's (css/frame.css a.ext): .7em square, 2.2/16 stroke, .18em from the words, .02em above the baseline */
+a.out .out-arrow { display: inline-block; width: .7em; height: .7em; margin-left: .18em; vertical-align: .02em; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.8 12.2 12 4M5.2 4H12v6.8'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.8 12.2 12 4M5.2 4H12v6.8'/%3E%3C/svg%3E") center / contain no-repeat; transition: transform .15s ease; }
+a.out:hover .out-arrow, a.out:focus-visible .out-arrow { transform: translate(1px, -1px); }
 @media (prefers-reduced-motion: reduce) { a.out .out-arrow { transition: none; } }
 /* The place-and-link form, in Settings and on Home */
 /* Contact: one row per way to reach neon1 */
@@ -1721,14 +1722,15 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
   select option::checkmark { display: none; }
   select option:checked { color: var(--accent); font-weight: 600; }
   select option:is(:hover, :focus-visible) { background-color: var(--accent-soft); outline: none; }
-  /* The placeholder (the first choice, value "") carries a rule under it in the brand colour, the weight of the arrow and the focus border; hover sets only background-color so it never wipes the line */
-  select option[value=""]:first-child { background-image: linear-gradient(var(--brand), var(--brand)); background-repeat: no-repeat; background-size: calc(100% - 24px) 1.5px; background-position: 12px 100%; margin-bottom: 5px; padding-bottom: 9px; }
+  /* The first choice (the placeholder, whatever its value) carries a rule under it in the brand colour, the weight of the arrow and the focus border; hover sets only background-color so it never wipes the line */
+  select option:first-child { background-image: linear-gradient(var(--accent), var(--accent)); background-repeat: no-repeat; background-size: calc(100% - 24px) 1.5px; background-position: 12px 100%; margin-bottom: 5px; padding-bottom: 9px; }
   select.unpicked selectedcontent, select.unpicked > button { color: inherit; }
   /* The dark sign-in screen: the neon arrow, a dark list */
   .signin select::picker-icon { background: var(--neon, #00FF41); }
   .signin ::picker(select) { background: #0D0208; color: var(--m-ink, #EDF1ED); border-color: rgba(0, 255, 65, .3); }
   .signin select option:is(:hover, :focus-visible) { background-color: rgba(0, 255, 65, .12); }
   .signin select option:checked { color: #00FF41; }
+  .signin select option:first-child { background-image: linear-gradient(var(--neon, #00FF41), var(--neon, #00FF41)); }
   /* The board card's small stage menu keeps its compact size */
   .pcard .move select { padding-right: 10px; gap: 6px; }
   .pcard .move select::picker-icon { font-size: 12px; }
@@ -1841,11 +1843,12 @@ html:has(.signin.awake), html:has(.signin.awake) body { background: var(--bg); c
 /* Awake dropdowns on sign-up: the same fill, border, and text as the other fields, a dark green arrow, and a light list */
 .signin.awake .signup-form select { background-color: var(--bg); color: var(--text); border-color: var(--line-strong); }
 .signin.awake .signup-form select.unpicked { color: var(--muted); }
-.signin.awake .signup-form select option { background: var(--panel); color: var(--text); }
+.signin.awake .signup-form select option { background-color: var(--panel); color: var(--text); }
 @supports (appearance: base-select) {
   .signin.awake select::picker-icon { background: var(--accent); }
   .signin.awake ::picker(select) { background: var(--panel); color: var(--text); border-color: var(--line-strong); box-shadow: 0 12px 32px rgba(3, 87, 4, .16); }
-  .signin.awake select option:is(:hover, :focus-visible) { background: var(--accent-soft); }
+  .signin.awake select option:is(:hover, :focus-visible) { background-color: var(--accent-soft); }
+  .signin.awake select option:first-child { background-image: linear-gradient(var(--accent), var(--accent)); }
   .signin.awake select option:checked { color: var(--accent); }
 }
 /* The required asterisk is the theme's green, light or dark (it was red in awake) */
@@ -1921,12 +1924,12 @@ html:has(.signin.awake), html:has(.signin.awake) body { background: var(--bg); c
 /* "Report a bug" takes its neighbours' look wherever it sits: in the menu it is a row like Settings and Contact (the same
    type, with the bug in an icon tile), on the profile and Settings a ghost button like its peers, and under the sign-in
    links a link like them. Only the small bug drawing and the northeast arrow are its own */
-.bug-glyph { width: 15px; height: 15px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; margin-right: 6px; vertical-align: -2px; }
+.bug-glyph { width: 1.17em; height: 1.17em; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; margin-right: .5em; /* the mark's middle sits on the x-height middle, as in the site footer's link */ vertical-align: -.335em; }
 .btn.bug-link { display: inline-flex; align-items: center; text-decoration: none; }
 .btn.bug-link .bug-glyph { vertical-align: 0; }
 .side .nav a.bug-row .ico { color: var(--accent); }
 .side .nav a.bug-row .bug-glyph { margin: 0; vertical-align: 0; }
-.side .nav a.bug-row:hover .out-arrow, .side .nav a.bug-row:focus-visible .out-arrow { transform: translate(2px, -2px); }
+.side .nav a.bug-row:hover .out-arrow, .side .nav a.bug-row:focus-visible .out-arrow { transform: translate(1px, -1px); }
 
 
 /* Two columns for the pages that were one narrow column (profile, Settings, Contact). The columns shrink with the window,
