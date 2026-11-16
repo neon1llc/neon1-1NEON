@@ -73,10 +73,6 @@ function syncDark() {
 darkDevice.addEventListener?.("change", syncDark);
 
 
-// Set by /arrive.js when someone came from neon1.tech's 1NEON link; the first sign-in screen uses it up
-let arriving = document.documentElement.classList.contains("from-site");
-
-
 /** Top-level gate: sign-in, error, first-visit redirect, then the app */
 // Whether this browser was last signed in or out, for the background shown while the session loads
 const LAST_KEY = "1neon.last";
@@ -123,10 +119,6 @@ function App() {
   useEffect(() => {
     if (me.data) applyTheme(me.data.user.theme);
   }, [me.data]);
-  // The black page from the site holds only until the first answer; the app then uses its own colors
-  useEffect(() => {
-    if (!me.isPending) document.documentElement.classList.remove("from-site");
-  }, [me.isPending]);
   // Remember whether this browser was last signed in, so a reload starts on the right background
   useEffect(() => {
     const state = me.data ? "in" : me.error instanceof HttpError && me.error.status === 401 ? "out" : undefined;
@@ -142,7 +134,7 @@ function App() {
     // code step while the session check runs; it hands over if the person turns out signed in
     if (loadStep(session())) return <SignIn />;
     // Arriving from the site, or last seen signed out: wait on the dark sign-in background, not a white page
-    if (arriving || lastSeen() === "out") return <div className="signin" aria-busy="true" />;
+    if (lastSeen() === "out") return <div className="signin" aria-busy="true" />;
     return <div className="content muted" aria-busy="true">Loading…</div>;
   }
   // An ended sign-in always shows sign-in. Any other failure keeps an app already on screen (the frame
@@ -341,11 +333,8 @@ function SignIn() {
     if (r.step === "choose" || r.step === "code" || r.step === "totp") saveStep(session(), { email: mail, step: r.step, methods: r.methods });
     fade(() => { setAt(r); setSigningUp(false); });
   };
-  // Fade in only on the first sign-in screen after arriving from the site, not on a later return to it
-  const [arrive] = useState(() => arriving);
-  useEffect(() => { arriving = false; }, []);
   return (
-    <main className={`signin${arrive ? " arrive" : ""}`}>
+    <main className="signin">
       <Rain panes=".signin .panel, .signin .n1-logo, .rainctl button" />
       <div className="veil" />
       {/* Back to neon1.tech, in the site's own top bar so the logo sits exactly where the site's does */}

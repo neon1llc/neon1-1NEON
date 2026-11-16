@@ -6,6 +6,7 @@
 
 ### Changed
 - Sign-up: the organization's name is optional for **Something else**. Without one, the account is named for the person.
+- Arriving from neon1.tech is the browser's one cross-fade; the portal's own arrival fade and the `neon1.handoff` key are gone.
 
 ## v0.15.0 - 2026-11-15
 

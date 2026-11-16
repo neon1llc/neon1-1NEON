@@ -11,7 +11,6 @@ The website sets no cookies. Your browser saves two small things, on your device
 | Saved item | What it's for | How long it lasts |
 |---|---|---|
 | `neon1.rain` (local storage) | The rain settings you pick: grid or free, the characters, and pause | Until you clear it |
-| `neon1.handoff` (session storage) | Lets the portal fade in when you open it from the website | Removed as soon as the portal opens |
 
 ## The 1NEON portal
 
