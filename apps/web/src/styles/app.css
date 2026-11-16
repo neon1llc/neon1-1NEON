@@ -80,7 +80,8 @@ select { appearance: none; -webkit-appearance: none; width: auto; max-width: 100
 select:disabled { cursor: default; opacity: .7; }
 /* Placeholders: muted in awake, the shared faint text (Lc 62) in matrix */
 ::placeholder { color: var(--faint); opacity: 1; }
-input:focus, textarea:focus, select:focus { outline: 2px solid var(--focus); outline-offset: 0; border-color: transparent; }
+/* A dropdown shows its focus from the moment it is pressed or opened (:open, for browsers that move focus into the list) until focus leaves, as the text fields do */
+input:focus, textarea:focus, select:focus, select:open { outline: 2px solid var(--focus); outline-offset: 0; border-color: transparent; }
 /* Boxes and dots keep the brand color, and show a ring only for keyboard focus, never a square on click */
 /* Checkboxes and radios keep their own size: the full-width rule above is for text fields */
 input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); width: 18px; height: 18px; min-height: 0; padding: 0; flex: none; }
@@ -1935,3 +1936,7 @@ html:has(.signin.awake), html:has(.signin.awake) body { background: var(--bg); c
 /* The unsaved note and the marks beside a choice that is only shown, not kept: the page's ink at a heavier weight, nothing new */
 .unsaved { color: var(--text); font-weight: 600; margin: 6px 0 0; }
 .actions .unsaved { margin: 0; }
+
+
+/* Dropdowns say they are clickable: the hand over the whole box, the arrow, and the choices */
+select:not(:disabled), select:not(:disabled)::picker-icon, select:not(:disabled) > button, select option { cursor: pointer; }

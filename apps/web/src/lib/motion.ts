@@ -57,7 +57,9 @@ function aimDropdown(select: HTMLSelectElement, rowPx = 38, maxPx = 320, pad = 1
 /** Called once at startup: every select is aimed as it's pressed or opened from the keyboard */
 export function aimDropdowns() {
   const at = (t: EventTarget | null) => (t instanceof HTMLSelectElement ? t : undefined);
-  document.addEventListener("pointerdown", (e) => { const s = at(e.target); if (s) aimDropdown(s); }, true);
+  // Pressing a dropdown focuses it at once: Safari and Firefox on a Mac don't focus a select on a click, so its focus
+  // border (the same as a text field's) would otherwise wait until a choice was made
+  document.addEventListener("pointerdown", (e) => { const s = at(e.target); if (s) { aimDropdown(s); if (!s.disabled && document.activeElement !== s) s.focus({ preventScroll: true }); } }, true);
   document.addEventListener("keydown", (e) => { const s = at(e.target); if (s && (e.key === " " || e.key === "Enter" || (e.altKey && e.key === "ArrowDown"))) aimDropdown(s); }, true);
 }
 
