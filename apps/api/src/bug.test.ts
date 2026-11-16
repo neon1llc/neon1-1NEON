@@ -1,9 +1,11 @@
 // apps/api/src/bug.test.ts - The report-a-bug form: it mails neon1 with a reference, keeps the same gates as the
 // contact form, and takes screenshots only as real PNG or JPEG files, within the caps, into the private prefix.
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "./app.ts";
 import { CONTACT_TO } from "./routes/contact.ts";
-import { MAX_IMAGE_BYTES, MAX_IMAGES, PER_SENDER_HOURLY } from "./routes/bug.ts";
+import { MAX_IMAGE_BYTES, MAX_IMAGES, PER_SENDER_HOURLY, sweepBugs } from "./routes/bug.ts";
+import { rawMessage } from "./lib/mime.ts";
+import { browserName } from "./lib/bugmail.ts";
 import { MemoryDirectory, MemoryMailer, MemoryStorage } from "./local.ts";
 import { MemoryTable } from "./store/memory.ts";
 import { Repo } from "./store/repo.ts";
@@ -11,11 +13,16 @@ import { Repo } from "./store/repo.ts";
 let app: ReturnType<typeof createApp>;
 let mailer: MemoryMailer;
 let storage: MemoryStorage;
+let deps: Parameters<typeof sweepBugs>[0];
 beforeEach(() => {
   mailer = new MemoryMailer();
   storage = new MemoryStorage();
-  app = createApp({ cfg: { env: "local", publicUrl: "https://neon1.tech", operatorEmails: [], devAuth: true }, repo: new Repo(new MemoryTable()), directory: new MemoryDirectory(), mailer, storage });
+  const cfg = { env: "local" as const, publicUrl: "https://neon1.tech", operatorEmails: [], devAuth: true };
+  const repo = new Repo(new MemoryTable());
+  deps = { cfg, repo, storage, mailer };
+  app = createApp({ cfg, repo, directory: new MemoryDirectory(), mailer, storage });
 });
+afterEach(() => vi.useRealTimers());
 
 const good = { where: "neo", what: "Neo's box stays open after I press Escape.", page: "https://neon1.tech/knowledge/?q=x#top", theme: "matrix", browser: "Safari", viewport: "390x844" };
 const send = (b: unknown, ip = "203.0.113.7") =>
@@ -33,11 +40,13 @@ describe("report a bug", () => {
     expect(j.ref).toMatch(/^BUG-[2-9A-HJKMNP-Z]{6}$/);
     expect(mailer.sent[0]).toMatchObject({ to: CONTACT_TO, replyTo: "dana@example.com" });
     const t = mailer.sent[0]!.text;
-    expect(t).toContain(`Reference: ${j.ref}`);
-    expect(t).toContain("Where: Neo chat");
-    expect(t).toContain("Page: https://neon1.tech/knowledge/");
+    expect(t).toMatch(new RegExp(`Reference\\s+${j.ref}`));
+    expect(t).toMatch(/Where\s+Neo chat/);
+    expect(t).toMatch(/Page\s+https:\/\/neon1.tech\/knowledge\//);
     expect(t).not.toContain("?q=x");
-    expect(t).toContain("Window: 390x844");
+    expect(t).toMatch(/Window\s+390x844/);
+    expect(t).toContain("WHAT HAPPENED");
+    expect(mailer.sent[0]!.subject).toMatch(/^\[bug\] BUG-\w{6} · Neo chat · Neo's box stays open/);
   });
   it("needs a place and a description, and checks an email only when one is given", async () => {
     expect((await send({ ...good, where: "moon" })).status).toBe(400);
@@ -63,6 +72,39 @@ describe("report a bug", () => {
     expect([...storage.files.keys()].sort()).toEqual([`t/_bugs/${ref}/1.png`, `t/_bugs/${ref}/2.jpg`]);
     expect((await image(ref, token, png())).status).toBe(400);
   });
+  it("holds a report with screenshots, then sends it once with the clean ones attached, and clears what it held", async () => {
+    const { ref, token } = (await (await send({ ...good, images: 2 })).json()) as { ref: string; token: string };
+    expect(mailer.sent).toHaveLength(0);
+    await image(ref, token, png());
+    // One of two has arrived: still waiting
+    expect((await sweepBugs(deps)).sent).toBe(0);
+    await image(ref, token, jpg(), "image/jpeg");
+    // Both arrived but one is still being scanned
+    storage.verdicts.set(`t/_bugs/${ref}/2.jpg`, "pending");
+    expect((await sweepBugs(deps)).sent).toBe(0);
+    storage.verdicts.delete(`t/_bugs/${ref}/2.jpg`);
+    expect(await sweepBugs(deps)).toEqual({ held: 1, sent: 1 });
+    expect(mailer.sent).toHaveLength(1);
+    expect(mailer.sent[0]!.attachments?.map((a) => a.name)).toEqual(["screenshot-1.png", "screenshot-2.jpg"]);
+    expect(mailer.sent[0]!.html).toContain("cid:shot1@neon1");
+    // Once sent, nothing is held, so a second pass sends nothing
+    expect(await sweepBugs(deps)).toEqual({ held: 0, sent: 0 });
+  });
+  it("names a screenshot that scanned as a threat instead of attaching it, and sends late with what is ready", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    const { ref, token } = (await (await send({ ...good, images: 3 })).json()) as { ref: string; token: string };
+    await image(ref, token, png());
+    await image(ref, token, png());
+    storage.verdicts.set(`t/_bugs/${ref}/2.png`, "infected");
+    // Two of three arrived, so it waits; after 15 minutes it goes anyway
+    expect((await sweepBugs(deps)).sent).toBe(0);
+    vi.setSystemTime(Date.now() + 16 * 60_000);
+    expect((await sweepBugs(deps)).sent).toBe(1);
+    const m = mailer.sent[0]!;
+    expect(m.attachments).toHaveLength(1);
+    expect(m.text).toContain("Screenshot 2 was not attached: the malware scan found a threat");
+    expect(m.text).toContain("1 of 3 screenshots never arrived");
+  });
   it("refuses a screenshot with no session, a wrong token, or a report that declared none", async () => {
     const { ref, token } = (await (await send({ ...good, images: 1 })).json()) as { ref: string; token: string };
     expect((await image(ref, "0".repeat(32), png())).status).toBe(403);
@@ -84,5 +126,22 @@ describe("report a bug", () => {
   });
   it("refuses more than 3 screenshots declared", async () => {
     expect((await send({ ...good, images: MAX_IMAGES + 1 })).status).toBe(400);
+  });
+});
+
+describe("the report email's parts", () => {
+  it("names the browser and system from an agent string, and keeps the string when unknown", () => {
+    expect(browserName("Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1")).toBe("Safari 17 on iOS");
+    expect(browserName("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0")).toBe("Edge 126 on Windows");
+    expect(browserName("curl dev-verify")).toBe("curl dev-verify");
+  });
+  it("builds a raw message with the HTML, an inline image, and its attachment, with every body in base64", () => {
+    const raw = rawMessage({ from: "a@neon1.tech", to: "b@neon1.tech", subject: "Héllo\nBcc: x@y.z", text: "hi", html: "<p>hi</p>", attachments: [{ name: "a b.png", type: "image/png", bytes: new Uint8Array([1, 2, 3]), cid: "shot1@neon1" }] });
+    expect(raw).toContain("multipart/mixed");
+    expect(raw).toContain("Content-ID: <shot1@neon1>");
+    expect(raw).toContain('filename="a b.png"');
+    // A newline in the subject can't start another header
+    expect(raw).not.toMatch(/^Bcc:/m);
+    expect(raw).toMatch(/Subject: =\?UTF-8\?B\?/);
   });
 });

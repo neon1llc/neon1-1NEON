@@ -18,6 +18,7 @@ import { SendTextMessageCommand, PinpointSMSVoiceV2Client } from "@aws-sdk/clien
 import { SendEmailCommand, SESv2Client } from "@aws-sdk/client-sesv2";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import type { Records } from "./payments.ts";
+import { rawMessage, type Attachment } from "./lib/mime.ts";
 
 
 /** The identity directory: create sign-in accounts for invitees and check strong sign-in */
@@ -74,7 +75,8 @@ export class TurnstileCheck implements HumanCheck {
 export interface Mailer {
   // Send one message with plain text and HTML bodies; replyTo, when given, is where answers go. An
   // aborted signal cancels the request where the provider's SDK supports it
-  send(to: string, subject: string, text: string, html: string, replyTo?: string, signal?: AbortSignal): Promise<void>;
+  // With attachments the message goes out raw: the HTML shows images that carry a cid, and every file also attaches
+  send(to: string, subject: string, text: string, html: string, replyTo?: string, signal?: AbortSignal, attachments?: Attachment[]): Promise<void>;
 }
 
 
@@ -101,6 +103,8 @@ export interface Storage {
   remove(key: string): Promise<void>;
   // Store bytes the server itself received (a bug report's screenshot); the scan treats them like any upload
   put(key: string, bytes: Uint8Array, contentType: string): Promise<void>;
+  // The stored bytes, for a file the server itself will pass on (a scanned screenshot going into an email)
+  get(key: string): Promise<Uint8Array>;
 }
 
 
@@ -167,6 +171,12 @@ export class S3Storage implements Storage {
   // Bytes that came through the API, not a presigned link; the bucket encrypts them and GuardDuty tags them like any other object
   async put(key: string, bytes: Uint8Array, contentType: string) {
     await this.s3.send(new PutObjectCommand({ Bucket: this.bucket, Key: key, Body: bytes, ContentType: contentType, ContentLength: bytes.length }));
+  }
+
+  // The bucket refuses this until the scan tags the object clean, so a caller reads only after a clean verdict
+  async get(key: string) {
+    const r = await this.s3.send(new GetObjectCommand({ Bucket: this.bucket, Key: key }));
+    return r.Body!.transformToByteArray();
   }
 }
 
@@ -255,7 +265,15 @@ export class SesMailer implements Mailer {
 
   // One recipient per message, so addresses never leak between invitees
   // The AWS SDK takes an abort signal per call, so a timed-out send is cancelled rather than left running
-  async send(to: string, subject: string, text: string, html: string, replyTo?: string, signal?: AbortSignal) {
+  async send(to: string, subject: string, text: string, html: string, replyTo?: string, signal?: AbortSignal, attachments: Attachment[] = []) {
+    if (attachments.length) {
+      const data = new TextEncoder().encode(rawMessage({ from: this.from, to, subject, replyTo, text, html, attachments }));
+      await this.ses.send(
+        new SendEmailCommand({ FromEmailAddress: this.from, Destination: { ToAddresses: [to] }, ...(this.configSet ? { ConfigurationSetName: this.configSet } : {}), Content: { Raw: { Data: data } } }),
+        { abortSignal: signal },
+      );
+      return;
+    }
     await this.ses.send(
       new SendEmailCommand({
         FromEmailAddress: this.from,

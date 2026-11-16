@@ -10,7 +10,7 @@
 - Switching the public screens to the dark theme, the bar's logo and Neo's button ease up smoothly to full brightness once instead of flickering, as on neon1.tech; the 1NEON mark and the other green parts keep their flicker.
 - Dark theme: text is off-white with green kept for headings and links, links are underlined in running text, and fields and focus rings are easier to see.
 - Dark theme: dropdowns, menus, and other controls now follow the dark theme.
-- The site's report-a-bug form has a backend: `POST /1NEON/api/bug` mails hello@ with a reference id, and `POST /1NEON/api/bug/:ref/image` takes up to three PNG or JPEG screenshots (3 MB each, checked by their first bytes). Screenshots are kept under `t/_bugs/<reference>/` in the private, malware-scanned documents bucket and are never deleted. The form has the contact form's hidden field and hourly and daily limits.
+- The site's report-a-bug form has a backend: `POST /1NEON/api/bug` mails hello@ with a reference id, and `POST /1NEON/api/bug/:ref/image` takes up to three PNG or JPEG screenshots (3 MB each, checked by their first bytes). Screenshots are kept under `t/_bugs/<reference>/` in the private, malware-scanned documents bucket and are never deleted. The report email reads like a tracker's issue (a left-aligned table of reference, where, time, reporter, page, theme, browser, and window, then what happened), with the screenshots shown inline and attached once the scan passes: a report with screenshots goes out within a minute or so of the scan, at most 15 minutes after it was made, with any screenshot that didn't scan clean named instead of attached. The form has the contact form's hidden field and hourly and daily limits.
 
 ## v0.17.0 - 2026-11-16
 

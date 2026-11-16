@@ -1,20 +1,24 @@
 // apps/api/src/routes/bug.ts - The report-a-bug form on neon1.tech. Two public routes with the contact form's
 // gates (a hidden field, per-sender and daily counters, a real email when one is given):
-//   POST /bug            the report as JSON; mails neon1 and answers with a reference and an upload token
+//   POST /bug            the report as JSON; answers with a reference and an upload token. Mails neon1 at once when it
+//                        has no screenshots; otherwise holds the report until they are scanned (see sweepBugs)
 //   POST /bug/:ref/:token/image one screenshot's raw bytes, sent after the report (the site's policy lets the page
 //                        talk only to neon1.tech, so images pass through here, not straight to S3)
 // A screenshot must be a PNG or JPEG by its first bytes (the declared type isn't trusted), under a size cap,
 // within a count cap fixed when the report was made. It is stored under t/_bugs/<ref>/ in the documents
 // bucket, which is private, scanned by GuardDuty, and refuses reads until the scan tags it clean. Nothing
-// here deletes a screenshot. The report itself is only the email; the table keeps counters and a two-hour
-// upload session.
+// here deletes a screenshot. The report itself is the email: a report with screenshots waits in the table, at
+// most 15 minutes, until each is scanned clean, then goes out with them attached (a scheduled pass does this once a
+// minute), and the waiting rows are removed. Otherwise the table keeps counters and a two-hour upload session.
 import { messageProblem } from "@1neon/domain";
 import { z } from "zod";
 import { emailProblem, failFields, type FieldProblems } from "../lib/vet.ts";
 import { fail } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
 import { viewerIp } from "../lib/edge.ts";
-import { branded, esc } from "../mail.ts";
+import type { Attachment } from "../lib/mime.ts";
+import { bugMail, bugSubject, type BugReport, type Shot } from "../lib/bugmail.ts";
+import type { Deps } from "../lib/kit.ts";
 import { COUNTER_KEEP_S, CONTACT_TO } from "./contact.ts";
 
 
@@ -57,6 +61,14 @@ const Report = z.object({
   website: z.string().max(200).optional().default(""),
 });
 
+
+// Reports waiting for their screenshots, and (one partition per report) the screenshots stored for each
+const PENDING = "BUGPENDING";
+const SHOT = "BUGSHOT#";
+// A report waits at most this long for its screenshots to arrive and scan; past it, it goes with what is clean
+const WAIT_MS = 15 * 60_000;
+// Under SES's message limit with room for encoding: attachments past this total are named, not attached
+const ATTACH_MAX = 18 * 1024 * 1024;
 
 const hex = (b: Uint8Array) => [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
 const sha = async (s: string) => hex(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s))));
@@ -122,28 +134,13 @@ export function bugRoutes(app: App, k: Kit) {
       await repo.table.write([{ put: { PK: "BUGSESSION", SK: ref, tokenHash: await sha(token), max: m.images, ttl: Math.floor(Date.now() / 1000) + SESSION_S }, guard: { create: true } }]);
     }
 
-    const page = cleanPage(m.page);
-    const rows: [string, string][] = [
-      ["Reference", ref],
-      ["Where", WHERE[m.where]],
-      ["What happened", m.what],
-      ...(m.email ? [["Reply to", m.email] as [string, string]] : []),
-      ...(page ? [["Page", page] as [string, string]] : []),
-      ...(m.theme ? [["Theme", m.theme] as [string, string]] : []),
-      ...(m.browser ? [["Browser", m.browser] as [string, string]] : []),
-      ...(m.viewport ? [["Window", m.viewport] as [string, string]] : []),
-      ...(m.images ? [["Screenshots", `${m.images} on the way, kept privately at t/_bugs/${ref}/ in the documents bucket (readable once scanned clean)`] as [string, string]] : []),
-    ];
-    const text = rows.map(([a, b]) => `${a}: ${b}`).join("\n\n");
-    const html = branded({
-      label: "bug report",
-      preheader: `${ref}: ${WHERE[m.where]}`,
-      heading: `Bug report ${ref}`,
-      body: rows.map(([a, b]) => `<p style="margin:0 0 14px"><b>${esc(a)}</b><br>${esc(b).replace(/\n/g, "<br>")}</p>`).join(""),
-      note: m.email ? "Reply to this email to answer them directly." : "They left no email.",
-    });
-    const tag = process.env.APP_ENV === "dev" ? "[dev] neon1.tech" : "neon1.tech";
-    await d.mailer.send(CONTACT_TO, `${tag} bug ${ref}: ${WHERE[m.where]}`, text, html, m.email || undefined);
+    const report: BugReport = { ref, where: WHERE[m.where], what: m.what, email: m.email, page: cleanPage(m.page), theme: m.theme, browser: m.browser, viewport: m.viewport, at: new Date().toISOString() };
+    if (m.images > 0) {
+      // Held until the screenshots are in and scanned; the row lives two days at most, even if nothing ever arrives
+      await repo.table.write([{ put: { PK: PENDING, SK: ref, report, expect: m.images, ttl: Math.floor(Date.now() / 1000) + 2 * 86_400 }, guard: { create: true } }]);
+    } else {
+      await deliver(d, report, [], []);
+    }
     return c.json({ ok: true, ref, token, images: m.images });
   });
 
@@ -173,7 +170,61 @@ export function bugRoutes(app: App, k: Kit) {
     const slot = await repo.table.increment("BUGSLOT", ref, 1, Math.floor(Date.now() / 1000) + SESSION_S);
     if (slot > Number(session.max)) fail(400, "too_many_images", `This report took up to ${session.max} screenshots.`);
 
-    await d.storage.put(`t/_bugs/${ref}/${slot}.${kind.ext}`, bytes, kind.type);
+    const key = `t/_bugs/${ref}/${slot}.${kind.ext}`;
+    await d.storage.put(key, bytes, kind.type);
+    await repo.table.write([{ put: { PK: `${SHOT}${ref}`, SK: String(slot).padStart(2, "0"), key, type: kind.type, size: bytes.length, ttl: Math.floor(Date.now() / 1000) + 2 * 86_400 }, guard: { always: true } }]);
     return c.json({ ok: true, n: slot });
   });
+}
+
+
+/** Mail neon1 the report, with the given screenshots attached and inline, and `notes` for any left out */
+async function deliver(d: Pick<Deps, "mailer" | "cfg">, r: BugReport, files: { name: string; type: string; bytes: Uint8Array }[], notes: string[]) {
+  const attach: Attachment[] = files.map((f, i) => ({ ...f, cid: `shot${i + 1}@neon1` }));
+  const shots: Shot[] = attach.map((a) => ({ name: a.name, type: a.type, size: a.bytes.length, cid: a.cid! }));
+  const { text, html } = bugMail(r, shots, notes);
+  const tag = d.cfg.env === "dev" ? "dev] [bug" : "bug";
+  await d.mailer.send(CONTACT_TO, bugSubject(r, tag), text, html, r.email || undefined, undefined, attach);
+}
+
+/**
+ * The scheduled pass: send each held report once its screenshots have all arrived and been scanned (clean ones
+ * attach; one with a threat, or that never scanned, is named instead), or after WAIT_MS with whatever is ready.
+ * An environment with no scan (dev) attaches what arrived. Returns how many reports it sent
+ */
+export async function sweepBugs(d: Pick<Deps, "repo" | "storage" | "mailer" | "cfg">, opts: { deadline?: number } = {}): Promise<{ held: number; sent: number }> {
+  const rows = await d.repo.table.query(PENDING);
+  let sent = 0;
+  for (const row of rows) {
+    if (opts.deadline !== undefined && Date.now() >= opts.deadline) break;
+    const report = row.report as BugReport;
+    const expect = Number(row.expect);
+    const shots = await d.repo.table.query(`${SHOT}${report.ref}`);
+    const verdicts = await Promise.all(shots.map(async (s) => ({ s, v: await d.storage.scan(String(s.key)) })));
+    // Still scanning (or the scan couldn't be asked): not settled yet
+    const settled = verdicts.every(({ v }) => v !== "pending" && v !== "error" && v !== "absent");
+    const late = Date.now() - Date.parse(report.at) > WAIT_MS;
+    if (!late && !(shots.length >= expect && settled)) continue;
+
+    const files: { name: string; type: string; bytes: Uint8Array }[] = [];
+    const notes: string[] = [];
+    let total = 0;
+    for (const { s, v } of verdicts) {
+      const n = Number(s.SK);
+      const name = `screenshot-${n}.${s.type === "image/png" ? "png" : "jpg"}`;
+      if (v === "infected") notes.push(`Screenshot ${n} was not attached: the malware scan found a threat. It is kept in the bucket at ${s.key}.`);
+      else if (v !== "clean" && v !== "unscanned") notes.push(`Screenshot ${n} was not attached: it ${v === "pending" || v === "error" || v === "absent" ? "hadn't finished scanning" : "couldn't be scanned"}. Key: ${s.key}.`);
+      else if (total + Number(s.size) > ATTACH_MAX) notes.push(`Screenshot ${n} was too large to attach with the others. Key: ${s.key}.`);
+      else {
+        files.push({ name, type: String(s.type), bytes: await d.storage.get(String(s.key)) });
+        total += Number(s.size);
+      }
+    }
+    if (shots.length < expect) notes.push(`${expect - shots.length} of ${expect} screenshots never arrived.`);
+    await deliver(d, report, files, notes);
+    sent++;
+    // Sent: nothing about the report stays in the table
+    await d.repo.table.write([{ delete: { PK: PENDING, SK: report.ref } }, ...shots.map((s) => ({ delete: { PK: String(s.PK), SK: String(s.SK) } }))]);
+  }
+  return { held: rows.length, sent };
 }
