@@ -275,7 +275,7 @@ async function eventTargets(d: OutboxDeps, e: AuditEvent, clock: Clock): Promise
     // neon1's working drafts reach neon1 only
     if (neon1Only(e.action) && !cfg.operatorEmails.includes(u.email)) continue;
     if (wants(u.notify, e.action, "email")) {
-      const mail = noticeEmail({ orgName: tenant?.name ?? "1NEON", by: m.userId === e.actorId ? "You" : by, summary, url: invoiceUrl ?? `${home}/workspace`, button: invoiceUrl ? "See the invoice" : undefined, important: groupOf(e.action).level === "critical" });
+      const mail = noticeEmail({ orgName: tenant?.name ?? "1NEON", by: m.userId === e.actorId ? "You" : by, summary, url: invoiceUrl ?? `${home}/workspace`, button: invoiceUrl ? "See the invoice" : undefined, zone: u.timeZone, important: groupOf(e.action).level === "critical" });
       targets.push({ key: u.id, channel: "email", send: (signal) => d.mailer.send(u.email, mail.subject, mail.text, mail.html, undefined, signal) });
     }
     // Texts only to a verified number the person still has, within the budgets, with no project detail

@@ -18,7 +18,12 @@ const PORTAL = `${process.env.PUBLIC_URL ?? "https://neon1.tech"}/1NEON/`;
 
 /** One function serves both triggers; Cognito names the trigger in triggerSource */
 export async function handler(event: PreSignUpTriggerEvent | CustomMessageTriggerEvent) {
-  if (event.triggerSource.startsWith("CustomMessage_")) return message(event as CustomMessageTriggerEvent);
+  if (event.triggerSource.startsWith("CustomMessage_")) {
+    // The person's own time zone, when 1NEON has one; a lookup that fails never holds back a code
+    const mail = String((event as CustomMessageTriggerEvent).request.userAttributes?.email ?? "").toLowerCase();
+    const zone = await (async () => (mail ? (await repo.getUser((await repo.userIdForEmail(mail)) ?? ""))?.timeZone : undefined))().catch(() => undefined);
+    return message(event as CustomMessageTriggerEvent, new Date(), zone);
+  }
   return preSignUp(event as PreSignUpTriggerEvent);
 }
 
@@ -37,12 +42,12 @@ const CODES: Record<string, { subject: string; label: string; heading: string; s
 
 
 /** Custom message: put the code in the branded design; any other message keeps Cognito's default */
-export function message(event: CustomMessageTriggerEvent, at = new Date()) {
+export function message(event: CustomMessageTriggerEvent, at = new Date(), zone?: string) {
   const kind = CODES[event.triggerSource];
   if (!kind) return event;
   // Sign-in codes share their template with the browser demo
   if ((event.triggerSource as string) === "CustomMessage_Authentication") {
-    const mail = signInCodeEmail({ code: (event as CustomMessageTriggerEvent).request.codeParameter, portal: PORTAL, at });
+    const mail = signInCodeEmail({ code: (event as CustomMessageTriggerEvent).request.codeParameter, portal: PORTAL, at, zone });
     event.response.emailSubject = mail.subject;
     event.response.emailMessage = mail.html;
     return event;
@@ -56,6 +61,7 @@ export function message(event: CustomMessageTriggerEvent, at = new Date()) {
     code: event.request.codeParameter,
     note: "It works for a few minutes. If you didn't ask for it, you can ignore this email.",
     at,
+    zone,
   });
   return event;
 }

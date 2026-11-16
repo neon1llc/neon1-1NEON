@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+### Changed
+- Email shows times in the reader's own zone with UTC beside it, such as "Nov 15, 2026, 8:25 AM EST (13:25 UTC)". The zone is an IANA name from the browser, so daylight saving and leap days follow the calendar; the abbreviation flips between EST and EDT on its own. The contact form's mail to neon1 reads in New York time and shows the sender's local time. Anyone without a saved zone reads in New York time.
+- The profile has a Time zone setting; the browser's zone is saved at the first sign-in.
+
 ## v0.17.1 - 2026-11-16
 
 - Switching the public screens to the dark theme, the bar's logo and Neo's button ease up smoothly to full brightness once instead of flickering, as on neon1.tech; the 1NEON mark and the other green parts keep their flicker.

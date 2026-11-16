@@ -162,6 +162,9 @@ export const User = z.object({
   // authorized from it; factor changes read the live inventory and admin actions read the session
   strongAuth: z.boolean().default(false),
   theme: Theme.default("awake"),
+  // The IANA zone this person reads times in (from their browser, changeable on the profile); email shows
+  // times in it. Missing reads as America/New_York
+  timeZone: z.string().max(64).optional(),
   // "default" opens the full menu from a button; "mini" keeps a slim icon menu on screen as well.
   // Older records say "rail" or "hidden" (from before 2026-11-09); both read as default (menuOf)
   menu: z.enum(["default", "mini", "rail", "hidden"]).default("default"),
