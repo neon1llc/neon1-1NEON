@@ -65,7 +65,7 @@ export const JOURNEY: Show = {
       "Watch her start a free 1NEON account, write down what her project needs, and ask for an assessment. Then switch to Pradeep at neon1: he reads her request, answers in her project, and, after they talk, makes her account a client account.",
     ],
   },
-  length: "about four minutes",
+  length: "about six minutes",
   end: "A free account, a written-down project, and a client.",
   recap: "Lena saw what a free account holds, signed up with a code by email, wrote down one project, and asked for an assessment. Pradeep read it, asked her a question in the project, and promoted her account to a client once they'd talked. Everything she wrote stayed where it was.",
   sections: [
@@ -77,7 +77,7 @@ export const JOURNEY: Show = {
         await s.think("I'd rather write it down first. Start for free.");
         await s.click({ sel: "button", text: "Start for free" }, 900);
         await s.say("Before she types anything, the form says what a free account holds");
-        await s.hover(".su-limits", 1400);
+        await s.hover(".signin-limits", 1400);
         await s.think("Three projects, kept 30 days after my last change. Fair.");
       },
     },
@@ -90,8 +90,7 @@ export const JOURNEY: Show = {
         await s.type("#su-name", "Lena Park", 200);
         await s.choose("#su-kind", "small", 300);
         await s.type("#su-org", SHOP, 300);
-        await s.think("Where we are helps. I'll add that.");
-        await s.click(".su-more", 700);
+        await s.think("The rest is optional, but where we are helps. I'll add it.");
         await s.type("#su-city", "Troy", 200);
         await s.choose("#su-state", "NY", 300);
         await s.choose("#su-found", "maps", 300);
@@ -214,6 +213,8 @@ export const JOURNEY: Show = {
         await s.click(".bell-btn", 1400);
         await s.think("Pradeep has a question.");
         await s.click({ sel: ".bell-list a.note", text: /comment/i }, 1000);
+        await s.think("It took me to the item he asked about.");
+        await s.click({ sel: ".item-open", text: "One real example" }, 900);
         await s.type('textarea[aria-label="Write a comment"]', "About 25 a month in season. Deposits are by card, through the shop's card reader.");
         await s.click({ sel: ".comment-box button", text: "Send" }, 1000);
         await s.click('dialog[open] button[aria-label="Close"]', 600);
@@ -225,9 +226,9 @@ export const JOURNEY: Show = {
       id: "free-promote",
       title: "Make it a client",
       run: async (s) => {
-        await become(s, PRADEEP, `${await shop()}/workspace`);
+        // Potentials sits under the organization switcher; his screen opens on it
+        await become(s, PRADEEP, "/all/prospects");
         await s.say("Pradeep's side again: Potentials lists everyone who signed themselves up");
-        await s.go("/all/prospects", "Potentials");
         await s.hover({ sel: "section.prospect", text: SHOP }, 1200);
         await s.think("Riverside Florist, Troy, found us on Google Maps. Promote.");
         await s.click({ sel: "section.prospect button", text: "Promote" }, 900);
@@ -240,9 +241,12 @@ export const JOURNEY: Show = {
       title: "A client account",
       run: async (s) => {
         await become(s, LENA, `${await shop()}/workspace`);
-        await s.say("On Lena's Home, the free-account notes are gone. Her project is right where she left it");
-        await s.think("Same project, same notes. Now the real work starts.");
+        await s.say("On Lena's Home, the free-account note and the keep date are gone");
+        await s.hover("h1", 1000);
+        await s.think("No more expiry date. I'm a client now.");
+        await s.say("Her project is right where she left it, and the work goes on from there");
         await s.go(`${await shop()}/projects`, "Projects");
+        await s.think("Same project, same notes. Now the real work starts.");
         await s.hover({ sel: ".ptr, .tl-row", text: PROJECT.name }, 1400);
       },
     },
