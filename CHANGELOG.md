@@ -4,12 +4,15 @@
 
 ## Unreleased
 
+## v0.17.0 - 2026-11-16
+
 ### Added
 - New walkthrough, **From free account to client** (`/1NEON/live?play=free`): a made-up florist starts a free account, writes down a project, keeps the account 30 more days, and asks for an assessment; Pradeep reads the request, asks a question in her project, and promotes the account to a client from Potentials. The FAQs link it.
 - Every walkthrough's sign-in now reads exactly as the real one: the site's awake or matrix theme, "New here? Start for free.", **Start for free** opening the real create-account form, and "Try it yourself · Or see how it works" under the panel.
 - The walkthrough's pretend mail window names whose inbox it is, not always Maria's.
 
 ### Changed
+- The privacy and data policy and the terms read from neon1-corpus v0.47.1: a suspended free account waits for review instead of being deleted, and Keep it adds 30 days. Neo's guide reads from the same release.
 - Create account says what a free account holds before anything is typed, on one quiet line under the heading: up to 3 projects, kept 30 days after the last change. The numbers come from the same limits the API enforces.
 - Create account's note under the optional fields ends "You can add these later." It stays on one line on a wide screen; narrower, that whole sentence moves to the next line rather than breaking mid-sentence.
 - "How free accounts work" under Create account does the same: on a phone it moves to its own line whole instead of splitting.
