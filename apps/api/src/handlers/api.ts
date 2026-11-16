@@ -14,6 +14,7 @@ import { finishPurges, sweepQuietProspects } from "../routes/prospects.ts";
 import { StripePayments } from "../payments.ts";
 import { beforeDeadline, drainOutbox } from "../outbox.ts";
 import { sweepFiles } from "../files.ts";
+import { sweepBugs } from "../routes/bug.ts";
 import { DynamoTable } from "../store/dynamo.ts";
 import { Repo } from "../store/repo.ts";
 import { bedrockNeo } from "../neo/bedrock.ts";
@@ -118,6 +119,8 @@ export const handler = async (event: Parameters<typeof http>[0] | { source?: str
     const result = await drainOutbox({ repo, mailer, texter, cfg }, { deadline: Math.min(end - 2_000, Date.now() + 7_000) });
     // Then files whose scan finished since the last pass become ready (or rejected) without a re-upload
     const files = await beforeDeadline(sweepFiles({ repo, storage }, { deadline: end - 500 }), end).catch((e) => ({ watched: 0, settled: 0, error: (e as Error).name }));
+    // Bug reports waiting for their screenshots to scan go out, with the clean ones attached
+    const bugs = await beforeDeadline(sweepBugs({ repo, storage, mailer, cfg }, { deadline: end - 400 }), end).catch((e) => ({ held: 0, sent: 0, error: (e as Error).name }));
     // Sign-ups never confirmed lose their sign-in account after a day; quiet prospects get their emails
     // (and, at the end, deletion) once a day. Neither may hold up the next pass
     const signups = await beforeDeadline(sweepSignups({ repo, d: deps }, { deadline: end - 300 }), end).catch((e) => ({ removed: 0, error: (e as Error).name }));
@@ -127,8 +130,8 @@ export const handler = async (event: Parameters<typeof http>[0] | { source?: str
     // One line per pass in CloudWatch's embedded metric format: counts and queue age only, never
     // addresses or bodies. Written to stdout directly, because the JSON log wrapper would hide the
     // metric directive inside its message field
-    process.stdout.write(`${JSON.stringify({ ...outboxMetrics(result, cfg.env), files, signups, quiet, purges })}\n`);
-    return { ...result, files, signups, quiet, purges };
+    process.stdout.write(`${JSON.stringify({ ...outboxMetrics(result, cfg.env), files, bugs, signups, quiet, purges })}\n`);
+    return { ...result, files, bugs, signups, quiet, purges };
   }
   return http(event as Parameters<typeof http>[0], context);
 };
