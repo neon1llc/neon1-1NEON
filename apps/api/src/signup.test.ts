@@ -7,7 +7,7 @@ import { PROSPECT_LIMITS, type User } from "@1neon/domain";
 import { createApp } from "./app.ts";
 import { claimSignup, SIGNUP_LIMITS, SIGNUP_PK, sweepSignups } from "./routes/signup.ts";
 import { WRITE_LIMITS } from "./lib/guards.ts";
-import { purgeProspect, sweepQuietProspects } from "./routes/prospects.ts";
+import { PurgeIncomplete, purgeProspect, sweepQuietProspects } from "./routes/prospects.ts";
 import { MemoryDirectory, MemoryMailer, MemoryStorage } from "./services.ts";
 import { MemoryTable } from "./store/memory.ts";
 import { Repo } from "./store/repo.ts";
@@ -330,6 +330,94 @@ describe("neon1's review queue", () => {
 });
 
 
+/** A prospect with a general file and a trashed project holding a file of its own */
+async function withTrashedFile() {
+  const p = await prospect();
+  await as(form.email, `/t/${p.tid}/docs`, "POST", { name: "general.pdf", contentType: "application/pdf", size: 1000, layer: "needs" });
+  const proj = (await (await as(form.email, `/t/${p.tid}/projects`, "POST", { name: "Old idea" })).json()) as { id: string };
+  expect((await as(form.email, `/t/${p.tid}/docs`, "POST", { name: "kept.pdf", contentType: "application/pdf", size: 1000, layer: "needs", projectId: proj.id })).status).toBe(201);
+  const row = (await repo.table.get(`T#${p.tid}`, `PROJ#${proj.id}`))!;
+  await repo.table.write([{ put: { ...row, deletedAt: new Date().toISOString(), archived: true }, guard: { always: true } }]);
+  const keys = [...(await repo.listDocs(p.tid, undefined)), ...(await repo.listDocs(p.tid, proj.id))].map((x) => x.key);
+  for (const key of keys) storage.files.set(key, { type: "application/pdf", bytes: new Uint8Array(1000) });
+  return { ...p, pid: proj.id, keys };
+}
+
+
+describe("deleting a free account", () => {
+  const kit = () => ({ repo, d: { mailer, storage, directory } as never, cfg });
+
+  it("reaches trashed projects: their rows and their files go too, and a receipt stays", async () => {
+    const { tid, pid, keys } = await withTrashedFile();
+    expect(keys).toHaveLength(2);
+    await purgeProspect(kit(), tid);
+    for (const key of keys) expect(storage.files.has(key)).toBe(false);
+    expect(await repo.table.query(`T#${tid}#P#${pid}`)).toHaveLength(0);
+    expect(await repo.table.query(`T#${tid}`)).toHaveLength(0);
+    expect(await repo.table.get("DELETED", tid)).toMatchObject({ files: 2, accounts: 1 });
+  });
+
+  it("counts a trashed project's files toward the storage limit", async () => {
+    const { tid } = await withTrashedFile();
+    for (let i = 2; i < PROSPECT_LIMITS.files; i++) expect((await as(form.email, `/t/${tid}/docs`, "POST", { name: `f${i}.png`, contentType: "image/png", size: 1000, layer: "needs" })).status).toBe(201);
+    expect((await as(form.email, `/t/${tid}/docs`, "POST", { name: "more.png", contentType: "image/png", size: 1000, layer: "needs" })).status).toBe(409);
+  });
+
+  it("stops before any row goes when a file can't be removed, keeps it shut out, and finishes on the next pass", async () => {
+    const { tid, keys } = await withTrashedFile();
+    const remove = storage.remove.bind(storage);
+    storage.remove = async () => { throw new Error("SlowDown"); };
+    await expect(purgeProspect(kit(), tid)).rejects.toBeInstanceOf(PurgeIncomplete);
+    const t = (await repo.getTenant(tid))!;
+    expect(t.prospect!.deletingAt).toBeTruthy();
+    expect((await repo.listDocs(tid, undefined)).length).toBe(1);
+    expect(await repo.userIdForEmail(form.email)).toBeTruthy();
+    expect((await as(form.email, `/t/${tid}/projects`)).status).toBe(403);
+    expect((await as(OP, `/prospects/${tid}/delete`, "POST", { confirm: "Kim Dental" })).status).toBe(502);
+    storage.remove = remove;
+    expect(await sweepQuietProspects(kit())).toMatchObject({ deleted: 1, failed: 0 });
+    expect(await repo.getTenant(tid)).toBeUndefined();
+    for (const key of keys) expect(storage.files.has(key)).toBe(false);
+  });
+
+  it("keeps a person's data when their sign-in account can't be removed", async () => {
+    const { tid } = await prospect();
+    directory.removeUser = async () => { throw new Error("TooManyRequests"); };
+    await expect(purgeProspect(kit(), tid)).rejects.toBeInstanceOf(PurgeIncomplete);
+    expect(await repo.userIdForEmail(form.email)).toBeTruthy();
+    expect(await repo.getTenant(tid)).toBeTruthy();
+  });
+
+  it("can't promote an organization being deleted, and a promotion that lands first stops the deletion", async () => {
+    const a = await prospect();
+    const t = (await repo.getTenant(a.tid))!;
+    await repo.saveTenant({ ...t, prospect: { ...t.prospect!, deletingAt: new Date().toISOString() }, version: t.version + 1 }, t.version);
+    expect((await as(OP, `/prospects/${a.tid}/promote`, "POST", {})).status).toBe(409);
+    // The other order: the purge read the prospect, then the promotion landed before its mark
+    const b = await prospect("b@example.com");
+    const stale = (await repo.getTenant(b.tid))!;
+    const get = repo.getTenant.bind(repo);
+    repo.getTenant = async (id: string) => (id === b.tid ? stale : get(id));
+    expect((await as(OP, `/prospects/${b.tid}/promote`, "POST", {})).status).toBe(200);
+    await expect(purgeProspect(kit(), b.tid)).rejects.toThrow();
+    repo.getTenant = get;
+    const after = (await repo.getTenant(b.tid))!;
+    expect(after.prospect).toBeUndefined();
+    expect(await repo.userIdForEmail("b@example.com")).toBeTruthy();
+  });
+
+  it("doesn't delete for being quiet when a change lands just before deletion starts", async () => {
+    const { tid } = await prospect();
+    const since = (await repo.getTenant(tid))!.prospect!.since;
+    const late = new Date(Date.parse(since) + 1000).toISOString();
+    await repo.table.write([{ put: { PK: `T#${tid}`, SK: "ACTIVE", at: late }, guard: { always: true } }]);
+    expect(await purgeProspect(kit(), tid, { quietSince: since })).toEqual({ deleted: false });
+    const t = (await repo.getTenant(tid))!;
+    expect(t.prospect!.deletingAt).toBeUndefined();
+  });
+});
+
+
 describe("tidying up", () => {
   it("removes the sign-in account of a sign-up never confirmed within a day", async () => {
     await signup(form);
@@ -359,6 +447,24 @@ describe("tidying up", () => {
     expect(await pass(30.2)).toMatchObject({ deleted: 1 });
     expect(await repo.getTenant(tid)).toBeUndefined();
     expect(toDana()).toHaveLength(3);
+  });
+
+  it("doesn't move the clock when the final notice is refused, and sends it again the next day", async () => {
+    const { tid } = await prospect();
+    const day = 24 * 3600 * 1000;
+    const since = Date.parse((await repo.getTenant(tid))!.prospect!.since);
+    const pass = (days: number) => sweepQuietProspects({ repo, d: { mailer, storage, directory } as never, cfg }, new Date(since + days * day));
+    await pass(7.1);
+    await pass(14.1);
+    const send = mailer.send.bind(mailer);
+    mailer.send = async () => { throw new Error("MessageRejected"); };
+    expect(await pass(21.1)).toMatchObject({ warned: 0, failed: 1 });
+    expect((await repo.getTenant(tid))!.prospect!.warnedAt).toBeUndefined();
+    // Still no final notice that went out, so day 30 deletes nothing
+    expect(await pass(30.2)).toMatchObject({ deleted: 0 });
+    mailer.send = send;
+    expect(await pass(31.2)).toMatchObject({ warned: 1 });
+    expect(await repo.getTenant(tid)).toBeTruthy();
   });
 
   it("sends nothing and deletes nothing while neon1 keeps a prospect", async () => {

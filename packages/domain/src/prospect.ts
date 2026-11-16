@@ -112,8 +112,8 @@ export function prospectFileAllowed(name: string, contentType: string): boolean 
 /** Is this organization a prospect (signed itself up, not yet promoted)? */
 export const isProspect = (t: Pick<Tenant, "prospect"> | undefined) => Boolean(t?.prospect);
 
-/** Is this prospect organization suspended? Its members are refused everything until it's resumed */
-export const isSuspended = (t: Pick<Tenant, "prospect"> | undefined) => Boolean(t?.prospect?.suspendedAt);
+/** Is this prospect organization suspended, or being deleted? Its members are refused everything */
+export const isSuspended = (t: Pick<Tenant, "prospect"> | undefined) => Boolean(t?.prospect?.suspendedAt || t?.prospect?.deletingAt);
 
 
 // The changes a prospect's own people may make, by method and path under /t/:tid. Anything not listed
