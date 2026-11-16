@@ -25,6 +25,7 @@ import { FileText as FileIcon, Folder as FolderIcon, Home as HomeIcon, Kanban as
 import { ConfirmDialog } from "./Confirm.tsx";
 import { HelpProvider, useHelp } from "./Help.tsx";
 import { Neo } from "./Neo.tsx";
+import { ReportBug } from "./BugReport.tsx";
 import { useProspectEverywhere } from "./Prospect.tsx";
 import { Palette } from "./Palette.tsx";
 import { SignUp } from "./SignUp.tsx";
@@ -339,31 +340,15 @@ function SignIn() {
     if (r.step === "choose" || r.step === "code" || r.step === "totp") saveStep(session(), { email: mail, step: r.step, methods: r.methods });
     fade(() => { setAt(r); setSigningUp(false); });
   };
-  // The real sign-in shares neon1.tech's awake or matrix choice (awake until picked); the demo's picker keeps its rain
-  // A walkthrough's sign-in looks the same (its own bar takes the top, so the site's bar stays hidden there)
-  const publicLook = !PICKER;
-  const [look, setLook] = useSiteTheme(publicLook);
-  const awake = publicLook && look === "awake";
+  // Sign-in, the demo's person picker, and a walkthrough's sign-in all share neon1.tech's awake or matrix choice
+  // (awake until picked) and the same bar: the logo on the left, the theme switch on the right
+  const [look, setLook] = useSiteTheme();
+  const awake = look === "awake";
   return (
     <main className={`signin${awake ? " awake" : ""}`}>
       {!awake && <Rain panes=".signin .panel, .signin .n1-logo, .rainctl button" />}
       {!awake && <div className="veil" />}
-      {publicLook ? (
-        <PublicBar theme={look} onChange={setLook} />
-      ) : (
-        /* Back to neon1.tech, in the site's own top bar so the logo sits exactly where the site's does */
-        <header className="n1-bar">
-          <div className="n1-inner">
-            <a className="n1-logo glass" href="/" aria-label="neon1.tech home">
-              <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
-                <path d="M6 6a24 24 0 0 1 24 24v30M6 12a18 18 0 0 1 18 18v30M6 18a12 12 0 0 1 12 12v30M6 24a6 6 0 0 1 6 6v30" />
-                <path d="M34 6a24 24 0 0 1 24 24v30M34 12a18 18 0 0 1 18 18v30M34 18a12 12 0 0 1 12 12v30M34 24a6 6 0 0 1 6 6v30" />
-              </svg>
-              <span><span className="ne">neon</span><span className="one">1</span></span>
-            </a>
-          </div>
-        </header>
-      )}
+      <PublicBar theme={look} onChange={setLook} />
       {/* Signing up widens the panel on a wide screen, so the form fits without scrolling */}
       <div className={`panel glass${signingUp ? " signing-up" : ""}`}>
         <Wordmark />
@@ -450,7 +435,7 @@ function SignIn() {
         )}
         {/* The three policies on one line of their own */}
         <p className="fine legal-links">
-          <Link to="/faqs" viewTransition>FAQs</Link> · <Link to="/cookies" viewTransition>Cookies</Link> · <Link to="/privacy" viewTransition>Privacy</Link> · <Link to="/terms" viewTransition>Terms</Link>
+          <Link to="/faqs" viewTransition>FAQs</Link> · <Link to="/cookies" viewTransition>Cookies</Link> · <Link to="/privacy" viewTransition>Privacy</Link> · <Link to="/terms" viewTransition>Terms</Link> · <ReportBug />
         </p>
         {/* Not a client yet: one door, the guided walkthrough, with no sign-in to attempt. The sample
             project and the demo stay reachable from inside it (its end card) and from the FAQs.
@@ -780,6 +765,8 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
         {/* Every way to reach neon1, for every account, new ones included */}
         <ul className="nav contact-nav">
           <Item to="/contact" icon={<Icon name="contact" />} label="Contact neon1" tour="nav-contact" />
+          {/* On every signed-in screen, in the full menu: the neon1 way to say something is broken */}
+          <li><ReportBug kind="row" /></li>
         </ul>
         {/* Back to the neon1.tech site, outside the app's routes, then the signed-in person */}
         <a className="site-link" href="/" title="neon1.tech">

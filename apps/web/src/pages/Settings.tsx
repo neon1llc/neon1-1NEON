@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { FaceFacts, FaceForm } from "../components/OrgFace.tsx";
 import { useOrg, useTopBar } from "../components/Shell.tsx";
+import { ReportBug } from "../components/BugReport.tsx";
 import { LayerBadge, LAYERS, layerName, useToast } from "../components/ui.tsx";
 import { api } from "../lib/api.ts";
 import { ExportCancelled, exportOrganization, type ExportResult } from "../lib/export.ts";
@@ -116,6 +117,12 @@ export function Settings() {
       {/* The organization's own copy of everything, any time, without asking neon1 */}
       <h2 className="section-h" id="your-data">Your data</h2>
       <ExportData />
+      {/* Same entry as the menu and the profile, where people look for it */}
+      <h2 className="section-h">Something not working?</h2>
+      <div className="card small" style={{ display: "grid", gap: 8, justifyItems: "start" }}>
+        <span className="muted">Tell me what happened, on a page that opens in a new tab.</span>
+        <ReportBug kind="button" />
+      </div>
     </>
   );
 }

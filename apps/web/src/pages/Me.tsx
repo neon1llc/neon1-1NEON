@@ -16,6 +16,7 @@ import { problem } from "../lib/hooks.ts";
 import { passkeyCreation } from "../lib/passkey.ts";
 import { useProspectEverywhere } from "../components/Prospect.tsx";
 import { useHelp } from "../components/Help.tsx";
+import { ReportBug } from "../components/BugReport.tsx";
 import { askToConfirm, TotpSetup } from "../components/Confirm.tsx";
 import { chosenLessMotion, deviceLessMotion, setLessMotion } from "../lib/motion.ts";
 
@@ -318,6 +319,12 @@ export function MePage() {
             <button className="btn btn-ghost" type="button" onClick={help.welcomeTour}>Replay the tour</button>
             <Link className="btn btn-ghost" to="/faqs">FAQs</Link>
           </div>
+        </div>
+        {/* Something broken or confusing: straight to neon1, with the page and theme */}
+        <div className="card small" style={{ display: "grid", gap: 8, justifyItems: "start" }}>
+          <b>Something not working?</b>
+          <span className="muted">Tell me what happened, on a page that opens in a new tab.</span>
+          <div className="actions"><ReportBug kind="button" /></div>
         </div>
         <div className="actions">
           <button className="btn btn-ghost" type="button" onClick={() => void signOut()}>Sign out</button>

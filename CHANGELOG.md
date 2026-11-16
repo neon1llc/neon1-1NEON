@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+- The interactive demo's landing has the sign-in's top bar (the neon1 logo on the left, the theme switch on the right) and opens in the awake or matrix theme you chose on neon1.tech. Neo sits at the bottom left there, and at the bottom right once you pick a person.
+- **report a bug** in the menu, on your profile, in Settings, and under the sign-in links, in the demo too. It opens neon1.tech/report-bug in a new tab.
 - Switching the public screens to the dark theme, the bar's logo and Neo's button ease up smoothly to full brightness once instead of flickering, as on neon1.tech; the 1NEON mark and the other green parts keep their flicker.
 - Dark theme: text is off-white with green kept for headings and links, links are underlined in running text, and fields and focus rings are easier to see.
 - Dark theme: dropdowns, menus, and other controls now follow the dark theme.

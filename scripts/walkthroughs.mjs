@@ -154,13 +154,32 @@ async function until(page, test, what, limit = LIMIT) {
   throw new Error(`timed out waiting for ${what}; last seen "${s?.title}" / "${s?.line}" / card "${s?.card}"`);
 }
 
-const address = (show) => `${BASE}/1NEON/live${show === "preview" ? "" : `?play=${show}`}`;
+const address = (show) => (show === "demo" ? `${BASE}/1NEON/demo/` : `${BASE}/1NEON/live${show === "preview" ? "" : `?play=${show}`}`);
 const press = (page, label) => page.locator(".live-card .live-btn", { hasText: label }).first().click();
 
 
 // --- What visitors do --------------------------------------------------------------------------
 
 const SCENARIOS = {
+  /** The interactive demo (not a walkthrough): its landing takes the site's bar and the chosen theme, Neo sits bottom left
+   * there and bottom right once a person is picked, and "report a bug" is a new-tab link inside */
+  async demo(page) {
+    const { width } = page.viewportSize();
+    const theme = await page.evaluate(() => { try { return localStorage.getItem("neon1.theme"); } catch { return null; } });
+    await page.waitForSelector(".signin .demo-pick", { timeout: 20_000 });
+    if (!(await page.locator(".n1-bar.pub-bar .n1-logo").count()) || !(await page.locator(".n1-bar.pub-bar [role=switch]").count())) throw new Error("the demo landing lacks the sign-in's bar (logo left, theme switch right)");
+    const awake = (await page.locator(".signin.awake").count()) > 0;
+    if (awake !== (theme !== "matrix")) throw new Error(`the demo landing shows ${awake ? "awake" : "matrix"} while the saved theme is ${theme ?? "unset"}`);
+    const side = async () => { const b = await page.locator(".n1chat-launch").first().boundingBox({ timeout: 15_000 }); return b.x + b.width / 2 < width / 2 ? "left" : "right"; };
+    if ((await side()) !== "left") throw new Error("Neo isn't bottom left on the demo landing");
+    await page.getByRole("button", { name: /Raj Patel/ }).click();
+    await page.waitForSelector(".shell", { timeout: 20_000 });
+    await page.waitForTimeout(800);
+    if ((await side()) !== "right") throw new Error("Neo isn't bottom right inside the demo");
+    const href = await page.locator("a.bug-link").first().getAttribute("href", { timeout: 5000 }).catch(() => null);
+    if (href !== "https://neon1.tech/report-bug") throw new Error("the demo's menu has no 'report a bug' link to neon1.tech/report-bug");
+  },
+
   /** Press Start and watch it to the end */
   async play(page) {
     const intro = await until(page, (s) => s.card === "intro", "the intro card", 20_000);
@@ -288,15 +307,21 @@ const SCENARIOS = {
 const browser = await engine.launch();
 const jobs = [];
 for (const show of shows) for (const size of sizes) for (const scenario of scenarios) jobs.push({ show, size, scenario });
+// The demo's landing is checked in both themes; "--shows demo --scenarios demo" runs only it
+const demoJobs = (sizes) => sizes.flatMap((size) => ["awake", "matrix"].map((theme) => ({ show: "demo", size, scenario: "demo", theme })));
+// With no --shows given, the demo's landing is checked too, in both themes, at each size
+if (!process.argv.some((a) => a === "--shows" || a.startsWith("--shows="))) jobs.push(...demoJobs(sizes));
+else if (shows.includes("demo")) jobs.splice(0, jobs.length, ...demoJobs(sizes));
 const failures = [];
 let done = 0;
 
 const retried = [];
 
 /** One walkthrough, one screen size, one scenario, in a fresh browser profile at double speed */
-async function run({ show, size, scenario }, tries = RETRIES) {
-  const name = `${show} · ${size} · ${scenario}`;
+async function run({ show, size, scenario, theme }, tries = RETRIES) {
+  const name = `${show} · ${size} · ${scenario}${theme ? ` · ${theme}` : ""}`;
   const ctx = await browser.newContext({ viewport: SIZES[size], ignoreHTTPSErrors: true, hasTouch: ["phone", "small", "landscape", "tablet", "ddg"].includes(size), ...(size === "ddg" ? { userAgent: DDG_UA } : {}) });
+  if (theme) await ctx.addInitScript((t) => { try { localStorage.setItem("neon1.theme", t); } catch { /* blocked */ } }, theme);
   await ctx.addInitScript((speed) => { try { localStorage.setItem("1neon.liveSpeed", `2:${speed}`); } catch { /* blocked */ } }, SPEED);
   const page = await ctx.newPage();
   const problems = [];
@@ -321,7 +346,7 @@ async function run({ show, size, scenario }, tries = RETRIES) {
       console.log(`retry ${name}`);
       retried.push(why);
       await ctx.close();
-      return run({ show, size, scenario }, tries - 1);
+      return run({ show, size, scenario, theme }, tries - 1);
     }
     failures.push(why);
     console.log(`FAIL  ${name}`);
