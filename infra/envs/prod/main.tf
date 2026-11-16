@@ -94,8 +94,8 @@ module "api" {
   # Prospect sign-up with Cloudflare's invisible Turnstile; the secret is in SSM, put in by hand
   signup             = true
   turnstile_site_key = "0x4AAAAAAGCHPE2pRvBUzJiO"
-  # Off for the release that adds the secret; on in the next, once neon1.tech sends it
-  origin_lock = false
+  # On since v0.16.1: neon1.tech sends the secret (neon1-aws-infrastructure v0.11.0), so anything else is refused
+  origin_lock = true
 }
 
 
