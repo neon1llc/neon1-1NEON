@@ -7,6 +7,8 @@ import { createApp } from "../../../api/src/app.ts";
 import { MemoryDirectory, MemoryMailer, MemoryStorage, MemoryTexter } from "../../../api/src/local.ts";
 import { DemoPayments } from "../../../api/src/payments.ts";
 import { seed } from "../../../api/src/seed.ts";
+import { claimSignup } from "../../../api/src/routes/signup.ts";
+import type { Config } from "../../../api/src/config.ts";
 import { MemoryTable } from "../../../api/src/store/memory.ts";
 import { Repo } from "../../../api/src/store/repo.ts";
 import type { Row } from "../../../api/src/store/types.ts";
@@ -147,6 +149,8 @@ async function save() {
 
 // The live playback's signed-in session, when a short demo signs in for real (none in the whole project)
 let session: LiveSession | undefined;
+// Sign-up is open only in the walkthrough of starting a free account
+const cfg = { env: "local", publicUrl: location.origin, operatorEmails: ["pradeep@neon1.tech"], devAuth: true, signup: live && PLAY.show === "free" } as Config;
 const ready = (async () => {
   const saved = live ? undefined : await load();
   if (live) {
@@ -165,7 +169,7 @@ const ready = (async () => {
   }
   // The demo's people sign in by picking who to be; Pradeep is the neon1 operator, as in real use
   return createApp({
-    cfg: { env: "local", publicUrl: location.origin, operatorEmails: ["pradeep@neon1.tech"], devAuth: true },
+    cfg,
     repo: new Repo(table),
     directory,
     mailer,
@@ -190,7 +194,18 @@ export async function demoFetch(url: string, init: RequestInit = {}): Promise<Re
         // "Confirm it's you" (Maria has no passkey or app yet); the short demos about it keep the session
         if (PLAY.show !== PROJECT) session = s;
         devUser.set(s.email);
-      });
+      }, (email) => claimSignup({ repo: new Repo(table), cfg }, email));
+    }
+    // Sign-up (the free-account walkthrough): the API's own route checks the form and keeps it, and the
+    // code that proves the address comes from here, as Cognito's would
+    if (req.method === "POST" && new URL(req.url).pathname === "/1NEON/api/auth/signup") {
+      const sent = (await req.clone().json().catch(() => ({}))) as { email?: string };
+      const res = await app.fetch(req);
+      if (res.ok && sent.email) {
+        const { liveSignupCode } = await import("../live/signin.ts");
+        await liveSignupCode(sent.email, mailer);
+      }
+      return res;
     }
     // The session rides along for its own person only, never for someone acting as another
     if (session && req.headers.get("x-dev-user")?.toLowerCase() === session.email) req.headers.set("x-dev-session", session.id);

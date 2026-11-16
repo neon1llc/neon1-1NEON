@@ -8,7 +8,7 @@ import type { Show, Stage, Target } from "./player.ts";
 import { opening } from "./opening.ts";
 import { fakePasskeys, MailWindow, Phone } from "./props.ts";
 import { PREVIEW } from "./preview.ts";
-import { MARIA, SAM } from "./seed.ts";
+import { LENA, MARIA, SAM } from "./seed.ts";
 
 
 // The bakery's pages
@@ -85,6 +85,124 @@ const CONFIRM: Target = { sel: "dialog[open] h2", text: "Confirm it's you" };
 
 
 // --- The short demos ----------------------------------------------------------------
+
+
+/** Lena's free account's pages, once the sign-up has made it (its address ends in a random part) */
+async function lenaBase() {
+  const me = await (await engine()).actAs<{ orgs: { slug: string }[] }>(LENA, "/me");
+  return `/o/${me.orgs[0]!.slug}`;
+}
+
+/** Start a free account: the limits up front, four answers, a code by email, then the project's needs
+ * written down and an assessment asked for. Nobody at neon1 has talked to her yet */
+const free: Show = {
+  id: "free",
+  title: "Start a free account",
+  blurb: "Sign up, write down a project's needs, and ask for an assessment",
+  intro: { text: ["Lena runs a fictional flower shop. She isn't a client yet and would rather write things down before any call. Watch her start a free 1NEON account, write down what her project needs, and ask for an assessment."] },
+  length: "about two minutes",
+  end: "Written down and asked for, before any call.",
+  recap: "Lena saw what a free account holds before typing anything, signed up with four answers and an emailed code, wrote down one project's needs, and asked for an assessment. The reply comes by email.",
+  sections: [
+    {
+      id: "free-start",
+      title: "Start for free",
+      run: async (s) => {
+        await s.say("Lena runs a fictional flower shop and wants help, but not a call just yet");
+        await s.think("I'd rather write it down first. Start for free.");
+        await s.click({ sel: "button", text: "Start for free" }, 800);
+        await s.say("Before she types anything, the form says what a free account holds");
+        await s.hover(".su-limits", 1200);
+        await s.think("Three projects, kept 30 days after my last change. Fair enough.");
+      },
+    },
+    {
+      id: "free-form",
+      title: "Create the account",
+      run: async (s) => {
+        await s.say("Four answers are needed; the rest waits behind one button");
+        await s.type("#su-email", LENA, 200);
+        await s.type("#su-name", "Lena Park", 200);
+        await s.choose("#su-kind", "small", 300);
+        await s.type("#su-org", "Riverside Florist", 300);
+        await s.think("Website and location are optional. Later.");
+        await s.hover(".su-more", 700);
+        await s.click(".su-terms input", 400);
+        await s.click({ sel: "button", text: "Create account" }, 1200);
+      },
+    },
+    {
+      id: "free-code",
+      title: "Prove the email",
+      run: async (s) => {
+        await s.say("1NEON emails a code to prove the address. No password");
+        const mail = await openMail(s);
+        let code = "";
+        try {
+          await read(s, mail, "sign-in code");
+          code = mail.code()?.value ?? "";
+          await s.think(`${code}. Back to 1NEON.`);
+          await s.hover(() => mail.code()?.el, 700);
+        } finally {
+          await mail.close();
+        }
+        await s.type("#code", code, 400);
+        await s.click({ sel: "form button", text: "Sign in" }, 1600);
+      },
+    },
+    {
+      id: "free-home",
+      title: "A first look",
+      run: async (s) => {
+        // The welcome's tour offer comes once per browser session; she skips it here
+        await s.waitFor({ sel: "dialog[open] h2", text: "New here?" }, 8000);
+        await s.think("A tour? Maybe later.");
+        await s.click({ sel: "dialog[open] button", text: "Skip" }, 900);
+        await s.say("Home says how long the account is kept, how to keep it longer, and how to download it");
+        await s.hover(".keep-card", 1400);
+        await s.think("Nothing gets deleted without an email first. Good.");
+      },
+    },
+    {
+      id: "free-needs",
+      title: "Write down the needs",
+      run: async (s) => {
+        await s.say("She writes down one project: what happens now, what she wants, and a real example");
+        await s.go(`${await lenaBase()}/projects`, "Projects");
+        await s.click({ sel: "a, button", text: "New project" }, 700);
+        await s.click({ sel: "label.option", text: "Workflow automation" }, 500);
+        await s.click({ sel: "button", text: /^Next$/ }, 700);
+        await s.type("#n", "Wedding orders in one place");
+        await s.type("#s", "Wedding orders come by email, Instagram, and phone, and I copy each one into a paper book.");
+        await s.type("#o", "Every order lands in one list with its date, flowers, and deposit.");
+        await s.think("Last month's mix-up is the best example.");
+        await s.type("#x", "Two brides asked for peonies on the same Saturday, and I found the second order the day before.");
+        await s.click({ sel: "button", text: /^Next$/ }, 700);
+        await s.type("#mt0", "Orders missed or double-booked");
+        await s.type("#mu0", "a month");
+        await s.type("#mb0", "2");
+        await s.type("#mg0", "0");
+        await s.click({ sel: "button", text: /^Next$/ }, 900);
+        await s.click({ sel: "button", text: "Create project" }, 1600);
+      },
+    },
+    {
+      id: "free-ask",
+      title: "Ask for an assessment",
+      run: async (s) => {
+        await s.say("From Home she asks for an assessment, or a free 15-minute call");
+        await s.go("/", "Home");
+        await s.hover(".next-step-ask", 900);
+        await s.type("#ask-note", "Weekday mornings are best if a call helps.", 300);
+        await s.click({ sel: "button", text: "Ask for an assessment" }, 1200);
+        await s.say("Pradeep gets an email, and the reply comes to hers");
+        await s.think("Done, and I didn't have to book anything.");
+        await s.wait(1000);
+      },
+    },
+  ],
+};
+
 
 
 /** Join from an invitation: the email, the link, a code by email, and the first look around */
@@ -494,4 +612,4 @@ const calendar: Show = {
 };
 
 
-export const SHORTS: Show[] = [PREVIEW, invite, passkey, authenticator, texts, calendar];
+export const SHORTS: Show[] = [PREVIEW, free, invite, passkey, authenticator, texts, calendar];

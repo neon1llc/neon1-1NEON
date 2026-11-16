@@ -31,6 +31,7 @@ import { SignUp } from "./SignUp.tsx";
 import { gate, Stale, type Read } from "./Reads.tsx";
 import { Avatar, Icon, initials, LayerBadge, LAYERS, layerHint, layerName, layerSlug, Rings, useAsk } from "./ui.tsx";
 import { prefs } from "../lib/prefs.ts";
+import { PLAY } from "../live/where.ts";
 import type { SignUpInfo } from "../lib/signup.ts";
 
 
@@ -176,6 +177,10 @@ const PEOPLE = [
 // The demo signs in by picking a person; the live playback always shows the real sign-in instead
 // (email, then a code from her email), answered in the browser
 const PICKER = IN_DEMO && !IN_LIVE;
+// Sign-up shows in the real portal, and in the walkthrough of starting a free account, where the in-browser
+// API answers it (live/signin.ts); the rest of the demo has no accounts to make
+const FREE_TOUR = IN_LIVE && PLAY.show === "free";
+const SIGNUP_HERE = !IN_DEMO || FREE_TOUR;
 
 
 // What the API answers at each sign-in step
@@ -258,18 +263,19 @@ function SignIn() {
   // Asked once by the real portal; while closed (production until neon1 opens it) neither shows
   // The last answer is kept in this browser and used at once, so the page doesn't draw the closed
   // wording and then switch; with no answer yet (a first visit) that wording waits, hidden, for it
-  const [signupOpen, setSignupOpen] = useState<boolean | undefined>(() => (IN_DEMO || PICKER ? false : SIGNUP_SEEN()));
+  const [signupOpen, setSignupOpen] = useState<boolean | undefined>(() => (FREE_TOUR ? undefined : !SIGNUP_HERE ? false : SIGNUP_SEEN()));
   // The whole answer (with Turnstile's site key) is kept too and handed to the form, so "Start a free
   // account" draws the form at once instead of "One moment…" while it asks again
   const [signupInfo, setSignupInfo] = useState<SignUpInfo | undefined>(undefined);
   useEffect(() => {
-    if (IN_DEMO || PICKER) return;
+    if (!SIGNUP_HERE) return;
     let live = true;
     api<SignUpInfo>("/auth/signup").then((r) => {
       if (!live) return;
       setSignupInfo(r);
       setSignupOpen(r.open === true);
-      prefs.set(SIGNUP_KEY, r.open === true ? "open" : "closed");
+      // The walkthrough's answer is its own, never the real portal's
+      if (!FREE_TOUR) prefs.set(SIGNUP_KEY, r.open === true ? "open" : "closed");
     }, () => live && setSignupOpen((v) => v ?? false));
     return () => { live = false; };
   }, []);
@@ -395,7 +401,7 @@ function SignIn() {
         )}
         {/* Step 1: the email */}
         {!PICKER && signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
-          <SignUp info={signupInfo} email={email} remember={remember} onStep={signedUp} onBack={() => fade(() => setSigningUp(false))} local={pickPerson} />
+          <SignUp info={signupInfo} email={email} remember={remember} onStep={signedUp} onBack={() => fade(() => setSigningUp(false))} local={pickPerson && !FREE_TOUR} />
         )}
         {!PICKER && !signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
           <form className="stack" name="signin" onSubmit={(e) => { e.preventDefault(); keepEmail(email.trim(), remember); void send({ op: "start", email: email.trim(), remember }); }}>
@@ -437,7 +443,7 @@ function SignIn() {
         )}
         {at.step !== "email" && <p className="fine"><button className="linkish" onClick={restart}>Use a different email</button></p>}
         {/* Not a client yet: start in 1NEON on your own, as a new account */}
-        {!IN_DEMO && signupOpen && !signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
+        {SIGNUP_HERE && signupOpen && !signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
           <p className="fine"><button className="linkish" onClick={() => fade(() => setSigningUp(true))}>Start for free</button></p>
         )}
         {/* The three policies on one line of their own */}

@@ -27,7 +27,7 @@ const arg = (name, fallback) => {
 
 // The walkthroughs by their ?play= value: the short preview (the bare address), the full story, the
 // short demos, and each chapter of the story that an FAQ links to on its own
-const SHORTS = ["preview", "full", "invite", "passkey", "authenticator", "texts", "calendar"];
+const SHORTS = ["preview", "full", "free", "invite", "passkey", "authenticator", "texts", "calendar"];
 const CHAPTERS = ["profile", "team", "start", "needs", "listen", "propose", "decide", "pay", "build", "observe", "handover", "final", "care"];
 const SIZES = {
   desktop: { width: 1280, height: 800 },

@@ -1,7 +1,8 @@
 // apps/web/src/live/signin.ts - Sign-in for the short demos, in the browser. The real portal's
 // sign-in runs through Cognito, which the demo doesn't have; this answers the same /auth/step calls
 // with the same steps (email, then a code or a passkey), mails a real-looking code to the pretend
-// inbox from the real template, and starts a session the API checks like a real one.
+// inbox from the real template, and starts a session the API checks like a real one. The free-account
+// walkthrough signs up here too: the API's own sign-up route checks the form, then the code comes from here.
 
 
 import { signInCodeEmail } from "../../../api/src/emails.ts";
@@ -19,24 +20,35 @@ let n = 0;
 // The sign-in step the web app expects, as JSON
 const reply = (body: object) => new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
 
+/** Mail a fresh eight-digit sign-in code from the real template, and wait for it */
+async function mailCode(email: string, mailer: MemoryMailer) {
+  const code = String(10_000_000 + Math.floor(Math.random() * 89_999_999));
+  pending = { email, code };
+  const mail = signInCodeEmail({ code, portal: `${location.origin}/1NEON/live/` });
+  await mailer.send(email, mail.subject, mail.text, mail.html);
+}
+
+/** After the API's sign-up route accepted the form: email the code that proves the address, as Cognito would */
+export async function liveSignupCode(email: string, mailer: MemoryMailer) {
+  await mailCode(email.trim().toLowerCase(), mailer);
+}
+
 /**
  * Answer one /auth/step call. `done` is called with the new session once a code or passkey checks out;
- * a passkey sign-in counts as confirmed, an emailed code doesn't, as in the real portal
+ * a passkey sign-in counts as confirmed, an emailed code doesn't, as in the real portal. `claim` makes the
+ * account for an email that signed up and has none yet (the API's claimSignup, as the real sign-in calls it)
  */
-export async function liveStep(req: Request, repo: Repo, mailer: MemoryMailer, done: (s: LiveSession, uid: string) => void): Promise<Response> {
+export async function liveStep(req: Request, repo: Repo, mailer: MemoryMailer, done: (s: LiveSession, uid: string) => void, claim?: (email: string) => Promise<string | undefined>): Promise<Response> {
   const b = (await req.json()) as { op: string; email?: string; prefer?: string; method?: string; kind?: string; value?: string };
-  // Mail a fresh eight-digit code from the real template
   const sendCode = async (email: string) => {
-    const code = String(10_000_000 + Math.floor(Math.random() * 89_999_999));
-    pending = { email, code };
-    const mail = signInCodeEmail({ code, portal: `${location.origin}/1NEON/live/` });
-    await mailer.send(email, mail.subject, mail.text, mail.html);
+    await mailCode(email, mailer);
     return reply({ step: "code" });
   };
   // Finish: a session row like the real one, and the person signed in
   const finish = async (strong: boolean) => {
     const email = pending!.email;
-    const uid = (await repo.userIdForEmail(email))!;
+    const uid = (await repo.userIdForEmail(email)) ?? (await claim?.(email));
+    if (!uid) return reply({ step: "not_invited" });
     const id = `live-${++n}`;
     await repo.saveSession(id, uid, strong);
     pending = undefined;

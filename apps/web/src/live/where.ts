@@ -6,7 +6,8 @@
 
 // The short demos, by the id their ?play= link uses (their sections live in shorts.ts)
 // "preview" is the short outcome-first tour the bare /1NEON/live opens with
-export const SHORT_IDS = ["preview", "invite", "passkey", "authenticator", "texts", "calendar"] as const;
+// "free" starts a free account from the sign-in screen, before any call
+export const SHORT_IDS = ["preview", "free", "invite", "passkey", "authenticator", "texts", "calendar"] as const;
 export type ShortId = (typeof SHORT_IDS)[number];
 
 // The whole project's id, for the saved place; ?play=full asks for it from the start
