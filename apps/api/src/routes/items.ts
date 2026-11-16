@@ -8,6 +8,7 @@ import { z } from "zod";
 import { actorId, body, byRank, check, defined, fail, label, need, now, validateFields, who, type Env } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
 import { itemQuota } from "../lib/guards.ts";
+import { viewerIp } from "../lib/edge.ts";
 import { keys, type Repo } from "../store/repo.ts";
 import { issueProposal } from "../proposals.ts";
 
@@ -492,7 +493,7 @@ export function editRoutes(app: App, k: Kit) {
 
 /** Where a signature came from, for its audit trail */
 export function from(c: Context<Env>) {
-  return { ip: c.req.header("x-forwarded-for")?.split(",")[0]?.trim(), ua: c.req.header("user-agent") };
+  return { ip: viewerIp(c), ua: c.req.header("user-agent") };
 }
 
 /** The project's current decision: the latest approval no later decision replaced */

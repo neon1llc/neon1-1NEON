@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+### Security
+- **Origin lock.** CloudFront now adds a secret header to every API request (`/1neon/<env>/origin_secret` in SSM), and with `origin_lock` on the API refuses anything that skipped CloudFront. On for dev; off in production until neon1.tech sends the header, then switched on in the next release.
+- The visitor's address for sign-up and contact limits, and on signature records, comes from CloudFront's own viewer-address header (`apps/api/src/lib/edge.ts`) instead of the first forwarded-for entry, which a caller could write.
+
 ## v0.15.1 - 2026-11-16
 
 ### Changed

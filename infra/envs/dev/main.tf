@@ -112,6 +112,8 @@ module "api" {
   # Prospect sign-up, tried here first with Cloudflare's invisible always-pass test key
   signup             = true
   turnstile_site_key = "1x00000000000000000000BB"
+  # dev.neon1.tech sends the secret once site-dev/ is applied after this stack
+  origin_lock = true
 }
 
 

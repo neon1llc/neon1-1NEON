@@ -7,6 +7,7 @@ import { emailProblem, failFields, nameProblem, textProblem, type FieldProblems 
 import { z } from "zod";
 import { body, fail } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
+import { viewerIp } from "../lib/edge.ts";
 import { esc, branded } from "../mail.ts";
 
 
@@ -81,7 +82,7 @@ export function contactRoutes(app: App, k: Kit) {
     if (Object.keys(problems).length) failFields(problems);
 
     // The sender's address is hashed before it's counted, so no address is stored
-    const ip = (c.req.header("cloudfront-viewer-address") ?? c.req.header("x-forwarded-for") ?? "unknown").split(",")[0]!.replace(/:\d+$/, "").trim();
+    const ip = viewerIp(c);
     // Web Crypto, not node:crypto, so the browser demo can run the same API
     const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ip)));
     const who = [...digest.slice(0, 12)].map((b) => b.toString(16).padStart(2, "0")).join("");

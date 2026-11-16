@@ -41,6 +41,9 @@ export interface Config {
   /** Cloudflare Turnstile: the public site key the sign-up form shows, and the SSM SecureString holding the secret */
   turnstileSiteKey?: string;
   turnstileSecretParam?: string;
+  /** The secret CloudFront adds to every request (x-origin-verify), and whether requests without it are refused */
+  originSecret?: string;
+  originLock?: boolean;
 }
 
 
@@ -55,6 +58,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const scanSetting = env.MALWARE_SCAN?.trim().toLowerCase() ?? (env.APP_ENV === "dev" ? "off" : "on");
   const malwareScan = scanSetting !== "off";
   if (!malwareScan && env.APP_ENV === "prod") throw new Error("MALWARE_SCAN=off is not allowed in prod");
+  // A lock with no secret would refuse every request, so say so at start-up instead
+  if (env.ORIGIN_LOCK?.trim().toLowerCase() === "on" && !env.ORIGIN_SECRET) throw new Error("ORIGIN_LOCK=on needs ORIGIN_SECRET");
   // Operator emails compare case-insensitively
   return {
     malwareScan,
@@ -77,6 +82,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     signup: env.SIGNUP?.trim().toLowerCase() === "on",
     turnstileSiteKey: env.TURNSTILE_SITE_KEY || undefined,
     turnstileSecretParam: env.TURNSTILE_SECRET_PARAM || undefined,
+    originSecret: env.ORIGIN_SECRET || undefined,
+    originLock: env.ORIGIN_LOCK?.trim().toLowerCase() === "on",
     neoMonthlyUsd: Number(env.NEO_MONTHLY_USD) > 0 ? Math.min(Number(env.NEO_MONTHLY_USD), 50) : 8,
   };
 }

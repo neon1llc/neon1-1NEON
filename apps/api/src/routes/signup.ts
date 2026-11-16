@@ -12,6 +12,7 @@ import type { Vetting } from "../vetting/types.ts";
 import type { Context } from "hono";
 import { z } from "zod";
 import { isDev, neon1Only } from "../dev-guard.ts";
+import { viewerIp } from "../lib/edge.ts";
 import { body, fail } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
 import { ConflictError } from "../store/types.ts";
@@ -95,10 +96,8 @@ async function checkSignUp(v: Vetting | undefined, b: z.infer<typeof SignUpBody>
 }
 
 
-/** The caller's address, as CloudFront saw it */
-export function callerIp(c: Context) {
-  return (c.req.header("cloudfront-viewer-address") ?? c.req.header("x-forwarded-for") ?? "unknown").split(",")[0]!.replace(/:\d+$/, "").trim();
-}
+/** The caller's address, as CloudFront saw it (lib/edge.ts) */
+export const callerIp = (c: Context) => viewerIp(c);
 
 /** A short one-way hash of a value, so counters and records never hold an address */
 export async function shortHash(s: string) {

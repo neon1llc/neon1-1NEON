@@ -64,6 +64,12 @@ variable "boundary" {
   default = "neon1-boundary-1neon"
 }
 variable "records_bucket_arn" { type = string }
+# Refuse requests that don't carry CloudFront's secret header. Turn on only once the edge sends it
+# (neon1-aws-infrastructure site/ or site-dev/ applied after this stack), or the portal stops answering
+variable "origin_lock" {
+  type    = bool
+  default = false
+}
 variable "log_retention_days" {
   type    = number
   default = 90
@@ -262,6 +268,24 @@ resource "aws_ssm_parameter" "turnstile_secret" {
 }
 
 
+# --- Origin lock ---
+
+
+# CloudFront adds this to every request it sends the API (x-origin-verify), so the API's own AWS
+# address can refuse anything that skipped CloudFront. The edge stack reads it from SSM
+resource "random_password" "origin_secret" {
+  length  = 48
+  special = false
+}
+
+resource "aws_ssm_parameter" "origin_secret" {
+  name        = "/1neon/${var.env}/origin_secret"
+  description = "Secret header CloudFront adds to 1NEON API requests"
+  type        = "SecureString"
+  value       = random_password.origin_secret.result
+}
+
+
 # --- Functions ---
 
 
@@ -313,6 +337,8 @@ resource "aws_lambda_function" "api" {
       SIGNUP                              = var.signup ? "on" : "off"
       TURNSTILE_SITE_KEY                  = var.turnstile_site_key
       TURNSTILE_SECRET_PARAM              = aws_ssm_parameter.turnstile_secret.name
+      ORIGIN_SECRET                       = random_password.origin_secret.result
+      ORIGIN_LOCK                         = var.origin_lock ? "on" : "off"
       NODE_OPTIONS                        = "--enable-source-maps"
       AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
     }
