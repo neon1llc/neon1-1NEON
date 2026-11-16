@@ -438,7 +438,7 @@ function SignIn() {
         {at.step !== "email" && <p className="fine"><button className="linkish" onClick={restart}>Use a different email</button></p>}
         {/* Not a client yet: start in 1NEON on your own, as a new account */}
         {!IN_DEMO && signupOpen && !signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
-          <p className="fine"><button className="linkish" onClick={() => fade(() => setSigningUp(true))}>New here? Start a free account</button></p>
+          <p className="fine"><button className="linkish" onClick={() => fade(() => setSigningUp(true))}>Start for free</button></p>
         )}
         {/* The three policies on one line of their own */}
         <p className="fine legal-links">

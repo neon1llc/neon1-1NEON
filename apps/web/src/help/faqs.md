@@ -11,7 +11,7 @@ The portal where we run your projects together: what you need, the work, the res
 Yes, with no account. The [guided walkthrough](/1NEON/live) takes about three minutes and plays a made-up project on the real portal, and the full story takes about 17 minutes. The [sample project](/1NEON/example) is one made-up project to read. The [interactive demo](/1NEON/demo/) is a working copy where you pick who to be, and changes stay in your browser until **Start over**. Short walkthroughs show one thing: [joining from an invitation](/1NEON/live?play=invite), [adding a passkey](/1NEON/live?play=passkey), [adding an authenticator app](/1NEON/live?play=authenticator), and [texts and text codes](/1NEON/live?play=texts).
 
 ### How do I get in?
-Start a free account from **New here? Start for free** on the sign-in screen, or open the link in an invite email from neon1 or your organization. Sign in with a code sent to your email, or with a passkey. No password needed. [Watch joining from an invite](/1NEON/live?play=invite).
+Start a free account from **Start for free** on the sign-in screen, or open the link in an invite email from neon1 or your organization. Sign in with a code sent to your email, or with a passkey. No password needed. [Watch joining from an invite](/1NEON/live?play=invite).
 
 ### I didn't get the sign-in code.
 Check spam or promotions, wait a minute, and choose **Send a new code**. Codes work for a few minutes, in the browser that asked. [Watch it](/1NEON/live?play=invite).
