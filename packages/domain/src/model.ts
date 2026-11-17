@@ -128,15 +128,16 @@ export const Tenant = z.object({
 export type Tenant = z.infer<typeof Tenant>;
 
 
-/** Display theme. Awake (light) is the default; "device" follows the device's light or dark setting */
-export const Theme = z.enum(["awake", "device", "matrix"]);
+/** Display theme. Awake (light) is the default; "device" follows the device's light or dark setting. Awake and matrix are the
+ * stylized look; alert (light) and lamp (dark) are the plain business look (neon1.tech's landing switch chooses the style) */
+export const Theme = z.enum(["awake", "device", "matrix", "alert", "lamp"]);
 export type Theme = z.infer<typeof Theme>;
 
 
 /** A stored theme as it reads today. Records from before "device" existed said "system", which now
  * reads as awake, so people land on the default until they choose device matching again */
 export function themeOf(stored: unknown): Theme {
-  return stored === "device" || stored === "matrix" ? stored : "awake";
+  return stored === "device" || stored === "matrix" || stored === "alert" || stored === "lamp" ? stored : "awake";
 }
 
 

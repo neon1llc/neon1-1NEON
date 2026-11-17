@@ -10,9 +10,12 @@ import type { SiteTheme } from "../lib/sitetheme.ts";
 
 
 export function ThemeSwitch({ theme, onChange }: { theme: SiteTheme; onChange: (t: SiteTheme) => void }) {
-  const dark = theme === "matrix";
+  // Dark is matrix or lamp; the switch stays inside the style the landing chose (awake and matrix, or alert and lamp)
+  const dark = theme === "matrix" || theme === "lamp";
+  const biz = theme === "alert" || theme === "lamp";
   return (
-    <button className="theme-sw" type="button" role="switch" aria-checked={dark} aria-label="Dark theme" title="awake or matrix" onClick={() => onChange(dark ? "awake" : "matrix")}>
+    <button className="theme-sw" type="button" role="switch" aria-checked={dark} aria-label="Dark theme" title={biz ? "alert or lamp" : "awake or matrix"}
+      onClick={() => onChange(dark ? (biz ? "alert" : "awake") : biz ? "lamp" : "matrix")}>
       <svg className="theme-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" /><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" /></svg>
       <svg className="theme-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.6A8.2 8.2 0 0 1 9.4 4a8.2 8.2 0 1 0 10.6 10.6Z" /></svg>
       <span className="theme-knob" aria-hidden="true" />

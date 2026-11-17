@@ -13,3 +13,15 @@ addEventListener("error", (e) => {
   const msg = document.getElementById("boot-failed");
   if (msg) msg.hidden = false;
 }, true);
+
+
+// The business style (neon1.tech's landing switch, the same localStorage keys) is set before the first paint too, so a lamp (dark) page
+// never flashes light and an alert page never flashes the stylized black. The app then keeps it (components/Shell.tsx applyTheme)
+try {
+  if (localStorage.getItem("neon1.style") === "business") {
+    const saved = localStorage.getItem("neon1.theme.business");
+    const dark = saved === "lamp" || (saved !== "alert" && matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.setAttribute("data-style", "business");
+    document.documentElement.setAttribute("data-theme", dark ? "matrix" : "awake");
+  }
+} catch { /* storage blocked: the app sets its own look once it loads */ }

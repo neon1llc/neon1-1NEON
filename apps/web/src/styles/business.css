@@ -1,0 +1,77 @@
+/* apps/web/src/styles/business.css - The business style of 1NEON: the whole app without the stylized look's neon, glows, washes, rain, or
+ * effects (Pradeep, 2026-11-17). Nothing here applies unless html[data-style="business"] is set (components/Shell.tsx applyTheme), which
+ * neon1.tech's landing style switch chooses (lib/style.ts) and Settings' theme list can set.
+ *
+ * Two themes, as the stylized style has two: alert (light) and lamp (dark). They ride on html[data-theme] "awake" and "matrix", so
+ * every layout and dark-surface rule written for those still applies; this file swaps the palette, takes out what is stylized, and
+ * keeps the type plain. Same palette as neon1.tech's css/business.css: neutral greys with one steel-blue accent. It loads after app.css. */
+
+/* ---- Tokens ---- */
+:root[data-style="business"][data-theme="awake"] {
+  color-scheme: light;
+  --paper: #F7F8FA; --void: #F7F8FA; --ink: #1B2230; --m-ink: #1B2230; --m-ink-soft: #3C4556; --m-muted: #566074; --m-faint: #6B7587;
+  --bg: #F7F8FA; --frame: #EDEFF3; --panel: #FFFFFF; --text: #1B2230; --muted: #566074; --faint: #566074;
+  --line: rgb(27 34 48 / .14); --line-strong: rgb(27 34 48 / .3); --field-line: rgb(27 34 48 / .4);
+  --accent: #1F4E79; --accent-ink: #FFFFFF; --accent-soft: rgb(31 78 121 / .08); --focus: #1F4E79; --shadow: 0 1px 2px rgb(27 34 48 / .06);
+  --amber: #8A5300; --red: #B3261E; --ok: #18692C;
+  --l1: #16304A; --l2: #1F4E79; --l3: #2C65A0; --l4: #3F78B3; --badge-ink: #FFFFFF;
+}
+:root[data-style="business"][data-theme="matrix"] {
+  color-scheme: dark;
+  --paper: #14171C; --void: #14171C; --ink: #E6E9EE; --m-ink: #E6E9EE; --m-ink-soft: #CDD2DA; --m-muted: #A3ABB8; --m-faint: #8B93A0;
+  --bg: #14171C; --frame: #0E1014; --panel: #1C2027; --text: #E6E9EE; --muted: #A3ABB8; --faint: #8B93A0;
+  --line: rgb(230 233 238 / .14); --line-strong: rgb(230 233 238 / .3); --field-line: rgb(230 233 238 / .45);
+  --accent: #8FB4DE; --accent-ink: #0E1116; --accent-soft: rgb(143 180 222 / .1); --focus: #8FB4DE; --shadow: none;
+  --amber: #E8B35A; --red: #FF9A8F; --ok: #7CC59A;
+  --l1: #5B86B5; --l2: #78A0CB; --l3: #94B8DD; --l4: #B0CCE9; --badge-ink: #14171C;
+}
+/* The accent stands in for every green and neon the shared and app styles still name */
+:root[data-style="business"] { --brand: var(--accent); --mark: var(--accent); --deep: var(--accent); --neon: var(--accent); --glow: var(--accent); --mid: var(--accent); --mono: var(--sans); }
+:root[data-style="business"] :is(code, pre, kbd, samp) { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+:root[data-style="business"] :is(*, *::before, *::after) { text-shadow: none !important; }
+:root[data-style="business"] ::selection { background: rgb(var(--accent-rgb, 143 180 222) / .28); color: var(--text); }
+:root[data-style="business"][data-theme="awake"] { --accent-rgb: 31 78 121; }
+:root[data-style="business"][data-theme="matrix"] { --accent-rgb: 143 180 222; }
+:root[data-style="business"] :is(.n1-logo svg, .n1chat-launch svg, .n1chat-mark) { filter: none !important; }
+
+/* ---- No rain, glass, or page transitions ---- */
+:root[data-style="business"] :is(#rain, #lens, .veil, .rainctl) { display: none !important; }
+:root[data-style="business"]::view-transition-group(*), :root[data-style="business"]::view-transition-old(*), :root[data-style="business"]::view-transition-new(*) { animation-duration: 0s !important; }
+
+/* ---- Public screens: sign-in, FAQs, legal pages ---- */
+:root[data-style="business"] .pub-bar .n1-logo, :root[data-style="business"][data-theme] .pub-bar .n1-logo { color: var(--accent); }
+:root[data-style="business"][data-theme="matrix"] body:has(.pub-bar) .n1chat-launch:not(.n1chat-light) { border-color: var(--accent); color: var(--accent); background: rgb(20 23 28 / .96); box-shadow: none; }
+:root[data-style="business"][data-theme="matrix"] body:has(.pub-bar) .n1chat-launch:not(.n1chat-light) svg { filter: none; }
+/* The sign-in: a plain panel on the page color, in both themes (the stylized awake one has green washes and rings, the dark one glass) */
+:root[data-style="business"] .signin, :root[data-style="business"] .signin.awake { background: var(--bg); color: var(--text); --focus: var(--accent); --req-color: var(--red); }
+:root[data-style="business"]:has(.signin), :root[data-style="business"]:has(.signin) body { background: var(--bg); }
+:root[data-style="business"] .signin .panel, :root[data-style="business"] .signin.awake .panel { background: var(--panel); border: 1px solid var(--line-strong); border-radius: var(--glass-r); box-shadow: var(--shadow); }
+:root[data-style="business"] .signin :is(.signin-h, .lost-title) { color: var(--text); }
+:root[data-style="business"] .signin :is(.signin-lead, .field-label, .fine, .fine a, .linkish, .word .rest, .signin-more a) { color: var(--muted); }
+:root[data-style="business"] .signin .word .init { color: var(--accent); }
+:root[data-style="business"] .signin input { background: var(--bg); color: var(--text); border-color: var(--line-strong); }
+:root[data-style="business"] .signin .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); box-shadow: none; }
+:root[data-style="business"] .signin .btn-ghost { color: var(--accent); border-color: var(--accent); }
+:root[data-style="business"] .signin :is(.signin-more, .signup-form .su-opt) { border-color: var(--line); }
+:root[data-style="business"] .signin .signup-form .su-opt { border-left-color: var(--line); }
+:root[data-style="business"] .signin .signin-more a:hover { color: var(--accent); }
+:root[data-style="business"] .signin .remember input { border-color: var(--line-strong); }
+:root[data-style="business"] .signin .remember input:checked { background: var(--accent); border-color: var(--accent); }
+:root[data-style="business"] .signin .remember input:checked::after { border-color: var(--accent-ink); }
+:root[data-style="business"] .signin .dev button { background: var(--bg); border: 1px solid var(--line); color: var(--text); }
+:root[data-style="business"] .signin .dev button:hover { border-color: var(--accent); }
+
+/* ---- The app and the demo ---- */
+:root[data-style="business"] .demo-bar { background: var(--frame); border-bottom: 1px solid var(--line-strong); }
+:root[data-style="business"] .demo-tag { background: var(--accent); color: var(--accent-ink); }
+:root[data-style="business"] :is(.nav a.active, .who-link.active) { background: var(--accent-soft); }
+:root[data-style="business"] .content :is(p, li) { letter-spacing: normal; }
+:root[data-style="business"] .side :is(.bug-row, .site-end) .lbl { text-decoration-color: color-mix(in srgb, currentColor 55%, transparent); }
+:root[data-style="business"] .side :is(.bug-row, .site-end):is(:hover, :focus-visible, :active) .lbl { text-decoration-color: currentColor; }
+:root[data-style="business"] .btn:disabled { opacity: .6; }
+:root[data-style="business"][data-theme="awake"] .n1chat { --bg: #FFFFFF; --fg: #1B2230; --line: rgb(27 34 48 / .3); --soft: rgb(27 34 48 / .14); --bot: #EDEFF3;
+  --you: rgb(31 78 121 / .08); --muted: #566074; --accent: #1F4E79; --accent-ink: #FFFFFF; --field: #F7F8FA; --link: #1F4E79; box-shadow: 0 8px 24px rgb(27 34 48 / .16); }
+:root[data-style="business"][data-theme="matrix"] .n1chat { --bg: #1C2027; --fg: #E6E9EE; --line: rgb(230 233 238 / .3); --soft: rgb(230 233 238 / .14); --bot: #14171C;
+  --you: rgb(143 180 222 / .1); --muted: #A3ABB8; --accent: #8FB4DE; --accent-ink: #0E1116; --field: #14171C; --link: #8FB4DE; box-shadow: 0 8px 24px rgb(0 0 0 / .4); }
+:root[data-style="business"] .n1chat-launch:not(.n1chat-light) { color: var(--accent); border-color: var(--accent); background: var(--bg); }
+:root[data-style="business"] .n1chat-launch:not(.n1chat-light):hover { background: var(--accent-soft); }

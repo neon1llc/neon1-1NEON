@@ -111,6 +111,8 @@ describe("themes", () => {
   it("reads stored values, with anything else as awake", () => {
     expect(themeOf("device")).toBe("device");
     expect(themeOf("matrix")).toBe("matrix");
+    expect(themeOf("alert")).toBe("alert");
+    expect(themeOf("lamp")).toBe("lamp");
     expect(themeOf("system")).toBe("awake");
     expect(themeOf(undefined)).toBe("awake");
   });

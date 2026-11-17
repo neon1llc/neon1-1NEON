@@ -8,7 +8,8 @@ import type { SmsState } from "../lib/types.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
-import { applyTheme, changeTheme, useSession, useTopBar } from "../components/Shell.tsx";
+import { applyAccountTheme, changeTheme, useSession, useTopBar } from "../components/Shell.tsx";
+import { isBusiness, resolveTheme, setStyleChoice } from "../lib/style.ts";
 import { Avatar, useAsk, useToast } from "../components/ui.tsx";
 import { api, BASE_PATH, devUser, LIVE, pickPerson } from "../lib/api.ts";
 import { menuOf, NOTIFY_GROUPS } from "@1neon/domain";
@@ -63,11 +64,13 @@ export function MePage() {
   // Anything that differs from what's saved; Save waits for a change
   const saved = { name: me.user.name, title: me.user.title, phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), theme: me.user.theme, menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) };
   const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
+  // The radio that shows: a named theme as the landing's style reads it (an account that says awake shows as alert when the landing chose business)
+  const shownTheme = draft.theme === "device" ? "device" : draft.theme === me.user.theme ? resolveTheme(draft.theme) : draft.theme;
   // A previewed theme that was never saved goes back to the saved one on leaving the page
   const savedTheme = useRef(me.user.theme);
   savedTheme.current = me.user.theme;
   // Leaving the profile unsaved puts the saved theme and menu style back
-  useEffect(() => () => { applyTheme(savedTheme.current); previewMenu(undefined); }, []);
+  useEffect(() => () => { applyAccountTheme(savedTheme.current); previewMenu(undefined); }, []);
   // The phone check: a code is texted, then typed here
   const [code, setCode] = useState<string | undefined>(undefined);
   // A new account has no texts: no number to add, no text notices, no text codes
@@ -100,6 +103,8 @@ export function MePage() {
     try {
       const user = await api<User>("/me", { method: "PATCH", body: { version: me.user.version, ...draft } });
       qc.setQueryData(["me"], { ...me, user });
+      // A saved theme also sets the style (the one neon1.tech's landing switch sets), so the two always agree
+      if (draft.theme !== "device") setStyleChoice(isBusiness(draft.theme) ? "business" : "stylized");
       // The text state depends on what was saved; read it back fresh
       qc.invalidateQueries({ queryKey: ["me"] });
       toast("Saved");
@@ -185,12 +190,23 @@ export function MePage() {
         <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
           <legend style={{ marginBottom: 8 }}>Theme</legend>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {(["awake", "matrix", "device"] as const).map((t) => (
-              <label key={t} className={`chip${draft.theme === t ? " on" : ""}`} style={{ cursor: "pointer" }}>
-                <input type="radio" name="theme" className="sr" checked={draft.theme === t} onChange={() => { setDraft({ ...draft, theme: t }); changeTheme(t); }} />
-                {t === "device" ? "Match my device" : t === "awake" ? "Awake (light)" : "Matrix (dark)"}
-              </label>
+            {/* Four themes in two styles: the stylized one (the neon) and the plain business one. neon1.tech's landing switch picks the
+                style for everything, and picking a theme here sets it the same way */}
+            {([["Stylized", ["awake", "matrix"]], ["Business", ["alert", "lamp"]]] as const).map(([group, themes]) => (
+              <div key={group} role="group" aria-label={group} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                <span className="muted small" aria-hidden="true">{group}</span>
+                {themes.map((t) => (
+                  <label key={t} className={`chip${shownTheme === t ? " on" : ""}`} style={{ cursor: "pointer" }}>
+                    <input type="radio" name="theme" className="sr" checked={shownTheme === t} onChange={() => { setDraft({ ...draft, theme: t }); changeTheme(t); }} />
+                    {t === "awake" ? "Awake (light)" : t === "matrix" ? "Matrix (dark)" : t === "alert" ? "Alert (light)" : "Lamp (dark)"}
+                  </label>
+                ))}
+              </div>
             ))}
+            <label className={`chip${shownTheme === "device" ? " on" : ""}`} style={{ cursor: "pointer" }}>
+              <input type="radio" name="theme" className="sr" checked={shownTheme === "device"} onChange={() => { setDraft({ ...draft, theme: "device" }); changeTheme("device"); }} />
+              Match my device
+            </label>
           </div>
           {draft.theme !== me.user.theme && <p className="unsaved small" role="status">Showing this now. Press Save to keep it.</p>}
         </fieldset>

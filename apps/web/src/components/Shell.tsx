@@ -22,6 +22,7 @@ import { Offline } from "./Glitch.tsx";
 import { Rain } from "./Rain.tsx";
 import { PublicBar } from "./PublicBar.tsx";
 import { useSiteTheme } from "../lib/sitetheme.ts";
+import { isBusiness, resolveTheme, styleChoice } from "../lib/style.ts";
 import { dawn } from "../lib/dawn.ts";
 import { FileText as FileIcon, Folder as FolderIcon, Home as HomeIcon, Kanban as KanbanIcon, Menu as MenuIcon, Search as SearchIcon } from "lucide-react";
 import { ConfirmDialog } from "./Confirm.tsx";
@@ -56,8 +57,19 @@ export const useSession = () => useContext(MeCtx)!;
 
 /** Apply a theme to the page; with no attribute the styles show awake */
 export function applyTheme(theme: string) {
-  document.documentElement.setAttribute("data-theme", theme);
+  // The business themes ride on the same two values the CSS already knows (alert is awake, lamp is matrix) with data-style over them
+  const biz = isBusiness(theme);
+  const root = document.documentElement;
+  root.setAttribute("data-theme", theme === "alert" ? "awake" : theme === "lamp" ? "matrix" : theme);
+  if (biz) root.setAttribute("data-style", "business"); else root.removeAttribute("data-style");
   syncDark();
+}
+// An account's saved theme as it shows here, through the landing's style choice (lib/style.ts); kept so a "device" theme in the
+// business style follows the device's light and dark setting as it changes
+let accountTheme: string | null = null;
+export function applyAccountTheme(theme: string) {
+  accountTheme = theme;
+  applyTheme(resolveTheme(theme));
 }
 
 
@@ -69,10 +81,15 @@ export function isDark() {
   const t = document.documentElement.getAttribute("data-theme");
   return t === "matrix" || (t === "device" && darkDevice.matches);
 }
-/** A theme change the person made: leaving dark is a slow dawn (lib/dawn.ts), anything else is at once */
+/** A theme the person is trying in Settings (Save keeps it, and sets the style to match): leaving dark is a slow dawn (lib/dawn.ts)
+ * within the stylized style; the business style, and a move between styles, change at once. A named theme shows as named; "device"
+ * follows the device inside the style the landing chose */
 export function changeTheme(theme: string) {
-  const willBeDark = theme === "matrix" || (theme === "device" && darkDevice.matches);
-  dawn(isDark() && !willBeDark, () => applyTheme(theme));
+  accountTheme = theme;
+  const next = theme === "device" ? resolveTheme(theme) : theme;
+  const willBeDark = next === "matrix" || next === "lamp" || (next === "device" && darkDevice.matches);
+  const plain = isBusiness(next) || document.documentElement.getAttribute("data-style") === "business";
+  dawn(!plain && isDark() && !willBeDark, () => applyTheme(next));
 }
 function syncDark() {
   const dark = isDark();
@@ -81,7 +98,9 @@ function syncDark() {
   const icon = document.getElementById("favicon") as HTMLLinkElement | null;
   if (icon) icon.href = dark ? "/favicon-matrix.svg" : "/favicon-awake.svg";
 }
-darkDevice.addEventListener?.("change", syncDark);
+darkDevice.addEventListener?.("change", () => {
+  if (accountTheme === "device" && styleChoice() === "business") applyAccountTheme("device"); else syncDark();
+});
 
 
 /** Top-level gate: sign-in, error, first-visit redirect, then the app */
@@ -128,7 +147,7 @@ function App() {
     return () => removeEventListener("1neon:signed-out", check);
   }, [qc]);
   useEffect(() => {
-    if (me.data) applyTheme(me.data.user.theme);
+    if (me.data) applyAccountTheme(me.data.user.theme);
   }, [me.data]);
   // First sign-in from a browser with no saved time zone: keep the browser's, so email shows times in
   // the person's own zone. Once per page load; the profile changes it, and a failure is simply skipped
@@ -362,11 +381,14 @@ function SignIn() {
   // Sign-in, the demo's person picker, and a walkthrough's sign-in all share neon1.tech's awake or matrix choice
   // (awake until picked) and the same bar: the logo on the left, the theme switch on the right
   const [look, setLook] = useSiteTheme();
-  const awake = look === "awake";
+  // Awake and alert are the light sign-in; matrix is the dark one with the rain; lamp is the same dark ground without it (the business
+  // style has no rain, and the landing's choice decides which style this is)
+  const awake = look === "awake" || look === "alert";
+  const rainy = look === "matrix";
   return (
     <main className={`signin${awake ? " awake" : ""}`}>
-      {!awake && <Rain panes=".signin .panel, .signin .n1-logo" controls={false} />}
-      {!awake && <div className="veil" />}
+      {rainy && <Rain panes=".signin .panel, .signin .n1-logo" controls={false} />}
+      {rainy && <div className="veil" />}
       <PublicBar theme={look} onChange={setLook} />
       {/* Signing up widens the panel on a wide screen, so the form fits without scrolling */}
       <div className={`panel glass${signingUp ? " signing-up" : ""}`}>

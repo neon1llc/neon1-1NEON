@@ -8,25 +8,25 @@ import { useCallback, useEffect, useState } from "react";
 import { flushSync } from "react-dom";
 import { applyTheme, isDark } from "../components/Shell.tsx";
 import { dawn } from "./dawn.ts";
+import { isBusiness, readLook, saveLook, type Look } from "./style.ts";
 
 
-const KEY = "neon1.theme";
-export type SiteTheme = "awake" | "matrix";
+const KEYS = ["neon1.theme", "neon1.theme.business", "neon1.style"];
+// awake and matrix are the stylized look; alert and lamp the plain business look the landing's style switch chooses (lib/style.ts)
+export type SiteTheme = Look;
 
 
-/** The saved pick, else awake (storage can be blocked) */
-export function readSiteTheme(): SiteTheme {
-  try { return localStorage.getItem(KEY) === "matrix" ? "matrix" : "awake"; } catch { return "awake"; }
-}
+/** The saved pick in the chosen style (storage can be blocked) */
+export function readSiteTheme(): SiteTheme { return readLook(); }
 
 
 const still = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 let timer = 0;
 
 
-/** The neon parts flicker as the theme changes, the site's way (css: .flick-on / .flick-off on the page element) */
+/** The neon parts flicker as the theme changes, the site's way (css: .flick-on / .flick-off on the page element); the business style never does */
 function flicker(next: SiteTheme) {
-  if (still()) return;
+  if (still() || isBusiness(next)) return;
   const root = document.documentElement;
   root.classList.remove("flick-on", "flick-off");
   void root.offsetWidth; // restart the animation if it was still running
@@ -42,17 +42,18 @@ export function useSiteTheme(active = true): [SiteTheme, (t: SiteTheme) => void]
   useEffect(() => { if (active) applyTheme(theme); }, [active, theme]);
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
-      if (e.key !== KEY) return;
+      if (!e.key || !KEYS.includes(e.key)) return;
       const t = readSiteTheme();
-      dawn(isDark() && t === "awake", () => { flushSync(() => setTheme(t)); applyTheme(t); });
+      // Leaving dark is a slow dawn, but only inside the stylized style
+      dawn(isDark() && t === "awake" && !document.documentElement.hasAttribute("data-style"), () => { flushSync(() => setTheme(t)); applyTheme(t); });
     };
     addEventListener("storage", onStorage);
     return () => removeEventListener("storage", onStorage);
   }, []);
   const set = useCallback((t: SiteTheme) => {
-    try { localStorage.setItem(KEY, t); } catch { /* not kept: this page still switches */ }
-    // Leaving dark is a slow dawn (the screen is repainted inside it); going dark is the quick flick
-    const leaving = isDark() && t === "awake";
+    saveLook(t);
+    // Leaving dark is a slow dawn (the screen is repainted inside it); going dark is the quick flick. Business is a plain change
+    const leaving = isDark() && t === "awake" && !document.documentElement.hasAttribute("data-style");
     if (!leaving) flicker(t);
     dawn(leaving, () => { flushSync(() => setTheme(t)); applyTheme(t); });
   }, []);
