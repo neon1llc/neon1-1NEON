@@ -2058,6 +2058,7 @@ body:has(.shell.mini) .n1chat.n1chat-right { left: auto; right: max(16px, env(sa
 .side .org-mini { flex: none; }
 .shell.mini .side:not(.open) .org-mini { margin-top: var(--air); }
 .side .org-full .org { height: var(--box); border-radius: 7px; } /* the icon boxes' corner */
+.side .org-full .org { background-clip: padding-box; } /* the border shows the menu behind it, as the icon boxes' do, so it reads the same colour in both themes */
 .side .org-full .org:not(.all) { border-color: var(--line-strong); }
 .side .org-full .org .arr { color: var(--accent); font-size: 13px; transition: rotate var(--t-base) var(--ease); }
 .side .org-full .org[aria-expanded="true"] .arr { rotate: -90deg; }
