@@ -26,6 +26,7 @@ import { commentRoutes } from "./routes/comments.ts";
 import { contactRoutes } from "./routes/contact.ts";
 import { bugRoutes } from "./routes/bug.ts";
 import { feedbackRoutes } from "./routes/feedback.ts";
+import { gateRoutes } from "./lib/formgate.ts";
 import { requestRoutes } from "./routes/requests.ts";
 import { devFileRoutes, docRoutes } from "./routes/docs.ts";
 import { exportRoutes } from "./routes/export.ts";
@@ -119,6 +120,7 @@ export function createApp(d: Deps) {
   contactRoutes(app, k);
 
   // --- The report-a-bug form on neon1.tech: the same public gates, plus screenshots ---
+  gateRoutes(app, k);
   bugRoutes(app, k);
 
   // --- The feedback form on neon1.tech: comments, complaints, and concerns, with the bug form's gates and no screenshots ---

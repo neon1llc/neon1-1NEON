@@ -6,6 +6,7 @@ import { messageProblem } from "@1neon/domain";
 import { z } from "zod";
 import { emailProblem, failFields, type FieldProblems } from "../lib/vet.ts";
 import { fail } from "../lib/http.ts";
+import { originCheck, readForm, themeOk, verifyGate, viewportOk } from "../lib/formgate.ts";
 import type { App, Kit } from "../lib/kit.ts";
 import { viewerIp } from "../lib/edge.ts";
 import { feedbackMail, feedbackSubject, type Feedback } from "../lib/feedbackmail.ts";
@@ -40,6 +41,8 @@ const Body = z.object({
   viewport: z.string().trim().max(40).optional().default(""),
   // Hidden from people; a bot that fills every field fills this one too
   website: z.string().max(200).optional().default(""),
+  // The answer to the challenge the page asked for when it opened (lib/formgate.ts)
+  gate: z.object({ id: z.string().max(40), nonce: z.string().max(20) }).optional(),
 });
 
 const hex = (b: Uint8Array) => [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
@@ -48,7 +51,9 @@ const hex = (b: Uint8Array) => [...b].map((x) => x.toString(16).padStart(2, "0")
 function cleanPage(p: string): string {
   try {
     const u = new URL(p);
+    // Only neon1's own pages: a link to anywhere else would reach the inbox as bait
     if (u.protocol !== "https:" && u.protocol !== "http:") return "";
+    if (!/(^|\.)neon1\.tech$|^localhost$/.test(u.hostname)) return "";
     return `${u.origin}${u.pathname}`.slice(0, 300);
   } catch {
     return "";
@@ -59,12 +64,16 @@ export function feedbackRoutes(app: App, k: Kit) {
   const { d, repo } = k;
 
   app.post("/feedback", async (c) => {
-    const raw = await c.req.json().catch(() => fail(400, "bad_json", "The request body isn't valid JSON."));
+    // Where it came from and how big it is, before anything is read; then the shape, then the gates
+    originCheck(c, k);
+    const raw = await readForm(c);
     const parsed = Body.safeParse(raw);
     if (!parsed.success) fail(400, "invalid", parsed.error.issues.map((i) => `${i.path.join(".") || "body"}: ${i.message}`).join("; "));
     const m = parsed.data;
     // A filled hidden field looks like success to the bot, and nothing is sent
     if (m.website) return c.json({ ok: true, ref: "FDB-000000" });
+    // A challenge this server issued, answered at person speed, once
+    await verifyGate(k, "feedback", m.gate);
 
     // Field by field, as the bug form answers, so the page shows each beside its field
     const problems: FieldProblems = {};
@@ -85,7 +94,7 @@ export function feedbackRoutes(app: App, k: Kit) {
 
     const bytes = crypto.getRandomValues(new Uint8Array(6));
     const ref = `FDB-${[...bytes].map((b) => REF_CHARS[b % REF_CHARS.length]).join("")}`;
-    const fb: Feedback = { ref, kind: KIND[m.kind], where: WHERE[m.where], what: m.what, email: m.email, page: cleanPage(m.page), theme: m.theme, browser: m.browser, viewport: m.viewport, at: new Date().toISOString() };
+    const fb: Feedback = { ref, kind: KIND[m.kind], where: WHERE[m.where], what: m.what, email: m.email, page: cleanPage(m.page), theme: themeOk(m.theme), browser: m.browser, viewport: viewportOk(m.viewport), at: new Date().toISOString() };
     const { text, html } = feedbackMail(fb);
     await d.mailer.send(d.cfg.feedbackTo ?? CONTACT_TO, feedbackSubject(fb), text, html, fb.email || undefined, undefined, undefined, "feedback");
     return c.json({ ok: true, ref });

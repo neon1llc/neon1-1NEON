@@ -8,6 +8,7 @@
 
 - "Feedback" sits beside "report a bug" everywhere it appears: the corner of sign-in and create account reads "report bug \ feedback" ("report" a plain muted word leading both, a bug before "bug", a speech bubble before "feedback"), the menu has a Feedback row under Report a bug, and the profile and Settings have a Feedback button beside Report a bug. Each opens neon1.tech's feedback page in a new tab.
 - A feedback route takes comments, complaints, concerns, and suggestions from that page: a kind, where it is about, what they wrote, and an optional email, with the report form's gates. It mails feedback@neon1.tech with a reference (FDB-) and no screenshots.
+- The report-a-bug and feedback forms have more gates. The site's policy loads nothing from outside neon1.tech, so a hosted bot check is not used there; instead the page asks for a one-time challenge when it opens (`GET /form-gate/:form`), solves a small proof of work in the background, and sends the answer with the form. The server refuses a send with no challenge, a made-up, wrong, stale, reused, or other form's one, or one answered faster than a person fills a form. Both routes also take JSON only, cap the body at 16 KB, accept a post only from neon1's own origin when the browser names one, drop control and direction-override characters from what was typed, and keep the page, theme, and window fields to the shapes a browser sends (the page only if it is a neon1.tech address).
 
 ## v0.18.0 - 2026-11-16
 
