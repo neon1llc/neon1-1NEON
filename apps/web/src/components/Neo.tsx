@@ -235,14 +235,14 @@ export function Neo() {
   // On phones, another control stays usable while Neo closes and gets out of its way
   useEffect(() => {
     if (!open || !matchMedia("(max-width: 640px)").matches) return;
-    const dismissForControl = (event: MouseEvent) => {
+    const dismissForControl = (event: PointerEvent) => {
       const target = event.target;
       if (!(target instanceof Element) || panel.current?.contains(target)) return;
       if (!target.closest("button, a[href], input, select, [role=button]")) return;
       close(false);
     };
-    document.addEventListener("click", dismissForControl, true);
-    return () => document.removeEventListener("click", dismissForControl, true);
+    document.addEventListener("pointerdown", dismissForControl, true);
+    return () => document.removeEventListener("pointerdown", dismissForControl, true);
   }, [open]);
   // The question field grows with wrapped text, then scrolls internally after a comfortable limit
   useLayoutEffect(() => {
