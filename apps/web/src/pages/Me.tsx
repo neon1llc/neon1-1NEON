@@ -8,7 +8,7 @@ import type { SmsState } from "../lib/types.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
-import { applyTheme, useSession, useTopBar } from "../components/Shell.tsx";
+import { applyTheme, changeTheme, useSession, useTopBar } from "../components/Shell.tsx";
 import { Avatar, useAsk, useToast } from "../components/ui.tsx";
 import { api, BASE_PATH, devUser, LIVE, pickPerson } from "../lib/api.ts";
 import { menuOf, NOTIFY_GROUPS } from "@1neon/domain";
@@ -187,7 +187,7 @@ export function MePage() {
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {(["awake", "matrix", "device"] as const).map((t) => (
               <label key={t} className={`chip${draft.theme === t ? " on" : ""}`} style={{ cursor: "pointer" }}>
-                <input type="radio" name="theme" className="sr" checked={draft.theme === t} onChange={() => { setDraft({ ...draft, theme: t }); applyTheme(t); }} />
+                <input type="radio" name="theme" className="sr" checked={draft.theme === t} onChange={() => { setDraft({ ...draft, theme: t }); changeTheme(t); }} />
                 {t === "device" ? "Match my device" : t === "awake" ? "Awake (light)" : "Matrix (dark)"}
               </label>
             ))}

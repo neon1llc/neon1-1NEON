@@ -29,11 +29,11 @@ interface Msg {
 }
 
 
-// The neon1 mark, the same paths as the public window's
+// The neon1 mark, the site logo's eight arcs, as the public window draws it
 function Mark() {
   return (
-    <svg className="n1chat-mark" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" aria-hidden="true">
-      <path d="M6 6a24 24 0 0 1 24 24v30M6 18a12 12 0 0 1 12 12v30M34 6a24 24 0 0 1 24 24v30M34 18a12 12 0 0 1 12 12v30" />
+    <svg className="n1chat-mark" viewBox="3 4 58 58" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" aria-hidden="true">
+      <path d="M6 6a24 24 0 0 1 24 24v30M6 12a18 18 0 0 1 18 18v30M6 18a12 12 0 0 1 12 12v30M6 24a6 6 0 0 1 6 6v30M34 6a24 24 0 0 1 24 24v30M34 12a18 18 0 0 1 18 18v30M34 18a12 12 0 0 1 12 12v30M34 24a6 6 0 0 1 6 6v30" />
     </svg>
   );
 }

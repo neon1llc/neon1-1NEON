@@ -22,13 +22,13 @@
 @media (prefers-color-scheme: dark) {
   :root[data-theme="device"] { color-scheme: dark; --bg: #0F0A0D; --frame: var(--void); --panel: #15100F; --text: var(--m-ink, #EDF1ED); --muted: var(--m-muted, #CBD1CC);
     --line: rgba(0, 255, 65, .14); --line-strong: rgba(0, 255, 65, .3); --accent: var(--neon); --accent-ink: var(--void);
-    --accent-soft: rgba(0, 230, 118, .08); --focus: var(--glow); --shadow: none; --amber: #FFB547; --red: #FF8A80; --ok: #6CFFA8;
+    --accent-soft: rgba(108, 255, 168, .08); --focus: var(--glow); --shadow: none; --amber: #FFB547; --red: #FF8A80; --ok: #6CFFA8;
     --l1: #008F11; --l2: #00B84F; --l3: #00E676; --l4: #6CFFA8; --badge-ink: var(--void);
     --faint: var(--m-faint, #B1B8B2); --field-line: rgb(237 241 237 / .45); }
 }
 :root[data-theme="matrix"] { color-scheme: dark; --bg: #0F0A0D; --frame: var(--void); --panel: #15100F; --text: var(--m-ink, #EDF1ED); --muted: var(--m-muted, #CBD1CC);
   --line: rgba(0, 255, 65, .14); --line-strong: rgba(0, 255, 65, .3); --accent: var(--neon); --accent-ink: var(--void);
-  --accent-soft: rgba(0, 230, 118, .08); --focus: var(--glow); --shadow: none; --amber: #FFB547; --red: #FF8A80; --ok: #6CFFA8;
+  --accent-soft: rgba(108, 255, 168, .08); --focus: var(--glow); --shadow: none; --amber: #FFB547; --red: #FF8A80; --ok: #6CFFA8;
   --l1: #008F11; --l2: #00B84F; --l3: #00E676; --l4: #6CFFA8; --badge-ink: var(--void);
     --faint: var(--m-faint, #B1B8B2); --field-line: rgb(237 241 237 / .45); }
 
@@ -100,7 +100,7 @@ input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outlin
 .side::-webkit-scrollbar { display: none; }
 /* The menu: fixed on the left; collapsed it is the rail, open it is full width over the page */
 .side { position: fixed; inset: 0 auto 0 0; z-index: 40; width: calc(var(--rail) + env(safe-area-inset-left)); background: var(--frame); border-right: 1px solid var(--line);
-  display: flex; flex-direction: column; gap: 2px; padding: 12px 10px 12px calc(10px + env(safe-area-inset-left)); overflow-x: hidden; overflow-y: auto; transition: width .2s, box-shadow .2s; }
+  display: flex; flex-direction: column; gap: 2px; --padl: calc(6px + env(safe-area-inset-left)); --padr: 6px; padding: 12px var(--padr) 12px var(--padl); overflow-x: hidden; overflow-y: auto; transition: width .2s, box-shadow .2s; }
 .side.open { width: calc(272px + env(safe-area-inset-left)); box-shadow: 0 0 40px rgba(0, 0, 0, .3); }
 .shell:not(.mini) .side:not(.open) { transform: translateX(-100%); }
 /* The mini rail's rows shrink with the screen's height (see "Menu rows" at the end) */
@@ -133,9 +133,7 @@ input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outlin
 .side:not(.open) .nav .sep { padding: 0; margin: 6px 4px; border-top: 1px solid var(--line); }
 .site-link { margin-top: auto; font: 13px var(--mono); color: var(--muted); }
 /* Contact neon1 sits at the foot of the menu, just above the site link */
-.side .contact-nav { margin-top: auto; }
-.side .contact-nav + .site-link { margin-top: 0; }
-.who-link { border-top: 1px solid var(--line); border-radius: 0; padding-top: 10px; margin-top: 4px; }
+.side .contact-nav { margin-top: 0; }
 .side .org { margin: 2px 0 6px; }
 /* Organization chooser; amber when it shows All clients */
 .org { width: 100%; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 9px 12px; cursor: pointer; color: var(--text); display: grid; gap: 1px; }
@@ -351,7 +349,7 @@ body:has(.live-bar) .signin .n1-bar { display: none; }
 .signin .word .rings { flex: none; width: 1.1em; height: 1.1em; margin: .05em .3em 0 0; stroke-width: 5; }
 /* Initials keep the neon and its glow; the rest of each word is a quieter green that still reads */
 .signin .word .seg { display: inline-flex; align-items: flex-start; }
-.signin .word .init { color: #9AFF9A; text-shadow: 0 0 8px rgba(108, 255, 168, .55), 0 0 24px rgba(0, 230, 118, .35); }
+.signin .word .init { color: #8CFFBE; text-shadow: 0 0 8px rgba(108, 255, 168, .55), 0 0 24px rgba(108, 255, 168, .35); }
 .signin .word .rest { display: inline-block; overflow: hidden; max-width: 0; opacity: 0; color: var(--m-muted, #CBD1CC); font-weight: 500;
   transition: max-width .6s ease, opacity .45s ease; }
 .signin .word.open .rest { max-width: calc(var(--n) * (1ch + .02em) + 1px); opacity: 1; }
@@ -476,7 +474,7 @@ fieldset legend { font: 12px var(--mono); color: var(--muted); }
 
 /* Lost signal: the sign-in screen's look, with a plain heading and one retry */
 .signin .lost { display: grid; gap: 12px; }
-.signin .lost .word { margin: 0 0 8px; height: auto; font: 600 clamp(40px, 8vw, 60px) var(--mono); color: var(--neon); text-shadow: 0 0 8px rgba(108, 255, 168, .55), 0 0 24px rgba(0, 230, 118, .35); }
+.signin .lost .word { margin: 0 0 8px; height: auto; font: 600 clamp(40px, 8vw, 60px) var(--mono); color: var(--neon); text-shadow: 0 0 8px rgba(108, 255, 168, .55), 0 0 24px rgba(108, 255, 168, .35); }
 .signin .lost-title { margin: 0; font: 600 16px var(--mono); color: var(--m-ink, #EDF1ED); }
 .signin .lost .fine { margin: 0; }
 .signin .lost .fine a { color: var(--m-muted, #CBD1CC); }
@@ -503,7 +501,7 @@ fieldset legend { font: 12px var(--mono); color: var(--muted); }
 @media (max-width: 640px) {
   /* Phones: a slimmer mini rail, and the tab bar starts where it ends */
   .shell.mini { --rail: 53px; }
-  .shell.mini .side:not(.open) { padding-left: calc(6px + env(safe-area-inset-left)); padding-right: 6px; }
+  .shell.mini .side:not(.open) { --padl: calc(6px + env(safe-area-inset-left)); --padr: 6px; }
   .shell.mini .tabbar { left: calc(var(--rail) + env(safe-area-inset-left)); }
   .content { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
   .tabbar { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; inset: auto 0 calc(-1 * var(--under)) 0; z-index: 30; background: var(--frame); border-top: 1px solid var(--line); padding: 6px 4px calc(6px + env(safe-area-inset-bottom) + var(--under)); }
@@ -1025,8 +1023,6 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 .side .nav, .shell.mini .side:not(.open) .nav { gap: 0; margin-top: 0; }
 .side .nav .sep, .side:not(.open) .nav .sep, .shell.mini .side:not(.open) .nav .sep { padding: 0; margin: 0; border: 0; }
 .side .nav .sep .nav { margin-top: 0; }
-.side:not(.open) .nav .sep::before { content: ""; display: block; height: var(--sep); background: linear-gradient(var(--line), var(--line)) center / 100% 1px no-repeat; }
-.side.open .nav .sep > .lbl { display: block; height: var(--sep); line-height: var(--sep); padding: 0 6px; font: 10px var(--mono); letter-spacing: .08em; }
 /* The full organization chooser takes exactly the row its initials box takes on the rail */
 .side .org-full .org { margin: 0; height: var(--row); padding: 0 10px; align-content: center; gap: 0; line-height: 1.15; }
 .side .org-full .org small { font-size: 11px; }
@@ -1755,12 +1751,12 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
 /* The bar: the site's light bar over awake, its dark glass over matrix. The logo, the switch, and the back button follow the site's layout */
 .pub-bar { background: color-mix(in srgb, var(--bg) 80%, transparent); -webkit-backdrop-filter: saturate(1.8) blur(20px); backdrop-filter: saturate(1.8) blur(20px); border-bottom: 1px solid var(--line); }
 .pub-bar .n1-logo { color: var(--accent); text-shadow: none; }
-:root[data-theme="matrix"] .pub-bar .n1-logo { color: #8CFFBE; text-shadow: 0 0 2px #C4FFDC, 0 0 7px rgba(108, 255, 168, .95), 0 0 16px rgba(60, 255, 140, .8), 0 0 34px rgba(0, 230, 118, .6); }
-:root[data-theme="matrix"] .pub-bar .n1-logo svg { filter: drop-shadow(0 0 2px #C4FFDC) drop-shadow(0 0 7px rgba(108, 255, 168, .95)) drop-shadow(0 0 16px rgba(0, 230, 118, .7)); }
+:root[data-theme="matrix"] .pub-bar .n1-logo { color: #6CFFA8; text-shadow: 0 0 2px #8CFFBE, 0 0 7px rgba(108, 255, 168, .95), 0 0 16px rgba(108, 255, 168, .8), 0 0 34px rgba(108, 255, 168, .6); }
+:root[data-theme="matrix"] .pub-bar .n1-logo svg { filter: drop-shadow(0 0 2px #8CFFBE) drop-shadow(0 0 7px rgba(108, 255, 168, .95)) drop-shadow(0 0 16px rgba(108, 255, 168, .7)); }
 /* Neo's launcher glows the same way over matrix on these screens (the portal itself is untouched) */
-:root[data-theme="matrix"] body:has(.pub-bar) .n1chat-launch:not(.n1chat-light) { border-color: #6CFFA8; color: #8CFFBE; background: rgb(15 10 13 / .94);
-  box-shadow: 0 0 3px rgba(196, 255, 220, .9), 0 0 11px rgba(108, 255, 168, .85), 0 0 26px rgba(0, 230, 118, .55), inset 0 0 9px rgba(108, 255, 168, .4); }
-:root[data-theme="matrix"] body:has(.pub-bar) .n1chat-launch:not(.n1chat-light) svg { filter: drop-shadow(0 0 2px #C4FFDC) drop-shadow(0 0 7px rgba(108, 255, 168, .95)) drop-shadow(0 0 14px rgba(0, 230, 118, .6)); }
+:root[data-theme="matrix"] body:has(.pub-bar) .n1chat-launch:not(.n1chat-light) { border-color: #6CFFA8; color: #6CFFA8; background: rgb(15 10 13 / .94);
+  box-shadow: 0 0 3px rgba(140, 255, 190, .9), 0 0 11px rgba(108, 255, 168, .85), 0 0 26px rgba(108, 255, 168, .55), inset 0 0 9px rgba(108, 255, 168, .4); }
+:root[data-theme="matrix"] body:has(.pub-bar) .n1chat-launch:not(.n1chat-light) svg { filter: drop-shadow(0 0 2px #8CFFBE) drop-shadow(0 0 7px rgba(108, 255, 168, .95)) drop-shadow(0 0 14px rgba(108, 255, 168, .6)); }
 .pub-bar a, .pub-bar button { -webkit-tap-highlight-color: transparent; }
 .theme-sw { position: relative; flex: none; width: 52px; height: 28px; margin-left: auto; padding: 0; border-radius: 99px; cursor: pointer;
   background: var(--panel); border: 1px solid var(--line-strong); color: var(--muted); }
@@ -1791,6 +1787,31 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
 }
 /* The FAQs and legal pages sit under the fixed bar */
 .pub-page { padding-top: calc(64px + env(safe-area-inset-top) + 28px); }
+
+/* ---- Dark to awake: eyes coming up into the light (Pradeep, 2026-11-17; same as neon1.tech's css/frame.css) ----
+   Going dark stays quick. Going light is slow: the dark screen stays and the light one comes up over it in a long ease-out, a little too
+   bright at first and settling, so glow, text and lines ease together. lib/dawn.ts sets html.dawn-vt around a view transition (html.theme-dawn
+   on a slow color transition where there are none). Reduced motion never sets either */
+:where(:root) { --dawn: 2.2s; --dawn-ease: cubic-bezier(.3, .05, .2, 1); }
+:root.dawn-vt::view-transition-group(*) { animation-duration: var(--dawn) !important; animation-timing-function: var(--dawn-ease) !important; }
+:root.dawn-vt::view-transition-old(*), :root.dawn-vt::view-transition-new(*) { mix-blend-mode: normal !important; animation-duration: var(--dawn) !important; animation-timing-function: var(--dawn-ease) !important; }
+:root.dawn-vt::view-transition-old(*) { animation: none !important; }
+:root.dawn-vt::view-transition-new(*) { animation-name: dawn-in !important; animation-fill-mode: both !important; }
+@keyframes dawn-in { from { opacity: 0; filter: brightness(1.16) saturate(.82); } 45% { opacity: .55; } to { opacity: 1; filter: brightness(1) saturate(1); } }
+:root.theme-dawn, :root.theme-dawn *, :root.theme-dawn *::before, :root.theme-dawn *::after {
+  transition: background-color var(--dawn) var(--dawn-ease), color var(--dawn) var(--dawn-ease), border-color var(--dawn) var(--dawn-ease),
+    fill var(--dawn) var(--dawn-ease), stroke var(--dawn) var(--dawn-ease), box-shadow var(--dawn) var(--dawn-ease), text-shadow var(--dawn) var(--dawn-ease),
+    transform var(--t-base) var(--ease-open), opacity var(--t-base) var(--ease), visibility var(--t-base) !important;
+}
+/* The lit fixtures (the logo and wordmark, Neo's launcher, the sign-in mark) are their own layers in a dawn: the dark green fixture they rest as is already
+   there underneath, and the glow of the lit one dims slowly away over it, so they never vanish before the light comes up (Pradeep, 2026-11-17) */
+:root.dawn-vt .pub-bar .n1-logo { view-transition-name: n1-logo; }
+:root.dawn-vt .signin .word { view-transition-name: n1-word; }
+:root.dawn-vt .n1chat-launch { view-transition-name: n1-neo; }
+:root.dawn-vt::view-transition-new(n1-logo), :root.dawn-vt::view-transition-new(n1-neo), :root.dawn-vt::view-transition-new(n1-word) { animation: none !important; opacity: 1 !important; }
+:root.dawn-vt::view-transition-old(n1-logo), :root.dawn-vt::view-transition-old(n1-neo), :root.dawn-vt::view-transition-old(n1-word) { animation: dawn-glow-out var(--dawn) var(--dawn-ease) both !important; }
+@keyframes dawn-glow-out { from { opacity: 1; } 40% { opacity: .65; } to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { :root.dawn-vt::view-transition-new(*) { animation: none !important; } }
 
 /* The neon flicker as the choice changes: the logo goes dark in one flick, and lights up with two quick flickers, a longer one, then a slow on */
 /* The bar's logo and Neo's launcher ease up once from off to full and hold rather than flicker, as on neon1.tech (Pradeep, 2026-11-16) */
@@ -1968,3 +1989,104 @@ html:has(.signin.awake), html:has(.signin.awake) body { background: var(--bg); c
 
 /* Dropdowns say they are clickable: the hand over the whole box, the arrow, and the choices */
 select:not(:disabled), select:not(:disabled)::picker-icon, select:not(:disabled) > button, select option { cursor: pointer; }
+
+
+/* --- Menu groups and edges (2026-11-17) ---
+   Edge lines run the menu's full width and sit exactly on the top bar's bottom edge (under the mark row) and
+   the bottom bar's top edge (above the neon1.tech row). Group rules are inset, and take the same --sep
+   band open or closed, so rows line up between the rail and the open menu. A group's name grows out of the
+   middle of its rule when the menu opens, and the rule closes over it when the rail returns */
+.side .edge { flex: none; height: 1px; background: var(--line); margin-left: calc(-1 * var(--padl)); margin-right: calc(-1 * var(--padr)); }
+.side .edge-top { margin-top: -1px; margin-bottom: 0; }
+.side .edge-bottom { margin-top: 6px; }
+.side .nav .sep > .gl, .side .gline { display: flex; align-items: center; height: var(--sep); }
+.side .nav .sep > .gl { position: static; width: auto; clip: auto; overflow: visible; padding: 0; }
+.side .nav .sep > .gl::before, .side .nav .sep > .gl::after, .side .gline::before { content: ""; flex: 1 1 0; height: 1px; background: var(--line); }
+.side .gl .gt { max-width: 0; padding: 0; overflow: hidden; opacity: 0; white-space: nowrap; font: 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); transition: max-width .2s, padding .2s, opacity .2s; }
+.side.open .gl .gt { max-width: 14em; padding: 0 10px; opacity: 1; }
+/* The untitled group of links out (report a bug, feedback) sits at the foot of the menu */
+.side .out-group { margin-top: auto; }
+.side .out-group .nav, .side .contact-nav { margin-top: 0; }
+.side .out-group :is(.bug-row) { font: 13px var(--mono); color: var(--muted); }
+.side .out-group .lbl { text-transform: lowercase; }
+/* neon1.tech: quiet monospace lowercase, the height of the top bar so it centers with the bottom bar */
+.side .site-end { font: 13px var(--mono); color: var(--muted); margin: 0 0 -8px; height: calc(var(--top-h) - 1px) !important; min-height: calc(var(--top-h) - 1px) !important; flex: none; }
+.side .site-end .lbl { text-transform: lowercase; }
+.side .who-link { border-radius: var(--r-sm); }
+/* The site mark in its round border: the accent is the logo's dark green in awake and matrix green in matrix */
+.side .ico.site-mark { border-radius: 50%; border-color: var(--accent); background: none; }
+.side .ico.site-mark svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 3.6; stroke-linecap: round; }
+/* On phones the bottom bar's top edge sits a little above the menu's foot: the neon1.tech row reaches it */
+@media (max-width: 640px) { .side .site-end { height: calc(62px + env(safe-area-inset-bottom)) !important; min-height: calc(62px + env(safe-area-inset-bottom)) !important; } }
+/* The profile's avatar is already a circle: the current page's green fill must not box it */
+.side .nav a.active .ico.av-box { background: none; border-color: transparent; }
+/* Lowercase monospace sits a hair low beside its icon box: nudge the three links' words up 1px (open menu only; the rail's labels are hidden) */
+.side.open :is(.out-group, .site-end) .lbl { position: relative; top: -1px; }
+/* The organization picker is one icon-box tall (--box), starting where the icons start and ending the same
+   distance from the menu's edge, centered in the row the Mini rail's initials button takes, so it never meets
+   the rule above and its space matches the icon rows. Its id line shows in the list instead */
+.side.open .org-full { display: flex; align-items: center; height: var(--row); margin: 0 6px; }
+.side .org-full .org { height: var(--box); padding: 0 10px; align-content: center; }
+.side .org-full .org small { display: none; }
+.side .org-full .org b { font-size: 13px; line-height: 1; }
+/* The picker fills the row from the icons' left edge to the same gap at the right, and its list is exactly that wide */
+.side .org-full > div { flex: 1; min-width: 0; }
+.side .org-full .org { width: 100%; }
+.side .org-full .menu { min-width: 0; width: auto; }
+
+/* With the Mini rail on, Neo's window keeps to the content space: the same gap to the rail as to the screen's right edge */
+body:has(.shell.mini) .n1chat.n1chat-right { left: auto; right: max(16px, env(safe-area-inset-right)); width: min(380px, calc(100vw - var(--rail) - env(safe-area-inset-left) - 32px)); }
+/* In matrix the chosen row's halo needs more than awake's tint to show on the dark ground, so the layer letters N E O N read apart */
+:root[data-theme="matrix"] :is(.nav a.active, .who-link.active) { background: rgba(108, 255, 168, .16); }
+@media (prefers-color-scheme: dark) { :root[data-theme="device"] :is(.nav a.active, .who-link.active) { background: rgba(108, 255, 168, .16); } }
+
+/* --- The read-only banner is the top bar's height (2026-11-17) ---
+   All clients' amber banner sits above the top bar, so its bottom edge lands on the menu's line under the
+   mark row (which is --top-h from the top). Text that doesn't fit wraps to two lines on a phone, then ellipsizes */
+.readonly-bar { box-sizing: border-box; height: var(--top-h); padding-top: 0; padding-bottom: 0; line-height: 1.3; overflow: hidden; }
+.readonly-bar > strong { flex: none; }
+.readonly-bar { padding-left: calc(var(--gut) + var(--inl)); padding-right: calc(var(--gut) + env(safe-area-inset-right)); }
+@media (max-width: 480px) { .readonly-bar { font-size: 12px; flex-wrap: wrap; align-content: center; gap: 0 6px; } }
+
+/* --- The organization picker follows the menu's rhythm (2026-11-17) ---
+   The picker is an icon box tall (the box inside a menu row), and the space from the rule above it to the picker,
+   and from the picker to the first row, is the space between one row's box and the next. Its border is the icon
+   boxes' (gold only in All clients, as the banner). The arrow is the site's drawn one, in the accent, turning down
+   as the list unrolls in the same time */
+.side { --air: calc((var(--row) - var(--box)) / 2); }
+.side.open .org-full { margin: var(--air) 6px 0; flex: none; } /* never squeezed when the menu scrolls */
+.side .org-mini { flex: none; }
+.shell.mini .side:not(.open) .org-mini { margin-top: var(--air); }
+.side .org-full .org { height: var(--box); border-radius: 7px; } /* the icon boxes' corner */
+.side .org-full .org { background-clip: padding-box; } /* the border shows the menu behind it, as the icon boxes' do, so it reads the same colour in both themes */
+.side .org-full .org:not(.all) { border-color: var(--line-strong); }
+.side .org-full .org .arr { color: var(--accent); font-size: 13px; transition: rotate var(--t-base) var(--ease); }
+.side .org-full .org[aria-expanded="true"] .arr { rotate: -90deg; }
+.side .org-full .menu { animation: unroll var(--t-base) var(--ease); }
+:root.flick-on .side .org-full .org .arr { animation: soft-on 2.23s linear both; --lo-soft: .5; }
+:root.flick-off .side .org-full .org .arr { animation: soft-off .5s ease-out both; --lo-soft: .5; }
+@media (prefers-reduced-motion: reduce) { .side .org-full .org .arr { transition: none; } .side .org-full .menu { animation: none; } }
+
+/* While the menu widens, the picker's name stays on one line and ends in an ellipsis rather than wrapping out of its box */
+.side .org-full .org { overflow: hidden; }
+.side .org-full .org b { white-space: nowrap; }
+.side .org-full .org .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.side .org-full .org .arr { flex: none; }
+
+/* The neon1.tech row's words take the theme's green as the 1NEON name above does: dark green awake, matrix green in matrix */
+.side .site-end { color: var(--accent); }
+.side .site-end { font-weight: 700; } /* the 1NEON name's weight */
+
+/* The neon1.tech row lights as the 1NEON mark row above does: a sharp-edged band the height of a menu row, centered
+   in its row, the same width in the Mini rail and the open menu (the other rows keep rounded pills) */
+.side .site-end:hover { background: linear-gradient(var(--accent-soft), var(--accent-soft)) center / 100% 40px no-repeat; }
+
+/* Report a bug, Feedback, and neon1.tech are links like the front page's: the theme's green (dark green awake, matrix
+   green in the dark), no underline in awake; in the dark an underline in a dulled green that turns full on hover, focus, or tap */
+.side :is(.bug-row, .site-end), .side :is(.bug-row, .site-end) .lbl { color: var(--accent); }
+:root[data-theme="matrix"] .side :is(.bug-row, .site-end) .lbl { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: rgb(108 255 168 / .55); transition: text-decoration-color var(--t-fast) var(--ease); }
+:root[data-theme="matrix"] .side :is(.bug-row, .site-end):is(:hover, :focus-visible, :active) .lbl { text-decoration-color: rgb(108 255 168); }
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="device"] .side :is(.bug-row, .site-end) .lbl { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: rgb(108 255 168 / .55); transition: text-decoration-color var(--t-fast) var(--ease); }
+  :root[data-theme="device"] .side :is(.bug-row, .site-end):is(:hover, :focus-visible, :active) .lbl { text-decoration-color: rgb(108 255 168); }
+}

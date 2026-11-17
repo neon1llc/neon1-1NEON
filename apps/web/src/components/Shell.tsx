@@ -22,6 +22,7 @@ import { Offline } from "./Glitch.tsx";
 import { Rain } from "./Rain.tsx";
 import { PublicBar } from "./PublicBar.tsx";
 import { useSiteTheme } from "../lib/sitetheme.ts";
+import { dawn } from "../lib/dawn.ts";
 import { FileText as FileIcon, Folder as FolderIcon, Home as HomeIcon, Kanban as KanbanIcon, Menu as MenuIcon, Search as SearchIcon } from "lucide-react";
 import { ConfirmDialog } from "./Confirm.tsx";
 import { HelpProvider, useHelp } from "./Help.tsx";
@@ -67,6 +68,11 @@ const darkDevice = matchMedia("(prefers-color-scheme: dark)");
 export function isDark() {
   const t = document.documentElement.getAttribute("data-theme");
   return t === "matrix" || (t === "device" && darkDevice.matches);
+}
+/** A theme change the person made: leaving dark is a slow dawn (lib/dawn.ts), anything else is at once */
+export function changeTheme(theme: string) {
+  const willBeDark = theme === "matrix" || (theme === "device" && darkDevice.matches);
+  dawn(isDark() && !willBeDark, () => applyTheme(theme));
 }
 function syncDark() {
   const dark = isDark();
@@ -651,6 +657,29 @@ function lastOrg(orgs: OrgSummary[]) {
 // What can take focus inside the menu, for moving focus into it when it opens
 /** Where the rail was last scrolled to, kept across the frame remounting between pages */
 let railScroll = 0;
+// The row at the top of the rail, with how far down the rail it sat. The open menu's rows differ a little in
+// height from the rail's (section labels), so it opens on this same row rather than at the same offset
+let railAnchor: { key: string; y: number } | null = null;
+const rowKey = (a: Element) => `${a.getAttribute("href") ?? ""}|${a.textContent?.trim() ?? ""}`;
+function findAnchor(side: HTMLElement): { key: string; y: number } | null {
+  const top = side.getBoundingClientRect().top;
+  for (const a of side.querySelectorAll("a, button")) {
+    const r = a.getBoundingClientRect();
+    if (r.height > 2 && r.bottom - top > 1) return { key: rowKey(a), y: r.top - top };
+  }
+  return null;
+}
+/** Where the open menu should scroll so the rail's top row stays at the top */
+function anchorScroll(side: HTMLElement): number {
+  if (!railAnchor) return railScroll;
+  const top = side.getBoundingClientRect().top;
+  for (const a of side.querySelectorAll("a, button")) {
+    if (rowKey(a) !== railAnchor.key) continue;
+    const r = a.getBoundingClientRect();
+    if (r.height > 2) return Math.max(0, side.scrollTop + (r.top - top) - railAnchor.y);
+  }
+  return railScroll;
+}
 const FOCUSABLE = "a[href], button:not([disabled]), input:not([disabled]), select:not([disabled])";
 
 
@@ -716,24 +745,34 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
     if (!el) return;
     if (open) {
       trigger.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      // The menu always opens at its top, row for row beside the rail; focusing the page in view must
-      // not scroll it (on the profile, that link sits at the very bottom)
-      el.scrollTop = 0;
+      // The open menu starts on the same row the rail was showing at its top (the rows differ a little in height,
+      // so the row is matched, not the offset); focusing the page in view must not scroll it (on the profile,
+      // that link sits at the very bottom)
+      el.scrollTop = mini ? anchorScroll(el) : 0;
       if (!el.contains(document.activeElement)) (el.querySelector<HTMLElement>("a[aria-current='page']") ?? el.querySelector<HTMLElement>(FOCUSABLE))?.focus({ preventScroll: true });
       return;
     }
-    // Closing (or arriving) returns the rail to where it was left, not to its top
-    el.scrollTop = railScroll;
+    // Closing (or arriving) puts the rail on the row the open menu showed at its top, not at its top
+    el.scrollTop = mini ? anchorScroll(el) : railScroll;
+    railScroll = el.scrollTop;
+    // The width is still easing in; place the rail once more after layout settles
+    if (mini) requestAnimationFrame(() => { el.scrollTop = anchorScroll(el); railScroll = el.scrollTop; });
     const back = trigger.current;
     trigger.current = null;
     const lost = !document.activeElement || document.activeElement === document.body || el.contains(document.activeElement);
-    if (back?.isConnected && !back.closest("[inert]") && lost) back.focus();
+    // preventScroll: refocusing the opener must not drag the rail to it, away from the row the menu showed
+    if (back?.isConnected && !back.closest("[inert]") && lost) back.focus({ preventScroll: true });
   }, [open]);
   // The rail keeps its scroll through everything that remounts the frame (the profile and Contact neon1
   // sit outside the organization's pages, so reaching them rebuilds it) and through the open menu,
   // which always opens at its top: the position is kept here, saved while the rail is what shows
   useLayoutEffect(() => { if (side.current) side.current.scrollTop = railScroll; }, []);
-  const keepRail = () => { if (!open && side.current) railScroll = side.current.scrollTop; };
+  // Rail and open menu follow each other row for row (Mini only): scrolling either records the top row
+  const keepRail = () => {
+    if (!mini || !side.current) return;
+    if (!open) railScroll = side.current.scrollTop;
+    railAnchor = findAnchor(side.current);
+  };
   // A tap on the rail while the page is still coasting from a swipe only stops the coast on touch
   // screens, and the rail doesn't answer until the page is still. A short touch that stays put
   // on the rail is taken as a tap right there, so the rail answers first time
@@ -778,6 +817,8 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
           </span>
           <span className="lbl">1NEON</span>
         </Link>
+        {/* Edge to edge, exactly on the top bar's bottom edge: the mark row above is the top bar's own height */}
+        <div className="edge edge-top" aria-hidden="true" />
         {/* Organization: the full chooser when there's room for labels, its initials otherwise */}
         <div className="org-full"><OrgChooser current={org} all={all} /></div>
         <button className="org-mini" type="button" onClick={() => setOpen(true)} title={all ? "All clients" : navOrg?.name ?? "Choose an organization"}>
@@ -793,14 +834,14 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
               <Item to={`${base}/projects`} icon={<Icon name="projects" />} label="Projects" end={false} tour="nav-projects" />
               <Item to={`${base}/documents`} icon={<Icon name="documents" />} label="Files" tour="nav-files" />
               <Item to={`${base}/insights`} icon={<Icon name="insights" />} label="Insights" tour="nav-insights" />
-              <li className="sep" data-tour="nav-layers"><span className="lbl">Layers</span>
+              <li className="sep" data-tour="nav-layers"><span className="lbl gl"><span className="gt">Layers</span></span>
                 <ul className="nav">
                   {LAYERS.map((l) => (
                     <Item key={l} to={`${base}/layer/${layerSlug(l)}`} icon={<LayerBadge layer={l} />} label={layerName(l)} sub={layerHint(l)} />
                   ))}
                 </ul>
               </li>
-              <li className="sep"><span className="lbl">Organization</span></li>
+              <li className="sep"><span className="lbl gl"><span className="gt">Organization</span></span></li>
               <Item to={`${base}/people`} icon={<Icon name="people" />} label="People" />
               <Item to={`${base}/settings`} icon={<Icon name="settings" />} label="Settings" />
             </>
@@ -811,22 +852,36 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
             </>
           ) : null}
         </ul>
-        {/* Every way to reach neon1, for every account, new ones included */}
+        {/* Every way to reach neon1, for every account, new ones included; the signed-in person ends the
+            Organization group, so it shows on the first screen and is never taken for Report a bug */}
         <ul className="nav contact-nav">
           <Item to="/contact" icon={<Icon name="contact" />} label="Contact neon1" tour="nav-contact" />
-          {/* On every signed-in screen, in the full menu: the neon1 way to say something is broken */}
-          <li><ReportBug kind="row" /></li>
-          <li><ReportBug kind="feedbackRow" /></li>
+          <li>
+            <NavLink to="/me" className="who-link" title="Your profile" data-tour="nav-me">
+              <span className="ico av-box"><Avatar id={me.user.id} name={me.user.name || me.user.email} size={24} /></span>
+              <span className="lbl">{me.user.name || me.user.email}</span>
+            </NavLink>
+          </li>
         </ul>
-        {/* Back to the neon1.tech site, outside the app's routes, then the signed-in person */}
-        <a className="site-link" href="/" title="neon1.tech">
-          <Icon name="site" />
+        {/* Links out of 1NEON read as one untitled group: the neon1 way to say something is broken, the way to
+            say anything else (both in a new tab) */}
+        <div className="out-group">
+          <div className="gline" aria-hidden="true" />
+          <ul className="nav">
+            <li><ReportBug kind="row" /></li>
+            <li><ReportBug kind="feedbackRow" /></li>
+          </ul>
+        </div>
+        {/* Edge to edge on the bottom bar's top edge; below it the way back to the neon1.tech site (outside the
+            app's routes), centered with that bar as the mark is with the top bar */}
+        <div className="edge edge-bottom" aria-hidden="true" />
+        <a className="site-link site-end" href="/" title="neon1.tech">
+          {/* The site logo's mark (v5 set), drawn in the theme's accent inside a round border */}
+          <span className="ico site-mark" aria-hidden="true">
+            <svg viewBox="3 4 58 58"><path d="M6 6a24 24 0 0 1 24 24v30M6 12a18 18 0 0 1 18 18v30M6 18a12 12 0 0 1 12 12v30M6 24a6 6 0 0 1 6 6v30M34 6a24 24 0 0 1 24 24v30M34 12a18 18 0 0 1 18 18v30M34 18a12 12 0 0 1 12 12v30M34 24a6 6 0 0 1 6 6v30" /></svg>
+          </span>
           <span className="lbl">neon1.tech</span>
         </a>
-        <NavLink to="/me" className="who-link" title="Your profile" data-tour="nav-me">
-          <span className="ico av-box"><Avatar id={me.user.id} name={me.user.name || me.user.email} size={24} /></span>
-          <span className="lbl">{me.user.name || me.user.email}</span>
-        </NavLink>
       </aside>
       <div className="main" inert={open}>
         {/* All clients is read only; say so on every screen of it, except Potentials, which has neon1's actions */}
@@ -927,10 +982,10 @@ function OrgChooser({ current, all }: { current?: OrgSummary; all?: boolean }) {
   return (
     <div ref={ref} style={{ position: "relative" }} onKeyDown={keys} onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node) && e.relatedTarget && setOpen(false)}>
       {!current && !all && only ? (
-        <Link className="org" to={`/o/${only.slug}/workspace`}><b>{label}</b><small>{sub}</small></Link>
+        <Link className="org" to={`/o/${only.slug}/workspace`}><b><span className="nm">{label}</span></b><small>{sub}</small></Link>
       ) : (
         <button ref={toggle} className={`org${all ? " all" : ""}`} onClick={() => many && setOpen(!open)} aria-expanded={many ? open : undefined} aria-controls={many ? "org-list" : undefined} disabled={!many && !current}>
-          <b>{label}{many && <span aria-hidden="true">▾</span>}</b>
+          <b><span className="nm">{label}</span>{many && <span className="arr" aria-hidden="true" />}</b>
           <small>{sub}</small>
         </button>
       )}

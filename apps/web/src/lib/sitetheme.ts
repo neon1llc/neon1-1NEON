@@ -5,7 +5,9 @@
 
 
 import { useCallback, useEffect, useState } from "react";
-import { applyTheme } from "../components/Shell.tsx";
+import { flushSync } from "react-dom";
+import { applyTheme, isDark } from "../components/Shell.tsx";
+import { dawn } from "./dawn.ts";
 
 
 const KEY = "neon1.theme";
@@ -39,14 +41,20 @@ export function useSiteTheme(active = true): [SiteTheme, (t: SiteTheme) => void]
   const [theme, setTheme] = useState<SiteTheme>(readSiteTheme);
   useEffect(() => { if (active) applyTheme(theme); }, [active, theme]);
   useEffect(() => {
-    const onStorage = (e: StorageEvent) => { if (e.key === KEY) setTheme(readSiteTheme()); };
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== KEY) return;
+      const t = readSiteTheme();
+      dawn(isDark() && t === "awake", () => { flushSync(() => setTheme(t)); applyTheme(t); });
+    };
     addEventListener("storage", onStorage);
     return () => removeEventListener("storage", onStorage);
   }, []);
   const set = useCallback((t: SiteTheme) => {
     try { localStorage.setItem(KEY, t); } catch { /* not kept: this page still switches */ }
-    flicker(t);
-    setTheme(t);
+    // Leaving dark is a slow dawn (the screen is repainted inside it); going dark is the quick flick
+    const leaving = isDark() && t === "awake";
+    if (!leaving) flicker(t);
+    dawn(leaving, () => { flushSync(() => setTheme(t)); applyTheme(t); });
   }, []);
   return [theme, set];
 }

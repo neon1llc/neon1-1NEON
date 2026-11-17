@@ -4,6 +4,28 @@
 
 ## Unreleased
 
+## v0.20.0 - 2026-11-17
+- Report a bug, Feedback, and neon1.tech in the menu are links like the front page's: the theme's green, plain in awake, and in the dark underlined in a dulled green that turns full on hover, focus, or tap.
+- The neon1.tech row lights like the 1NEON mark row: a sharp-edged band a menu row tall, in the Mini rail and the open menu alike.
+- The neon1.tech row's text is bold like the 1NEON name.
+- The neon1.tech row's text is the theme's green, as the 1NEON name above it: dark green in awake, matrix green in matrix.
+- Opening the menu from the Mini rail no longer nudges its content 4px right: the open menu uses the rail's side padding, so icons, the mark, and the picker stay put as it widens.
+- While the menu opens, a long organization name stays on one line in the picker (ending in an ellipsis) instead of wrapping out of its box.
+- The organization picker's border is drawn over the menu behind it, exactly like the icon boxes', in awake and matrix.
+- The open menu's organization picker keeps its place and space when the menu is taller than the screen (it was squeezed 6px tighter), so it matches the Mini rail's organization box exactly.
+- The organization picker follows the menu's rhythm: an icon box tall, the same space above and below as between rows, and the icon boxes' border (gold only in All clients), and their corner. Its arrow is the site's drawn one in the accent, turning down as the list unrolls.
+- The organization picker is as tall as a menu row, with the space above and below it that the Feedback box has to the rule under it; the Mini rail's organization box gets the same space.
+- The "All clients · read only" banner is the top bar's height, so its bottom edge meets the menu's line under the 1NEON mark; on a phone the text wraps to two lines instead of overflowing.
+- Switching from dark to awake, on the public screens and in Settings, is slow like eyes taking the light after the dark: the light screen comes up over the dark one in a long ease-out. Going dark stays quick. Reduced motion changes at once.
+- With the Mini rail on, Neo's window sits in the content space: the gap to the rail matches the gap to the screen's right edge.
+- In the dark theme the chosen menu row has a stronger halo, so chosen layers read apart.
+- Neo's mark is the site logo's eight arcs, as on neon1.tech. The neon1.tech menu row's mark is the size of the other menu icons, with no fill.
+- The neon1.tech row shows the site logo's mark in a round border, in the theme's logo green.
+- The menu has a new order: your profile ends the Organization group, under Contact neon1, so it shows on the first screen and isn't mistaken for Report a bug. Report a bug and Feedback form their own untitled group under a rule, and neon1.tech sits last, centered with the bottom bar.
+- Two edge to edge rules sit exactly on the top bar's bottom edge (under the 1NEON mark) and the bottom bar's top edge (above neon1.tech). The other rules stay inset.
+- A group's name (Layers, Organization) sits in the middle of its rule, which parts around it as the menu opens and closes over it as the Mini rail returns.
+- The Mini rail and the open menu follow each other row for row as either scrolls; opening or closing starts on the row at the top of the other. The default menu (no rail) always opens at its top.
+
 ## v0.19.0 - 2026-11-17
 - The menu and the Mini rail no longer show a scroll bar in any theme; the page's own content keeps its bar.
 - The Mini rail keeps its place when Settings, Contact neon1, or your profile opens, and after the full menu closes, instead of jumping to the top.
