@@ -2048,11 +2048,19 @@ body:has(.shell.mini) .n1chat.n1chat-right { left: auto; right: max(16px, env(sa
 .readonly-bar { padding-left: calc(var(--gut) + var(--inl)); padding-right: calc(var(--gut) + env(safe-area-inset-right)); }
 @media (max-width: 480px) { .readonly-bar { font-size: 12px; flex-wrap: wrap; align-content: center; gap: 0 6px; } }
 
-/* --- The organization picker is a full row, with the feedback row's own air (2026-11-17) ---
-   The picker is as tall as a menu row (the chosen row's whole pill), not just its icon box. Above and below it
-   sits the space between the Feedback box and the rule under it (the row's slack plus the 7px to the rule), so the
-   picker breathes the same on both sides. The Mini rail's org box gets the same space */
-.side { --air: calc((var(--row) - var(--box)) / 2 + 7px); }
-.side.open .org-full { margin: var(--air) 6px; }
-.side .org-full .org { height: var(--row); }
-.shell.mini .side:not(.open) .org-mini { margin: var(--air) 0; }
+/* --- The organization picker follows the menu's rhythm (2026-11-17) ---
+   The picker is an icon box tall (the box inside a menu row), and the space from the rule above it to the picker,
+   and from the picker to the first row, is the space between one row's box and the next. Its border is the icon
+   boxes' (gold only in All clients, as the banner). The arrow is the site's drawn one, in the accent, turning down
+   as the list unrolls in the same time */
+.side { --air: calc((var(--row) - var(--box)) / 2); }
+.side.open .org-full { margin: var(--air) 6px 0; }
+.shell.mini .side:not(.open) .org-mini { margin-top: var(--air); }
+.side .org-full .org { height: var(--box); }
+.side .org-full .org:not(.all) { border-color: var(--line-strong); }
+.side .org-full .org .arr { color: var(--accent); font-size: 13px; transition: rotate var(--t-base) var(--ease); }
+.side .org-full .org[aria-expanded="true"] .arr { rotate: -90deg; }
+.side .org-full .menu { animation: unroll var(--t-base) var(--ease); }
+:root.flick-on .side .org-full .org .arr { animation: soft-on 2.23s linear both; --lo-soft: .5; }
+:root.flick-off .side .org-full .org .arr { animation: soft-off .5s ease-out both; --lo-soft: .5; }
+@media (prefers-reduced-motion: reduce) { .side .org-full .org .arr { transition: none; } .side .org-full .menu { animation: none; } }
