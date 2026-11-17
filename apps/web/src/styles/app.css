@@ -2018,8 +2018,8 @@ select:not(:disabled), select:not(:disabled)::picker-icon, select:not(:disabled)
 /* The site mark in its round border: the accent is the logo's dark green in awake and matrix green in matrix */
 .side .ico.site-mark { border-radius: 50%; border-color: var(--accent); background: none; }
 .side .ico.site-mark svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 3.6; stroke-linecap: round; }
-/* On phones the bottom bar's top edge sits a little above the menu's foot: the neon1.tech row reaches it */
-@media (max-width: 640px) { .side .site-end { height: calc(var(--top-h) + env(safe-area-inset-bottom)) !important; min-height: calc(var(--top-h) + env(safe-area-inset-bottom)) !important; } }
+/* The separator and site-link row together match the top bar and the bottom bar's visible height */
+@media (max-width: 640px) { .side .site-end { height: calc(var(--top-h) - 1px + env(safe-area-inset-bottom)) !important; min-height: calc(var(--top-h) - 1px + env(safe-area-inset-bottom)) !important; } }
 /* The profile's avatar is already a circle: the current page's green fill must not box it */
 .side .nav a.active .ico.av-box { background: none; border-color: transparent; }
 /* Lowercase monospace sits a hair low beside its icon box: nudge the three links' words up 1px (open menu only; the rail's labels are hidden) */
@@ -2038,6 +2038,15 @@ select:not(:disabled), select:not(:disabled)::picker-icon, select:not(:disabled)
 
 /* With the Mini rail on, Neo's window keeps to the content space: the same gap to the rail as to the screen's right edge */
 body:has(.shell.mini) .n1chat.n1chat-right { left: auto; right: max(16px, env(safe-area-inset-right)); width: min(380px, calc(100vw - var(--rail) - env(safe-area-inset-left) - 32px)); }
+/* On phones, Neo fills the space between the frame bars with matching insets from the bar and the rail */
+@media (max-width: 640px) {
+  .n1chat.n1chat-right { top: calc(var(--top-h) + 8px); bottom: calc(var(--top-h) + env(safe-area-inset-bottom) + 8px); height: auto; }
+  body:has(.readonly-bar) .n1chat.n1chat-right { top: calc(var(--top-h) + var(--top-h) + 8px); }
+  body:has(.demo-bar) .n1chat.n1chat-right { top: calc(var(--top-h) + var(--demo-h, 0px) + 8px); }
+  body:has(.demo-bar):has(.readonly-bar) .n1chat.n1chat-right { top: calc(var(--top-h) + var(--top-h) + var(--demo-h, 0px) + 8px); }
+  body:has(.shell:not(.mini)) .n1chat.n1chat-right { left: 8px; right: max(8px, env(safe-area-inset-right)); width: auto; }
+  body:has(.shell.mini) .n1chat.n1chat-right { left: calc(var(--rail) + env(safe-area-inset-left) + 8px); right: max(8px, env(safe-area-inset-right)); width: auto; }
+}
 /* In matrix the chosen row's halo needs more than awake's tint to show on the dark ground, so the layer letters N E O N read apart */
 :root[data-theme="matrix"] :is(.nav a.active, .who-link.active) { background: rgba(108, 255, 168, .16); }
 @media (prefers-color-scheme: dark) { :root[data-theme="device"] :is(.nav a.active, .who-link.active) { background: rgba(108, 255, 168, .16); } }
