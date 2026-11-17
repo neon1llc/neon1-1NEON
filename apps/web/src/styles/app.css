@@ -92,7 +92,12 @@ input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outlin
    rail on screen at every size, and the page makes room for it */
 .shell { min-height: 100%; }
 .shell.mini .main { padding-left: calc(var(--rail) + env(safe-area-inset-left)); }
-:root { --rail: 60px; --box: 28px; }
+:root { --rail: 61px; --box: 28px; }
+/* The rail is its icon row (a 28px box and 6px either side, 40px), the same gap on both sides, and the
+   border: so a row's highlight sits evenly around its icon. The menu scrolls without a visible bar
+   (the page's own content keeps its bar) */
+.side { scrollbar-width: none; -ms-overflow-style: none; }
+.side::-webkit-scrollbar { display: none; }
 /* The menu: fixed on the left; collapsed it is the rail, open it is full width over the page */
 .side { position: fixed; inset: 0 auto 0 0; z-index: 40; width: calc(var(--rail) + env(safe-area-inset-left)); background: var(--frame); border-right: 1px solid var(--line);
   display: flex; flex-direction: column; gap: 2px; padding: 12px 10px 12px calc(10px + env(safe-area-inset-left)); overflow-x: hidden; overflow-y: auto; transition: width .2s, box-shadow .2s; }
@@ -497,7 +502,7 @@ fieldset legend { font: 12px var(--mono); color: var(--muted); }
 .tabbar { display: none; }
 @media (max-width: 640px) {
   /* Phones: a slimmer mini rail, and the tab bar starts where it ends */
-  .shell.mini { --rail: 48px; }
+  .shell.mini { --rail: 53px; }
   .shell.mini .side:not(.open) { padding-left: calc(6px + env(safe-area-inset-left)); padding-right: 6px; }
   .shell.mini .tabbar { left: calc(var(--rail) + env(safe-area-inset-left)); }
   .content { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }

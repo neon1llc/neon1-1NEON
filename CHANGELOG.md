@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+- The menu and the Mini rail no longer show a scroll bar in any theme; the page's own content keeps its bar.
+- The Mini rail keeps its place when Settings, Contact neon1, or your profile opens, and after the full menu closes, instead of jumping to the top.
+- The Mini rail answers a tap while the page is still coasting from a swipe.
+- Every row of the Mini rail has the same 40px width with equal space either side of its icon, so the highlight on Home, the 1NEON mark, neon1.tech, and your profile sits evenly. The rail is 4px wider on a computer and 5px wider on a phone to make the room.
 - Files has three placement levels. Organization level is the catch-all and shows no layer to pick. Choosing a project adds "in" and its layers, with Project level at the top for files that belong to the project as a whole. Files lists the levels as filters, shows where each file sits, and a project's overview lists its project level files. **Move** on a file re-files it between levels, to another project, or to another layer, later; the file's bytes are never touched, and a file answering a request stays with its project. Existing files keep their placement, and older organization files simply stop showing a layer, so nothing is changed or deleted.
 - Insights puts the same gap above "How these are counted" as between the charts.
 
