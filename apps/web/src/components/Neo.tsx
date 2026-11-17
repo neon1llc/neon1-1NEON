@@ -203,10 +203,9 @@ function Plan({ plan }: { plan: NeoPlan }) {
 
 // --- The window -------------------------------------------------------------------------
 
-export function Neo() {
+export function Neo({ open, setOpen }: { open: boolean; setOpen: (open: boolean) => void }) {
   const light = useLight();
   const loc = useLocation();
-  const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [history, setHistory] = useState<Turn[]>([]);
   const [busy, setBusy] = useState(false);
@@ -232,22 +231,6 @@ export function Neo() {
   }, [open]);
   // Opening moves focus into the window (not the box, so phones don't raise the keyboard)
   useEffect(() => { if (open) panel.current?.focus({ preventScroll: true }); }, [open]);
-  // Another control stays usable while Neo closes and gets out of its way
-  useLayoutEffect(() => {
-    if (!open) return;
-    const dismissForControl = (event: Event) => {
-      const target = event.target;
-      if (!(target instanceof Element) || panel.current?.contains(target)) return;
-      if (!target.closest("button, a[href], input, select, [role=button]")) return;
-      close(false);
-    };
-    document.addEventListener("pointerdown", dismissForControl, true);
-    document.addEventListener("click", dismissForControl, true);
-    return () => {
-      document.removeEventListener("pointerdown", dismissForControl, true);
-      document.removeEventListener("click", dismissForControl, true);
-    };
-  }, [open]);
   // The question field grows with wrapped text, then scrolls internally after a comfortable limit
   useLayoutEffect(() => {
     const field = input.current;

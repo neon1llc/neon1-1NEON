@@ -3,7 +3,7 @@
 
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, type SyntheticEvent } from "react";
 import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate, useParams } from "react-router";
 import { menuOf, PROSPECT_FINAL_DAYS, PROSPECT_GRACE_DAYS, PROSPECT_LIMITS } from "@1neon/domain";
 import { api, DEMO as IN_DEMO, LIVE as IN_LIVE, devUser, HttpError, pickPerson, resetDemo, Unconfirmed } from "../lib/api.ts";
@@ -729,9 +729,15 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
   // The organization in view, when this frame is inside one, for hiding what a new account can't do
   const inOrg = useContext(OrgCtx);
   const [open, setOpen] = useState(false);
+  const [neoOpen, setNeoOpen] = useState(false);
   const [search, setSearch] = useState(false);
   const [top, setTop] = useState<ReactNode>(null);
   const loc = useLocation();
+  const dismissNeoFromControl = (event: SyntheticEvent<HTMLDivElement>) => {
+    if (!neoOpen || !(event.target instanceof Element) || event.target.closest(".n1neo")) return;
+    if (!event.target.closest("button, a[href], input, select, [role=button]")) return;
+    setNeoOpen(false);
+  };
   // Each page (a project counts as one, whatever its tab) eases in when you arrive
   const parts = loc.pathname.split("/");
   const section = parts.slice(0, parts[3] === "projects" && parts[4] && parts[4] !== "new" ? 5 : 4).join("/");
@@ -831,7 +837,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
   // Home: the organization's Home, All clients' board for an operator there, or the app's landing
   const home = navOrg ? `${base}/workspace` : all ? "/all/workflow" : "/";
   return (
-    <div className={`shell${mini ? " mini" : ""}`}>
+    <div className={`shell${mini ? " mini" : ""}`} onPointerDownCapture={dismissNeoFromControl} onClickCapture={dismissNeoFromControl}>
       {/* First stop for the keyboard: straight to the page, past the menu and top bar. Focus moves in
           code, so the address never gains a #main that pages would read as a link to an item */}
       <a className="skip" href="#main" onClick={(e) => { e.preventDefault(); document.getElementById("main")?.focus(); }}>Skip to content</a>
@@ -959,7 +965,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
       <Palette me={me} org={org} prospect={inOrg?.prospect} open={search} setOpen={setSearch} onHelp={help.open} onTour={help.welcomeTour} />
       <ConfirmDialog me={me} />
       {/* Neo for signed-in people, where a model is wired; elsewhere the public Neo stays */}
-      {me.neo && !IN_DEMO && newAccount === false && <Neo />}
+      {me.neo && !IN_DEMO && newAccount === false && <Neo open={neoOpen} setOpen={setNeoOpen} />}
     </div>
   );
 }
