@@ -119,12 +119,12 @@ module "api" {
 
 # Cognito on auth-dev.neon1.tech: dev accounts are separate from production's
 module "auth" {
-  source                         = "../../modules/auth"
-  name                           = local.name
-  auth_domain                    = local.auth_domain
-  zone_id                        = var.zone_id
-  certificate_arn                = data.aws_acm_certificate.site.arn
-  public_url                     = local.public_url
+  source          = "../../modules/auth"
+  name            = local.name
+  auth_domain     = local.auth_domain
+  zone_id         = var.zone_id
+  certificate_arn = data.aws_acm_certificate.site.arn
+  public_url      = local.public_url
   # Dev passkeys belong to dev.neon1.tech, so a device never offers a neon1.tech (production) passkey
   # to dev, or a dev one to production
   passkey_rp_id                  = "dev.${var.domain}"
