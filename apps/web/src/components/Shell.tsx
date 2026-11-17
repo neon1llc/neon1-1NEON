@@ -749,10 +749,13 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
     // Closing (or arriving) puts the rail on the row the open menu showed at its top, not at its top
     el.scrollTop = mini ? anchorScroll(el) : railScroll;
     railScroll = el.scrollTop;
+    // The width is still easing in; place the rail once more after layout settles
+    if (mini) requestAnimationFrame(() => { el.scrollTop = anchorScroll(el); railScroll = el.scrollTop; });
     const back = trigger.current;
     trigger.current = null;
     const lost = !document.activeElement || document.activeElement === document.body || el.contains(document.activeElement);
-    if (back?.isConnected && !back.closest("[inert]") && lost) back.focus();
+    // preventScroll: refocusing the opener must not drag the rail to it, away from the row the menu showed
+    if (back?.isConnected && !back.closest("[inert]") && lost) back.focus({ preventScroll: true });
   }, [open]);
   // The rail keeps its scroll through everything that remounts the frame (the profile and Contact neon1
   // sit outside the organization's pages, so reaching them rebuilds it) and through the open menu,
