@@ -6,7 +6,7 @@ import type { Project } from "@1neon/domain";
 import { useQuery } from "@tanstack/react-query";
 import { Command } from "cmdk";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { read } from "../lib/reads.ts";
 import type { Me, OrgSummary } from "../lib/types.ts";
 import { Dialog } from "./ui.tsx";
@@ -15,6 +15,8 @@ import { Dialog } from "./ui.tsx";
 /** The palette for one organization (or none, on profile and All clients) */
 export function Palette({ me, org, prospect, open, setOpen, onHelp, onTour }: { me: Me; org?: OrgSummary; prospect?: boolean; open: boolean; setOpen: (v: boolean) => void; onHelp: () => void; onTour: () => void }) {
   const nav = useNavigate();
+  // Operator commands stay in the All clients frame when it owns the current page
+  const all = useLocation().pathname.startsWith("/all/");
   const [q, setQ] = useState("");
   // Projects to jump to; fetched only while the palette is open
   const projects = useQuery({ queryKey: ["projects", org?.id], queryFn: () => read<Project[]>(`/t/${org!.id}/projects`, "array"), enabled: open && Boolean(org) });
@@ -79,7 +81,7 @@ export function Palette({ me, org, prospect, open, setOpen, onHelp, onTour }: { 
                 <Command.Item onSelect={go(() => nav(`${base}/settings`))}>Settings</Command.Item>
               </>
             )}
-            <Command.Item onSelect={go(() => nav("/me"))}>Your profile</Command.Item>
+            <Command.Item onSelect={go(() => nav(all ? "/all/me" : "/me"))}>Your profile</Command.Item>
             {me.operator && <Command.Item onSelect={go(() => nav("/all/workflow"))}>All clients</Command.Item>}
             {me.operator && <Command.Item onSelect={go(() => nav("/all/prospects"))}>Potentials</Command.Item>}
             {me.orgs.filter((o) => o.id !== org?.id).map((o) => (
@@ -90,7 +92,7 @@ export function Palette({ me, org, prospect, open, setOpen, onHelp, onTour }: { 
             <Command.Item onSelect={go(onHelp)}>Help for this page</Command.Item>
             <Command.Item onSelect={go(onTour)}>Take the tour</Command.Item>
             <Command.Item onSelect={go(() => nav("/faqs"))}>FAQs</Command.Item>
-            <Command.Item value="contact neon1 email call text phone" onSelect={go(() => nav("/contact"))}>Contact neon1</Command.Item>
+            <Command.Item value="contact neon1 email call text phone" onSelect={go(() => nav(all ? "/all/contact" : "/contact"))}>Contact neon1</Command.Item>
           </Command.Group>
         </Command.List>
       </Command>

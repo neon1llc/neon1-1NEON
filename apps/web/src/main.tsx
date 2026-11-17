@@ -99,7 +99,7 @@ const router = createBrowserRouter(
             { path: "settings", lazy: page(() => import("./pages/Settings.tsx"), "Settings") },
           ] }],
         },
-        { path: "all", element: <AllLayout />, children: [{ errorElement: <RouteError inFrame />, children: [{ index: true, element: <Navigate to="workflow" replace /> }, { path: "workflow", lazy: page(() => import("./pages/AllWorkflow.tsx"), "AllWorkflow") }, { path: "prospects", lazy: page(() => import("./pages/Prospects.tsx"), "Prospects") }, { path: "me", lazy: page(() => import("./pages/Me.tsx"), "MePage") }] }] },
+        { path: "all", element: <AllLayout />, children: [{ errorElement: <RouteError inFrame />, children: [{ index: true, element: <Navigate to="workflow" replace /> }, { path: "workflow", lazy: page(() => import("./pages/AllWorkflow.tsx"), "AllWorkflow") }, { path: "prospects", lazy: page(() => import("./pages/Prospects.tsx"), "Prospects") }, { path: "me", lazy: page(() => import("./pages/Me.tsx"), "MePage") }, { path: "contact", lazy: page(() => import("./pages/Contact.tsx"), "ContactPage") }] }] },
         { element: <PlainLayout />, children: [{ errorElement: <RouteError inFrame />, children: [{ path: "me", lazy: page(() => import("./pages/Me.tsx"), "MePage") }, { path: "contact", lazy: page(() => import("./pages/Contact.tsx"), "ContactPage") }] }] },
         { path: "*", element: <NotFound /> },
       ],
