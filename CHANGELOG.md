@@ -3,6 +3,7 @@
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
 ## Unreleased
+- Neo's mark is the site logo's eight arcs, as on neon1.tech. The neon1.tech menu row's mark is the size of the other menu icons, with no fill.
 - The neon1.tech row shows the site logo's mark in a round border, in the theme's logo green.
 - The menu has a new order: your profile ends the Organization group, under Contact neon1, so it shows on the first screen and isn't mistaken for Report a bug. Report a bug and Feedback form their own untitled group under a rule, and neon1.tech sits last, centered with the bottom bar.
 - Two edge to edge rules sit exactly on the top bar's bottom edge (under the 1NEON mark) and the bottom bar's top edge (above neon1.tech). The other rules stay inset.
