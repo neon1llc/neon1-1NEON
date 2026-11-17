@@ -2066,3 +2066,9 @@ body:has(.shell.mini) .n1chat.n1chat-right { left: auto; right: max(16px, env(sa
 :root.flick-on .side .org-full .org .arr { animation: soft-on 2.23s linear both; --lo-soft: .5; }
 :root.flick-off .side .org-full .org .arr { animation: soft-off .5s ease-out both; --lo-soft: .5; }
 @media (prefers-reduced-motion: reduce) { .side .org-full .org .arr { transition: none; } .side .org-full .menu { animation: none; } }
+
+/* While the menu widens, the picker's name stays on one line and ends in an ellipsis rather than wrapping out of its box */
+.side .org-full .org { overflow: hidden; }
+.side .org-full .org b { white-space: nowrap; }
+.side .org-full .org .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.side .org-full .org .arr { flex: none; }

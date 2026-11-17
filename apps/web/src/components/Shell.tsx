@@ -982,10 +982,10 @@ function OrgChooser({ current, all }: { current?: OrgSummary; all?: boolean }) {
   return (
     <div ref={ref} style={{ position: "relative" }} onKeyDown={keys} onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node) && e.relatedTarget && setOpen(false)}>
       {!current && !all && only ? (
-        <Link className="org" to={`/o/${only.slug}/workspace`}><b>{label}</b><small>{sub}</small></Link>
+        <Link className="org" to={`/o/${only.slug}/workspace`}><b><span className="nm">{label}</span></b><small>{sub}</small></Link>
       ) : (
         <button ref={toggle} className={`org${all ? " all" : ""}`} onClick={() => many && setOpen(!open)} aria-expanded={many ? open : undefined} aria-controls={many ? "org-list" : undefined} disabled={!many && !current}>
-          <b>{label}{many && <span className="arr" aria-hidden="true" />}</b>
+          <b><span className="nm">{label}</span>{many && <span className="arr" aria-hidden="true" />}</b>
           <small>{sub}</small>
         </button>
       )}
