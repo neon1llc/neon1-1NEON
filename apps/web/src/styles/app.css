@@ -2051,12 +2051,14 @@ select:not(:disabled), select:not(:disabled)::picker-icon, select:not(:disabled)
 body:has(.shell.mini) .n1chat.n1chat-right { left: auto; right: max(16px, env(safe-area-inset-right)); width: min(380px, calc(100vw - var(--rail) - env(safe-area-inset-left) - 32px)); }
 /* On phones, Neo fills the space between the frame bars with matching insets from the bar and the rail */
 @media (max-width: 640px) {
+  /* One shared gutter keeps Neo evenly inset from the mini rail and the screen edge */
+  body:has(.shell.mini) { --neo-inline-gap: max(8px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)); }
   .n1chat.n1chat-right { top: calc(var(--top-h) + 8px); bottom: calc(var(--top-h) + env(safe-area-inset-bottom) + 8px); height: auto; }
   body:has(.readonly-bar) .n1chat.n1chat-right { top: calc(var(--top-h) + var(--top-h) + 8px); }
   body:has(.demo-bar) .n1chat.n1chat-right { top: calc(var(--top-h) + var(--demo-h, 0px) + 8px); }
   body:has(.demo-bar):has(.readonly-bar) .n1chat.n1chat-right { top: calc(var(--top-h) + var(--top-h) + var(--demo-h, 0px) + 8px); }
   body:has(.shell:not(.mini)) .n1chat.n1chat-right { left: 8px; right: max(8px, env(safe-area-inset-right)); width: auto; }
-  body:has(.shell.mini) .n1chat.n1chat-right { left: calc(var(--rail) + env(safe-area-inset-left) + 8px); right: max(8px, env(safe-area-inset-right)); width: auto; }
+  body:has(.shell.mini) .n1chat.n1chat-right { left: calc(var(--rail) + env(safe-area-inset-left, 0px) + var(--neo-inline-gap)); right: var(--neo-inline-gap); width: auto; }
 }
 /* In matrix the chosen row's halo needs more than awake's tint to show on the dark ground, so the layer letters N E O N read apart */
 :root[data-theme="matrix"] :is(.nav a.active, .who-link.active) { background: rgba(108, 255, 168, .16); }
