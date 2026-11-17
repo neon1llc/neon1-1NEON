@@ -125,7 +125,9 @@ module "auth" {
   zone_id                        = var.zone_id
   certificate_arn                = data.aws_acm_certificate.site.arn
   public_url                     = local.public_url
-  passkey_rp_id                  = var.domain
+  # Dev passkeys belong to dev.neon1.tech, so a device never offers a neon1.tech (production) passkey
+  # to dev, or a dev one to production
+  passkey_rp_id                  = "dev.${var.domain}"
   ses_identity_arn               = local.ses_identity_arn
   ses_configuration_set          = aws_sesv2_configuration_set.dev.configuration_set_name
   mail_from                      = local.mail_from

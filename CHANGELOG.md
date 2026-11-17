@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+## v0.20.1 - 2026-11-17
+- Dev passkeys belong to dev.neon1.tech, so a device no longer offers a neon1.tech passkey to the dev site or a dev one to production. Production is unchanged.
+
 ## v0.20.0 - 2026-11-17
 - Report a bug, Feedback, and neon1.tech in the menu are links like the front page's: the theme's green, plain in awake, and in the dark underlined in a dulled green that turns full on hover, focus, or tap.
 - The neon1.tech row lights like the 1NEON mark row: a sharp-edged band a menu row tall, in the Mini rail and the open menu alike.
