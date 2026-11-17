@@ -2080,3 +2080,13 @@ body:has(.shell.mini) .n1chat.n1chat-right { left: auto; right: max(16px, env(sa
 /* The neon1.tech row lights as the 1NEON mark row above does: a sharp-edged band the height of a menu row, centered
    in its row, the same width in the Mini rail and the open menu (the other rows keep rounded pills) */
 .side .site-end:hover { background: linear-gradient(var(--accent-soft), var(--accent-soft)) center / 100% 40px no-repeat; }
+
+/* Report a bug, Feedback, and neon1.tech are links like the front page's: the theme's green (dark green awake, matrix
+   green in the dark), no underline in awake; in the dark an underline in a dulled green that turns full on hover, focus, or tap */
+.side :is(.bug-row, .site-end), .side :is(.bug-row, .site-end) .lbl { color: var(--accent); }
+:root[data-theme="matrix"] .side :is(.bug-row, .site-end) .lbl { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: rgb(108 255 168 / .55); transition: text-decoration-color var(--t-fast) var(--ease); }
+:root[data-theme="matrix"] .side :is(.bug-row, .site-end):is(:hover, :focus-visible, :active) .lbl { text-decoration-color: rgb(108 255 168); }
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="device"] .side :is(.bug-row, .site-end) .lbl { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: rgb(108 255 168 / .55); transition: text-decoration-color var(--t-fast) var(--ease); }
+  :root[data-theme="device"] .side :is(.bug-row, .site-end):is(:hover, :focus-visible, :active) .lbl { text-decoration-color: rgb(108 255 168); }
+}
