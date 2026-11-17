@@ -73,9 +73,9 @@ export async function walkTo(s: Stage, path: string) {
   const here = () => location.pathname.replace(/^\/1NEON\/live/, "") || "/";
   if (here() === path) return;
   const m = /^\/o\/([^/]+)\/([^/]+)(?:\/([^/]+))?(?:\/([^/]+))?/.exec(path);
-  if (path === "/me") {
+  if (path === "/me" || path === "/all/me") {
     await s.think("My profile is in the menu.");
-    await s.go("/me");
+    await s.go(path);
     return;
   }
   if (!m) return void (await s.open(path));
