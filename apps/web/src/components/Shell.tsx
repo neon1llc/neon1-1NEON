@@ -22,6 +22,7 @@ import { Offline } from "./Glitch.tsx";
 import { Rain } from "./Rain.tsx";
 import { PublicBar } from "./PublicBar.tsx";
 import { useSiteTheme } from "../lib/sitetheme.ts";
+import { dawn } from "../lib/dawn.ts";
 import { FileText as FileIcon, Folder as FolderIcon, Home as HomeIcon, Kanban as KanbanIcon, Menu as MenuIcon, Search as SearchIcon } from "lucide-react";
 import { ConfirmDialog } from "./Confirm.tsx";
 import { HelpProvider, useHelp } from "./Help.tsx";
@@ -67,6 +68,11 @@ const darkDevice = matchMedia("(prefers-color-scheme: dark)");
 export function isDark() {
   const t = document.documentElement.getAttribute("data-theme");
   return t === "matrix" || (t === "device" && darkDevice.matches);
+}
+/** A theme change the person made: leaving dark is a slow dawn (lib/dawn.ts), anything else is at once */
+export function changeTheme(theme: string) {
+  const willBeDark = theme === "matrix" || (theme === "device" && darkDevice.matches);
+  dawn(isDark() && !willBeDark, () => applyTheme(theme));
 }
 function syncDark() {
   const dark = isDark();

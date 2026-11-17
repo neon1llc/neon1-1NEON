@@ -1788,6 +1788,23 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
 /* The FAQs and legal pages sit under the fixed bar */
 .pub-page { padding-top: calc(64px + env(safe-area-inset-top) + 28px); }
 
+/* ---- Dark to awake: eyes coming up into the light (Pradeep, 2026-11-17; same as neon1.tech's css/frame.css) ----
+   Going dark stays quick. Going light is slow: the dark screen stays and the light one comes up over it in a long ease-out, a little too
+   bright at first and settling, so glow, text and lines ease together. lib/dawn.ts sets html.dawn-vt around a view transition (html.theme-dawn
+   on a slow color transition where there are none). Reduced motion never sets either */
+:where(:root) { --dawn: 2.2s; --dawn-ease: cubic-bezier(.3, .05, .2, 1); }
+:root.dawn-vt::view-transition-group(*) { animation-duration: var(--dawn) !important; animation-timing-function: var(--dawn-ease) !important; }
+:root.dawn-vt::view-transition-old(*), :root.dawn-vt::view-transition-new(*) { mix-blend-mode: normal !important; animation-duration: var(--dawn) !important; animation-timing-function: var(--dawn-ease) !important; }
+:root.dawn-vt::view-transition-old(*) { animation: none !important; }
+:root.dawn-vt::view-transition-new(*) { animation-name: dawn-in !important; animation-fill-mode: both !important; }
+@keyframes dawn-in { from { opacity: 0; filter: brightness(1.16) saturate(.82); } 45% { opacity: .55; } to { opacity: 1; filter: brightness(1) saturate(1); } }
+:root.theme-dawn, :root.theme-dawn *, :root.theme-dawn *::before, :root.theme-dawn *::after {
+  transition: background-color var(--dawn) var(--dawn-ease), color var(--dawn) var(--dawn-ease), border-color var(--dawn) var(--dawn-ease),
+    fill var(--dawn) var(--dawn-ease), stroke var(--dawn) var(--dawn-ease), box-shadow var(--dawn) var(--dawn-ease), text-shadow var(--dawn) var(--dawn-ease),
+    transform var(--t-base) var(--ease-open), opacity var(--t-base) var(--ease), visibility var(--t-base) !important;
+}
+@media (prefers-reduced-motion: reduce) { :root.dawn-vt::view-transition-new(*) { animation: none !important; } }
+
 /* The neon flicker as the choice changes: the logo goes dark in one flick, and lights up with two quick flickers, a longer one, then a slow on */
 /* The bar's logo and Neo's launcher ease up once from off to full and hold rather than flicker, as on neon1.tech (Pradeep, 2026-11-16) */
 :root.flick-on :is(.pub-bar .n1-logo, body:has(.pub-bar) .n1chat-launch) { animation: glow-in 2.23s ease-in-out both; --lo: .08; }
