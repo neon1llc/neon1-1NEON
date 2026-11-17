@@ -3,6 +3,7 @@
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
 ## Unreleased
+- The open menu's organization picker keeps its place and space when the menu is taller than the screen (it was squeezed 6px tighter), so it matches the Mini rail's organization box exactly.
 - The organization picker follows the menu's rhythm: an icon box tall, the same space above and below as between rows, and the icon boxes' border (gold only in All clients), and their corner. Its arrow is the site's drawn one in the accent, turning down as the list unrolls.
 - The organization picker is as tall as a menu row, with the space above and below it that the Feedback box has to the rule under it; the Mini rail's organization box gets the same space.
 - The "All clients · read only" banner is the top bar's height, so its bottom edge meets the menu's line under the 1NEON mark; on a phone the text wraps to two lines instead of overflowing.
