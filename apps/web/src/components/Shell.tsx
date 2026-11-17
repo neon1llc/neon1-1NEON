@@ -729,9 +729,18 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
   // The organization in view, when this frame is inside one, for hiding what a new account can't do
   const inOrg = useContext(OrgCtx);
   const [open, setOpen] = useState(false);
+  const [mobileLayout, setMobileLayout] = useState(() => matchMedia("(max-width: 640px)").matches);
   const [search, setSearch] = useState(false);
   const [top, setTop] = useState<ReactNode>(null);
   const loc = useLocation();
+  // On mobile, the person can dismiss Neo by using another control; keep those controls interactive.
+  // Desktop keeps the page inert while the dialog is open.
+  useEffect(() => {
+    const media = matchMedia("(max-width: 640px)");
+    const update = () => setMobileLayout(media.matches);
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
   // Each page (a project counts as one, whatever its tab) eases in when you arrive
   const parts = loc.pathname.split("/");
   const section = parts.slice(0, parts[3] === "projects" && parts[4] && parts[4] !== "new" ? 5 : 4).join("/");
@@ -913,7 +922,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
           <span className="lbl">neon1.tech</span>
         </a>
       </aside>
-      <div className="main" inert={open}>
+      <div className="main" inert={open && !mobileLayout}>
         {/* Only the board is read only; Potentials has neon1's actions, and Contact is not a client workspace */}
         {all && loc.pathname === "/all/workflow" && (
           <div className="readonly-bar" role="status">
@@ -943,7 +952,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
         </Crumbs.Provider>
       </div>
       {/* Phones: the main places as a tab bar at the bottom, within thumb reach */}
-      <nav className="tabbar" aria-label="Main" inert={open}>
+      <nav className="tabbar" aria-label="Main" inert={open && !mobileLayout}>
         {navOrg ? (
           <>
             <NavLink to={`${base}/workspace`} data-tour="nav-home"><HomeIcon size={20} aria-hidden="true" /><span>Home</span></NavLink>
