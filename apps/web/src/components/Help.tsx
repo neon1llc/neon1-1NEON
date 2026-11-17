@@ -146,6 +146,7 @@ export const GUIDES: Record<PageKey, Guide> = {
 
 /** The guide for the page at this path */
 export function pageKey(path: string): PageKey {
+  if (path.startsWith("/all/me")) return "me";
   if (path.startsWith("/all")) return "all";
   if (path.startsWith("/me")) return "me";
   if (path.startsWith("/contact")) return "contact";

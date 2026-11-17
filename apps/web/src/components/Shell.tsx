@@ -887,7 +887,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
         <ul className="nav contact-nav">
           <Item to="/contact" icon={<Icon name="contact" />} label="Contact neon1" tour="nav-contact" />
           <li>
-            <NavLink to="/me" className="who-link" title="Your profile" data-tour="nav-me">
+            <NavLink to={all ? "/all/me" : "/me"} className="who-link" title="Your profile" data-tour="nav-me">
               <span className="ico av-box"><Avatar id={me.user.id} name={me.user.name || me.user.email} size={24} /></span>
               <span className="lbl">{me.user.name || me.user.email}</span>
             </NavLink>

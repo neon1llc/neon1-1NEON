@@ -76,6 +76,7 @@ export function MePage() {
   const [code, setCode] = useState<string | undefined>(undefined);
   // A new account has no texts: no number to add, no text notices, no text codes
   const noTexts = useProspectEverywhere(me) === true;
+  const textsAvailable = !noTexts && Boolean(draft.phone.trim()) && draft.smsConsent;
   const sms = me.sms?.state ?? "unavailable";
   // A saved change to the number or consent matters before a code makes sense
   const smsDirty = draft.phone !== me.user.phone || draft.smsConsent !== Boolean(me.user.smsConsentAt);
@@ -240,14 +241,17 @@ export function MePage() {
           <p className="muted small" style={{ margin: "6px 0 0" }}>{draft.menu === "mini" ? "A slim menu of icons stays on the left. The menu button opens the full menu over it." : "The menu button opens the full menu. A tap outside it, or the button again, closes it."}</p>
           {draft.menu !== menuOf(me.user.menu) && <p className="unsaved small" role="status">Showing this now. Press Save to keep it.</p>}
         </fieldset>
+        <div className="actions profile-save-inline">
+          <button className="btn btn-primary" type="submit" disabled={busy || !dirty}>{busy ? "Saving…" : "Save"}</button>
+        </div>
       </form>
       <div className="form">
-        {/* Notifications: every kind shows under the bell; choose which also email you */}
+        {/* Each notification kind keeps its email and text choices together */}
         <div className="card small notify" id="notifications">
           <b>Notifications</b>
           <span className="muted">Everything shows under the bell. Choose what also reaches you by email or text. Important ones email you by default.</span>
           <table className="notify-table">
-            <thead><tr><th scope="col">When</th><th scope="col">Email</th></tr></thead>
+            <thead><tr><th scope="col">When</th><th scope="col">Email</th><th scope="col">Text</th></tr></thead>
             <tbody>
               {NOTIFY_GROUPS.map((g) => {
                 // The saved choice, or the group's default
@@ -257,12 +261,12 @@ export function MePage() {
                   <tr key={g.id}>
                     <th scope="row"><span>{g.label}{g.level === "critical" && <span className="tag rec">important</span>}</span><span className="muted">{g.hint}</span></th>
                     <td><input type="checkbox" aria-label={`Email me: ${g.label}`} checked={cur.email} onChange={(e) => set({ email: e.target.checked })} /></td>
+                    <td><input type="checkbox" aria-label={`Text me: ${g.label}`} checked={textsAvailable && cur.sms} disabled={!textsAvailable} onChange={(e) => set({ sms: e.target.checked })} /></td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
-          {/* Texts sit apart from email: every box here starts unticked, as carriers require */}
           {!noTexts && <fieldset className="notify-texts" id="texts">
             <legend>Text messages</legend>
             {/* Texts need a mobile number and a clear yes, worded the way carriers require */}
@@ -290,22 +294,6 @@ export function MePage() {
                 </span>
               ))}
             {smsDirty && (draft.smsConsent || draft.phone !== me.user.phone) && draft.phone.trim() && <span className="muted">Save first, then confirm the number with a texted code.</span>}
-            {/* Which kinds also come by text: none until ticked, and only after the yes above */}
-            <ul className="notify-text-kinds" aria-label="Text me about">
-              {NOTIFY_GROUPS.map((g) => {
-                const texts = draft.smsConsent && Boolean(draft.phone.trim());
-                const cur = draft.notify[g.id] ?? { email: g.email, sms: false };
-                const set = (patch: Partial<typeof cur>) => setDraft({ ...draft, notify: { ...draft.notify, [g.id]: { ...cur, ...patch } } });
-                return (
-                  <li key={g.id}>
-                    <label className={texts ? "notify-kind" : "notify-kind off"}>
-                      <input type="checkbox" aria-label={`Text me: ${g.label}`} checked={texts && cur.sms} disabled={!texts} onChange={(e) => set({ sms: e.target.checked })} />
-                      {g.label}
-                    </label>
-                  </li>
-                );
-              })}
-            </ul>
           </fieldset>}
         </div>
       </div>

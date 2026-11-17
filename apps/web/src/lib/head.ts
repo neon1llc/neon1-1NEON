@@ -57,7 +57,7 @@ export function headFor(pathname: string): Head {
 // "/o/acme/projects/PRJ-1" is Projects; "/me" is Profile
 function sectionOf(rest: string) {
   const parts = rest.split("/").filter(Boolean);
-  const key = parts[0] === "o" ? parts[2] : parts[0];
+  const key = parts[0] === "o" ? parts[2] : parts[0] === "all" && parts[1] === "me" ? "me" : parts[0];
   return key ? SECTIONS[key] : undefined;
 }
 
