@@ -19,13 +19,14 @@ const SANS = "Figtree,-apple-system,'Segoe UI',Roboto,sans-serif";
 export const MAIL_FROM = { name: "1NEON", address: "noreply@notify.neon1.tech" } as const;
 
 // Who a message is from, by the part of neon1 that sends it, so a glance at the sender says what it is:
-// "1NEON" is only the portal; "neon1" is the website (contact and use-case requests, bug reports);
+// "1NEON" is only the portal; "neon1" is the website (contact and use-case requests, bug reports, feedback);
 // "neon1 alerts" is system mail neon1 controls. All send from the one verified notify.neon1.tech domain,
 // so SPF and DKIM stay aligned for every address
 export const SENDERS = {
   portal: { name: "1NEON", local: "noreply" },
   requests: { name: "neon1", local: "requests" },
   bugs: { name: "neon1", local: "bugs" },
+  feedback: { name: "neon1", local: "feedback" },
   alerts: { name: "neon1 alerts", local: "alerts" },
 } as const;
 export type SenderKind = keyof typeof SENDERS;

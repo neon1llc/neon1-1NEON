@@ -243,3 +243,49 @@ describe("scanning on or unset", () => {
     expect(await on.scan("k")).toBe("pending");
   });
 });
+
+
+describe("file placement levels", () => {
+  /** A ready 4-byte file filed as given, found again through the Files list */
+  async function filed(place: Record<string, unknown>) {
+    const r = await call("POST", `/t/${s.acme.id}/docs`, { name: "note.txt", contentType: "text/plain", size: 4, ...place });
+    expect(r.status).toBe(201);
+    storage.files.set(r.json.doc.key, { type: "text/plain", bytes: new Uint8Array(4) });
+    const done = await call("POST", `/t/${s.acme.id}/docs/${r.json.doc.id}/done${r.json.doc.projectId ? `?p=${r.json.doc.projectId}` : ""}`);
+    expect(done.json.state).toBe("ready");
+    return r.json.doc as { id: string; projectId?: string; layer?: string };
+  }
+  const listed = async (id: string) => ((await call("GET", `/t/${s.acme.id}/docs`)).json.docs as { id: string; projectId?: string; layer?: string }[]).find((d) => d.id === id);
+
+  it("files at organization level with no layer, even if one is sent, and at project level with a project alone", async () => {
+    const org = await filed({ layer: "needs" });
+    expect(org.layer).toBeUndefined();
+    const p = (await repo.listProjects(s.acme.id))[0]!;
+    const proj = await filed({ projectId: p.id });
+    expect(proj.projectId).toBe(p.id);
+    expect(proj.layer).toBeUndefined();
+  });
+
+  it("moves a file from organization to a project, to a layer, and back, without losing it", async () => {
+    const p = (await repo.listProjects(s.acme.id))[0]!;
+    const x = await filed({});
+    expect((await call("PATCH", `/t/${s.acme.id}/docs/${x.id}`, { projectId: p.id, layer: null })).status).toBe(200);
+    expect(await listed(x.id)).toMatchObject({ projectId: p.id });
+    expect((await call("PATCH", `/t/${s.acme.id}/docs/${x.id}?p=${p.id}`, { projectId: p.id, layer: "execution" })).status).toBe(200);
+    expect(await listed(x.id)).toMatchObject({ projectId: p.id, layer: "execution" });
+    expect((await call("PATCH", `/t/${s.acme.id}/docs/${x.id}?p=${p.id}`, { projectId: null, layer: "execution" })).status).toBe(200);
+    const back = await listed(x.id);
+    expect(back?.projectId).toBeUndefined();
+    expect(back?.layer).toBeUndefined();
+    // Its bytes never moved, and it still downloads
+    expect((await call("GET", `/t/${s.acme.id}/docs/${x.id}/download`)).status).toBe(200);
+  });
+
+  it("keeps a file that answers a request with its project", async () => {
+    const f = await start();
+    f.put();
+    await f.done();
+    const r = await call("PATCH", `/t/${s.acme.id}/docs/${f.doc.id}?p=${f.doc.projectId}`, { projectId: null, layer: null });
+    expect(r.status).toBe(409);
+  });
+});

@@ -27,3 +27,8 @@ export function keepEdgeStill() {
 export function pageScroller(): Pick<Window, "scrollTo" | "scrollBy"> {
   return document.documentElement.classList.contains("body-scrolls") ? document.body : window;
 }
+
+/** How far the page is scrolled, from whatever scrolls it (see pageScroller) */
+export function pageTop(): number {
+  return document.documentElement.classList.contains("body-scrolls") ? document.body.scrollTop : window.scrollY;
+}

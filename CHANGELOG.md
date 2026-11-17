@@ -4,6 +4,19 @@
 
 ## Unreleased
 
+## v0.19.0 - 2026-11-17
+- The menu and the Mini rail no longer show a scroll bar in any theme; the page's own content keeps its bar.
+- The Mini rail keeps its place when Settings, Contact neon1, or your profile opens, and after the full menu closes, instead of jumping to the top.
+- The Mini rail answers a tap while the page is still coasting from a swipe.
+- Every row of the Mini rail has the same 40px width with equal space either side of its icon, so the highlight on Home, the 1NEON mark, neon1.tech, and your profile sits evenly. The rail is 4px wider on a computer and 5px wider on a phone to make the room.
+- Files has three placement levels. Organization level is the catch-all and shows no layer to pick. Choosing a project adds "in" and its layers, with Project level at the top for files that belong to the project as a whole. Files lists the levels as filters, shows where each file sits, and a project's overview lists its project level files. **Move** on a file re-files it between levels, to another project, or to another layer, later; the file's bytes are never touched, and a file answering a request stays with its project. Existing files keep their placement, and older organization files simply stop showing a layer, so nothing is changed or deleted.
+- Insights puts the same gap above "How these are counted" as between the charts.
+- Each section of the app (Settings, Contact, Documents, one project, and so on) keeps the scroll position you left it at. Moving from a scrolled Settings to Contact opens Contact at its top the first time, and returning to Settings puts you back where you were. This lasts for the tab, survives a reload, and is cleared on sign-out; a link to a spot on a page (#item-...) still goes to that spot. Works on desktop, phones, and iPhone, where the page body is what scrolls.
+- Sign-in and create account in the dark theme no longer show the rain's grid, text, and pause buttons, which met the report and feedback links in the corner. The rain still follows the choice made on the landing page.
+- "Feedback" sits beside "report a bug" everywhere it appears: the corner of sign-in and create account reads "report bug \ feedback" ("report" a plain muted word leading both, a bug before "bug", a speech bubble before "feedback"), the menu has a Feedback row under Report a bug, and the profile and Settings have a Feedback button beside Report a bug. Each opens neon1.tech's feedback page in a new tab.
+- A feedback route takes comments, complaints, concerns, and suggestions from that page: a kind, where it is about, what they wrote, and an optional email, with the report form's gates. It mails feedback@neon1.tech with a reference (FDB-) and no screenshots.
+- The report-a-bug and feedback forms have more gates. The site's policy loads nothing from outside neon1.tech, so a hosted bot check is not used there; instead the page asks for a one-time challenge when it opens (`GET /form-gate/:form`), solves a small proof of work in the background, and sends the answer with the form. The server refuses a send with no challenge, a made-up, wrong, stale, reused, or other form's one, or one answered faster than a person fills a form. Both routes also take JSON only, cap the body at 16 KB, accept a post only from neon1's own origin when the browser names one, drop control and direction-override characters from what was typed, and keep the page, theme, and window fields to the shapes a browser sends (the page only if it is a neon1.tech address).
+
 ## v0.18.0 - 2026-11-16
 
 - Sign-in and create account carry "report a bug" in the page's bottom right corner, centered on Neo's button with its right edge on the theme switch's, as on neon1.tech's footer, and no longer in the links inside the form. In the dark theme the rain controls sit one row above it. The bug mark's gap to the text is the arrow's gap to the text, everywhere.

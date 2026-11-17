@@ -91,8 +91,8 @@ export function Settings() {
       {/* Same entry as the menu and the profile, where people look for it */}
       <h2 className="section-h">Something not working?</h2>
       <div className="card small" style={{ display: "grid", gap: 8, justifyItems: "start" }}>
-        <span className="muted">Tell me what happened, on a page that opens in a new tab.</span>
-        <ReportBug kind="button" />
+        <span className="muted">Tell me what happened, or what you think, on a page that opens in a new tab.</span>
+        <ReportBug kind="buttons" />
       </div>
         </div>
       </div>
