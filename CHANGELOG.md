@@ -3,6 +3,8 @@
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
 ## Unreleased
+
+## v0.20.0 - 2026-11-17
 - Report a bug, Feedback, and neon1.tech in the menu are links like the front page's: the theme's green, plain in awake, and in the dark underlined in a dulled green that turns full on hover, focus, or tap.
 - The neon1.tech row lights like the 1NEON mark row: a sharp-edged band a menu row tall, in the Mini rail and the open menu alike.
 - The neon1.tech row's text is bold like the 1NEON name.
