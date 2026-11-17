@@ -2039,3 +2039,11 @@ body:has(.shell.mini) .n1chat.n1chat-right { left: auto; right: max(16px, env(sa
 /* In matrix the chosen row's halo needs more than awake's tint to show on the dark ground, so the layer letters N E O N read apart */
 :root[data-theme="matrix"] :is(.nav a.active, .who-link.active) { background: rgba(108, 255, 168, .16); }
 @media (prefers-color-scheme: dark) { :root[data-theme="device"] :is(.nav a.active, .who-link.active) { background: rgba(108, 255, 168, .16); } }
+
+/* --- The read-only banner is the top bar's height (2026-11-17) ---
+   All clients' amber banner sits above the top bar, so its bottom edge lands on the menu's line under the
+   mark row (which is --top-h from the top). Text that doesn't fit wraps to two lines on a phone, then ellipsizes */
+.readonly-bar { box-sizing: border-box; height: var(--top-h); padding-top: 0; padding-bottom: 0; line-height: 1.3; overflow: hidden; }
+.readonly-bar > strong { flex: none; }
+.readonly-bar { padding-left: calc(var(--gut) + var(--inl)); padding-right: calc(var(--gut) + env(safe-area-inset-right)); }
+@media (max-width: 480px) { .readonly-bar { font-size: 12px; flex-wrap: wrap; align-content: center; gap: 0 6px; } }
