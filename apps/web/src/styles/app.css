@@ -2072,3 +2072,6 @@ body:has(.shell.mini) .n1chat.n1chat-right { left: auto; right: max(16px, env(sa
 .side .org-full .org b { white-space: nowrap; }
 .side .org-full .org .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .side .org-full .org .arr { flex: none; }
+
+/* The neon1.tech row's words take the theme's green as the 1NEON name above does: dark green awake, matrix green in matrix */
+.side .site-end { color: var(--accent); }
