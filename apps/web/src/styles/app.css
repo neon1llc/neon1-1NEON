@@ -2004,3 +2004,9 @@ select:not(:disabled), select:not(:disabled)::picker-icon, select:not(:disabled)
 .side .org-full .org { height: var(--box); padding: 0 10px; align-content: center; }
 .side .org-full .org small { display: none; }
 .side .org-full .org b { font-size: 13px; line-height: 1; }
+
+/* With the Mini rail on, Neo's window keeps to the content space: the same gap to the rail as to the screen's right edge */
+body:has(.shell.mini) .n1chat.n1chat-right { left: auto; right: max(16px, env(safe-area-inset-right)); width: min(380px, calc(100vw - var(--rail) - env(safe-area-inset-left) - 32px)); }
+/* In matrix the chosen row's halo needs more than awake's tint to show on the dark ground, so the layer letters N E O N read apart */
+:root[data-theme="matrix"] :is(.nav a.active, .who-link.active) { background: rgba(108, 255, 168, .16); }
+@media (prefers-color-scheme: dark) { :root[data-theme="device"] :is(.nav a.active, .who-link.active) { background: rgba(108, 255, 168, .16); } }
