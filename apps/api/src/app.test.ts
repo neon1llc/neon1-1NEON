@@ -117,7 +117,7 @@ describe("email", () => {
     expect(mail.html).toContain("your invitation");
     expect(mail.html).toContain('href="https://neon1.tech/1NEON/"');
     expect(mail.html).toContain('href="https://neon1.tech/"');
-    expect(mail.html).toMatch(/1 is glad to be of service\.<\/div><div style="white-space:nowrap[^"]*">Sent .+ E[SD]T \(\d\d:\d\d UTC\)<\/div>/);
+    expect(mail.html).toMatch(/1 is glad to be of service\.<\/div><div style="white-space:nowrap[^"]*">Sent .+ E[SD]T \(\d\d:\d\d UTC(, [A-Z][a-z]{2} \d+)?\)<\/div>/);
     expect(mail.text).toContain("how it becomes routine");
   });
 
