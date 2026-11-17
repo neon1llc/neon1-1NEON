@@ -123,6 +123,7 @@ function keepNeoBelowTopBar() {
   };
 
   document.addEventListener("scroll", update, { passive: true, capture: true });
+  addEventListener("scroll", update, { passive: true });
   addEventListener("resize", update, { passive: true });
   const root = document.getElementById("root");
   if (root) new MutationObserver(update).observe(root, { childList: true, subtree: true });
