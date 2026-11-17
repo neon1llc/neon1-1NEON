@@ -3,6 +3,7 @@
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
 ## Unreleased
+- The organization picker is as tall as a menu row, with the space above and below it that the Feedback box has to the rule under it; the Mini rail's organization box gets the same space.
 - The "All clients · read only" banner is the top bar's height, so its bottom edge meets the menu's line under the 1NEON mark; on a phone the text wraps to two lines instead of overflowing.
 - Switching from dark to awake, on the public screens and in Settings, is slow like eyes taking the light after the dark: the light screen comes up over the dark one in a long ease-out. Going dark stays quick. Reduced motion changes at once.
 - With the Mini rail on, Neo's window sits in the content space: the gap to the rail matches the gap to the screen's right edge.
