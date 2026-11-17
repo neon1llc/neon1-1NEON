@@ -232,9 +232,9 @@ export function Neo() {
   }, [open]);
   // Opening moves focus into the window (not the box, so phones don't raise the keyboard)
   useEffect(() => { if (open) panel.current?.focus({ preventScroll: true }); }, [open]);
-  // On phones, another control stays usable while Neo closes and gets out of its way
+  // Another control stays usable while Neo closes and gets out of its way
   useLayoutEffect(() => {
-    if (!open || !matchMedia("(max-width: 640px)").matches) return;
+    if (!open) return;
     const dismissForControl = (event: Event) => {
       const target = event.target;
       if (!(target instanceof Element) || panel.current?.contains(target)) return;
