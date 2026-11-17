@@ -1997,3 +1997,10 @@ select:not(:disabled), select:not(:disabled)::picker-icon, select:not(:disabled)
 .side .nav a.active .ico.av-box { background: none; border-color: transparent; }
 /* Lowercase monospace sits a hair low beside its icon box: nudge the three links' words up 1px (open menu only; the rail's labels are hidden) */
 .side.open :is(.out-group, .site-end) .lbl { position: relative; top: -1px; }
+/* The organization picker is one icon-box tall (--box), starting where the icons start and ending the same
+   distance from the menu's edge, centered in the row the Mini rail's initials button takes, so it never meets
+   the rule above and its space matches the icon rows. Its id line shows in the list instead */
+.side.open .org-full { display: flex; align-items: center; height: var(--row); margin: 0 6px; }
+.side .org-full .org { height: var(--box); padding: 0 10px; align-content: center; }
+.side .org-full .org small { display: none; }
+.side .org-full .org b { font-size: 13px; line-height: 1; }
