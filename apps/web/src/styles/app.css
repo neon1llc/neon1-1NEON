@@ -1988,3 +1988,6 @@ select:not(:disabled), select:not(:disabled)::picker-icon, select:not(:disabled)
 .side .site-end { font: 13px var(--mono); color: var(--muted); margin: 0 0 -8px; height: calc(var(--top-h) - 1px) !important; min-height: calc(var(--top-h) - 1px) !important; flex: none; }
 .side .site-end .lbl { text-transform: lowercase; }
 .side .who-link { border-radius: var(--r-sm); }
+/* The site mark in its round border: the accent is the logo's dark green in awake and matrix green in matrix */
+.side .ico.site-mark { border-radius: 50%; border-color: var(--accent); }
+.side .ico.site-mark svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 3.2; stroke-linecap: round; }

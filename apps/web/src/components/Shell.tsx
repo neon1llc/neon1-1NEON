@@ -867,7 +867,10 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
             app's routes), centered with that bar as the mark is with the top bar */}
         <div className="edge edge-bottom" aria-hidden="true" />
         <a className="site-link site-end" href="/" title="neon1.tech">
-          <Icon name="site" />
+          {/* The site logo's mark (v5 set), drawn in the theme's accent inside a round border */}
+          <span className="ico site-mark" aria-hidden="true">
+            <svg viewBox="3 4 58 58"><path d="M6 6a24 24 0 0 1 24 24v30M6 12a18 18 0 0 1 18 18v30M6 18a12 12 0 0 1 12 12v30M6 24a6 6 0 0 1 6 6v30M34 6a24 24 0 0 1 24 24v30M34 12a18 18 0 0 1 18 18v30M34 18a12 12 0 0 1 12 12v30M34 24a6 6 0 0 1 6 6v30" /></svg>
+          </span>
           <span className="lbl">neon1.tech</span>
         </a>
       </aside>
