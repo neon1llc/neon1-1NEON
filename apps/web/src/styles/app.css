@@ -1995,3 +1995,5 @@ select:not(:disabled), select:not(:disabled)::picker-icon, select:not(:disabled)
 @media (max-width: 640px) { .side .site-end { height: calc(62px + env(safe-area-inset-bottom)) !important; min-height: calc(62px + env(safe-area-inset-bottom)) !important; } }
 /* The profile's avatar is already a circle: the current page's green fill must not box it */
 .side .nav a.active .ico.av-box { background: none; border-color: transparent; }
+/* Lowercase monospace sits a hair low beside its icon box: nudge the three links' words up 1px (open menu only; the rail's labels are hidden) */
+.side.open :is(.out-group, .site-end) .lbl { position: relative; top: -1px; }
