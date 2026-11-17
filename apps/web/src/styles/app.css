@@ -100,7 +100,7 @@ input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outlin
 .side::-webkit-scrollbar { display: none; }
 /* The menu: fixed on the left; collapsed it is the rail, open it is full width over the page */
 .side { position: fixed; inset: 0 auto 0 0; z-index: 40; width: calc(var(--rail) + env(safe-area-inset-left)); background: var(--frame); border-right: 1px solid var(--line);
-  display: flex; flex-direction: column; gap: 2px; --padl: calc(10px + env(safe-area-inset-left)); --padr: 10px; padding: 12px var(--padr) 12px var(--padl); overflow-x: hidden; overflow-y: auto; transition: width .2s, box-shadow .2s; }
+  display: flex; flex-direction: column; gap: 2px; --padl: calc(6px + env(safe-area-inset-left)); --padr: 6px; padding: 12px var(--padr) 12px var(--padl); overflow-x: hidden; overflow-y: auto; transition: width .2s, box-shadow .2s; }
 .side.open { width: calc(272px + env(safe-area-inset-left)); box-shadow: 0 0 40px rgba(0, 0, 0, .3); }
 .shell:not(.mini) .side:not(.open) { transform: translateX(-100%); }
 /* The mini rail's rows shrink with the screen's height (see "Menu rows" at the end) */

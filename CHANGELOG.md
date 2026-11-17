@@ -3,6 +3,7 @@
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
 ## Unreleased
+- Opening the menu from the Mini rail no longer nudges its content 4px right: the open menu uses the rail's side padding, so icons, the mark, and the picker stay put as it widens.
 - While the menu opens, a long organization name stays on one line in the picker (ending in an ellipsis) instead of wrapping out of its box.
 - The organization picker's border is drawn over the menu behind it, exactly like the icon boxes', in awake and matrix.
 - The open menu's organization picker keeps its place and space when the menu is taller than the screen (it was squeezed 6px tighter), so it matches the Mini rail's organization box exactly.
