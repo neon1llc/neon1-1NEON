@@ -651,6 +651,29 @@ function lastOrg(orgs: OrgSummary[]) {
 // What can take focus inside the menu, for moving focus into it when it opens
 /** Where the rail was last scrolled to, kept across the frame remounting between pages */
 let railScroll = 0;
+// The row at the top of the rail, with how far down the rail it sat. The open menu's rows differ a little in
+// height from the rail's (section labels), so it opens on this same row rather than at the same offset
+let railAnchor: { key: string; y: number } | null = null;
+const rowKey = (a: Element) => `${a.getAttribute("href") ?? ""}|${a.textContent?.trim() ?? ""}`;
+function findAnchor(side: HTMLElement): { key: string; y: number } | null {
+  const top = side.getBoundingClientRect().top;
+  for (const a of side.querySelectorAll("a, button")) {
+    const r = a.getBoundingClientRect();
+    if (r.height > 2 && r.bottom - top > 1) return { key: rowKey(a), y: r.top - top };
+  }
+  return null;
+}
+/** Where the open menu should scroll so the rail's top row stays at the top */
+function anchorScroll(side: HTMLElement): number {
+  if (!railAnchor) return railScroll;
+  const top = side.getBoundingClientRect().top;
+  for (const a of side.querySelectorAll("a, button")) {
+    if (rowKey(a) !== railAnchor.key) continue;
+    const r = a.getBoundingClientRect();
+    if (r.height > 2) return Math.max(0, side.scrollTop + (r.top - top) - railAnchor.y);
+  }
+  return railScroll;
+}
 const FOCUSABLE = "a[href], button:not([disabled]), input:not([disabled]), select:not([disabled])";
 
 
@@ -716,9 +739,10 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
     if (!el) return;
     if (open) {
       trigger.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      // The menu always opens at its top, row for row beside the rail; focusing the page in view must
-      // not scroll it (on the profile, that link sits at the very bottom)
-      el.scrollTop = 0;
+      // The open menu starts on the same row the rail was showing at its top (the rows differ a little in height,
+      // so the row is matched, not the offset); focusing the page in view must not scroll it (on the profile,
+      // that link sits at the very bottom)
+      el.scrollTop = anchorScroll(el);
       if (!el.contains(document.activeElement)) (el.querySelector<HTMLElement>("a[aria-current='page']") ?? el.querySelector<HTMLElement>(FOCUSABLE))?.focus({ preventScroll: true });
       return;
     }
@@ -733,7 +757,11 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
   // sit outside the organization's pages, so reaching them rebuilds it) and through the open menu,
   // which always opens at its top: the position is kept here, saved while the rail is what shows
   useLayoutEffect(() => { if (side.current) side.current.scrollTop = railScroll; }, []);
-  const keepRail = () => { if (!open && side.current) railScroll = side.current.scrollTop; };
+  const keepRail = () => {
+    if (open || !side.current) return;
+    railScroll = side.current.scrollTop;
+    railAnchor = findAnchor(side.current);
+  };
   // A tap on the rail while the page is still coasting from a swipe only stops the coast on touch
   // screens, and the rail doesn't answer until the page is still. A short touch that stays put
   // on the rail is taken as a tap right there, so the rail answers first time
@@ -814,15 +842,19 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
         {/* Every way to reach neon1, for every account, new ones included */}
         <ul className="nav contact-nav">
           <Item to="/contact" icon={<Icon name="contact" />} label="Contact neon1" tour="nav-contact" />
-          {/* On every signed-in screen, in the full menu: the neon1 way to say something is broken */}
-          <li><ReportBug kind="row" /></li>
-          <li><ReportBug kind="feedbackRow" /></li>
         </ul>
-        {/* Back to the neon1.tech site, outside the app's routes, then the signed-in person */}
-        <a className="site-link" href="/" title="neon1.tech">
-          <Icon name="site" />
-          <span className="lbl">neon1.tech</span>
-        </a>
+        {/* Links out of 1NEON read as one group under their own rule: the neon1 way to say something is broken,
+            the way to say anything else, and back to the neon1.tech site (outside the app's routes) */}
+        <div className="out-group">
+          <ul className="nav">
+            <li><ReportBug kind="row" /></li>
+            <li><ReportBug kind="feedbackRow" /></li>
+          </ul>
+          <a className="site-link" href="/" title="neon1.tech">
+            <Icon name="site" />
+            <span className="lbl">neon1.tech</span>
+          </a>
+        </div>
         <NavLink to="/me" className="who-link" title="Your profile" data-tour="nav-me">
           <span className="ico av-box"><Avatar id={me.user.id} name={me.user.name || me.user.email} size={24} /></span>
           <span className="lbl">{me.user.name || me.user.email}</span>

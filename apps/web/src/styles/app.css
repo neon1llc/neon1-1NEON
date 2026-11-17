@@ -134,7 +134,15 @@ input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outlin
 .site-link { margin-top: auto; font: 13px var(--mono); color: var(--muted); }
 /* Contact neon1 sits at the foot of the menu, just above the site link */
 .side .contact-nav { margin-top: auto; }
-.side .contact-nav + .site-link { margin-top: 0; }
+/* The links out of 1NEON (report a bug, feedback, neon1.tech) sit under their own rule, the profile's rule, and share the
+   site link's quiet monospace lowercase so they read as one group */
+.out-group { border-top: 1px solid var(--line); margin-top: 6px; padding-top: 6px; display: grid; gap: 2px; }
+.out-group .nav { margin: 0; }
+.out-group .site-link { margin-top: 0; }
+.out-group :is(.bug-row, .site-link) { font: 13px var(--mono); color: var(--muted); }
+.out-group .lbl { text-transform: lowercase; }
+.shell.mini .side:not(.open) .out-group { gap: 0; margin: 4px 0 0; padding-top: 4px; }
+.shell.mini .side:not(.open) .out-group .nav { margin: 0; }
 .who-link { border-top: 1px solid var(--line); border-radius: 0; padding-top: 10px; margin-top: 4px; }
 .side .org { margin: 2px 0 6px; }
 /* Organization chooser; amber when it shows All clients */

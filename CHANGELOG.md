@@ -3,6 +3,8 @@
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
 ## Unreleased
+- Report a bug, Feedback, and neon1.tech, the links out of 1NEON, sit together under their own rule between Contact neon1 and your profile, in the same quiet lowercase monospace, in the full menu and the Mini rail, in both themes.
+- Opening the full menu from a scrolled Mini rail starts on the same row the rail was showing, instead of at the top.
 
 - The menu and the Mini rail no longer show a scroll bar in any theme; the page's own content keeps its bar.
 - The Mini rail keeps its place when Settings, Contact neon1, or your profile opens, and after the full menu closes, instead of jumping to the top.
