@@ -591,14 +591,16 @@ export const VIEWABLE = new Set(["application/pdf", "image/png", "image/jpeg", "
 
 
 /** A file's record. Bytes live in S3 under the organization's folder; `scan` gates downloads.
- * Without a project it's a general file for the organization; with `itemId` it answers a "file needed" item */
+ * Placement has three levels: no project is organization level; a project with no layer is project
+ * level; a project with a layer is filed in that layer. Older organization-level records carry a
+ * layer that is ignored. With `itemId` it answers a "file needed" item */
 export const DocumentRecord = z.object({
   tenantId: id,
   projectId: id.optional(),
   itemId: id.optional(),
   id: id,
   name: z.string().trim().min(1).max(200),
-  layer: Layer,
+  layer: Layer.optional(),
   contentType: z.string().max(120),
   size: z.number().int().nonnegative(),
   key: z.string().max(512),

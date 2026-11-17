@@ -44,12 +44,14 @@ export function Documents() {
   const checking = (q.data?.docs ?? []).filter((d) => fileState(d) === "checking").length;
   // Where the next upload is filed, and which layer the list shows
   const [projectId, setProjectId] = useState("");
-  const [layer, setLayer] = useState<Layer>("needs");
-  const [show, setShow] = useState<Layer | "all">("all");
+  // "" is the project as a whole (project level); a layer files under it
+  const [layer, setLayer] = useState<Layer | "">("");
+  const [show, setShow] = useState<Layer | "all" | "org" | "project">("all");
   const docs = q.data?.docs ?? [];
-  const projectName = (id?: string) => (id ? q.data?.projects.find((p) => p.id === id)?.key : "General");
+  const projectName = (id?: string) => q.data?.projects.find((p) => p.id === id)?.key;
   // Counts only once the list has answered; a zero while it loads or fails would be a false claim
   const count = (n: number) => (q.data ? <span className="muted">{n}</span> : null);
+  const shown = docs.filter((d) => show === "all" || (show === "org" ? !d.projectId : show === "project" ? d.projectId && !d.layer : d.projectId && d.layer === show));
   return (
     <>
       <h1 className="page-title">Files</h1>
@@ -58,25 +60,31 @@ export function Documents() {
       <div className="file-target">
         <span>File new uploads under</span>
         <select aria-label="Project" value={projectId} onChange={(e) => setProjectId(e.target.value)}>
-          <option value="">the whole organization</option>
+          <option value="">Organization level</option>
           {/* Archived projects keep their files for browsing but take no new uploads (the API refuses
               them too), so they're shown and disabled rather than offered (AUTH-P05) */}
           {q.data?.projects.map((p) => <option key={p.id} value={p.id} disabled={p.archived}>{p.key} · {p.name}{p.archived ? " (archived)" : ""}</option>)}
         </select>
-        <span>in</span>
-        <select aria-label="Layer" value={layer} onChange={(e) => setLayer(e.target.value as Layer)}>
-          {LAYERS.map((l) => <option key={l} value={l}>{layerName(l)}</option>)}
-        </select>
+        {/* Organization level is the catch-all: no layer to pick. A project adds "in" and its layers */}
+        {projectId && <>
+          <span>in</span>
+          <select aria-label="Layer" value={layer} onChange={(e) => setLayer(e.target.value as Layer | "")}>
+            <option value="">Project level</option>
+            {LAYERS.map((l) => <option key={l} value={l}>{layerName(l)}</option>)}
+          </select>
+        </>}
       </div>
-      <DropZone target={{ layer, projectId: projectId || undefined }}>
+      <DropZone target={{ layer: projectId && layer ? layer : undefined, projectId: projectId || undefined }}>
         <span className="muted small">Files a project asks for can also be sent from its Needs tab.</span>
       </DropZone>
       {/* Filter by layer, with counts */}
       <div className="chips" role="group" aria-label="Show files from">
         <button className={`chip${show === "all" ? " on" : ""}`} aria-pressed={show === "all"} onClick={() => setShow("all")}>All {count(docs.length)}</button>
+        <button className={`chip${show === "org" ? " on" : ""}`} aria-pressed={show === "org"} onClick={() => setShow("org")}>Organization level {count(docs.filter((d) => !d.projectId).length)}</button>
+        <button className={`chip${show === "project" ? " on" : ""}`} aria-pressed={show === "project"} onClick={() => setShow("project")}>Project level {count(docs.filter((d) => d.projectId && !d.layer).length)}</button>
         {LAYERS.map((l) => (
           <button key={l} className={`chip${show === l ? " on" : ""}`} aria-pressed={show === l} onClick={() => setShow(l)}>
-            <LayerBadge layer={l} /> {layerName(l)} {count(docs.filter((d) => d.layer === l).length)}
+            <LayerBadge layer={l} /> {layerName(l)} {count(docs.filter((d) => d.projectId && d.layer === l).length)}
           </button>
         ))}
       </div>
@@ -113,7 +121,7 @@ export function Documents() {
           </div>
         </section>
       )}
-      {gate([q]) ?? <FileList docs={show === "all" ? docs : docs.filter((d) => d.layer === show)} projectName={projectName} empty="No files here yet." />}
+      {gate([q]) ?? <FileList docs={shown} projectName={projectName} empty="No files here yet." />}
     </>
   );
 }

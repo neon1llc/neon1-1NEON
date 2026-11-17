@@ -255,6 +255,7 @@ a.row:hover { background: var(--accent-soft); }
 .tabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 14px; font: 13px var(--mono); color: var(--muted); cursor: pointer; white-space: nowrap; }
 .tabs a.active, .tabs button.active { color: var(--accent); border-color: var(--accent); }
 .badge { font: 700 10px var(--mono); width: 18px; height: 18px; border-radius: 5px; display: inline-grid; place-items: center; color: var(--badge-ink); }
+.badge.level { background: var(--line-strong); color: var(--text, inherit); }
 /* Item groups and rows inside a layer tab */
 .kind-group { margin-bottom: 26px; }
 .item { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 12px 4px; border-bottom: 1px solid var(--line); }
@@ -417,7 +418,7 @@ html:has(.signin), html:has(.signin) body { background: var(--void); color-schem
 }
 
 /* Files: where uploads go, the drop area, layer filters, and file rows */
-/* Where uploads go, read as a sentence: "File new uploads under [the whole organization] in [Needs]" */
+/* Where uploads go, read as a sentence: "File new uploads under [Organization level]", or "[ACME-1] in [Needs]" once a project is chosen */
 .file-target { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; color: var(--muted); font-size: 14px; }
 .file-target select { min-height: 36px; padding-top: 6px; padding-bottom: 6px; font-size: 14px; }
 .drop { display: grid; gap: 6px; place-items: center; text-align: center; padding: 28px 16px; border: 1.5px dashed var(--line-strong); border-radius: var(--r); cursor: pointer; margin-bottom: 22px; transition: border-color .2s, background .2s; }
@@ -817,6 +818,8 @@ details.history summary { cursor: pointer; font: 12px var(--mono); color: var(--
 .kpi small { font: 12px var(--mono); color: var(--muted); }
 .kpi small.warn { color: var(--red); }
 .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+/* The counting notes sit one gap (16px) below the charts, like the charts do from each other */
+.charts + .chart { margin-top: 16px; }
 .chart .section-h { margin-top: 0; }
 .cols { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; height: 160px; align-items: end; }
 .cols .wk { display: grid; grid-template-rows: auto 1fr auto; height: 100%; align-items: end; justify-items: center; gap: 4px; }

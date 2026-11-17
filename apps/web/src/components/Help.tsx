@@ -104,7 +104,7 @@ export const GUIDES: Record<PageKey, Guide> = {
   files: {
     title: "Files",
     purpose: "Every file shared in this organization.",
-    howto: ["Upload a file and pick its project.", "Files are checked for viruses before anyone can download them."],
+    howto: ["Upload a file at Organization level, or pick a project and file it in a layer or at Project level.", "Choose Move on a file to file it somewhere else.", "Files are checked for viruses before anyone can download them."],
     tour: [{ at: "upload", title: "Upload", text: "Drop a file here, or choose one." }],
   },
   insights: {

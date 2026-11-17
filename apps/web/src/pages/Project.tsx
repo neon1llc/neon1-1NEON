@@ -141,7 +141,7 @@ export function ProjectPage() {
       </nav>
       {/* The section under the tabs pans by tab order */}
       <div className="slide-stage">
-      {tab === "overview" ? <Overview project={p} items={items} /> : layerFromSlug(tab) ? <LayerTab layer={layerFromSlug(tab)!} project={p} items={items} docs={detail.data.docs} edits={detail.data.edits} /> : <Empty text="That section doesn't exist." />}
+      {tab === "overview" ? <Overview project={p} items={items} docs={detail.data.docs} /> : layerFromSlug(tab) ? <LayerTab layer={layerFromSlug(tab)!} project={p} items={items} docs={detail.data.docs} edits={detail.data.edits} /> : <Empty text="That section doesn't exist." />}
       </div>
     </>
   );
@@ -362,7 +362,7 @@ function Presence({ edits }: { edits: EditMarker[] }) {
 
 
 /** Overview: decision, summary and outcome, measures, status, and people */
-function Overview({ project: p, items }: { project: Project; items: Item[] }) {
+function Overview({ project: p, items, docs }: { project: Project; items: Item[]; docs: DocumentRecord[] }) {
   const { org, canWrite, access } = useOrg();
   const me = useSession();
   const members = useMembers(org.id);
@@ -549,6 +549,12 @@ function Overview({ project: p, items }: { project: Project; items: Item[] }) {
           <div className="actions"><button className="btn btn-primary" disabled={!post.title.trim() || sending}>{sending ? "Posting…" : "Post"}</button><button type="button" className="btn btn-ghost" onClick={() => setPosting(false)}>Cancel</button></div>
         </form>
       </Dialog>
+      {/* Files for the project as a whole, not filed under one layer */}
+      <section className="kind-group">
+        <h2 className="section-h">Project level files <small>{docs.filter((d) => d.uploaded && !d.layer).length}</small></h2>
+        <FileList docs={docs.filter((d) => !d.layer)} empty="No project level files yet." />
+        {canWrite && <div className="actions" style={{ marginTop: 10 }}><UploadButton target={{ projectId: p.id }} label="Upload project level files" /></div>}
+      </section>
       {/* Who's on the project and in what role; the decision maker approves options */}
       <PeopleDialog open={peopleOpen} onClose={() => setPeopleOpen(false)} people={p.people} version={p.version} onSave={(list, version) => { setPeopleOpen(false); void save(version, { people: list }); }} />
       {/* Keep mine saves the same change over their version; Take theirs drops it */}

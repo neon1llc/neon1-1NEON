@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- Files has three placement levels. Organization level is the catch-all and shows no layer to pick. Choosing a project adds "in" and its layers, with Project level at the top for files that belong to the project as a whole. Files lists the levels as filters, shows where each file sits, and a project's overview lists its project level files. **Move** on a file re-files it between levels, to another project, or to another layer, later; the file's bytes are never touched, and a file answering a request stays with its project. Existing files keep their placement, and older organization files simply stop showing a layer, so nothing is changed or deleted.
+- Insights puts the same gap above "How these are counted" as between the charts.
+
 - Sign-in and create account in the dark theme no longer show the rain's grid, text, and pause buttons, which met the report and feedback links in the corner. The rain still follows the choice made on the landing page.
 
 - "Feedback" sits beside "report a bug" everywhere it appears: the corner of sign-in and create account reads "report bug \ feedback" ("report" a plain muted word leading both, a bug before "bug", a speech bubble before "feedback"), the menu has a Feedback row under Report a bug, and the profile and Settings have a Feedback button beside Report a bug. Each opens neon1.tech's feedback page in a new tab.

@@ -2,7 +2,7 @@
 // scanned before download, and the in-memory file links local dev uses instead of S3.
 
 
-import { CreateDocInput, DocumentRecord, fileState, newId, revisions, VIEWABLE, type FileProblem } from "@1neon/domain";
+import { CreateDocInput, DocumentRecord, MoveDocInput, fileState, newId, revisions, VIEWABLE, type FileProblem } from "@1neon/domain";
 import type { Context } from "hono";
 import { settleFile, unwatchOp, watchOp } from "../files.ts";
 import { actorId, body, fail, need, now, type Env } from "../lib/http.ts";
@@ -60,7 +60,7 @@ export function devFileRoutes(app: App, k: Kit) {
 export function docRoutes(app: App, k: Kit) {
   const { d, repo, allDocs } = k;
 
-  // --- Documents: general files and project files, filed by layer -------------
+  // --- Documents: organization-level files, project-level files, and files filed by layer -------------
 
   // Where a file's bytes live: the organization's folder, then the project (or "_"), then the record
   const docKey = (x: DocumentRecord) => `t/${x.tenantId}/${x.projectId ?? "_"}/${x.id}/${x.name.replace(/[^\w.\- ]+/g, "_")}`;
@@ -107,6 +107,8 @@ export function docRoutes(app: App, k: Kit) {
       if (!item || !["file_request", "purchase", "proposal"].includes(item.kind)) fail(400, "invalid", "Files can only answer a \"file needed\" item, a purchase, or a proposal in the same project.");
     }
     const ts = now();
+    // Organization-level files take no layer
+    if (!input.projectId) delete input.layer;
     const x = DocumentRecord.parse({ ...input, tenantId: t.id, id: newId("d"), key: "", scan: "pending", uploaded: false, version: 1, createdAt: ts, updatedAt: ts, updatedBy: actorId(c) });
     x.key = docKey(x);
     x.state = "receiving";
@@ -127,6 +129,35 @@ export function docRoutes(app: App, k: Kit) {
   app.get("/t/:tid/docs/:did/download", async (c) => {
     need(c, "read");
     return c.json(await downloadLink(k, await doc(c), c.req.query("view") === "1"));
+  });
+
+  // Move a ready file between levels (organization, project, or a layer of a project). The bytes stay
+  // where they are; only the record moves, in one transaction, so nothing is copied or lost. The
+  // uploader and editors may move it; a file answering a "file needed" item stays with its project
+  app.patch("/t/:tid/docs/:did", async (c) => {
+    const x = await doc(c);
+    if (x.updatedBy !== actorId(c)) need(c, "write");
+    else need(c, "comment");
+    const to = await body(c, MoveDocInput);
+    if (fileState(x) !== "ready") fail(409, "not_ready", "Wait until the file has been checked before moving it.");
+    const projectId = to.projectId ?? undefined;
+    const layer = projectId ? to.layer ?? undefined : undefined;
+    if (x.itemId && projectId !== x.projectId) fail(409, "answers_item", "This file answers a request in its project. Move it to another layer there, or delete it.");
+    if (projectId) {
+      const p = await repo.getProject(x.tenantId, projectId);
+      if (!p || p.deletedAt) fail(404, "not_found", "That project doesn't exist.");
+      if (p.archived && projectId !== x.projectId) fail(409, "archived", "This project is archived. Unarchive it to add files.");
+    }
+    if (projectId === x.projectId && layer === x.layer) return c.json(x);
+    const next = DocumentRecord.parse({ ...x, projectId, layer, version: x.version + 1, updatedAt: now() });
+    // Changing project changes the record's key: drop the old one and write the new one together
+    const moved = projectId !== x.projectId;
+    await repo.table.write([
+      ...(moved ? [{ delete: keys.doc(x.tenantId, x.projectId, x.id) }] : []),
+      repo.docOp(next, moved ? { create: true } : { version: x.version }),
+      repo.auditOp({ tenantId: x.tenantId, actorId: actorId(c), action: "doc.moved", target: x.id, summary: `Moved "${x.name}"` }),
+    ]);
+    return c.json(next);
   });
 
   // Remove a file: the person who uploaded it, or an admin
