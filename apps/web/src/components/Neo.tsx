@@ -7,7 +7,7 @@
 
 import { LASTING_OPS, type NeoPlan, type NeoTour } from "@1neon/domain";
 import { driver } from "driver.js";
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useLocation } from "react-router";
 import { problem } from "../lib/hooks.ts";
 import { askNeo, blocks, fit, keep, runStep, type Piece, type Turn } from "../lib/neo.ts";
@@ -214,6 +214,7 @@ export function Neo() {
   const log = useRef<HTMLDivElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const launcher = useRef<HTMLButtonElement>(null);
+  const input = useRef<HTMLTextAreaElement>(null);
   // "new" starts over; an answer for an earlier conversation is dropped
   const generation = useRef(0);
   const ids = useRef(0);
@@ -231,6 +232,36 @@ export function Neo() {
   }, [open]);
   // Opening moves focus into the window (not the box, so phones don't raise the keyboard)
   useEffect(() => { if (open) panel.current?.focus({ preventScroll: true }); }, [open]);
+  // On phones, another control stays usable while Neo closes and gets out of its way
+  useEffect(() => {
+    if (!open || !matchMedia("(max-width: 640px)").matches) return;
+    const dismissForControl = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element) || panel.current?.contains(target)) return;
+      if (!target.closest("button, a[href], input, select, [role=button]")) return;
+      close(false);
+    };
+    document.addEventListener("click", dismissForControl, true);
+    return () => document.removeEventListener("click", dismissForControl, true);
+  }, [open]);
+  // The question field grows with wrapped text, then scrolls internally after a comfortable limit
+  useLayoutEffect(() => {
+    const field = input.current;
+    if (!field) return;
+    const fit = () => {
+      field.style.height = "auto";
+      const max = 160;
+      field.style.height = `${Math.min(field.scrollHeight, max)}px`;
+      field.style.overflowY = field.scrollHeight > max ? "auto" : "hidden";
+    };
+    fit();
+    addEventListener("resize", fit);
+    window.visualViewport?.addEventListener("resize", fit);
+    return () => {
+      removeEventListener("resize", fit);
+      window.visualViewport?.removeEventListener("resize", fit);
+    };
+  }, [text, open]);
 
   const add = (m: Omit<Msg, "id">) => setMsgs((all) => [...all, { ...m, id: ++ids.current }]);
 
@@ -263,9 +294,10 @@ export function Neo() {
     setBusy(false);
   }
 
-  function close() {
+  // Return keyboard focus after a manual close; an outside control keeps its own focus
+  function close(restoreFocus = true) {
     setOpen(false);
-    requestAnimationFrame(() => launcher.current?.focus({ preventScroll: true }));
+    if (restoreFocus) requestAnimationFrame(() => launcher.current?.focus({ preventScroll: true }));
   }
 
   const look = light ? " n1chat-light" : "";
@@ -277,7 +309,7 @@ export function Neo() {
         <strong className="n1chat-title"><Mark />Neo</strong>
         <span className="n1chat-tools">
           <button type="button" className="n1chat-tool" onClick={fresh} aria-label="Start a new conversation">new</button>
-          <button type="button" className="n1chat-tool" onClick={close} aria-label="Close">close</button>
+          <button type="button" className="n1chat-tool" onClick={() => close()} aria-label="Close">close</button>
         </span>
       </div>
       <div ref={log} className="n1chat-log" role="log" aria-live="polite">
@@ -305,12 +337,13 @@ export function Neo() {
       </div>
       <form className="n1chat-form" onSubmit={submit}>
         <textarea
+          ref={input}
           className="n1chat-input"
-          rows={2}
+          rows={1}
           maxLength={2000}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void ask(text); } }}
+          onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void ask(text); } }}
           aria-label="Your question"
           placeholder="Ask Neo"
         />
