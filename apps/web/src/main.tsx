@@ -22,7 +22,7 @@ import { setCache, setNavigate } from "./lib/nav.ts";
 import { offline } from "./lib/reads.ts";
 import { Example } from "./pages/Example.tsx";
 import "./styles/app.css";
-import "./styles/business.css";
+import "./styles/sentinel.css";
 
 
 // iPhone browsers: the body scrolls and the page stays still, so nothing scrolls by under their bars

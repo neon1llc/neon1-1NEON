@@ -22,7 +22,7 @@ import { Offline } from "./Glitch.tsx";
 import { Rain } from "./Rain.tsx";
 import { PublicBar } from "./PublicBar.tsx";
 import { useSiteTheme } from "../lib/sitetheme.ts";
-import { isBusiness, resolveTheme, styleChoice } from "../lib/style.ts";
+import { isSentinel, isDarkLook, normalizeLook, resolveTheme, styleChoice } from "../lib/style.ts";
 import { dawn } from "../lib/dawn.ts";
 import { FileText as FileIcon, Folder as FolderIcon, Home as HomeIcon, Kanban as KanbanIcon, Menu as MenuIcon, Search as SearchIcon } from "lucide-react";
 import { ConfirmDialog } from "./Confirm.tsx";
@@ -57,15 +57,17 @@ export const useSession = () => useContext(MeCtx)!;
 
 /** Apply a theme to the page; with no attribute the styles show awake */
 export function applyTheme(theme: string) {
-  // The business themes ride on the same two values the CSS already knows (alert is awake, lamp is matrix) with data-style over them
-  const biz = isBusiness(theme);
+  // Named looks map to the existing light/dark CSS values; data-look retains the public name
+  const look = normalizeLook(theme);
+  const biz = isSentinel(look);
   const root = document.documentElement;
-  root.setAttribute("data-theme", theme === "alert" ? "awake" : theme === "lamp" ? "matrix" : theme);
-  if (biz) root.setAttribute("data-style", "business"); else root.removeAttribute("data-style");
+  root.setAttribute("data-theme", theme === "device" ? "device" : isDarkLook(look) ? "matrix" : "awake");
+  root.setAttribute("data-look", theme === "device" ? "device" : look);
+  if (biz) root.setAttribute("data-style", "sentinel"); else root.removeAttribute("data-style");
   syncDark();
 }
 // An account's saved theme as it shows here, through the landing's style choice (lib/style.ts); kept so a "device" theme in the
-// business style follows the device's light and dark setting as it changes
+// sentinel theme follows the device's light and dark setting as it changes
 let accountTheme: string | null = null;
 export function applyAccountTheme(theme: string) {
   accountTheme = theme;
@@ -73,7 +75,7 @@ export function applyAccountTheme(theme: string) {
 }
 
 
-// Whether the page shows Matrix (dark) right now: chosen outright, or "device" on a device set to dark.
+// Whether the page shows a dark mode right now: chosen outright, or "device" on a device set to dark.
 // The html element carries it as the class n1-dark, so Neo's window can follow the same look as the
 // landing page (dark over the rain, light over awake pages) and repaint the moment either one changes
 const darkDevice = matchMedia("(prefers-color-scheme: dark)");
@@ -82,13 +84,13 @@ export function isDark() {
   return t === "matrix" || (t === "device" && darkDevice.matches);
 }
 /** A theme the person is trying in Settings (Save keeps it, and sets the style to match): leaving dark is a slow dawn (lib/dawn.ts)
- * within the stylized style; the business style, and a move between styles, change at once. A named theme shows as named; "device"
+ * within the matrix theme; the sentinel theme, and a move between styles, change at once. A named theme shows as named; "device"
  * follows the device inside the style the landing chose */
 export function changeTheme(theme: string) {
   accountTheme = theme;
   const next = theme === "device" ? resolveTheme(theme) : theme;
-  const willBeDark = next === "matrix" || next === "lamp" || (next === "device" && darkDevice.matches);
-  const plain = isBusiness(next) || document.documentElement.getAttribute("data-style") === "business";
+  const willBeDark = isDarkLook(next) || (next === "device" && darkDevice.matches);
+  const plain = isSentinel(next) || document.documentElement.getAttribute("data-style") === "sentinel";
   dawn(!plain && isDark() && !willBeDark, () => applyTheme(next));
 }
 function syncDark() {
@@ -99,7 +101,7 @@ function syncDark() {
   if (icon) icon.href = dark ? "/favicon-matrix.svg" : "/favicon-awake.svg";
 }
 darkDevice.addEventListener?.("change", () => {
-  if (accountTheme === "device" && styleChoice() === "business") applyAccountTheme("device"); else syncDark();
+  if (accountTheme === "device" && styleChoice() === "sentinel") applyAccountTheme("device"); else syncDark();
 });
 
 
@@ -147,7 +149,13 @@ function App() {
     return () => removeEventListener("1neon:signed-out", check);
   }, [qc]);
   useEffect(() => {
-    if (me.data) applyAccountTheme(me.data.user.theme);
+    if (!me.data) { accountTheme = null; return; }
+    applyAccountTheme(me.data.user.theme);
+    const follow = (event: StorageEvent) => {
+      if (event.key === "neon1.style" || event.key === null) applyAccountTheme(me.data.user.theme);
+    };
+    addEventListener("storage", follow);
+    return () => removeEventListener("storage", follow);
   }, [me.data]);
   // First sign-in from a browser with no saved time zone: keep the browser's, so email shows times in
   // the person's own zone. Once per page load; the profile changes it, and a failure is simply skipped
@@ -378,13 +386,13 @@ function SignIn() {
     if (r.step === "choose" || r.step === "code" || r.step === "totp") saveStep(session(), { email: mail, step: r.step, methods: r.methods });
     fade(() => { setAt(r); setSigningUp(false); });
   };
-  // Sign-in, the demo's person picker, and a walkthrough's sign-in all share neon1.tech's awake or matrix choice
+  // Sign-in, the demo's person picker, and a walkthrough's sign-in all share neon1.tech's family and mode choices
   // (awake until picked) and the same bar: the logo on the left, the theme switch on the right
   const [look, setLook] = useSiteTheme();
-  // Awake and alert are the light sign-in; matrix is the dark one with the rain; lamp is the same dark ground without it (the business
+  // Awake and providence are light; plugged has rain; desert of the real is dark without it (the sentinel
   // style has no rain, and the landing's choice decides which style this is)
-  const awake = look === "awake" || look === "alert";
-  const rainy = look === "matrix";
+  const awake = !isDarkLook(look);
+  const rainy = look === "plugged";
   return (
     <main className={`signin${awake ? " awake" : ""}`}>
       {rainy && <Rain panes=".signin .panel, .signin .n1-logo" controls={false} />}

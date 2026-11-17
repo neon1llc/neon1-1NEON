@@ -1,54 +1,59 @@
-// apps/web/src/lib/style.ts - The style neon1.tech's landing screen chooses for the whole of neon1: stylized (the rain, the neon, the
-// glows) or business (plain, with no effects). It is kept in the same localStorage key the site uses ("neon1.style", same origin), so the
-// landing's switch wins here too (Pradeep, 2026-11-17). Each style has a light and a dark theme: awake and matrix when stylized, alert
-// and lamp when business. 1NEON reads them as html[data-theme] "awake" or "matrix" (so every light and dark rule written for those still
-// applies) with html[data-style="business"] over them (styles/business.css), exactly as neon1.tech does.
+// apps/web/src/lib/style.ts - Matrix/sentinel preferences shared with neon1.tech, with an independent mode.
 
 
-export type Look = "awake" | "matrix" | "alert" | "lamp";
-export type Style = "stylized" | "business";
-
+export type Look = "awake" | "plugged" | "providence" | "desert-of-the-real";
+export type Style = "matrix" | "sentinel";
 const KEY_STYLE = "neon1.style";
-const KEY = "neon1.theme";               // stylized: awake or matrix
-const KEY_BIZ = "neon1.theme.business";  // business: alert or lamp
+const KEY_MODE = "neon1.mode";
+const memory = new Map<string, string>();
 
-const read = (k: string): string | null => { try { return localStorage.getItem(k); } catch { return null; } };
-const write = (k: string, v: string) => { try { localStorage.setItem(k, v); } catch { /* not kept: this page still switches */ } };
+// Storage may be blocked; a choice still applies for this page's lifetime
+const read = (key: string): string | null => { if (memory.has(key)) return memory.get(key)!; try { return localStorage.getItem(key); } catch { return null; } };
+const write = (key: string, value: string) => { try { localStorage.setItem(key, value); memory.delete(key); } catch { memory.set(key, value); } };
 
-export const isBusiness = (t: string): boolean => t === "alert" || t === "lamp";
-export const isDarkLook = (t: string): boolean => t === "matrix" || t === "lamp";
+/** Old names remain readable while saved profiles and browser preferences migrate */
+export function normalizeLook(theme: string): Look {
+  if (theme === "matrix" || theme === "plugged") return "plugged";
+  if (theme === "alert" || theme === "providence") return "providence";
+  if (theme === "lamp" || theme === "desert-of-the-real") return "desert-of-the-real";
+  return "awake";
+}
+export const isSentinel = (theme: string): boolean => ["providence", "desert-of-the-real"].includes(normalizeLook(theme));
+export const isDarkLook = (theme: string): boolean => ["plugged", "desert-of-the-real"].includes(normalizeLook(theme));
 const darkDevice = () => matchMedia("(prefers-color-scheme: dark)").matches;
+export const lookFor = (style: Style, dark: boolean): Look => style === "sentinel" ? (dark ? "desert-of-the-real" : "providence") : dark ? "plugged" : "awake";
 
-/** The landing's choice, or null when this browser never made one (an account's own theme then stands as it is) */
+/** Null means this browser has no family override for an account's saved preference */
 export function styleChoice(): Style | null {
-  const v = read(KEY_STYLE);
-  return v === "business" || v === "stylized" ? v : null;
+  const value = read(KEY_STYLE);
+  if (value === "sentinel" || value === "business") return "sentinel";
+  if (value === "matrix" || value === "stylized") return "matrix";
+  return null;
 }
-export function setStyleChoice(s: Style) { write(KEY_STYLE, s); }
+export function setStyleChoice(style: Style) { write(KEY_STYLE, style); }
 
-/** The public screens' look: the style, then that style's saved theme. Stylized is awake until a pick; business follows the
- * device's light or dark setting on its first visit only, as on the site */
+/** Prefer the common mode; migrate the active family's old saved choice once */
 export function readLook(): Look {
-  if (styleChoice() === "business") {
-    const v = read(KEY_BIZ);
-    return v === "lamp" || v === "alert" ? v : darkDevice() ? "lamp" : "alert";
+  const style = styleChoice() ?? "matrix";
+  let mode = read(KEY_MODE);
+  if (mode !== "light" && mode !== "dark") {
+    const old = read(style === "sentinel" ? "neon1.theme.business" : "neon1.theme");
+    mode = old && isDarkLook(old) ? "dark" : "light";
+    write(KEY_MODE, mode);
   }
-  return read(KEY) === "matrix" ? "matrix" : "awake";
-}
-/** Keep a pick made on a public screen, in the style's own key (a business pick also makes business the style) */
-export function saveLook(look: Look) {
-  if (isBusiness(look)) { setStyleChoice("business"); write(KEY_BIZ, look); }
-  else { setStyleChoice("stylized"); write(KEY, look); }
+  return lookFor(style, mode === "dark");
 }
 
-/** An account's saved theme as it shows on this browser: the landing's style wins. Stylized themes read as their business twin when
- * the landing chose business, and the other way round; "device" follows the device's light or dark setting inside the chosen style */
+/** A named selection explicitly sets both axes, including when saved from the profile */
+export function saveLook(look: Look) {
+  write(KEY_MODE, isDarkLook(look) ? "dark" : "light");
+  setStyleChoice(isSentinel(look) ? "sentinel" : "matrix");
+}
+
+/** The landing's family overrides the account's family, preserving the account's light/dark mode */
 export function resolveTheme(theme: string): string {
-  const s = styleChoice();
-  if (!s) return theme;
-  const biz = s === "business";
-  const t = theme === "device" ? (biz ? (darkDevice() ? "matrix" : "awake") : "device") : theme;
-  if (t === "device") return t;
-  const dark = isDarkLook(t);
-  return biz ? (dark ? "lamp" : "alert") : dark ? "matrix" : "awake";
+  const style = styleChoice();
+  if (theme === "device") return style === "sentinel" ? lookFor(style, darkDevice()) : "device";
+  const look = normalizeLook(theme);
+  return style ? lookFor(style, isDarkLook(look)) : look;
 }

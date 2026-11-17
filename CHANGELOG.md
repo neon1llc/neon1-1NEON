@@ -3,7 +3,10 @@
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
 ## Unreleased
-- A business style, the plain look of neon1.tech's new landing switch, now covers 1NEON: no rain, glow, flicker, or fades, a neutral palette with one steel-blue accent, and the same logo mark recolored. It has two themes, alert (light) and lamp (dark). Settings lists four themes in two groups, Stylized (awake, matrix) and Business (alert, lamp), plus match my device, and the sign-in follows what the landing chose. Saving a theme also sets the style, so the site and 1NEON always agree.
+
+- The landing theme switch chooses Matrix or Sentinel without changing light or dark mode. Mode switches say “light or dark.” Existing saved preferences remain readable.
+- Matrix has Awake (light) and Plugged (dark). Sentinel has Providence (light) and Desert of the Real (dark), with a leaf-green palette based on #39AB56 and still presentation.
+- Site and 1NEON public screens share the family and mode. The profile uses the same four names, and an unrelated profile save preserves the landing's family choice.
 
 ## v0.20.1 - 2026-11-17
 - Dev passkeys belong to dev.neon1.tech, so a device no longer offers a neon1.tech passkey to the dev site or a dev one to production. Production is unchanged.

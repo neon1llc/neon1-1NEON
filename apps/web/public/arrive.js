@@ -15,13 +15,13 @@ addEventListener("error", (e) => {
 }, true);
 
 
-// The business style (neon1.tech's landing switch, the same localStorage keys) is set before the first paint too, so a lamp (dark) page
-// never flashes light and an alert page never flashes the stylized black. The app then keeps it (components/Shell.tsx applyTheme)
+// Set the public look before paint, using the same mode migration as the site and lib/style.ts
 try {
-  if (localStorage.getItem("neon1.style") === "business") {
-    const saved = localStorage.getItem("neon1.theme.business");
-    const dark = saved === "lamp" || (saved !== "alert" && matchMedia("(prefers-color-scheme: dark)").matches);
-    document.documentElement.setAttribute("data-style", "business");
-    document.documentElement.setAttribute("data-theme", dark ? "matrix" : "awake");
-  }
-} catch { /* storage blocked: the app sets its own look once it loads */ }
+  const style = localStorage.getItem("neon1.style");
+  const sentinel = style === "sentinel" || style === "business";
+  const old = localStorage.getItem(sentinel ? "neon1.theme.business" : "neon1.theme");
+  const mode = localStorage.getItem("neon1.mode");
+  const dark = mode === "dark" || (mode !== "light" && ["matrix", "lamp", "plugged", "desert-of-the-real"].includes(old));
+  if (sentinel) document.documentElement.setAttribute("data-style", "sentinel");
+  document.documentElement.setAttribute("data-theme", dark ? "matrix" : "awake");
+} catch { /* storage blocked: the app sets its look once it loads */ }
