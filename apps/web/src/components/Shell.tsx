@@ -733,7 +733,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
   const [search, setSearch] = useState(false);
   const [top, setTop] = useState<ReactNode>(null);
   const loc = useLocation();
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!neoOpen) return;
     // Listen at the document so controls rendered through portals (Search, dialogs, menus) are covered too.
     const dismiss = (event: Event) => {
@@ -943,7 +943,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
           <button className="icon-btn menu-btn" onClick={() => setOpen(!open)} aria-expanded={open} aria-label="Menu" title="Menu" data-tour="menu"><MenuIcon size={18} /></button>
           <div className="crumb">{top}</div>
           <span className="spacer" />
-          <button className="search-btn" onClick={() => setSearch(true)} data-tour="search" aria-label="Search">
+          <button className="search-btn" onClick={() => { setNeoOpen(false); setSearch(true); }} data-tour="search" aria-label="Search">
             <SearchIcon size={16} aria-hidden="true" />
             <span className="hide-sm">Search</span>
             <span className="kbd hide-sm">{/Mac|iPhone|iPad/.test(navigator.platform) ? "⌘K" : "Ctrl K"}</span>
