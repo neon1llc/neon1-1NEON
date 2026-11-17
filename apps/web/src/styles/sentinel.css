@@ -6,21 +6,21 @@
 /* ---- Tokens ---- */
 :root[data-style="sentinel"][data-theme="awake"] {
   color-scheme: light;
-  --paper: #F5F8F4; --void: #F5F8F4; --ink: #18271D; --m-ink: #18271D; --m-ink-soft: #384D3F; --m-muted: #526858; --m-faint: #5B705F;
-  --bg: #F5F8F4; --frame: #E7EFE6; --panel: #FFFFFF; --text: #18271D; --muted: #526858; --faint: #526858;
+  --paper: #F2F4F2; --void: #F2F4F2; --ink: #18271D; --m-ink: #18271D; --m-ink-soft: #384D3F; --m-muted: #526858; --m-faint: #5B705F;
+  --bg: #F2F4F2; --frame: #E7EFE6; --panel: #F5F8F4; --text: #18271D; --muted: #526858; --faint: #526858;
   --line: rgb(24 39 29 / .14); --line-strong: rgb(24 39 29 / .6); --field-line: rgb(24 39 29 / .6);
-  --accent: #246F38; --accent-ink: #FFFFFF; --accent-soft: rgb(36 111 56 / .08); --focus: #246F38; --shadow: 0 1px 2px rgb(24 39 29 / .06);
+  --accent: #246F38; --accent-ink: #F2F4F2; --accent-soft: rgb(36 111 56 / .08); --focus: #246F38; --shadow: 0 1px 2px rgb(24 39 29 / .06);
   --amber: #8A5300; --red: #B3261E; --ok: #18692C;
-  --l1: #174B27; --l2: #246F38; --l3: #2F7A42; --l4: #358048; --badge-ink: #FFFFFF;
+  --l1: #174B27; --l2: #246F38; --l3: #2F7A42; --l4: #358048; --badge-ink: #F2F4F2;
 }
 :root[data-style="sentinel"][data-theme="matrix"] {
   color-scheme: dark;
-  --paper: #121A14; --void: #121A14; --ink: #E6F0E7; --m-ink: #E6F0E7; --m-ink-soft: #C8DACB; --m-muted: #A6BFA9; --m-faint: #91AC96;
-  --bg: #121A14; --frame: #0D1510; --panel: #1B2820; --text: #E6F0E7; --muted: #A6BFA9; --faint: #91AC96;
-  --line: rgb(230 240 231 / .14); --line-strong: rgb(230 240 231 / .5); --field-line: rgb(230 240 231 / .5);
-  --accent: #79CF91; --accent-ink: #0D1510; --accent-soft: rgb(121 207 145 / .1); --focus: #79CF91; --shadow: none;
+  --paper: #0F0A0D; --void: #0F0A0D; --ink: #F2F4F2; --m-ink: #F2F4F2; --m-ink-soft: #D3D9D4; --m-muted: #B2BDB4; --m-faint: #9AA89C;
+  --bg: #0F0A0D; --frame: #0A0608; --panel: #17110F; --text: #F2F4F2; --muted: #B2BDB4; --faint: #9AA89C;
+  --line: rgb(242 244 242 / .14); --line-strong: rgb(242 244 242 / .5); --field-line: rgb(242 244 242 / .5);
+  --accent: #79CF91; --accent-ink: #0F0A0D; --accent-soft: rgb(121 207 145 / .1); --focus: #79CF91; --shadow: none;
   --amber: #E8B35A; --red: #FF9A8F; --ok: #7CC59A;
-  --l1: #56AB70; --l2: #72BF89; --l3: #91D3A4; --l4: #B2E5BF; --badge-ink: #121A14;
+  --l1: #56AB70; --l2: #72BF89; --l3: #91D3A4; --l4: #B2E5BF; --badge-ink: #0F0A0D;
 }
 /* The accent stands in for every green and neon the shared and app styles still name */
 :root[data-style="sentinel"] { --leaf: #39AB56; --brand: var(--accent); --mark: var(--accent); --deep: var(--accent); --neon: var(--accent); --glow: var(--accent); --mid: var(--accent); --mono: var(--sans); }
@@ -37,7 +37,7 @@
 
 /* ---- Public screens: sign-in, FAQs, legal pages ---- */
 :root[data-style="sentinel"] .pub-bar .n1-logo, :root[data-style="sentinel"][data-theme] .pub-bar .n1-logo { color: var(--accent); }
-:root[data-style="sentinel"][data-theme="matrix"] body:has(.pub-bar) .n1chat-launch:not(.n1chat-light) { border-color: var(--accent); color: var(--accent); background: rgb(18 26 20 / .96); box-shadow: none; }
+:root[data-style="sentinel"][data-theme="matrix"] body:has(.pub-bar) .n1chat-launch:not(.n1chat-light) { border-color: var(--accent); color: var(--accent); background: rgb(15 10 13 / .96); box-shadow: none; }
 :root[data-style="sentinel"][data-theme="matrix"] body:has(.pub-bar) .n1chat-launch:not(.n1chat-light) svg { filter: none; }
 /* The sign-in: a plain panel on the page color, in both themes (the matrix awake one has green washes and rings, the dark one glass) */
 :root[data-style="sentinel"] .signin, :root[data-style="sentinel"] .signin.awake { background: var(--bg); color: var(--text); --focus: var(--accent); --req-color: var(--red); }
@@ -66,9 +66,9 @@
 :root[data-style="sentinel"] .side :is(.bug-row, .site-end) .lbl { text-decoration-color: color-mix(in srgb, currentColor 55%, transparent); }
 :root[data-style="sentinel"] .side :is(.bug-row, .site-end):is(:hover, :focus-visible, :active) .lbl { text-decoration-color: currentColor; }
 :root[data-style="sentinel"] .btn:disabled { opacity: .6; }
-:root[data-style="sentinel"][data-theme="awake"] .n1chat { --bg: #FFFFFF; --fg: #18271D; --line: rgb(24 39 29 / .6); --soft: rgb(24 39 29 / .14); --bot: #E7EFE6;
-  --you: rgb(36 111 56 / .08); --muted: #526858; --accent: #246F38; --accent-ink: #FFFFFF; --field: #F5F8F4; --link: #246F38; box-shadow: 0 8px 24px rgb(24 39 29 / .16); }
-:root[data-style="sentinel"][data-theme="matrix"] .n1chat { --bg: #1B2820; --fg: #E6F0E7; --line: rgb(230 240 231 / .5); --soft: rgb(230 240 231 / .14); --bot: #121A14;
-  --you: rgb(121 207 145 / .1); --muted: #A6BFA9; --accent: #79CF91; --accent-ink: #0D1510; --field: #121A14; --link: #79CF91; box-shadow: 0 8px 24px rgb(0 0 0 / .4); }
+:root[data-style="sentinel"][data-theme="awake"] .n1chat { --bg: #F5F8F4; --fg: #18271D; --line: rgb(24 39 29 / .6); --soft: rgb(24 39 29 / .14); --bot: #E7EFE6;
+  --you: rgb(36 111 56 / .08); --muted: #526858; --accent: #246F38; --accent-ink: #F2F4F2; --field: #F2F4F2; --link: #246F38; box-shadow: 0 8px 24px rgb(24 39 29 / .16); }
+:root[data-style="sentinel"][data-theme="matrix"] .n1chat { --bg: #17110F; --fg: #F2F4F2; --line: rgb(242 244 242 / .5); --soft: rgb(242 244 242 / .14); --bot: #0F0A0D;
+  --you: rgb(121 207 145 / .1); --muted: #B2BDB4; --accent: #79CF91; --accent-ink: #0F0A0D; --field: #0F0A0D; --link: #79CF91; box-shadow: 0 8px 24px rgb(0 0 0 / .4); }
 :root[data-style="sentinel"] .n1chat-launch:not(.n1chat-light) { color: var(--accent); border-color: var(--accent); background: var(--bg); }
 :root[data-style="sentinel"] .n1chat-launch:not(.n1chat-light):hover { background: var(--accent-soft); }

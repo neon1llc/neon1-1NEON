@@ -1107,7 +1107,7 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
    lays its mark exactly over the top bar's. Both lead to Home */
 :root { --top-h: 60px; }
 .top { height: var(--top-h); padding-top: 0; padding-bottom: 0; }
-.top-brand { flex: none; display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 6px; margin-left: calc(10px - var(--gut)); margin-right: -4px; border-radius: var(--r-sm);
+.top-brand { flex: none; display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 6px; margin-left: calc(6px - var(--gut)); margin-right: -4px; border-radius: var(--r-sm);
   color: var(--accent); font: 700 14px var(--mono); letter-spacing: .08em; text-decoration: none; }
 .top-brand:hover { background: var(--accent-soft); }
 .top-brand:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }

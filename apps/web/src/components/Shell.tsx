@@ -885,7 +885,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
         {/* Every way to reach neon1, for every account, new ones included; the signed-in person ends the
             Organization group, so it shows on the first screen and is never taken for Report a bug */}
         <ul className="nav contact-nav">
-          <Item to="/contact" icon={<Icon name="contact" />} label="Contact neon1" tour="nav-contact" />
+          <Item to={all ? "/all/contact" : "/contact"} icon={<Icon name="contact" />} label="Contact neon1" tour="nav-contact" />
           <li>
             <NavLink to={all ? "/all/me" : "/me"} className="who-link" title="Your profile" data-tour="nav-me">
               <span className="ico av-box"><Avatar id={me.user.id} name={me.user.name || me.user.email} size={24} /></span>
