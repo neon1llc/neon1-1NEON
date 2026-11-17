@@ -3,6 +3,7 @@
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
 ## Unreleased
+- Switching from dark to awake, on the public screens and in Settings, is slow like eyes taking the light after the dark: the light screen comes up over the dark one in a long ease-out. Going dark stays quick. Reduced motion changes at once.
 - With the Mini rail on, Neo's window sits in the content space: the gap to the rail matches the gap to the screen's right edge.
 - In the dark theme the chosen menu row has a stronger halo, so chosen layers read apart.
 - Neo's mark is the site logo's eight arcs, as on neon1.tech. The neon1.tech menu row's mark is the size of the other menu icons, with no fill.
