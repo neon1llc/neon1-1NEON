@@ -5,7 +5,7 @@
 ## Unreleased
 - Report a bug, Feedback, and neon1.tech in the menu are links like the front page's: the theme's green, plain in awake, and in the dark underlined in a dulled green that turns full on hover, focus, or tap.
 - The neon1.tech row lights like the 1NEON mark row: a sharp-edged band a menu row tall, in the Mini rail and the open menu alike.
-- The neon1.tech row's text is bold with the 1NEON name's letter spacing.
+- The neon1.tech row's text is bold like the 1NEON name.
 - The neon1.tech row's text is the theme's green, as the 1NEON name above it: dark green in awake, matrix green in matrix.
 - Opening the menu from the Mini rail no longer nudges its content 4px right: the open menu uses the rail's side padding, so icons, the mark, and the picker stay put as it widens.
 - While the menu opens, a long organization name stays on one line in the picker (ending in an ellipsis) instead of wrapping out of its box.

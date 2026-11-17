@@ -2075,7 +2075,7 @@ body:has(.shell.mini) .n1chat.n1chat-right { left: auto; right: max(16px, env(sa
 
 /* The neon1.tech row's words take the theme's green as the 1NEON name above does: dark green awake, matrix green in matrix */
 .side .site-end { color: var(--accent); }
-.side .site-end { font-weight: 700; letter-spacing: .08em; } /* the 1NEON name's weight and spacing */
+.side .site-end { font-weight: 700; } /* the 1NEON name's weight */
 
 /* The neon1.tech row lights as the 1NEON mark row above does: a sharp-edged band the height of a menu row, centered
    in its row, the same width in the Mini rail and the open menu (the other rows keep rounded pills) */
