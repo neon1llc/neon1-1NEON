@@ -968,10 +968,20 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 .bell-list .lvl-critical .dot { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .bell-list .lvl-info .what { opacity: .75; }
 .bell-empty { padding: 14px; margin: 0; }
-@media (max-width: 640px) { .bell-list { position: fixed; left: 12px; right: 12px; top: 64px; width: auto; } }
+/* On phones the list uses the same content gutters as the page, and clears every bar in the frame */
+@media (max-width: 640px) {
+  .bell-list { --bell-top: calc(var(--top-h) + 8px); position: fixed; left: calc(var(--gut) + env(safe-area-inset-left)); right: calc(var(--gut) + env(safe-area-inset-right));
+    top: var(--bell-top); width: auto; max-height: calc(100dvh - var(--bell-top) - var(--top-h) - env(safe-area-inset-bottom) - 8px); }
+  body:has(.readonly-bar) .bell-list { --bell-top: calc(var(--top-h) + var(--top-h) + 8px); }
+  body:has(.demo-bar) .bell-list { --bell-top: calc(var(--top-h) + var(--demo-h, 0px) + 8px); }
+  body:has(.demo-bar):has(.readonly-bar) .bell-list { --bell-top: calc(var(--top-h) + var(--top-h) + var(--demo-h, 0px) + 8px); }
+  body:has(.shell.mini) .bell-list { left: calc(var(--rail) + var(--gut) + env(safe-area-inset-left)); }
+}
 @media (prefers-reduced-motion: reduce) { .bell-btn.breathing { animation: none; background: var(--accent-soft); } }
 /* The profile's notification choices: one row per kind for email; texts in their own block below */
 .notify { display: grid; gap: 8px; }
+.notify-table-scroll { max-width: 100%; min-width: 0; overflow-x: auto; overscroll-behavior-inline: contain; }
+.notify-table-scroll:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .notify-table { width: 100%; border-collapse: collapse; }
 .notify-table th, .notify-table td { padding: 8px 6px; border-top: 1px solid var(--line); text-align: left; vertical-align: middle; font-weight: 400; }
 .notify-table thead th { border-top: 0; font: 11px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
@@ -981,6 +991,7 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 .notify-table input { width: 18px; height: 18px; min-height: 0; accent-color: var(--accent); }
 .notify-table input:disabled { opacity: .4; cursor: not-allowed; }
 .profile-save-inline { justify-content: center; margin: 4px 0 24px; }
+@media (max-width: 640px) { .notify-table { min-width: 460px; } }
 
 /* The yes to texts: a checkbox with the carrier wording beside it */
 .notify .sms-consent { display: grid; font: 13px/1.5 var(--sans, inherit); color: var(--text); letter-spacing: 0; text-transform: none; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--bg); font-size: 13px; line-height: 1.5; }
