@@ -20,6 +20,7 @@ import { previewMenu } from "../lib/preview.ts";
 import { ReportBug } from "../components/BugReport.tsx";
 import { askToConfirm, TotpSetup } from "../components/Confirm.tsx";
 import { chosenLessMotion, deviceLessMotion, setLessMotion } from "../lib/motion.ts";
+import { forgetScroll } from "../lib/scrollmemory.ts";
 
 
 // What the profile says under the text consent for each state
@@ -144,6 +145,7 @@ export function MePage() {
   };
   // Dev and demo: forget who you picked. Production: the API revokes tokens and returns Cognito's logout URL
   const signOut = async () => {
+    forgetScroll();
     // The live playback's story lives in this page, so signing out stays in it, at the sign-in
     if (LIVE) {
       devUser.set("");

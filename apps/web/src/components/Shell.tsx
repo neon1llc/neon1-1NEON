@@ -12,6 +12,7 @@ import { passkeyAssertion } from "../lib/passkey.ts";
 import { SIGN_IN_METHODS } from "../lib/methods.ts";
 import { drew, fade, lessMotion } from "../lib/motion.ts";
 import { REWIND } from "../lib/nav.ts";
+import { useSectionScroll } from "../lib/scrollmemory.ts";
 import { usePersisting } from "../lib/persist.ts";
 import { cleanCode, clearStep, loadStep, saveStep, session } from "../lib/signin.ts";
 import type { Me, OrgResponse, OrgSummary } from "../lib/types.ts";
@@ -675,6 +676,8 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
   // Each page (a project counts as one, whatever its tab) eases in when you arrive
   const parts = loc.pathname.split("/");
   const section = parts.slice(0, parts[3] === "projects" && parts[4] && parts[4] !== "new" ? 5 : 4).join("/");
+  // Each section keeps the scroll it was left at; a section not yet visited opens at its top
+  useSectionScroll(section, loc.hash);
   // The full menu closes after navigating, and on Escape
   useEffect(() => setOpen(false), [loc.pathname]);
   // Arriving on another page puts keyboard focus on its title, so a screen reader hears where it is and
