@@ -250,23 +250,25 @@ export function MePage() {
         <div className="card small notify" id="notifications">
           <b>Notifications</b>
           <span className="muted">Everything shows under the bell. Choose what also reaches you by email or text. Important ones email you by default.</span>
-          <table className="notify-table">
-            <thead><tr><th scope="col">When</th><th scope="col">Email</th><th scope="col">Text</th></tr></thead>
-            <tbody>
-              {NOTIFY_GROUPS.map((g) => {
-                // The saved choice, or the group's default
-                const cur = draft.notify[g.id] ?? { email: g.email, sms: false };
-                const set = (patch: Partial<typeof cur>) => setDraft({ ...draft, notify: { ...draft.notify, [g.id]: { ...cur, ...patch } } });
-                return (
-                  <tr key={g.id}>
-                    <th scope="row"><span>{g.label}{g.level === "critical" && <span className="tag rec">important</span>}</span><span className="muted">{g.hint}</span></th>
-                    <td><input type="checkbox" aria-label={`Email me: ${g.label}`} checked={cur.email} onChange={(e) => set({ email: e.target.checked })} /></td>
-                    <td><input type="checkbox" aria-label={`Text me: ${g.label}`} checked={textsAvailable && cur.sms} disabled={!textsAvailable} onChange={(e) => set({ sms: e.target.checked })} /></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="notify-table-scroll" role="region" aria-label="Notification delivery preferences" tabIndex={0}>
+            <table className="notify-table">
+              <thead><tr><th scope="col">When</th><th scope="col">Email</th><th scope="col">Text</th></tr></thead>
+              <tbody>
+                {NOTIFY_GROUPS.map((g) => {
+                  // The saved choice, or the group's default
+                  const cur = draft.notify[g.id] ?? { email: g.email, sms: false };
+                  const set = (patch: Partial<typeof cur>) => setDraft({ ...draft, notify: { ...draft.notify, [g.id]: { ...cur, ...patch } } });
+                  return (
+                    <tr key={g.id}>
+                      <th scope="row"><span>{g.label}{g.level === "critical" && <span className="tag rec">important</span>}</span><span className="muted">{g.hint}</span></th>
+                      <td><input type="checkbox" aria-label={`Email me: ${g.label}`} checked={cur.email} onChange={(e) => set({ email: e.target.checked })} /></td>
+                      <td><input type="checkbox" aria-label={`Text me: ${g.label}`} checked={textsAvailable && cur.sms} disabled={!textsAvailable} onChange={(e) => set({ sms: e.target.checked })} /></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
           {!noTexts && <fieldset className="notify-texts" id="texts">
             <legend>Text messages</legend>
             {/* Texts need a mobile number and a clear yes, worded the way carriers require */}
