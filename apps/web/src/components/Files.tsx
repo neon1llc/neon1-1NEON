@@ -6,14 +6,15 @@ import { fileState, PROSPECT_ACCEPT, proposalRef, revisions, VIEWABLE, type Docu
 import { proposalRefOf } from "../lib/docx.ts";
 import { useRef, useState, type ReactNode } from "react";
 import { api, HttpError, openable, send } from "../lib/api.ts";
-import { problem, useRefresh } from "../lib/hooks.ts";
+import { problem, useProjects, useRefresh } from "../lib/hooks.ts";
 import { useOrg, useSession } from "./Shell.tsx";
-import { ago, LayerBadge, useAsk, useToast } from "./ui.tsx";
+import { ago, Dialog, LayerBadge, LAYERS, layerName, useAsk, useToast } from "./ui.tsx";
 
 
-// Where an upload is filed: its layer, and optionally a project and the "file needed" item it answers
+// Where an upload is filed: nothing is organization level, a project alone is project level, and a layer
+// with it files under that layer. Optionally the "file needed" item it answers
 export interface FileTarget {
-  layer: Layer;
+  layer?: Layer;
   projectId?: string;
   itemId?: string;
 }
@@ -212,6 +213,12 @@ export function DropZone({ target, children }: { target: FileTarget; children?: 
 
 
 // A short note on each row for files that aren't plain ready ones
+/** Where a file sits, in words: "Organization level", "ACME-1 · Project level", or "ACME-1 · Needs" */
+function placement(d: DocumentRecord, projectName?: (id?: string) => string | undefined) {
+  if (!d.projectId) return "Organization level";
+  const key = projectName?.(d.projectId);
+  return [key, d.layer ? layerName(d.layer) : "Project level"].filter(Boolean).join(" · ");
+}
 const STATE_NOTE: Record<FileState, string> = { receiving: "", checking: "malware check running", ready: "", rejected: "flagged by scan", failed: "upload failed" };
 
 
@@ -222,7 +229,7 @@ const size = (n: number) => (n < 1024 ? `${n} B` : n < 1024 ** 2 ? `${(n / 1024)
 /** Files as rows: the name opens it (in a tab when the browser can show it, otherwise it downloads),
  * then where it's filed, when, and Download; the uploader and admins may delete, after a check */
 export function FileList({ docs, projectName, empty = "No files yet." }: { docs: DocumentRecord[]; projectName?: (id?: string) => string | undefined; empty?: string }) {
-  const { org, canAdmin } = useOrg();
+  const { org, canAdmin, canWrite } = useOrg();
   const me = useSession();
   const toast = useToast();
   const refresh = useRefresh(org.id);
@@ -255,6 +262,24 @@ export function FileList({ docs, projectName, empty = "No files yet." }: { docs:
       toast(problem(e));
     }
   };
+  // Where a file is filed, set from its menu: organization level, a project, or a layer of one
+  const [moveDoc, setMoveDoc] = useState<DocumentRecord>();
+  const [toProject, setToProject] = useState("");
+  const [toLayer, setToLayer] = useState("");
+  const projects = useProjects(org.id);
+  const openMove = (d: DocumentRecord) => { setToProject(d.projectId ?? ""); setToLayer(d.projectId ? d.layer ?? "" : ""); setMoveDoc(d); };
+  const saveMove = async () => {
+    const d = moveDoc;
+    if (!d) return;
+    try {
+      await api(`/t/${org.id}/docs/${d.id}${q(d)}`, { method: "PATCH", body: { projectId: toProject || null, layer: toProject && toLayer ? toLayer : null } });
+      toast("Moved.");
+      setMoveDoc(undefined);
+    } catch (e) {
+      toast(problem(e));
+    }
+    refresh();
+  };
   // Deleting asks first; admins need strong sign-in for others' files
   const remove = async (d: DocumentRecord) => {
     if (!(await ask({ title: `Delete ${d.name}?`, body: "It's deleted for everyone in this organization and can't be downloaded again. The activity log notes the deletion.", yes: "Delete", danger: true }))) return;
@@ -267,17 +292,39 @@ export function FileList({ docs, projectName, empty = "No files yet." }: { docs:
   };
   return (
     <div className="files">
+      {/* Move: pick the level (organization, or a project), then for a project its layer or the project as a whole */}
+      <Dialog open={Boolean(moveDoc)} onClose={() => setMoveDoc(undefined)} label="Move file" className="ask">
+        <h2>Move {moveDoc?.name}</h2>
+        <div className="file-target">
+          <select aria-label="Level" value={toProject} disabled={Boolean(moveDoc?.itemId)} onChange={(e) => { setToProject(e.target.value); setToLayer(""); }}>
+            <option value="">Organization level</option>
+            {projects.data?.filter((p) => !p.deletedAt && (!p.archived || p.id === moveDoc?.projectId)).map((p) => <option key={p.id} value={p.id}>{p.key} · {p.name}</option>)}
+          </select>
+          {toProject && <>
+            <span>in</span>
+            <select aria-label="Layer" value={toLayer} onChange={(e) => setToLayer(e.target.value)}>
+              <option value="">Project level</option>
+              {LAYERS.map((l) => <option key={l} value={l}>{layerName(l)}</option>)}
+            </select>
+          </>}
+        </div>
+        <div className="actions">
+          <button className="btn btn-primary" onClick={() => void saveMove()}>Move</button>
+          <button className="btn btn-ghost" onClick={() => setMoveDoc(undefined)} autoFocus>Cancel</button>
+        </div>
+      </Dialog>
       {list.map((d) => (
         <div className="file" key={d.id}>
-          <LayerBadge layer={d.layer} />
+          {d.projectId && d.layer ? <LayerBadge layer={d.layer} /> : <span className="badge level" aria-hidden="true">{d.projectId ? "P" : "O"}</span>}
           <div className="meta">
             {/* A ready file's name opens it, like other titles; others are plain text until they're ready */}
             {fileState(d) === "ready" ? <button type="button" className="t item-open" onClick={() => void view(d)} title={VIEWABLE.has(d.contentType) ? "Open in a new tab" : "Download"}>{d.name}</button> : <span className="t">{d.name}</span>}
-            <span className="s">{[projectName?.(d.projectId), size(d.size), ago(d.createdAt), STATE_NOTE[fileState(d)], d.scan === "skipped" && fileState(d) === "ready" ? "not scanned (test site)" : ""].filter(Boolean).join(" · ")}</span>
+            <span className="s">{[placement(d, projectName), size(d.size), ago(d.createdAt), STATE_NOTE[fileState(d)], d.scan === "skipped" && fileState(d) === "ready" ? "not scanned (test site)" : ""].filter(Boolean).join(" · ")}</span>
             {(d.state === "failed" || d.state === "rejected") && <span className="s warn-text">Not available: {fileProblem(d)}</span>}
           </div>
           <span className="acts">
             <button className="chip" onClick={() => void download(d)} disabled={fileState(d) !== "ready"}>{fileState(d) === "checking" ? "Checking…" : "Download"}</button>
+            {fileState(d) === "ready" && (d.updatedBy === me.user.id || canWrite) && <button className="chip" onClick={() => openMove(d)} aria-label={`Move ${d.name}`}>Move</button>}
             {(d.updatedBy === me.user.id || canAdmin) && <button className="chip" onClick={() => void remove(d)} aria-label={`Delete ${d.name}`}>Delete</button>}
           </span>
         </div>

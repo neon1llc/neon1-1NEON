@@ -12,6 +12,7 @@ import { passkeyAssertion } from "../lib/passkey.ts";
 import { SIGN_IN_METHODS } from "../lib/methods.ts";
 import { drew, fade, lessMotion } from "../lib/motion.ts";
 import { REWIND } from "../lib/nav.ts";
+import { useSectionScroll } from "../lib/scrollmemory.ts";
 import { usePersisting } from "../lib/persist.ts";
 import { cleanCode, clearStep, loadStep, saveStep, session } from "../lib/signin.ts";
 import type { Me, OrgResponse, OrgSummary } from "../lib/types.ts";
@@ -358,7 +359,7 @@ function SignIn() {
   const awake = look === "awake";
   return (
     <main className={`signin${awake ? " awake" : ""}`}>
-      {!awake && <Rain panes=".signin .panel, .signin .n1-logo, .rainctl button" />}
+      {!awake && <Rain panes=".signin .panel, .signin .n1-logo" controls={false} />}
       {!awake && <div className="veil" />}
       <PublicBar theme={look} onChange={setLook} />
       {/* Signing up widens the panel on a wide screen, so the form fits without scrolling */}
@@ -648,6 +649,8 @@ function lastOrg(orgs: OrgSummary[]) {
   return orgs.find((o) => o.slug === slug) ?? (orgs.length === 1 ? orgs[0] : undefined);
 }
 // What can take focus inside the menu, for moving focus into it when it opens
+/** Where the rail was last scrolled to, kept across the frame remounting between pages */
+let railScroll = 0;
 const FOCUSABLE = "a[href], button:not([disabled]), input:not([disabled]), select:not([disabled])";
 
 
@@ -673,6 +676,8 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
   // Each page (a project counts as one, whatever its tab) eases in when you arrive
   const parts = loc.pathname.split("/");
   const section = parts.slice(0, parts[3] === "projects" && parts[4] && parts[4] !== "new" ? 5 : 4).join("/");
+  // Each section keeps the scroll it was left at; a section not yet visited opens at its top
+  useSectionScroll(section, loc.hash);
   // The full menu closes after navigating, and on Escape
   useEffect(() => setOpen(false), [loc.pathname]);
   // Arriving on another page puts keyboard focus on its title, so a screen reader hears where it is and
@@ -717,11 +722,39 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
       if (!el.contains(document.activeElement)) (el.querySelector<HTMLElement>("a[aria-current='page']") ?? el.querySelector<HTMLElement>(FOCUSABLE))?.focus({ preventScroll: true });
       return;
     }
+    // Closing (or arriving) returns the rail to where it was left, not to its top
+    el.scrollTop = railScroll;
     const back = trigger.current;
     trigger.current = null;
     const lost = !document.activeElement || document.activeElement === document.body || el.contains(document.activeElement);
     if (back?.isConnected && !back.closest("[inert]") && lost) back.focus();
   }, [open]);
+  // The rail keeps its scroll through everything that remounts the frame (the profile and Contact neon1
+  // sit outside the organization's pages, so reaching them rebuilds it) and through the open menu,
+  // which always opens at its top: the position is kept here, saved while the rail is what shows
+  useLayoutEffect(() => { if (side.current) side.current.scrollTop = railScroll; }, []);
+  const keepRail = () => { if (!open && side.current) railScroll = side.current.scrollTop; };
+  // A tap on the rail while the page is still coasting from a swipe only stops the coast on touch
+  // screens, and the rail doesn't answer until the page is still. A short touch that stays put
+  // on the rail is taken as a tap right there, so the rail answers first time
+  useEffect(() => {
+    const el = side.current;
+    if (!el) return;
+    let from: { x: number; y: number; at: number } | null = null;
+    const down = (e: TouchEvent) => { const t = e.touches[0]; from = e.touches.length === 1 && t ? { x: t.clientX, y: t.clientY, at: e.timeStamp } : null; };
+    const up = (e: TouchEvent) => {
+      const t = e.changedTouches[0], f = from;
+      from = null;
+      if (!f || !t || el.classList.contains("open") || e.timeStamp - f.at > 500 || Math.hypot(t.clientX - f.x, t.clientY - f.y) > 10) return;
+      const hit = (e.target as Element | null)?.closest<HTMLElement>("a[href], button:not(:disabled)");
+      if (!hit || !el.contains(hit)) return;
+      e.preventDefault(); // the browser's own click for this tap is dropped, so it never fires twice
+      hit.click();
+    };
+    el.addEventListener("touchstart", down, { passive: true });
+    el.addEventListener("touchend", up, { passive: false });
+    return () => { el.removeEventListener("touchstart", down); el.removeEventListener("touchend", up); };
+  }, []);
   // Remember the organization in view, so pages outside one (profile, FAQs) keep its menu and tabs
   useEffect(() => { if (org) prefs.set(LAST_ORG, org.slug); }, [org]);
   const navOrg = org ?? (all ? undefined : lastOrg(me.orgs));
@@ -736,7 +769,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
       {IN_DEMO && !IN_LIVE && <DemoBar />}
       {/* Scrim behind the full menu; a tap outside closes it */}
       {open && <div className="scrim" onClick={() => setOpen(false)} aria-hidden="true" />}
-      <aside ref={side} className={`side${open ? " open" : ""}`} aria-label="Menu" inert={tucked}>
+      <aside ref={side} onScroll={keepRail} className={`side${open ? " open" : ""}`} aria-label="Menu" inert={tucked}>
         {/* The mark and name lead Home, from the open menu and the Mini rail alike. It sits exactly where
             the top bar's own mark sits, so opening the menu covers one with the other */}
         <Link className="brand" to={home} onClick={() => setOpen(false)} title="Home" aria-label="1NEON, Home">
@@ -783,6 +816,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
           <Item to="/contact" icon={<Icon name="contact" />} label="Contact neon1" tour="nav-contact" />
           {/* On every signed-in screen, in the full menu: the neon1 way to say something is broken */}
           <li><ReportBug kind="row" /></li>
+          <li><ReportBug kind="feedbackRow" /></li>
         </ul>
         {/* Back to the neon1.tech site, outside the app's routes, then the signed-in person */}
         <a className="site-link" href="/" title="neon1.tech">

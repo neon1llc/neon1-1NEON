@@ -256,9 +256,16 @@ export const CreateDocInput = z.object({
   name: z.string().trim().min(1).max(200),
   contentType: z.string().max(120).default("application/octet-stream"),
   size: z.number().int().positive().max(100 * 1024 * 1024),
-  layer: Layer,
+  // Left out: organization level (no project) or project level (a project, no layer)
+  layer: Layer.optional(),
   projectId: id.optional(),
   itemId: id.optional(),
+});
+
+// Move a file between levels. Both fields are the new placement as a whole: null clears one
+export const MoveDocInput = z.object({
+  projectId: id.nullable(),
+  layer: Layer.nullable(),
 });
 
 
