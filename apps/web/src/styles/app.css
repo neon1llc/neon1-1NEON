@@ -100,7 +100,7 @@ input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outlin
 .side::-webkit-scrollbar { display: none; }
 /* The menu: fixed on the left; collapsed it is the rail, open it is full width over the page */
 .side { position: fixed; inset: 0 auto 0 0; z-index: 40; width: calc(var(--rail) + env(safe-area-inset-left)); background: var(--frame); border-right: 1px solid var(--line);
-  display: flex; flex-direction: column; gap: 2px; padding: 12px 10px 12px calc(10px + env(safe-area-inset-left)); overflow-x: hidden; overflow-y: auto; transition: width .2s, box-shadow .2s; }
+  display: flex; flex-direction: column; gap: 2px; --padl: calc(10px + env(safe-area-inset-left)); --padr: 10px; padding: 12px var(--padr) 12px var(--padl); overflow-x: hidden; overflow-y: auto; transition: width .2s, box-shadow .2s; }
 .side.open { width: calc(272px + env(safe-area-inset-left)); box-shadow: 0 0 40px rgba(0, 0, 0, .3); }
 .shell:not(.mini) .side:not(.open) { transform: translateX(-100%); }
 /* The mini rail's rows shrink with the screen's height (see "Menu rows" at the end) */
@@ -133,17 +133,7 @@ input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outlin
 .side:not(.open) .nav .sep { padding: 0; margin: 6px 4px; border-top: 1px solid var(--line); }
 .site-link { margin-top: auto; font: 13px var(--mono); color: var(--muted); }
 /* Contact neon1 sits at the foot of the menu, just above the site link */
-.side .contact-nav { margin-top: auto; }
-/* The links out of 1NEON (report a bug, feedback, neon1.tech) sit under their own rule, the profile's rule, and share the
-   site link's quiet monospace lowercase so they read as one group */
-.out-group { border-top: 1px solid var(--line); margin-top: 6px; padding-top: 6px; display: grid; gap: 2px; }
-.out-group .nav { margin: 0; }
-.out-group .site-link { margin-top: 0; }
-.out-group :is(.bug-row, .site-link) { font: 13px var(--mono); color: var(--muted); }
-.out-group .lbl { text-transform: lowercase; }
-.shell.mini .side:not(.open) .out-group { gap: 0; margin: 4px 0 0; padding-top: 4px; }
-.shell.mini .side:not(.open) .out-group .nav { margin: 0; }
-.who-link { border-top: 1px solid var(--line); border-radius: 0; padding-top: 10px; margin-top: 4px; }
+.side .contact-nav { margin-top: 0; }
 .side .org { margin: 2px 0 6px; }
 /* Organization chooser; amber when it shows All clients */
 .org { width: 100%; text-align: left; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 9px 12px; cursor: pointer; color: var(--text); display: grid; gap: 1px; }
@@ -511,7 +501,7 @@ fieldset legend { font: 12px var(--mono); color: var(--muted); }
 @media (max-width: 640px) {
   /* Phones: a slimmer mini rail, and the tab bar starts where it ends */
   .shell.mini { --rail: 53px; }
-  .shell.mini .side:not(.open) { padding-left: calc(6px + env(safe-area-inset-left)); padding-right: 6px; }
+  .shell.mini .side:not(.open) { --padl: calc(6px + env(safe-area-inset-left)); --padr: 6px; }
   .shell.mini .tabbar { left: calc(var(--rail) + env(safe-area-inset-left)); }
   .content { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
   .tabbar { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; inset: auto 0 calc(-1 * var(--under)) 0; z-index: 30; background: var(--frame); border-top: 1px solid var(--line); padding: 6px 4px calc(6px + env(safe-area-inset-bottom) + var(--under)); }
@@ -1033,8 +1023,6 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 .side .nav, .shell.mini .side:not(.open) .nav { gap: 0; margin-top: 0; }
 .side .nav .sep, .side:not(.open) .nav .sep, .shell.mini .side:not(.open) .nav .sep { padding: 0; margin: 0; border: 0; }
 .side .nav .sep .nav { margin-top: 0; }
-.side:not(.open) .nav .sep::before { content: ""; display: block; height: var(--sep); background: linear-gradient(var(--line), var(--line)) center / 100% 1px no-repeat; }
-.side.open .nav .sep > .lbl { display: block; height: var(--sep); line-height: var(--sep); padding: 0 6px; font: 10px var(--mono); letter-spacing: .08em; }
 /* The full organization chooser takes exactly the row its initials box takes on the rail */
 .side .org-full .org { margin: 0; height: var(--row); padding: 0 10px; align-content: center; gap: 0; line-height: 1.15; }
 .side .org-full .org small { font-size: 11px; }
@@ -1976,3 +1964,27 @@ html:has(.signin.awake), html:has(.signin.awake) body { background: var(--bg); c
 
 /* Dropdowns say they are clickable: the hand over the whole box, the arrow, and the choices */
 select:not(:disabled), select:not(:disabled)::picker-icon, select:not(:disabled) > button, select option { cursor: pointer; }
+
+
+/* --- Menu groups and edges (2026-11-17) ---
+   Edge lines run the menu's full width and sit exactly on the top bar's bottom edge (under the mark row) and
+   the bottom bar's top edge (above the neon1.tech row). Group rules are inset, and take the same --sep
+   band open or closed, so rows line up between the rail and the open menu. A group's name grows out of the
+   middle of its rule when the menu opens, and the rule closes over it when the rail returns */
+.side .edge { flex: none; height: 1px; background: var(--line); margin-left: calc(-1 * var(--padl)); margin-right: calc(-1 * var(--padr)); }
+.side .edge-top { margin-top: -7px; margin-bottom: 6px; }
+.side .edge-bottom { margin-top: 6px; }
+.side .nav .sep > .gl, .side .gline { display: flex; align-items: center; height: var(--sep); }
+.side .nav .sep > .gl { position: static; width: auto; clip: auto; overflow: visible; padding: 0; }
+.side .nav .sep > .gl::before, .side .nav .sep > .gl::after, .side .gline::before { content: ""; flex: 1 1 0; height: 1px; background: var(--line); }
+.side .gl .gt { max-width: 0; padding: 0; overflow: hidden; opacity: 0; white-space: nowrap; font: 10px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); transition: max-width .2s, padding .2s, opacity .2s; }
+.side.open .gl .gt { max-width: 14em; padding: 0 10px; opacity: 1; }
+/* The untitled group of links out (report a bug, feedback) sits at the foot of the menu */
+.side .out-group { margin-top: auto; }
+.side .out-group .nav, .side .contact-nav { margin-top: 0; }
+.side .out-group :is(.bug-row) { font: 13px var(--mono); color: var(--muted); }
+.side .out-group .lbl { text-transform: lowercase; }
+/* neon1.tech: quiet monospace lowercase, the height of the top bar so it centers with the bottom bar */
+.side .site-end { font: 13px var(--mono); color: var(--muted); margin: 0 0 -8px; height: calc(var(--top-h) - 1px) !important; min-height: calc(var(--top-h) - 1px) !important; flex: none; }
+.side .site-end .lbl { text-transform: lowercase; }
+.side .who-link { border-radius: var(--r-sm); }

@@ -742,12 +742,13 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
       // The open menu starts on the same row the rail was showing at its top (the rows differ a little in height,
       // so the row is matched, not the offset); focusing the page in view must not scroll it (on the profile,
       // that link sits at the very bottom)
-      el.scrollTop = anchorScroll(el);
+      el.scrollTop = mini ? anchorScroll(el) : 0;
       if (!el.contains(document.activeElement)) (el.querySelector<HTMLElement>("a[aria-current='page']") ?? el.querySelector<HTMLElement>(FOCUSABLE))?.focus({ preventScroll: true });
       return;
     }
-    // Closing (or arriving) returns the rail to where it was left, not to its top
-    el.scrollTop = railScroll;
+    // Closing (or arriving) puts the rail on the row the open menu showed at its top, not at its top
+    el.scrollTop = mini ? anchorScroll(el) : railScroll;
+    railScroll = el.scrollTop;
     const back = trigger.current;
     trigger.current = null;
     const lost = !document.activeElement || document.activeElement === document.body || el.contains(document.activeElement);
@@ -757,9 +758,10 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
   // sit outside the organization's pages, so reaching them rebuilds it) and through the open menu,
   // which always opens at its top: the position is kept here, saved while the rail is what shows
   useLayoutEffect(() => { if (side.current) side.current.scrollTop = railScroll; }, []);
+  // Rail and open menu follow each other row for row (Mini only): scrolling either records the top row
   const keepRail = () => {
-    if (open || !side.current) return;
-    railScroll = side.current.scrollTop;
+    if (!mini || !side.current) return;
+    if (!open) railScroll = side.current.scrollTop;
     railAnchor = findAnchor(side.current);
   };
   // A tap on the rail while the page is still coasting from a swipe only stops the coast on touch
@@ -806,6 +808,8 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
           </span>
           <span className="lbl">1NEON</span>
         </Link>
+        {/* Edge to edge, exactly on the top bar's bottom edge: the mark row above is the top bar's own height */}
+        <div className="edge edge-top" aria-hidden="true" />
         {/* Organization: the full chooser when there's room for labels, its initials otherwise */}
         <div className="org-full"><OrgChooser current={org} all={all} /></div>
         <button className="org-mini" type="button" onClick={() => setOpen(true)} title={all ? "All clients" : navOrg?.name ?? "Choose an organization"}>
@@ -821,14 +825,14 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
               <Item to={`${base}/projects`} icon={<Icon name="projects" />} label="Projects" end={false} tour="nav-projects" />
               <Item to={`${base}/documents`} icon={<Icon name="documents" />} label="Files" tour="nav-files" />
               <Item to={`${base}/insights`} icon={<Icon name="insights" />} label="Insights" tour="nav-insights" />
-              <li className="sep" data-tour="nav-layers"><span className="lbl">Layers</span>
+              <li className="sep" data-tour="nav-layers"><span className="lbl gl"><span className="gt">Layers</span></span>
                 <ul className="nav">
                   {LAYERS.map((l) => (
                     <Item key={l} to={`${base}/layer/${layerSlug(l)}`} icon={<LayerBadge layer={l} />} label={layerName(l)} sub={layerHint(l)} />
                   ))}
                 </ul>
               </li>
-              <li className="sep"><span className="lbl">Organization</span></li>
+              <li className="sep"><span className="lbl gl"><span className="gt">Organization</span></span></li>
               <Item to={`${base}/people`} icon={<Icon name="people" />} label="People" />
               <Item to={`${base}/settings`} icon={<Icon name="settings" />} label="Settings" />
             </>
@@ -839,26 +843,33 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
             </>
           ) : null}
         </ul>
-        {/* Every way to reach neon1, for every account, new ones included */}
+        {/* Every way to reach neon1, for every account, new ones included; the signed-in person ends the
+            Organization group, so it shows on the first screen and is never taken for Report a bug */}
         <ul className="nav contact-nav">
           <Item to="/contact" icon={<Icon name="contact" />} label="Contact neon1" tour="nav-contact" />
+          <li>
+            <NavLink to="/me" className="who-link" title="Your profile" data-tour="nav-me">
+              <span className="ico av-box"><Avatar id={me.user.id} name={me.user.name || me.user.email} size={24} /></span>
+              <span className="lbl">{me.user.name || me.user.email}</span>
+            </NavLink>
+          </li>
         </ul>
-        {/* Links out of 1NEON read as one group under their own rule: the neon1 way to say something is broken,
-            the way to say anything else, and back to the neon1.tech site (outside the app's routes) */}
+        {/* Links out of 1NEON read as one untitled group: the neon1 way to say something is broken, the way to
+            say anything else (both in a new tab) */}
         <div className="out-group">
+          <div className="gline" aria-hidden="true" />
           <ul className="nav">
             <li><ReportBug kind="row" /></li>
             <li><ReportBug kind="feedbackRow" /></li>
           </ul>
-          <a className="site-link" href="/" title="neon1.tech">
-            <Icon name="site" />
-            <span className="lbl">neon1.tech</span>
-          </a>
         </div>
-        <NavLink to="/me" className="who-link" title="Your profile" data-tour="nav-me">
-          <span className="ico av-box"><Avatar id={me.user.id} name={me.user.name || me.user.email} size={24} /></span>
-          <span className="lbl">{me.user.name || me.user.email}</span>
-        </NavLink>
+        {/* Edge to edge on the bottom bar's top edge; below it the way back to the neon1.tech site (outside the
+            app's routes), centered with that bar as the mark is with the top bar */}
+        <div className="edge edge-bottom" aria-hidden="true" />
+        <a className="site-link site-end" href="/" title="neon1.tech">
+          <Icon name="site" />
+          <span className="lbl">neon1.tech</span>
+        </a>
       </aside>
       <div className="main" inert={open}>
         {/* All clients is read only; say so on every screen of it, except Potentials, which has neon1's actions */}
