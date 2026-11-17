@@ -109,6 +109,27 @@ const router = createBrowserRouter(
 );
 
 
+// The public chat is portaled to body, so follow the top bar's visible edge instead of the banner's old height
+function keepNeoBelowTopBar() {
+  let frame: number | null = null;
+  const update = () => {
+    if (frame !== null) return;
+    frame = requestAnimationFrame(() => {
+      frame = null;
+      const top = document.querySelector<HTMLElement>(".top");
+      if (top) document.body.style.setProperty("--neo-topbar-bottom", `${Math.max(0, top.getBoundingClientRect().bottom)}px`);
+      else document.body.style.removeProperty("--neo-topbar-bottom");
+    });
+  };
+
+  document.addEventListener("scroll", update, { passive: true, capture: true });
+  addEventListener("resize", update, { passive: true });
+  const root = document.getElementById("root");
+  if (root) new MutationObserver(update).observe(root, { childList: true, subtree: true });
+  update();
+}
+
+
 // Mount the app
 // The live playback always starts at the person picker, from a fresh story
 if (LIVE) devUser.set("");
@@ -159,6 +180,7 @@ createRoot(document.getElementById("root")!).render(
     </QueryClientProvider>
   </StrictMode>,
 );
+keepNeoBelowTopBar();
 
 
 // Neo, the site's assistant window, answered from neon1's public pages through /chat/api on this

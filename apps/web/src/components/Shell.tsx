@@ -914,8 +914,8 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
         </a>
       </aside>
       <div className="main" inert={open}>
-        {/* All clients is read only; say so on every screen of it, except Potentials, which has neon1's actions */}
-        {all && !loc.pathname.endsWith("/all/prospects") && (
+        {/* Only the board is read only; Potentials has neon1's actions, and Contact is not a client workspace */}
+        {all && loc.pathname === "/all/workflow" && (
           <div className="readonly-bar" role="status">
             <strong>All clients · read only.</strong> Open a client to make changes.
           </div>

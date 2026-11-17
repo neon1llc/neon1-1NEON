@@ -2053,10 +2053,8 @@ body:has(.shell.mini) .n1chat.n1chat-right { left: auto; right: max(16px, env(sa
 @media (max-width: 640px) {
   /* The public chat lives under body, so mirror the mini rail's phone width for its position */
   body:has(.shell.mini) { --neo-rail: 53px; --neo-inline-gap: max(8px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)); }
-  .n1chat.n1chat-right { top: calc(var(--top-h) + 8px); bottom: calc(var(--top-h) + env(safe-area-inset-bottom) + 8px); height: auto; }
-  body:has(.readonly-bar) .n1chat.n1chat-right { top: calc(var(--top-h) + var(--top-h) + 8px); }
-  body:has(.demo-bar) .n1chat.n1chat-right { top: calc(var(--top-h) + var(--demo-h, 0px) + 8px); }
-  body:has(.demo-bar):has(.readonly-bar) .n1chat.n1chat-right { top: calc(var(--top-h) + var(--top-h) + var(--demo-h, 0px) + 8px); }
+  /* The sticky bar moves as banners scroll away; Neo follows its current bottom edge */
+  body:has(.shell) .n1chat.n1chat-right { top: calc(var(--neo-topbar-bottom, var(--top-h)) + 8px); bottom: calc(var(--top-h) + env(safe-area-inset-bottom) + 8px); height: auto; }
   body:has(.shell:not(.mini)) .n1chat.n1chat-right { left: 8px; right: max(8px, env(safe-area-inset-right)); width: auto; }
   body:has(.shell.mini) .n1chat.n1chat-right { left: calc(var(--neo-rail) + env(safe-area-inset-left, 0px) + var(--neo-inline-gap)); right: var(--neo-inline-gap); width: auto; }
 }
