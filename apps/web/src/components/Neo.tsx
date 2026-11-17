@@ -233,16 +233,20 @@ export function Neo() {
   // Opening moves focus into the window (not the box, so phones don't raise the keyboard)
   useEffect(() => { if (open) panel.current?.focus({ preventScroll: true }); }, [open]);
   // On phones, another control stays usable while Neo closes and gets out of its way
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!open || !matchMedia("(max-width: 640px)").matches) return;
-    const dismissForControl = (event: PointerEvent) => {
+    const dismissForControl = (event: Event) => {
       const target = event.target;
       if (!(target instanceof Element) || panel.current?.contains(target)) return;
       if (!target.closest("button, a[href], input, select, [role=button]")) return;
       close(false);
     };
     document.addEventListener("pointerdown", dismissForControl, true);
-    return () => document.removeEventListener("pointerdown", dismissForControl, true);
+    document.addEventListener("click", dismissForControl, true);
+    return () => {
+      document.removeEventListener("pointerdown", dismissForControl, true);
+      document.removeEventListener("click", dismissForControl, true);
+    };
   }, [open]);
   // The question field grows with wrapped text, then scrolls internally after a comfortable limit
   useLayoutEffect(() => {
