@@ -1,6 +1,6 @@
 {
- "ref": "docs/pre-v1-operations",
- "commit": "df9b96e9fbe10b46d0cce359c39c1387205c8116",
+ "ref": "v0.49.0",
+ "commit": "aee4c04fb29a75db683db1fe962c1c0e96c1cad7",
  "digest": "sha256:ff6b8b9bc5e0ac23617e11f98db8b4596d49f5b7f2324b9d9ab7659afd601028",
  "chars": 80189,
  "docs": [

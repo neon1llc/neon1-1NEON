@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+## v0.21.0 - 2026-11-18
+
+### Changed
+- Matrix and Sentinel keep separate light or dark modes, with the four named looks shared with neon1.tech.
+- Profile saves preserve the selected family, and profile and Contact navigation keep the All clients context.
+- Email and text preferences remain side by side and scroll on narrow screens. A second profile save sits above notifications.
+- Neo's mobile panel follows the app frame and Mini rail, grows its question field, and closes when another portal control is used.
 - The landing theme switch chooses Matrix or Sentinel without changing light or dark mode. Mode switches say “light or dark.” Existing saved preferences remain readable.
 - Matrix has Awake (light) and Plugged (dark). Sentinel has Providence (light) and Desert of the Real (dark), with a leaf-green palette based on #39AB56 and still presentation.
 - Site and 1NEON public screens share the family and mode. The profile uses the same four names, and an unrelated profile save preserves the landing's family choice.
