@@ -504,12 +504,12 @@ fieldset legend { font: 12px var(--mono); color: var(--muted); }
   .shell.mini .side:not(.open) { --padl: calc(6px + env(safe-area-inset-left)); --padr: 6px; }
   .shell.mini .tabbar { left: calc(var(--rail) + env(safe-area-inset-left)); }
   .content { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
-  .tabbar { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; inset: auto 0 calc(-1 * var(--under)) 0; z-index: 30; background: var(--frame); border-top: 1px solid var(--line); padding: 6px 4px calc(6px + env(safe-area-inset-bottom) + var(--under)); }
+  .tabbar { box-sizing: border-box; display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; inset: auto 0 calc(-1 * var(--under)) 0; z-index: 30; height: calc(var(--top-h) + env(safe-area-inset-bottom) + var(--under)); background: var(--frame); border-top: 1px solid var(--line); padding: 0 4px calc(env(safe-area-inset-bottom) + var(--under)); }
   /* The bar's own box runs --under past the screen's bottom edge. Some phone browsers (DuckDuckGo on
      iPhone) pin bottom:0 above their floating toolbar yet draw the page below it, and a painted overhang
      (a pseudo-element) didn't cover that strip there; the bar's box itself does. Off screen elsewhere */
   .tabbar { --under: 40vh; }
-  .tabbar a, .tabbar button { display: grid; justify-items: center; gap: 2px; padding: 6px 0; border: 0; background: none; color: var(--muted); font: 11px var(--mono); text-decoration: none; border-radius: var(--r-sm); cursor: pointer; }
+  .tabbar a, .tabbar button { display: grid; align-content: center; justify-items: center; gap: 2px; padding: 0; border: 0; background: none; color: var(--muted); font: 11px var(--mono); text-decoration: none; border-radius: var(--r-sm); cursor: pointer; }
   .tabbar a.active { color: var(--accent); background: var(--accent-soft); }
   /* Menu is always the last column, under the right thumb, however few places the bar has (Home alone, or all of them) */
   .tabbar .menu-btn { grid-column: 5; }
@@ -968,10 +968,20 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 .bell-list .lvl-critical .dot { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .bell-list .lvl-info .what { opacity: .75; }
 .bell-empty { padding: 14px; margin: 0; }
-@media (max-width: 640px) { .bell-list { position: fixed; left: 12px; right: 12px; top: 64px; width: auto; } }
+/* On phones the list uses the same content gutters as the page, and clears every bar in the frame */
+@media (max-width: 640px) {
+  .bell-list { --bell-top: calc(var(--top-h) + 8px); position: fixed; left: calc(var(--gut) + env(safe-area-inset-left)); right: calc(var(--gut) + env(safe-area-inset-right));
+    top: var(--bell-top); width: auto; max-height: calc(100dvh - var(--bell-top) - var(--top-h) - env(safe-area-inset-bottom) - 8px); }
+  body:has(.readonly-bar) .bell-list { --bell-top: calc(var(--top-h) + var(--top-h) + 8px); }
+  body:has(.demo-bar) .bell-list { --bell-top: calc(var(--top-h) + var(--demo-h, 0px) + 8px); }
+  body:has(.demo-bar):has(.readonly-bar) .bell-list { --bell-top: calc(var(--top-h) + var(--top-h) + var(--demo-h, 0px) + 8px); }
+  body:has(.shell.mini) .bell-list { left: calc(var(--rail) + var(--gut) + env(safe-area-inset-left)); }
+}
 @media (prefers-reduced-motion: reduce) { .bell-btn.breathing { animation: none; background: var(--accent-soft); } }
 /* The profile's notification choices: one row per kind for email; texts in their own block below */
 .notify { display: grid; gap: 8px; }
+.notify-table-scroll { max-width: 100%; min-width: 0; overflow-x: auto; overscroll-behavior-inline: contain; }
+.notify-table-scroll:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .notify-table { width: 100%; border-collapse: collapse; }
 .notify-table th, .notify-table td { padding: 8px 6px; border-top: 1px solid var(--line); text-align: left; vertical-align: middle; font-weight: 400; }
 .notify-table thead th { border-top: 0; font: 11px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
@@ -979,6 +989,9 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 .notify-table tbody th > span { display: block; margin: 1px 0; }
 .notify-table tbody th .tag { margin-left: 6px; }
 .notify-table input { width: 18px; height: 18px; min-height: 0; accent-color: var(--accent); }
+.notify-table input:disabled { opacity: .4; cursor: not-allowed; }
+.profile-save-inline { justify-content: center; margin: 4px 0 24px; }
+@media (max-width: 640px) { .notify-table { min-width: 460px; } }
 
 /* The yes to texts: a checkbox with the carrier wording beside it */
 .notify .sms-consent { display: grid; font: 13px/1.5 var(--sans, inherit); color: var(--text); letter-spacing: 0; text-transform: none; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--bg); font-size: 13px; line-height: 1.5; }
@@ -1105,7 +1118,7 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
    lays its mark exactly over the top bar's. Both lead to Home */
 :root { --top-h: 60px; }
 .top { height: var(--top-h); padding-top: 0; padding-bottom: 0; }
-.top-brand { flex: none; display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 6px; margin-left: calc(10px - var(--gut)); margin-right: -4px; border-radius: var(--r-sm);
+.top-brand { flex: none; display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 6px; margin-left: calc(6px - var(--gut)); margin-right: -4px; border-radius: var(--r-sm);
   color: var(--accent); font: 700 14px var(--mono); letter-spacing: .08em; text-decoration: none; }
 .top-brand:hover { background: var(--accent-soft); }
 .top-brand:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
@@ -2016,8 +2029,8 @@ select:not(:disabled), select:not(:disabled)::picker-icon, select:not(:disabled)
 /* The site mark in its round border: the accent is the logo's dark green in awake and matrix green in matrix */
 .side .ico.site-mark { border-radius: 50%; border-color: var(--accent); background: none; }
 .side .ico.site-mark svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 3.6; stroke-linecap: round; }
-/* On phones the bottom bar's top edge sits a little above the menu's foot: the neon1.tech row reaches it */
-@media (max-width: 640px) { .side .site-end { height: calc(62px + env(safe-area-inset-bottom)) !important; min-height: calc(62px + env(safe-area-inset-bottom)) !important; } }
+/* The separator and site-link row together match the top bar and the bottom bar's visible height */
+@media (max-width: 640px) { .side .site-end { height: calc(var(--top-h) - 1px + env(safe-area-inset-bottom)) !important; min-height: calc(var(--top-h) - 1px + env(safe-area-inset-bottom)) !important; } }
 /* The profile's avatar is already a circle: the current page's green fill must not box it */
 .side .nav a.active .ico.av-box { background: none; border-color: transparent; }
 /* Lowercase monospace sits a hair low beside its icon box: nudge the three links' words up 1px (open menu only; the rail's labels are hidden) */
@@ -2036,6 +2049,15 @@ select:not(:disabled), select:not(:disabled)::picker-icon, select:not(:disabled)
 
 /* With the Mini rail on, Neo's window keeps to the content space: the same gap to the rail as to the screen's right edge */
 body:has(.shell.mini) .n1chat.n1chat-right { left: auto; right: max(16px, env(safe-area-inset-right)); width: min(380px, calc(100vw - var(--rail) - env(safe-area-inset-left) - 32px)); }
+/* On phones, Neo fills the space between the frame bars with matching insets from the bar and the rail */
+@media (max-width: 640px) {
+  /* The public chat lives under body, so mirror the mini rail's phone width for its position */
+  body:has(.shell.mini) { --neo-rail: 53px; --neo-inline-gap: max(8px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)); }
+  /* The sticky bar moves as banners scroll away; Neo follows its current bottom edge */
+  body:has(.shell) .n1chat.n1chat-right { top: calc(var(--neo-topbar-bottom, var(--top-h)) + 8px); bottom: calc(var(--top-h) + env(safe-area-inset-bottom) + 8px); height: auto; }
+  body:has(.shell:not(.mini)) .n1chat.n1chat-right { left: 8px; right: max(8px, env(safe-area-inset-right)); width: auto; }
+  body:has(.shell.mini) .n1chat.n1chat-right { left: calc(var(--neo-rail) + env(safe-area-inset-left, 0px) + var(--neo-inline-gap)); right: var(--neo-inline-gap); width: auto; }
+}
 /* In matrix the chosen row's halo needs more than awake's tint to show on the dark ground, so the layer letters N E O N read apart */
 :root[data-theme="matrix"] :is(.nav a.active, .who-link.active) { background: rgba(108, 255, 168, .16); }
 @media (prefers-color-scheme: dark) { :root[data-theme="device"] :is(.nav a.active, .who-link.active) { background: rgba(108, 255, 168, .16); } }

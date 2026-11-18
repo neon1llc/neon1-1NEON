@@ -22,6 +22,7 @@ import { Offline } from "./Glitch.tsx";
 import { Rain } from "./Rain.tsx";
 import { PublicBar } from "./PublicBar.tsx";
 import { useSiteTheme } from "../lib/sitetheme.ts";
+import { isSentinel, isDarkLook, normalizeLook, resolveTheme, styleChoice } from "../lib/style.ts";
 import { dawn } from "../lib/dawn.ts";
 import { FileText as FileIcon, Folder as FolderIcon, Home as HomeIcon, Kanban as KanbanIcon, Menu as MenuIcon, Search as SearchIcon } from "lucide-react";
 import { ConfirmDialog } from "./Confirm.tsx";
@@ -56,12 +57,25 @@ export const useSession = () => useContext(MeCtx)!;
 
 /** Apply a theme to the page; with no attribute the styles show awake */
 export function applyTheme(theme: string) {
-  document.documentElement.setAttribute("data-theme", theme);
+  // Named looks map to the existing light/dark CSS values; data-look retains the public name
+  const look = normalizeLook(theme);
+  const biz = isSentinel(look);
+  const root = document.documentElement;
+  root.setAttribute("data-theme", theme === "device" ? "device" : isDarkLook(look) ? "matrix" : "awake");
+  root.setAttribute("data-look", theme === "device" ? "device" : look);
+  if (biz) root.setAttribute("data-style", "sentinel"); else root.removeAttribute("data-style");
   syncDark();
+}
+// An account's saved theme as it shows here, through the landing's style choice (lib/style.ts); kept so a "device" theme in the
+// sentinel theme follows the device's light and dark setting as it changes
+let accountTheme: string | null = null;
+export function applyAccountTheme(theme: string) {
+  accountTheme = theme;
+  applyTheme(resolveTheme(theme));
 }
 
 
-// Whether the page shows Matrix (dark) right now: chosen outright, or "device" on a device set to dark.
+// Whether the page shows a dark mode right now: chosen outright, or "device" on a device set to dark.
 // The html element carries it as the class n1-dark, so Neo's window can follow the same look as the
 // landing page (dark over the rain, light over awake pages) and repaint the moment either one changes
 const darkDevice = matchMedia("(prefers-color-scheme: dark)");
@@ -69,10 +83,15 @@ export function isDark() {
   const t = document.documentElement.getAttribute("data-theme");
   return t === "matrix" || (t === "device" && darkDevice.matches);
 }
-/** A theme change the person made: leaving dark is a slow dawn (lib/dawn.ts), anything else is at once */
+/** A theme the person is trying in Settings (Save keeps it, and sets the style to match): leaving dark is a slow dawn (lib/dawn.ts)
+ * within the matrix theme; the sentinel theme, and a move between styles, change at once. A named theme shows as named; "device"
+ * follows the device inside the style the landing chose */
 export function changeTheme(theme: string) {
-  const willBeDark = theme === "matrix" || (theme === "device" && darkDevice.matches);
-  dawn(isDark() && !willBeDark, () => applyTheme(theme));
+  accountTheme = theme;
+  const next = theme === "device" ? resolveTheme(theme) : theme;
+  const willBeDark = isDarkLook(next) || (next === "device" && darkDevice.matches);
+  const plain = isSentinel(next) || document.documentElement.getAttribute("data-style") === "sentinel";
+  dawn(!plain && isDark() && !willBeDark, () => applyTheme(next));
 }
 function syncDark() {
   const dark = isDark();
@@ -81,7 +100,9 @@ function syncDark() {
   const icon = document.getElementById("favicon") as HTMLLinkElement | null;
   if (icon) icon.href = dark ? "/favicon-matrix.svg" : "/favicon-awake.svg";
 }
-darkDevice.addEventListener?.("change", syncDark);
+darkDevice.addEventListener?.("change", () => {
+  if (accountTheme === "device" && styleChoice() === "sentinel") applyAccountTheme("device"); else syncDark();
+});
 
 
 /** Top-level gate: sign-in, error, first-visit redirect, then the app */
@@ -128,7 +149,13 @@ function App() {
     return () => removeEventListener("1neon:signed-out", check);
   }, [qc]);
   useEffect(() => {
-    if (me.data) applyTheme(me.data.user.theme);
+    if (!me.data) { accountTheme = null; return; }
+    applyAccountTheme(me.data.user.theme);
+    const follow = (event: StorageEvent) => {
+      if (event.key === "neon1.style" || event.key === null) applyAccountTheme(me.data.user.theme);
+    };
+    addEventListener("storage", follow);
+    return () => removeEventListener("storage", follow);
   }, [me.data]);
   // First sign-in from a browser with no saved time zone: keep the browser's, so email shows times in
   // the person's own zone. Once per page load; the profile changes it, and a failure is simply skipped
@@ -359,14 +386,17 @@ function SignIn() {
     if (r.step === "choose" || r.step === "code" || r.step === "totp") saveStep(session(), { email: mail, step: r.step, methods: r.methods });
     fade(() => { setAt(r); setSigningUp(false); });
   };
-  // Sign-in, the demo's person picker, and a walkthrough's sign-in all share neon1.tech's awake or matrix choice
+  // Sign-in, the demo's person picker, and a walkthrough's sign-in all share neon1.tech's family and mode choices
   // (awake until picked) and the same bar: the logo on the left, the theme switch on the right
   const [look, setLook] = useSiteTheme();
-  const awake = look === "awake";
+  // Awake and providence are light; plugged has rain; desert of the real is dark without it (the sentinel
+  // style has no rain, and the landing's choice decides which style this is)
+  const awake = !isDarkLook(look);
+  const rainy = look === "plugged";
   return (
     <main className={`signin${awake ? " awake" : ""}`}>
-      {!awake && <Rain panes=".signin .panel, .signin .n1-logo" controls={false} />}
-      {!awake && <div className="veil" />}
+      {rainy && <Rain panes=".signin .panel, .signin .n1-logo" controls={false} />}
+      {rainy && <div className="veil" />}
       <PublicBar theme={look} onChange={setLook} />
       {/* Signing up widens the panel on a wide screen, so the form fits without scrolling */}
       <div className={`panel glass${signingUp ? " signing-up" : ""}`}>
@@ -699,9 +729,25 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
   // The organization in view, when this frame is inside one, for hiding what a new account can't do
   const inOrg = useContext(OrgCtx);
   const [open, setOpen] = useState(false);
+  const [neoOpen, setNeoOpen] = useState(false);
   const [search, setSearch] = useState(false);
   const [top, setTop] = useState<ReactNode>(null);
   const loc = useLocation();
+  useLayoutEffect(() => {
+    if (!neoOpen) return;
+    // Listen at the document so controls rendered through portals (Search, dialogs, menus) are covered too.
+    const dismiss = (event: Event) => {
+      if (!(event.target instanceof Element) || event.target.closest(".n1neo")) return;
+      if (!event.target.closest("button, a[href], input, select, [role=button]")) return;
+      setNeoOpen(false);
+    };
+    document.addEventListener("pointerdown", dismiss, true);
+    document.addEventListener("click", dismiss, true);
+    return () => {
+      document.removeEventListener("pointerdown", dismiss, true);
+      document.removeEventListener("click", dismiss, true);
+    };
+  }, [neoOpen]);
   // Each page (a project counts as one, whatever its tab) eases in when you arrive
   const parts = loc.pathname.split("/");
   const section = parts.slice(0, parts[3] === "projects" && parts[4] && parts[4] !== "new" ? 5 : 4).join("/");
@@ -855,9 +901,9 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
         {/* Every way to reach neon1, for every account, new ones included; the signed-in person ends the
             Organization group, so it shows on the first screen and is never taken for Report a bug */}
         <ul className="nav contact-nav">
-          <Item to="/contact" icon={<Icon name="contact" />} label="Contact neon1" tour="nav-contact" />
+          <Item to={all ? "/all/contact" : "/contact"} icon={<Icon name="contact" />} label="Contact neon1" tour="nav-contact" />
           <li>
-            <NavLink to="/me" className="who-link" title="Your profile" data-tour="nav-me">
+            <NavLink to={all ? "/all/me" : "/me"} className="who-link" title="Your profile" data-tour="nav-me">
               <span className="ico av-box"><Avatar id={me.user.id} name={me.user.name || me.user.email} size={24} /></span>
               <span className="lbl">{me.user.name || me.user.email}</span>
             </NavLink>
@@ -884,8 +930,8 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
         </a>
       </aside>
       <div className="main" inert={open}>
-        {/* All clients is read only; say so on every screen of it, except Potentials, which has neon1's actions */}
-        {all && !loc.pathname.endsWith("/all/prospects") && (
+        {/* Only the board is read only; Potentials has neon1's actions, and Contact is not a client workspace */}
+        {all && loc.pathname === "/all/workflow" && (
           <div className="readonly-bar" role="status">
             <strong>All clients · read only.</strong> Open a client to make changes.
           </div>
@@ -897,7 +943,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
           <button className="icon-btn menu-btn" onClick={() => setOpen(!open)} aria-expanded={open} aria-label="Menu" title="Menu" data-tour="menu"><MenuIcon size={18} /></button>
           <div className="crumb">{top}</div>
           <span className="spacer" />
-          <button className="search-btn" onClick={() => setSearch(true)} data-tour="search" aria-label="Search">
+          <button className="search-btn" onClick={() => { setNeoOpen(false); setSearch(true); }} data-tour="search" aria-label="Search">
             <SearchIcon size={16} aria-hidden="true" />
             <span className="hide-sm">Search</span>
             <span className="kbd hide-sm">{/Mac|iPhone|iPad/.test(navigator.platform) ? "⌘K" : "Ctrl K"}</span>
@@ -929,7 +975,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
       <Palette me={me} org={org} prospect={inOrg?.prospect} open={search} setOpen={setSearch} onHelp={help.open} onTour={help.welcomeTour} />
       <ConfirmDialog me={me} />
       {/* Neo for signed-in people, where a model is wired; elsewhere the public Neo stays */}
-      {me.neo && !IN_DEMO && newAccount === false && <Neo />}
+      {me.neo && !IN_DEMO && newAccount === false && <Neo open={neoOpen} setOpen={setNeoOpen} />}
     </div>
   );
 }

@@ -13,3 +13,15 @@ addEventListener("error", (e) => {
   const msg = document.getElementById("boot-failed");
   if (msg) msg.hidden = false;
 }, true);
+
+
+// Set the public look before paint, using the same mode migration as the site and lib/style.ts
+try {
+  const style = localStorage.getItem("neon1.style");
+  const sentinel = style === "sentinel" || style === "business";
+  const old = localStorage.getItem(sentinel ? "neon1.theme.business" : "neon1.theme");
+  const mode = localStorage.getItem("neon1.mode");
+  const dark = mode === "dark" || (mode !== "light" && ["matrix", "lamp", "plugged", "desert-of-the-real"].includes(old));
+  if (sentinel) document.documentElement.setAttribute("data-style", "sentinel");
+  document.documentElement.setAttribute("data-theme", dark ? "matrix" : "awake");
+} catch { /* storage blocked: the app sets its look once it loads */ }

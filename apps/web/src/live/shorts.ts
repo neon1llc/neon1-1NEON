@@ -60,7 +60,8 @@ function pretendPasskeys() {
 
 /** Open the profile from the menu, the way Maria would (go opens the menu first when it's tucked away) */
 async function profile(s: Stage, section?: string) {
-  await s.go("/me");
+  const route = location.pathname.replace(/^\/1NEON\/(?:live|demo)/, "");
+  await s.go(route.startsWith("/all/") ? "/all/me" : "/me");
   await s.waitFor("#notifications");
   if (section) await s.hover(section, 500);
 }

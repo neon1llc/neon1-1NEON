@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+## v0.21.0 - 2026-11-18
+
+### Changed
+- Matrix and Sentinel keep separate light or dark modes, with the four named looks shared with neon1.tech.
+- Profile saves preserve the selected family, and profile and Contact navigation keep the All clients context.
+- Email and text preferences remain side by side and scroll on narrow screens. A second profile save sits above notifications.
+- Neo's mobile panel follows the app frame and Mini rail, grows its question field, and closes when another portal control is used.
+
 ## v0.20.1 - 2026-11-17
 - Dev passkeys belong to dev.neon1.tech, so a device no longer offers a neon1.tech passkey to the dev site or a dev one to production. Production is unchanged.
 
