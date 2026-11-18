@@ -8,7 +8,8 @@ import type { SmsState } from "../lib/types.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
-import { applyTheme, changeTheme, useSession, useTopBar } from "../components/Shell.tsx";
+import { applyAccountTheme, changeTheme, useSession, useTopBar } from "../components/Shell.tsx";
+import { normalizeLook, resolveTheme, saveLook } from "../lib/style.ts";
 import { Avatar, useAsk, useToast } from "../components/ui.tsx";
 import { api, BASE_PATH, devUser, LIVE, pickPerson } from "../lib/api.ts";
 import { menuOf, NOTIFY_GROUPS } from "@1neon/domain";
@@ -62,16 +63,20 @@ export function MePage() {
   const [less, setLess] = useState(() => deviceLess || chosenLessMotion());
   // Anything that differs from what's saved; Save waits for a change
   const saved = { name: me.user.name, title: me.user.title, phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), theme: me.user.theme, menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) };
-  const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
+  const [themePicked, setThemePicked] = useState(false);
+  const dirty = themePicked || JSON.stringify(draft) !== JSON.stringify(saved);
+  // The radio that shows: a named theme as the landing's style reads it (an account that says awake shows as providence when the landing chose sentinel)
+  const shownTheme = draft.theme === "device" ? "device" : !themePicked ? resolveTheme(draft.theme) : draft.theme;
   // A previewed theme that was never saved goes back to the saved one on leaving the page
   const savedTheme = useRef(me.user.theme);
   savedTheme.current = me.user.theme;
   // Leaving the profile unsaved puts the saved theme and menu style back
-  useEffect(() => () => { applyTheme(savedTheme.current); previewMenu(undefined); }, []);
+  useEffect(() => () => { applyAccountTheme(savedTheme.current); previewMenu(undefined); }, []);
   // The phone check: a code is texted, then typed here
   const [code, setCode] = useState<string | undefined>(undefined);
   // A new account has no texts: no number to add, no text notices, no text codes
   const noTexts = useProspectEverywhere(me) === true;
+  const textsAvailable = !noTexts && Boolean(draft.phone.trim()) && draft.smsConsent;
   const sms = me.sms?.state ?? "unavailable";
   // A saved change to the number or consent matters before a code makes sense
   const smsDirty = draft.phone !== me.user.phone || draft.smsConsent !== Boolean(me.user.smsConsentAt);
@@ -100,6 +105,9 @@ export function MePage() {
     try {
       const user = await api<User>("/me", { method: "PATCH", body: { version: me.user.version, ...draft } });
       qc.setQueryData(["me"], { ...me, user });
+      // A saved theme also sets the style (the one neon1.tech's landing switch sets), so the two always agree
+      if (themePicked && draft.theme !== "device") saveLook(normalizeLook(draft.theme));
+      setThemePicked(false);
       // The text state depends on what was saved; read it back fresh
       qc.invalidateQueries({ queryKey: ["me"] });
       toast("Saved");
@@ -185,14 +193,25 @@ export function MePage() {
         <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
           <legend style={{ marginBottom: 8 }}>Theme</legend>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {(["awake", "matrix", "device"] as const).map((t) => (
-              <label key={t} className={`chip${draft.theme === t ? " on" : ""}`} style={{ cursor: "pointer" }}>
-                <input type="radio" name="theme" className="sr" checked={draft.theme === t} onChange={() => { setDraft({ ...draft, theme: t }); changeTheme(t); }} />
-                {t === "device" ? "Match my device" : t === "awake" ? "Awake (light)" : "Matrix (dark)"}
-              </label>
+            {/* Four themes in two styles: the matrix one (the neon) and the still sentinel one. neon1.tech's landing switch picks the
+                style for everything, and picking a theme here sets it the same way */}
+            {([["Matrix", ["awake", "plugged"]], ["Sentinel", ["providence", "desert-of-the-real"]]] as const).map(([group, themes]) => (
+              <div key={group} role="group" aria-label={group} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                <span className="muted small" aria-hidden="true">{group}</span>
+                {themes.map((t) => (
+                  <label key={t} className={`chip${shownTheme === t ? " on" : ""}`} style={{ cursor: "pointer" }}>
+                    <input type="radio" name="theme" className="sr" checked={shownTheme === t} onChange={() => { setThemePicked(true); setDraft({ ...draft, theme: t }); changeTheme(t); }} />
+                    {t === "awake" ? "Awake (light)" : t === "plugged" ? "Plugged (dark)" : t === "providence" ? "Providence (light)" : "Desert of the real (dark)"}
+                  </label>
+                ))}
+              </div>
             ))}
+            <label className={`chip${shownTheme === "device" ? " on" : ""}`} style={{ cursor: "pointer" }}>
+              <input type="radio" name="theme" className="sr" checked={shownTheme === "device"} onChange={() => { setThemePicked(true); setDraft({ ...draft, theme: "device" }); changeTheme("device"); }} />
+              Match my device
+            </label>
           </div>
-          {draft.theme !== me.user.theme && <p className="unsaved small" role="status">Showing this now. Press Save to keep it.</p>}
+          {themePicked && <p className="unsaved small" role="status">Showing this now. Press Save to keep it.</p>}
         </fieldset>
         {/* Motion: smooth by default; Reduced turns every animation off in this browser at once, and a device
             that asks for less motion keeps it reduced (lib/motion.ts) */}
@@ -222,29 +241,34 @@ export function MePage() {
           <p className="muted small" style={{ margin: "6px 0 0" }}>{draft.menu === "mini" ? "A slim menu of icons stays on the left. The menu button opens the full menu over it." : "The menu button opens the full menu. A tap outside it, or the button again, closes it."}</p>
           {draft.menu !== menuOf(me.user.menu) && <p className="unsaved small" role="status">Showing this now. Press Save to keep it.</p>}
         </fieldset>
+        <div className="actions profile-save-inline">
+          <button className="btn btn-primary" type="submit" disabled={busy || !dirty}>{busy ? "Saving…" : "Save"}</button>
+        </div>
       </form>
       <div className="form">
-        {/* Notifications: every kind shows under the bell; choose which also email you */}
+        {/* Each notification kind keeps its email and text choices together */}
         <div className="card small notify" id="notifications">
           <b>Notifications</b>
           <span className="muted">Everything shows under the bell. Choose what also reaches you by email or text. Important ones email you by default.</span>
-          <table className="notify-table">
-            <thead><tr><th scope="col">When</th><th scope="col">Email</th></tr></thead>
-            <tbody>
-              {NOTIFY_GROUPS.map((g) => {
-                // The saved choice, or the group's default
-                const cur = draft.notify[g.id] ?? { email: g.email, sms: false };
-                const set = (patch: Partial<typeof cur>) => setDraft({ ...draft, notify: { ...draft.notify, [g.id]: { ...cur, ...patch } } });
-                return (
-                  <tr key={g.id}>
-                    <th scope="row"><span>{g.label}{g.level === "critical" && <span className="tag rec">important</span>}</span><span className="muted">{g.hint}</span></th>
-                    <td><input type="checkbox" aria-label={`Email me: ${g.label}`} checked={cur.email} onChange={(e) => set({ email: e.target.checked })} /></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          {/* Texts sit apart from email: every box here starts unticked, as carriers require */}
+          <div className="notify-table-scroll" role="region" aria-label="Notification delivery preferences" tabIndex={0}>
+            <table className="notify-table">
+              <thead><tr><th scope="col">When</th><th scope="col">Email</th><th scope="col">Text</th></tr></thead>
+              <tbody>
+                {NOTIFY_GROUPS.map((g) => {
+                  // The saved choice, or the group's default
+                  const cur = draft.notify[g.id] ?? { email: g.email, sms: false };
+                  const set = (patch: Partial<typeof cur>) => setDraft({ ...draft, notify: { ...draft.notify, [g.id]: { ...cur, ...patch } } });
+                  return (
+                    <tr key={g.id}>
+                      <th scope="row"><span>{g.label}{g.level === "critical" && <span className="tag rec">important</span>}</span><span className="muted">{g.hint}</span></th>
+                      <td><input type="checkbox" aria-label={`Email me: ${g.label}`} checked={cur.email} onChange={(e) => set({ email: e.target.checked })} /></td>
+                      <td><input type="checkbox" aria-label={`Text me: ${g.label}`} checked={textsAvailable && cur.sms} disabled={!textsAvailable} onChange={(e) => set({ sms: e.target.checked })} /></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
           {!noTexts && <fieldset className="notify-texts" id="texts">
             <legend>Text messages</legend>
             {/* Texts need a mobile number and a clear yes, worded the way carriers require */}
@@ -272,22 +296,6 @@ export function MePage() {
                 </span>
               ))}
             {smsDirty && (draft.smsConsent || draft.phone !== me.user.phone) && draft.phone.trim() && <span className="muted">Save first, then confirm the number with a texted code.</span>}
-            {/* Which kinds also come by text: none until ticked, and only after the yes above */}
-            <ul className="notify-text-kinds" aria-label="Text me about">
-              {NOTIFY_GROUPS.map((g) => {
-                const texts = draft.smsConsent && Boolean(draft.phone.trim());
-                const cur = draft.notify[g.id] ?? { email: g.email, sms: false };
-                const set = (patch: Partial<typeof cur>) => setDraft({ ...draft, notify: { ...draft.notify, [g.id]: { ...cur, ...patch } } });
-                return (
-                  <li key={g.id}>
-                    <label className={texts ? "notify-kind" : "notify-kind off"}>
-                      <input type="checkbox" aria-label={`Text me: ${g.label}`} checked={texts && cur.sms} disabled={!texts} onChange={(e) => set({ sms: e.target.checked })} />
-                      {g.label}
-                    </label>
-                  </li>
-                );
-              })}
-            </ul>
           </fieldset>}
         </div>
       </div>

@@ -5,7 +5,7 @@ What each route under neon1.tech/1NEON asks of search engines. `apps/web/src/lib
 | Route | Who it's for | Indexing | Canonical |
 |---|---|---|---|
 | `/1NEON/` (sign-in) | Invited clients signing in | `noindex` | none |
-| `/1NEON/o/...`, `/1NEON/all/...`, `/1NEON/me` | Signed-in clients and neon1 | `noindex` | none |
+| `/1NEON/o/...`, `/1NEON/all/...` (including `/1NEON/all/me`), `/1NEON/me` | Signed-in clients and neon1 | `noindex` | none |
 | `/1NEON/demo/...` | Prospects trying the interactive demo (in-browser, temporary) | `noindex` | none |
 | `/1NEON/live...` | Prospects watching the guided walkthrough (fictional, resets on load) | `noindex` | none |
 | `/1NEON/example` | Anyone: a sample project to read | indexable | `https://neon1.tech/1NEON/example` |

@@ -22,6 +22,7 @@ import { setCache, setNavigate } from "./lib/nav.ts";
 import { offline } from "./lib/reads.ts";
 import { Example } from "./pages/Example.tsx";
 import "./styles/app.css";
+import "./styles/sentinel.css";
 
 
 // iPhone browsers: the body scrolls and the page stays still, so nothing scrolls by under their bars
@@ -98,7 +99,7 @@ const router = createBrowserRouter(
             { path: "settings", lazy: page(() => import("./pages/Settings.tsx"), "Settings") },
           ] }],
         },
-        { path: "all", element: <AllLayout />, children: [{ errorElement: <RouteError inFrame />, children: [{ index: true, element: <Navigate to="workflow" replace /> }, { path: "workflow", lazy: page(() => import("./pages/AllWorkflow.tsx"), "AllWorkflow") }, { path: "prospects", lazy: page(() => import("./pages/Prospects.tsx"), "Prospects") }] }] },
+        { path: "all", element: <AllLayout />, children: [{ errorElement: <RouteError inFrame />, children: [{ index: true, element: <Navigate to="workflow" replace /> }, { path: "workflow", lazy: page(() => import("./pages/AllWorkflow.tsx"), "AllWorkflow") }, { path: "prospects", lazy: page(() => import("./pages/Prospects.tsx"), "Prospects") }, { path: "me", lazy: page(() => import("./pages/Me.tsx"), "MePage") }, { path: "contact", lazy: page(() => import("./pages/Contact.tsx"), "ContactPage") }] }] },
         { element: <PlainLayout />, children: [{ errorElement: <RouteError inFrame />, children: [{ path: "me", lazy: page(() => import("./pages/Me.tsx"), "MePage") }, { path: "contact", lazy: page(() => import("./pages/Contact.tsx"), "ContactPage") }] }] },
         { path: "*", element: <NotFound /> },
       ],
@@ -106,6 +107,28 @@ const router = createBrowserRouter(
   ],
   { basename: BASE_PATH },
 );
+
+
+// The public chat is portaled to body, so follow the top bar's visible edge instead of the banner's old height
+function keepNeoBelowTopBar() {
+  let frame: number | null = null;
+  const update = () => {
+    if (frame !== null) return;
+    frame = requestAnimationFrame(() => {
+      frame = null;
+      const top = document.querySelector<HTMLElement>(".top");
+      if (top) document.body.style.setProperty("--neo-topbar-bottom", `${Math.max(0, top.getBoundingClientRect().bottom)}px`);
+      else document.body.style.removeProperty("--neo-topbar-bottom");
+    });
+  };
+
+  document.addEventListener("scroll", update, { passive: true, capture: true });
+  addEventListener("scroll", update, { passive: true });
+  addEventListener("resize", update, { passive: true });
+  const root = document.getElementById("root");
+  if (root) new MutationObserver(update).observe(root, { childList: true, subtree: true });
+  update();
+}
 
 
 // Mount the app
@@ -158,6 +181,7 @@ createRoot(document.getElementById("root")!).render(
     </QueryClientProvider>
   </StrictMode>,
 );
+keepNeoBelowTopBar();
 
 
 // Neo, the site's assistant window, answered from neon1's public pages through /chat/api on this
@@ -167,16 +191,26 @@ createRoot(document.getElementById("root")!).render(
 // can't load, the portal works without it
 const CHAT = "/shared/chat.js";
 type ChatOptions = { className?: string; light?: () => boolean; watch?: Element[] };
+type ChatWindow = { open: () => void; close: () => void };
 // The demo's data never leaves the browser, so Neo (which answers from neon1's public pages only) shows in the demo
 // but not in the walkthrough, which makes no calls at all: bottom left on the picker, bottom right once a person is picked
 if (!LIVE) import(/* @vite-ignore */ CHAT)
-  .then((m: { chat(opts: ChatOptions): unknown }) =>
-    m.chat({
+  .then((m: { chat(opts: ChatOptions): ChatWindow }) => {
+    const neo = m.chat({
       className: "n1chat-portal n1chat-right",
       light: () => (document.querySelector(".signin") ? !!document.querySelector(".signin.awake") : !document.documentElement.classList.contains("n1-dark")),
       watch: [document.documentElement],
-    }),
-  )
+    });
+    // The shared chat is mounted outside React. Close it at the portal boundary when a
+    // different app control is used; this covers buttons and controls in React portals too.
+    const dismissNeo = (event: Event) => {
+      if (!(event.target instanceof Element) || event.target.closest(".n1chat, .n1chat-launch")) return;
+      if (!event.target.closest("button, a[href], input, select, textarea, [role=button]")) return;
+      neo.close();
+    };
+    document.addEventListener("pointerdown", dismissNeo, true);
+    document.addEventListener("click", dismissNeo, true);
+  })
   .catch(() => undefined);
 
 

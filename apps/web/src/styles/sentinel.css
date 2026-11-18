@@ -1,0 +1,74 @@
+/* apps/web/src/styles/sentinel.css - Sentinel's leaf-green palette and still presentation.
+ * Providence is light; desert of the real is dark. The #39AB56 seed sits between the brand greens.
+ * Text accents use #246F38 on light surfaces and #79CF91 on dark surfaces. Compatibility selectors
+ * keep existing awake/matrix layout rules, while data-style (or data-site-style) selects sentinel. */
+
+/* ---- Tokens ---- */
+:root[data-style="sentinel"][data-theme="awake"] {
+  color-scheme: light;
+  --paper: #F2F4F2; --void: #F2F4F2; --ink: #18271D; --m-ink: #18271D; --m-ink-soft: #384D3F; --m-muted: #526858; --m-faint: #5B705F;
+  --bg: #F2F4F2; --frame: #E7EFE6; --panel: #F5F8F4; --text: #18271D; --muted: #526858; --faint: #526858;
+  --line: rgb(24 39 29 / .14); --line-strong: rgb(24 39 29 / .6); --field-line: rgb(24 39 29 / .6);
+  --accent: #246F38; --accent-ink: #F2F4F2; --accent-soft: rgb(36 111 56 / .08); --focus: #246F38; --shadow: 0 1px 2px rgb(24 39 29 / .06);
+  --amber: #8A5300; --red: #B3261E; --ok: #18692C;
+  --l1: #174B27; --l2: #246F38; --l3: #2F7A42; --l4: #358048; --badge-ink: #F2F4F2;
+}
+:root[data-style="sentinel"][data-theme="matrix"] {
+  color-scheme: dark;
+  --paper: #0F0A0D; --void: #0F0A0D; --ink: #F2F4F2; --m-ink: #F2F4F2; --m-ink-soft: #D3D9D4; --m-muted: #B2BDB4; --m-faint: #9AA89C;
+  --bg: #0F0A0D; --frame: #0A0608; --panel: #17110F; --text: #F2F4F2; --muted: #B2BDB4; --faint: #9AA89C;
+  --line: rgb(242 244 242 / .14); --line-strong: rgb(242 244 242 / .5); --field-line: rgb(242 244 242 / .5);
+  --accent: #79CF91; --accent-ink: #0F0A0D; --accent-soft: rgb(121 207 145 / .1); --focus: #79CF91; --shadow: none;
+  --amber: #E8B35A; --red: #FF9A8F; --ok: #7CC59A;
+  --l1: #56AB70; --l2: #72BF89; --l3: #91D3A4; --l4: #B2E5BF; --badge-ink: #0F0A0D;
+}
+/* The accent stands in for every green and neon the shared and app styles still name */
+:root[data-style="sentinel"] { --leaf: #39AB56; --brand: var(--accent); --mark: var(--accent); --deep: var(--accent); --neon: var(--accent); --glow: var(--accent); --mid: var(--accent); --mono: var(--sans); }
+:root[data-style="sentinel"] :is(code, pre, kbd, samp) { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+:root[data-style="sentinel"] :is(*, *::before, *::after) { text-shadow: none !important; }
+:root[data-style="sentinel"] ::selection { background: rgb(var(--accent-rgb, 121 207 145) / .28); color: var(--text); }
+:root[data-style="sentinel"][data-theme="awake"] { --accent-rgb: 36 111 56; }
+:root[data-style="sentinel"][data-theme="matrix"] { --accent-rgb: 121 207 145; }
+:root[data-style="sentinel"] :is(.n1-logo svg, .n1chat-launch svg, .n1chat-mark) { filter: none !important; }
+
+/* ---- No rain, glass, or page transitions ---- */
+:root[data-style="sentinel"] :is(#rain, #lens, .veil, .rainctl) { display: none !important; }
+:root[data-style="sentinel"]::view-transition-group(*), :root[data-style="sentinel"]::view-transition-old(*), :root[data-style="sentinel"]::view-transition-new(*) { animation-duration: 0s !important; }
+
+/* ---- Public screens: sign-in, FAQs, legal pages ---- */
+:root[data-style="sentinel"] .pub-bar .n1-logo, :root[data-style="sentinel"][data-theme] .pub-bar .n1-logo { color: var(--accent); }
+:root[data-style="sentinel"][data-theme="matrix"] body:has(.pub-bar) .n1chat-launch:not(.n1chat-light) { border-color: var(--accent); color: var(--accent); background: rgb(15 10 13 / .96); box-shadow: none; }
+:root[data-style="sentinel"][data-theme="matrix"] body:has(.pub-bar) .n1chat-launch:not(.n1chat-light) svg { filter: none; }
+/* The sign-in: a plain panel on the page color, in both themes (the matrix awake one has green washes and rings, the dark one glass) */
+:root[data-style="sentinel"] .signin, :root[data-style="sentinel"] .signin.awake { background: var(--bg); color: var(--text); --focus: var(--accent); --req-color: var(--red); }
+:root[data-style="sentinel"]:has(.signin), :root[data-style="sentinel"]:has(.signin) body { background: var(--bg); }
+:root[data-style="sentinel"] .signin .panel, :root[data-style="sentinel"] .signin.awake .panel { background: var(--panel); border: 1px solid var(--line-strong); border-radius: var(--glass-r); box-shadow: var(--shadow); }
+:root[data-style="sentinel"] .signin :is(.signin-h, .lost-title) { color: var(--text); }
+:root[data-style="sentinel"] .signin :is(.signin-lead, .field-label, .fine, .fine a, .linkish, .word .rest, .signin-more a) { color: var(--muted); }
+:root[data-style="sentinel"] .signin .word .init { color: var(--accent); }
+:root[data-style="sentinel"] .signin input { background: var(--bg); color: var(--text); border-color: var(--line-strong); }
+:root[data-style="sentinel"] .signin .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); box-shadow: none; }
+:root[data-style="sentinel"] .signin .btn-ghost { color: var(--accent); border-color: var(--accent); }
+:root[data-style="sentinel"] .signin :is(.signin-more, .signup-form .su-opt) { border-color: var(--line); }
+:root[data-style="sentinel"] .signin .signup-form .su-opt { border-left-color: var(--line); }
+:root[data-style="sentinel"] .signin .signin-more a:hover { color: var(--accent); }
+:root[data-style="sentinel"] .signin .remember input { border-color: var(--line-strong); }
+:root[data-style="sentinel"] .signin .remember input:checked { background: var(--accent); border-color: var(--accent); }
+:root[data-style="sentinel"] .signin .remember input:checked::after { border-color: var(--accent-ink); }
+:root[data-style="sentinel"] .signin .dev button { background: var(--bg); border: 1px solid var(--line); color: var(--text); }
+:root[data-style="sentinel"] .signin .dev button:hover { border-color: var(--accent); }
+
+/* ---- The app and the demo ---- */
+:root[data-style="sentinel"] .demo-bar { background: var(--frame); border-bottom: 1px solid var(--line-strong); }
+:root[data-style="sentinel"] .demo-tag { background: var(--accent); color: var(--accent-ink); }
+:root[data-style="sentinel"] :is(.nav a.active, .who-link.active) { background: var(--accent-soft); }
+:root[data-style="sentinel"] .content :is(p, li) { letter-spacing: normal; }
+:root[data-style="sentinel"] .side :is(.bug-row, .site-end) .lbl { text-decoration-color: color-mix(in srgb, currentColor 55%, transparent); }
+:root[data-style="sentinel"] .side :is(.bug-row, .site-end):is(:hover, :focus-visible, :active) .lbl { text-decoration-color: currentColor; }
+:root[data-style="sentinel"] .btn:disabled { opacity: .6; }
+:root[data-style="sentinel"][data-theme="awake"] .n1chat { --bg: #F5F8F4; --fg: #18271D; --line: rgb(24 39 29 / .6); --soft: rgb(24 39 29 / .14); --bot: #E7EFE6;
+  --you: rgb(36 111 56 / .08); --muted: #526858; --accent: #246F38; --accent-ink: #F2F4F2; --field: #F2F4F2; --link: #246F38; box-shadow: 0 8px 24px rgb(24 39 29 / .16); }
+:root[data-style="sentinel"][data-theme="matrix"] .n1chat { --bg: #17110F; --fg: #F2F4F2; --line: rgb(242 244 242 / .5); --soft: rgb(242 244 242 / .14); --bot: #0F0A0D;
+  --you: rgb(121 207 145 / .1); --muted: #B2BDB4; --accent: #79CF91; --accent-ink: #0F0A0D; --field: #0F0A0D; --link: #79CF91; box-shadow: 0 8px 24px rgb(0 0 0 / .4); }
+:root[data-style="sentinel"] .n1chat-launch:not(.n1chat-light) { color: var(--accent); border-color: var(--accent); background: var(--bg); }
+:root[data-style="sentinel"] .n1chat-launch:not(.n1chat-light):hover { background: var(--accent-soft); }
