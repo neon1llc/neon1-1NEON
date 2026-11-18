@@ -177,7 +177,9 @@ export function MePage() {
       {/* Name, title, and mobile number */}
       {/* Two columns on a wide screen: who you are and how it looks, beside notifications; one column when narrow */}
       <div className="cols2">
-      <form id="profile" className="form" onSubmit={(e) => { e.preventDefault(); void save(); }}>
+      <form id="profile" className="form profile-form" onSubmit={(e) => { e.preventDefault(); void save(); }}>
+        <section className="card profile-section">
+          <h2 className="card-h">Your details</h2>
         <div><label htmlFor="nm">Name</label><input id="nm" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} maxLength={80} autoComplete="name" /></div>
         <div><label htmlFor="tt">Title</label><input id="tt" value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} maxLength={80} autoComplete="organization-title" /></div>
         {!noTexts && <div><label htmlFor="ph">Phone (only you see it)</label><input id="ph" type="tel" value={draft.phone} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} maxLength={32} autoComplete="tel" /></div>}
@@ -189,7 +191,10 @@ export function MePage() {
           </select>
           <span className="muted">Emails show times in this zone, with UTC beside them. Daylight saving follows it automatically.</span>
         </div>
+        </section>
         {/* Theme previews immediately; Save keeps it with the account */}
+        <section className="card profile-section">
+          <h2 className="card-h">Appearance</h2>
         <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
           <legend style={{ marginBottom: 8 }}>Theme</legend>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -241,9 +246,7 @@ export function MePage() {
           <p className="muted small" style={{ margin: "6px 0 0" }}>{draft.menu === "mini" ? "A slim menu of icons stays on the left. The menu button opens the full menu over it." : "The menu button opens the full menu. A tap outside it, or the button again, closes it."}</p>
           {draft.menu !== menuOf(me.user.menu) && <p className="unsaved small" role="status">Showing this now. Press Save to keep it.</p>}
         </fieldset>
-        <div className="actions profile-save-inline">
-          <button className="btn btn-primary" type="submit" disabled={busy || !dirty}>{busy ? "Saving…" : "Save"}</button>
-        </div>
+        </section>
       </form>
       <div className="form">
         {/* Each notification kind keeps its email and text choices together */}

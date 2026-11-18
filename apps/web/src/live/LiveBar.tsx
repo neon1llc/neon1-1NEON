@@ -6,6 +6,7 @@
 
 
 import { ChevronDown, ChevronLeft, ChevronRight, Gauge, Pause, Play, RotateCcw } from "lucide-react";
+import { OutLink } from "../components/OutLink.tsx";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import type { Player, View } from "./player.ts";
@@ -247,7 +248,7 @@ export function LiveBar({ player }: { player: Player }) {
             <a className="live-btn" href="/1NEON/demo/">Try it yourself instead</a>
           </div>
           <p className="live-card-foot">
-            If it keeps happening, <a href={`mailto:hello@neon1.tech?subject=${encodeURIComponent(`1NEON walkthrough stopped: ${show.title}, chapter ${v.index + 1} (${v.title})`)}`}>tell neon1</a> and it gets fixed. <a href={exit.href}>{exit.label}</a>
+            If it keeps happening, <OutLink href={`mailto:hello@neon1.tech?subject=${encodeURIComponent(`1NEON walkthrough stopped: ${show.title}, chapter ${v.index + 1} (${v.title})`)}`}>tell neon1</OutLink> and it gets fixed. <a href={exit.href}>{exit.label}</a>
           </p>
         </Card>
       )}

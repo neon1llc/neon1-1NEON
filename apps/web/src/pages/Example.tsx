@@ -3,6 +3,7 @@
 
 
 import { LayerBadge, LAYERS, layerHint, layerName } from "../components/ui.tsx";
+import { OutLink } from "../components/OutLink.tsx";
 import type { Layer } from "@1neon/domain";
 import { CHOSEN, CONSTRAINTS, DRY_RUN, FRIDAY, HOURS, MEASURES, MONEY, PRINTER, SUMMARY, TASKS } from "../lib/bakery.ts";
 
@@ -120,7 +121,7 @@ export function Example() {
           <p>That's the whole loop. A real project follows the same steps, with its own need and numbers.</p>
           <div className="actions">
             <a className="btn btn-primary" href="/1NEON/live">Watch it (about 3 minutes)</a>
-            <a className="btn btn-ghost" href="https://calendly.com/1isgladtobeofservice/neon1-consultation" target="_blank" rel="noopener">Book a free call</a>
+            <OutLink className="btn btn-ghost" href="https://calendly.com/1isgladtobeofservice/neon1-consultation">Book a free call</OutLink>
           </div>
           <p className="small muted">Would rather click around yourself? <a href="/1NEON/demo/">Try the interactive demo</a>.</p>
         </section>

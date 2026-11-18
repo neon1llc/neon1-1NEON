@@ -6,6 +6,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { Markdown } from "../components/Markdown.tsx";
+import { OutLink } from "../components/OutLink.tsx";
 import { PublicBar } from "../components/PublicBar.tsx";
 import { useSiteTheme } from "../lib/sitetheme.ts";
 import source from "../help/faqs.md?raw";
@@ -69,7 +70,7 @@ export function Faqs() {
       <input type="search" aria-label="Search the FAQs" placeholder="Search the FAQs" value={q} onChange={(e) => setQ(e.target.value)} className="faq-search" />
       {/* One quiet count after typing settles; focus stays in the box (AP-08) */}
       <p className="sr" role="status">{said}</p>
-      {topics.length === 0 && <p className="muted">No answers match. Email <a href="mailto:hello@neon1.tech">hello@neon1.tech</a> and I'll help.</p>}
+      {topics.length === 0 && <p className="muted">No answers match. Email <OutLink href="mailto:hello@neon1.tech">hello@neon1.tech</OutLink> and I'll help.</p>}
       {topics.map((t) => (
         <section key={t.name}>
           <h2 className="section-h">{t.name}</h2>

@@ -22,9 +22,9 @@ import { Offline } from "./Glitch.tsx";
 import { Rain } from "./Rain.tsx";
 import { PublicBar } from "./PublicBar.tsx";
 import { useSiteTheme } from "../lib/sitetheme.ts";
-import { isSentinel, isDarkLook, normalizeLook, resolveTheme, styleChoice } from "../lib/style.ts";
+import { isSentinel, isDarkLook, lookFor, normalizeLook, resolveTheme, saveLook, sharedThemeChoice, styleChoice } from "../lib/style.ts";
 import { dawn } from "../lib/dawn.ts";
-import { FileText as FileIcon, Folder as FolderIcon, Home as HomeIcon, Kanban as KanbanIcon, Menu as MenuIcon, Search as SearchIcon } from "lucide-react";
+import { BriefcaseBusiness, FileText as FileIcon, Folder as FolderIcon, Home as HomeIcon, Kanban as KanbanIcon, Menu as MenuIcon, Moon, Search as SearchIcon, Sun, Waves } from "lucide-react";
 import { ConfirmDialog } from "./Confirm.tsx";
 import { HelpProvider, useHelp } from "./Help.tsx";
 import { Neo } from "./Neo.tsx";
@@ -152,7 +152,8 @@ function App() {
     if (!me.data) { accountTheme = null; return; }
     applyAccountTheme(me.data.user.theme);
     const follow = (event: StorageEvent) => {
-      if (event.key === "neon1.style" || event.key === null) applyAccountTheme(me.data.user.theme);
+      if (!["neon1.style", "neon1.mode", "neon1.theme.shared", null].includes(event.key)) return;
+      applyAccountTheme(me.data.user.theme);
     };
     addEventListener("storage", follow);
     return () => removeEventListener("storage", follow);
@@ -713,6 +714,46 @@ function anchorScroll(side: HTMLElement): number {
 const FOCUSABLE = "a[href], button:not([disabled]), input:not([disabled]), select:not([disabled])";
 
 
+// The menu's switches use the same origin-wide family and mode as neon1.tech
+function currentMenuLook(theme: string) {
+  const current = resolveTheme(theme);
+  return current === "device" ? lookFor(styleChoice() ?? "matrix", matchMedia("(prefers-color-scheme: dark)").matches) : normalizeLook(current);
+}
+
+
+function MenuThemeControls({ theme, kind }: { theme: string; kind: "mode" | "family" }) {
+  const [look, setLook] = useState(() => currentMenuLook(theme));
+  useEffect(() => {
+    const sync = (event: StorageEvent) => {
+      if (["neon1.style", "neon1.mode", "neon1.theme.shared", null].includes(event.key)) setLook(currentMenuLook(theme));
+    };
+    addEventListener("storage", sync);
+    return () => removeEventListener("storage", sync);
+  }, [theme]);
+  const dark = isDarkLook(look);
+  const family = sharedThemeChoice() ? styleChoice() ?? "sentinel" : isSentinel(look) ? "sentinel" : "matrix";
+  const pick = (next: typeof look) => {
+    saveLook(next);
+    setLook(next);
+    changeTheme(next);
+  };
+  if (kind === "family") {
+    const family = sharedThemeChoice() ? styleChoice() ?? "sentinel" : isSentinel(look) ? "sentinel" : "matrix";
+    return <button className="menu-theme-switch style-switch" type="button" role="switch" aria-checked={family === "sentinel"} aria-label="Sentinel theme" title={`Switch to ${family === "sentinel" ? "Matrix" : "Sentinel"}`} onClick={() => pick(lookFor(family === "sentinel" ? "matrix" : "sentinel", dark))}>
+      <Waves className="switch-sun" size={14} aria-hidden="true" /><BriefcaseBusiness className="switch-moon" size={14} aria-hidden="true" /><span className="switch-knob" aria-hidden="true" />
+    </button>;
+  }
+  return (
+    <>
+      <button className="menu-theme-switch" type="button" role="switch" aria-checked={dark} aria-label="Dark mode" title={`Switch to ${dark ? "light" : "dark"} mode`} onClick={() => pick(lookFor(family, !dark))}>
+        <Sun className="switch-sun" size={14} aria-hidden="true" /><Moon className="switch-moon" size={14} aria-hidden="true" /><span className="switch-knob" aria-hidden="true" />
+      </button>
+      <span className="sr" aria-live="polite">{sharedThemeChoice() ? "Shared theme preference active" : `Using your saved ${theme} theme`}</span>
+    </>
+  );
+}
+
+
 // The frame itself, inside the help context so the ? button and search can use it
 function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?: boolean; reads?: Read[]; children: ReactNode }) {
   const me = useSession();
@@ -857,12 +898,13 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
       <aside ref={side} onScroll={keepRail} className={`side${open ? " open" : ""}`} aria-label="Menu" inert={tucked}>
         {/* The mark and name lead Home, from the open menu and the Mini rail alike. It sits exactly where
             the top bar's own mark sits, so opening the menu covers one with the other */}
-        <Link className="brand" to={home} onClick={() => setOpen(false)} title="Home" aria-label="1NEON, Home">
-          <span className="ico mark" aria-hidden="true">
-            <Rings />
-          </span>
-          <span className="lbl">1NEON</span>
-        </Link>
+        <div className="side-head">
+          <Link className="brand" to={home} onClick={() => setOpen(false)} title="Home" aria-label="1NEON, Home">
+            <span className="ico mark" aria-hidden="true"><Rings /></span>
+            <span className="lbl">1NEON</span>
+          </Link>
+          {open && <MenuThemeControls theme={me.user.theme} kind="mode" />}
+        </div>
         {/* Edge to edge, exactly on the top bar's bottom edge: the mark row above is the top bar's own height */}
         <div className="edge edge-top" aria-hidden="true" />
         {/* Organization: the full chooser when there's room for labels, its initials otherwise */}
@@ -921,13 +963,16 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
         {/* Edge to edge on the bottom bar's top edge; below it the way back to the neon1.tech site (outside the
             app's routes), centered with that bar as the mark is with the top bar */}
         <div className="edge edge-bottom" aria-hidden="true" />
-        <a className="site-link site-end" href="/" title="neon1.tech">
-          {/* The site logo's mark (v5 set), drawn in the theme's accent inside a round border */}
-          <span className="ico site-mark" aria-hidden="true">
-            <svg viewBox="3 4 58 58"><path d="M6 6a24 24 0 0 1 24 24v30M6 12a18 18 0 0 1 18 18v30M6 18a12 12 0 0 1 12 12v30M6 24a6 6 0 0 1 6 6v30M34 6a24 24 0 0 1 24 24v30M34 12a18 18 0 0 1 18 18v30M34 18a12 12 0 0 1 12 12v30M34 24a6 6 0 0 1 6 6v30" /></svg>
-          </span>
-          <span className="lbl">neon1.tech</span>
-        </a>
+        <div className="menu-footer">
+          {open && <MenuThemeControls theme={me.user.theme} kind="family" />}
+          <a className="site-link site-end" href="/" title="neon1.tech">
+            {/* The site logo's mark (v5 set), drawn in the theme's accent inside a round border */}
+            <span className="ico site-mark" aria-hidden="true">
+              <svg viewBox="3 4 58 58"><path d="M6 6a24 24 0 0 1 24 24v30M6 12a18 18 0 0 1 18 18v30M6 18a12 12 0 0 1 12 12v30M6 24a6 6 0 0 1 6 6v30M34 6a24 24 0 0 1 24 24v30M34 12a18 18 0 0 1 18 18v30M34 18a12 12 0 0 1 12 12v30M34 24a6 6 0 0 1 6 6v30" /></svg>
+            </span>
+            <span className="lbl">neon1.tech</span>
+          </a>
+        </div>
       </aside>
       <div className="main" inert={open}>
         {/* Only the board is read only; Potentials has neon1's actions, and Contact is not a client workspace */}

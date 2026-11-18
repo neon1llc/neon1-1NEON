@@ -3,13 +3,16 @@
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
 ## Unreleased
+- The open menu now has the shared light/dark switch beside 1NEON and the Sentinel/Matrix switch beside neon1.tech. Sentinel is the site's default family, with light mode unchanged; choosing either axis carries across the site and portal.
+- The desktop Mini rail centers its icons evenly. Contact, FAQ, and walkthrough email and phone links use the same outbound arrow as other links, and open their handler without an extra browser tab.
+- The profile uses one Save action after its details and notification choices, with personal details and appearance grouped separately.
 
 ## v0.21.0 - 2026-11-18
 
 ### Changed
 - Matrix and Sentinel keep separate light or dark modes, with the four named looks shared with neon1.tech.
 - Profile saves preserve the selected family, and profile and Contact navigation keep the All clients context.
-- Email and text preferences remain side by side and scroll on narrow screens. A second profile save sits above notifications.
+- Email and text preferences remain side by side and scroll on narrow screens.
 - Neo's mobile panel follows the app frame and Mini rail, grows its question field, and closes when another portal control is used.
 - The landing theme switch chooses Matrix or Sentinel without changing light or dark mode. Mode switches say “light or dark.” Existing saved preferences remain readable.
 - Matrix has Awake (light) and Plugged (dark). Sentinel has Providence (light) and Desert of the Real (dark), with a leaf-green palette based on #39AB56 and still presentation.

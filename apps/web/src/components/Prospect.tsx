@@ -5,6 +5,7 @@
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router";
+import { OutLink } from "./OutLink.tsx";
 import { api } from "../lib/api.ts";
 import { problem } from "../lib/hooks.ts";
 import { read } from "../lib/reads.ts";
@@ -30,7 +31,7 @@ export function useProspectEverywhere(me: Me): boolean | undefined {
 export function ProspectNote() {
   return (
     <p className="notice prospect-note" role="note">
-      <span>You're set up as a free account. Write down what your projects need, then ask for an assessment or a call under Next step. Other ways to reach neon1 are on <Link to="/contact">Contact</Link>, or <a className="out" href={BOOK_A_CALL} target="_blank" rel="noopener noreferrer">book a call<span className="out-arrow" aria-hidden="true">↗</span></a>.</span>
+      <span>You're set up as a free account. Write down what your projects need, then ask for an assessment or a call under Next step. Other ways to reach neon1 are on <Link to="/contact">Contact</Link>, or <OutLink href={BOOK_A_CALL}>book a call</OutLink>.</span>
     </p>
   );
 }
