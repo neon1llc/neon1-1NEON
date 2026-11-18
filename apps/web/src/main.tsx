@@ -191,16 +191,26 @@ keepNeoBelowTopBar();
 // can't load, the portal works without it
 const CHAT = "/shared/chat.js";
 type ChatOptions = { className?: string; light?: () => boolean; watch?: Element[] };
+type ChatWindow = { open: () => void; close: () => void };
 // The demo's data never leaves the browser, so Neo (which answers from neon1's public pages only) shows in the demo
 // but not in the walkthrough, which makes no calls at all: bottom left on the picker, bottom right once a person is picked
 if (!LIVE) import(/* @vite-ignore */ CHAT)
-  .then((m: { chat(opts: ChatOptions): unknown }) =>
-    m.chat({
+  .then((m: { chat(opts: ChatOptions): ChatWindow }) => {
+    const neo = m.chat({
       className: "n1chat-portal n1chat-right",
       light: () => (document.querySelector(".signin") ? !!document.querySelector(".signin.awake") : !document.documentElement.classList.contains("n1-dark")),
       watch: [document.documentElement],
-    }),
-  )
+    });
+    // The shared chat is mounted outside React. Close it at the portal boundary when a
+    // different app control is used; this covers buttons and controls in React portals too.
+    const dismissNeo = (event: Event) => {
+      if (!(event.target instanceof Element) || event.target.closest(".n1chat, .n1chat-launch")) return;
+      if (!event.target.closest("button, a[href], input, select, textarea, [role=button]")) return;
+      neo.close();
+    };
+    document.addEventListener("pointerdown", dismissNeo, true);
+    document.addEventListener("click", dismissNeo, true);
+  })
   .catch(() => undefined);
 
 
