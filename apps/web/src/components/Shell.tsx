@@ -964,7 +964,6 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
             app's routes), centered with that bar as the mark is with the top bar */}
         <div className="edge edge-bottom" aria-hidden="true" />
         <div className="menu-footer">
-          {open && <MenuThemeControls theme={me.user.theme} kind="family" />}
           <a className="site-link site-end" href="/" title="neon1.tech">
             {/* The site logo's mark (v5 set), drawn in the theme's accent inside a round border */}
             <span className="ico site-mark" aria-hidden="true">
@@ -972,6 +971,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
             </span>
             <span className="lbl">neon1.tech</span>
           </a>
+          {open && <MenuThemeControls theme={me.user.theme} kind="family" />}
         </div>
       </aside>
       <div className="main" inert={open}>

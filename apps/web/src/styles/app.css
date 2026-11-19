@@ -92,7 +92,7 @@ input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outlin
    rail on screen at every size, and the page makes room for it */
 .shell { min-height: 100%; }
 .shell.mini .main { padding-left: calc(var(--rail) + env(safe-area-inset-left)); }
-:root { --rail: 61px; --box: 28px; }
+:root { --rail: 53px; --box: 28px; }
 /* The rail is its icon row (a 28px box and 6px either side, 40px), the same gap on both sides, and the
    border: so a row's highlight sits evenly around its icon. The menu scrolls without a visible bar
    (the page's own content keeps its bar) */
@@ -107,8 +107,6 @@ input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outlin
 .shell.mini .side:not(.open) :is(.brand, .org-mini, .nav a, .site-link, .who-link) { min-height: var(--row); padding-top: 2px; padding-bottom: 2px; }
 .shell.mini .side:not(.open) .nav { gap: 0; margin-top: 2px; }
 .shell.mini .side:not(.open) .nav .sep { margin: 3px 0; }
-/* Center each icon within the rail's padded row, so both sides have equal space */
-.shell.mini .side:not(.open) :is(.brand, .org-mini, .nav a, .site-link, .who-link) { justify-content: center; }
 .scrim { position: fixed; inset: 0; z-index: 39; background: rgba(13, 2, 8, .45); }
 /* Every entry is one row: a 28px box, then its label; collapsed, labels stay readable to screen readers only */
 .side .brand, .side .org-mini, .nav a, .site-link, .who-link { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 6px 6px; border-radius: var(--r-sm);
@@ -501,8 +499,7 @@ fieldset legend { font: 12px var(--mono); color: var(--muted); }
 /* Phone tab bar: hidden until phone widths */
 .tabbar { display: none; }
 @media (max-width: 640px) {
-  /* Phones: a slimmer mini rail, and the tab bar starts where it ends */
-  .shell.mini { --rail: 53px; }
+  /* Phones keep the compact rail, and the tab bar starts where it ends */
   .shell.mini .side:not(.open) { --padl: calc(6px + env(safe-area-inset-left)); --padr: 6px; }
   .shell.mini .tabbar { left: calc(var(--rail) + env(safe-area-inset-left)); }
   .content { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
@@ -2032,11 +2029,10 @@ select:not(:disabled), select:not(:disabled)::picker-icon, select:not(:disabled)
 .side-head { display: flex; align-items: center; flex: none; height: var(--top-h); margin-top: -8px; }
 .side-head .brand { width: auto; flex: 1; min-width: 0; margin: 0; }
 .side .side-head .brand { height: var(--top-h); min-height: var(--top-h); margin-top: 0; flex: 1; }
-.menu-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: var(--top-h); min-height: var(--top-h); margin-top: auto; flex: none; }
+.menu-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: var(--top-h); min-height: var(--top-h); flex: none; }
 .side .menu-footer .site-end { width: auto; min-width: 0; margin: 0; }
 .shell.mini .side:not(.open) .menu-footer .site-end { width: 100%; }
 .menu-theme-switch { position: relative; flex: none; width: 52px; height: 28px; margin: 0 6px 0 0; padding: 0; border: 1px solid var(--line-strong); border-radius: 99px; background: var(--panel); color: var(--muted); cursor: pointer; }
-.menu-footer .menu-theme-switch { margin: 0 0 0 6px; }
 .menu-theme-switch svg { position: absolute; top: 50%; z-index: 1; margin-top: -7px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .menu-theme-switch .switch-sun { left: 6px; }
 .menu-theme-switch .switch-moon { right: 6px; }
