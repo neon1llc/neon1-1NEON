@@ -24,7 +24,7 @@ import { PublicBar } from "./PublicBar.tsx";
 import { useSiteTheme } from "../lib/sitetheme.ts";
 import { isSentinel, isDarkLook, lookFor, normalizeLook, resolveTheme, saveLook, sharedThemeChoice, styleChoice } from "../lib/style.ts";
 import { dawn } from "../lib/dawn.ts";
-import { BriefcaseBusiness, FileText as FileIcon, Folder as FolderIcon, Home as HomeIcon, Kanban as KanbanIcon, Menu as MenuIcon, Moon, Search as SearchIcon, Sun, Waves } from "lucide-react";
+import { FileText as FileIcon, Folder as FolderIcon, Home as HomeIcon, Kanban as KanbanIcon, Menu as MenuIcon, Moon, Search as SearchIcon, Sun } from "lucide-react";
 import { ConfirmDialog } from "./Confirm.tsx";
 import { HelpProvider, useHelp } from "./Help.tsx";
 import { Neo } from "./Neo.tsx";
@@ -717,7 +717,7 @@ const FOCUSABLE = "a[href], button:not([disabled]), input:not([disabled]), selec
 // The menu's switches use the same origin-wide family and mode as neon1.tech
 function currentMenuLook(theme: string) {
   const current = resolveTheme(theme);
-  return current === "device" ? lookFor(styleChoice() ?? "matrix", matchMedia("(prefers-color-scheme: dark)").matches) : normalizeLook(current);
+  return current === "device" ? lookFor(styleChoice() ?? "sentinel", matchMedia("(prefers-color-scheme: dark)").matches) : normalizeLook(current);
 }
 
 
@@ -740,7 +740,9 @@ function MenuThemeControls({ theme, kind }: { theme: string; kind: "mode" | "fam
   if (kind === "family") {
     const family = sharedThemeChoice() ? styleChoice() ?? "sentinel" : isSentinel(look) ? "sentinel" : "matrix";
     return <button className="menu-theme-switch style-switch" type="button" role="switch" aria-checked={family === "sentinel"} aria-label="Sentinel theme" title={`Switch to ${family === "sentinel" ? "Matrix" : "Sentinel"}`} onClick={() => pick(lookFor(family === "sentinel" ? "matrix" : "sentinel", dark))}>
-      <Waves className="switch-sun" size={14} aria-hidden="true" /><BriefcaseBusiness className="switch-moon" size={14} aria-hidden="true" /><span className="switch-knob" aria-hidden="true" />
+      <svg className="switch-sun" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5v6M12 3.5v9M17 3.5v5M7 14v6.5M12 16.5v4M17 12v8.5" /></svg>
+      <svg className="switch-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 8h17v11.5h-17zM8.5 8V5.5h7V8M3.5 13h17" /></svg>
+      <span className="switch-knob" aria-hidden="true" />
     </button>;
   }
   return (

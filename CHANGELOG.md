@@ -3,6 +3,8 @@
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
 ## Unreleased
+- The menu family switch now uses the landing's Matrix rain mark and Sentinel briefcase mark, and a device-based account theme follows Sentinel by default.
+- The 1NEON mark in the menu sits on the same visual centerline as the top-bar controls.
 - The open menu now has the shared light/dark switch beside 1NEON and the Sentinel/Matrix switch beside neon1.tech. Sentinel is the site's default family, with light mode unchanged; choosing either axis carries across the site and portal.
 - The desktop Mini rail uses the same compact width and icon alignment as mobile. In the expanded menu, the neon1.tech link stays on the left and the theme switch aligns with the mode switch; Report a bug and Feedback stay docked above the footer. Contact, FAQ, and walkthrough email and phone links use the same outbound arrow as other links, and open their handler without an extra browser tab.
 - The profile no longer duplicates theme controls; its browser motion and menu preferences remain under Preferences.

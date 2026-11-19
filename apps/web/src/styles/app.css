@@ -2029,6 +2029,8 @@ select:not(:disabled), select:not(:disabled)::picker-icon, select:not(:disabled)
 .side-head { display: flex; align-items: center; flex: none; height: var(--top-h); margin-top: -8px; }
 .side-head .brand { width: auto; flex: 1; min-width: 0; margin: 0; }
 .side .side-head .brand { height: 40px !important; min-height: 40px !important; margin-top: 0; flex: 1; }
+/* The menu wordmark sits slightly high against the top-bar controls in the rendered frame */
+.side .side-head .brand { transform: translateY(3px); }
 .menu-footer { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 12px; height: var(--top-h); min-height: var(--top-h); margin: 6px calc(-1 * var(--padr)) -8px calc(-1 * var(--padl)); padding: 0 var(--padr) 0 var(--padl); border-top: 1px solid var(--line); flex: none; }
 .side .menu-footer .site-end { width: auto; min-width: 0; margin: 0; }
 .shell.mini .side:not(.open) .menu-footer .site-end { width: 100%; }
