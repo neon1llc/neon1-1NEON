@@ -1,33 +1,34 @@
-// apps/web/src/live/journey.ts - The free-account journey, start to finish: Lena, who runs a fictional
-// flower shop, starts a free account from the sign-in screen, writes down what her project needs, and
-// asks for an assessment; Pradeep at neon1 reads the request, answers in her project, and, after they
-// talk, makes her account a client. The cursor follows whoever is acting, and the line under the
-// controls says whose side it is. Every name, shop, and order here is made up.
+// apps/web/src/live/journey.ts - The free-account journey, start to finish: Noor, who runs a fictional
+// building-supply yard, starts a free account from the sign-in screen, writes down what her project
+// needs, and asks for an assessment; Pradeep at neon1 reads the request, answers in her project, and,
+// after they talk, makes her account a client. The cursor follows whoever is acting, and the line under
+// the controls says whose side it is. Every name, business, and form here is made up.
 
 
 import { CONTACT_TO } from "../../../api/src/routes/contact.ts";
 import { liveEngine } from "../lib/api.ts";
 import type { Show, Stage } from "./player.ts";
 import { MailWindow } from "./props.ts";
-import { LENA, PRADEEP } from "./seed.ts";
+import { PRADEEP } from "./seed.ts";
 
 
 const engine = async () => (await liveEngine())!;
 
-// Lena's shop, as she types it at sign-up
-const SHOP = "Riverside Florist";
+// Noor, who isn't a client of anyone yet, and her business as she types it at sign-up
+const NOOR = "noor@calderbuildingsupply.example";
+const SHOP = "Calder Building Supply";
 // The project she writes down, and the request inside it
 const PROJECT = {
-  name: "Wedding orders in one place",
-  today: "Wedding orders come by email, Instagram, and phone, and I copy each one into a paper book.",
-  outcome: "Every order lands in one list with its date, flowers, and deposit.",
-  example: "Two brides asked for peonies on the same Saturday, and I found the second order the day before.",
+  name: "Answer the insurer's security questions",
+  today: "Our insurer sent a cyber-coverage form with 31 questions. Our files sit on one office PC and a USB drive, and I can't answer about half of them.",
+  outcome: "Honest answers by the deadline, the gaps listed, and the cheapest fixes first.",
+  example: "The form asks whether we back up and have tested a restore. We back up when someone remembers, and we've never tried a restore.",
 };
 
 
-/** Lena's free account's pages (the address ends in a random part the sign-up chose) */
+/** Noor's free account's pages (the address ends in a random part the sign-up chose) */
 async function shop() {
-  const me = await (await engine()).actAs<{ orgs: { slug: string; name: string }[] }>(LENA, "/me");
+  const me = await (await engine()).actAs<{ orgs: { slug: string; name: string }[] }>(NOOR, "/me");
   return `/o/${me.orgs.find((o) => o.name === SHOP)!.slug}`;
 }
 
@@ -59,21 +60,21 @@ export const JOURNEY: Show = {
   title: "From free account to client",
   blurb: "Sign up, write down a project, ask for an assessment, and become a client",
   intro: {
-    heading: "Meet Lena",
+    heading: "Meet Noor",
     text: [
-      "Lena runs Riverside Florist, a fictional flower shop. She isn't a client yet and would rather write things down before any call.",
+      "Noor runs Calder Building Supply, a fictional lumber and hardware yard with eleven employees. Her insurer sent a security questionnaire she can't fully answer. She isn't a client yet and would rather write things down before any call.",
       "Watch her start a free 1NEON account, write down what her project needs, and ask for an assessment. Then switch to Pradeep at neon1: he reads her request, answers in her project, and, after they talk, makes her account a client account.",
     ],
   },
   length: "about six minutes",
   end: "A free account, a written-down project, and a client.",
-  recap: "Lena saw what a free account holds, signed up with a code by email, wrote down one project, and asked for an assessment. Pradeep read it, asked her a question in the project, and promoted her account to a client once they'd talked. Everything she wrote stayed where it was.",
+  recap: "Noor saw what a free account holds, signed up with a code by email, wrote down one project, and asked for an assessment. Pradeep read it, asked her a question in the project, and promoted her account to a client once they'd talked. Everything she wrote stayed where it was.",
   sections: [
     {
       id: "free-start",
       title: "Start for free",
       run: async (s) => {
-        await s.say("Lena runs a fictional flower shop. She wants help, but not a call just yet");
+        await s.say("Noor runs a fictional building-supply yard. She wants help with an insurance form, but not a call just yet");
         await s.think("I'd rather write it down first. Start for free.");
         await s.click({ sel: "button", text: "Start for free" }, 900);
         await s.say("Before she types anything, the form says what a free account holds");
@@ -86,12 +87,12 @@ export const JOURNEY: Show = {
       title: "Create the account",
       run: async (s) => {
         await s.say("A few answers are needed. Website, place, and how she found neon1 are optional");
-        await s.type("#su-email", LENA, 200);
-        await s.type("#su-name", "Lena Park", 200);
+        await s.type("#su-email", NOOR, 200);
+        await s.type("#su-name", "Noor Haddad", 200);
         await s.choose("#su-kind", "small", 300);
         await s.type("#su-org", SHOP, 300);
         await s.think("The rest is optional, but where we are helps. I'll add it.");
-        await s.type("#su-city", "Troy", 200);
+        await s.type("#su-city", "Hudson", 200);
         await s.choose("#su-state", "NY", 300);
         await s.choose("#su-found", "maps", 300);
         await s.click(".su-terms input", 400);
@@ -104,7 +105,7 @@ export const JOURNEY: Show = {
       run: async (s) => {
         await s.say("1NEON emails a code to prove the address. No password");
         await s.waitFor("#code", 8000);
-        const mail = await inbox(s, LENA);
+        const mail = await inbox(s, NOOR);
         let code = "";
         try {
           await read(s, mail, "sign-in code");
@@ -145,20 +146,20 @@ export const JOURNEY: Show = {
         await s.say("She writes down one project: what happens now, what she wants, and a real example");
         await s.go(`${await shop()}/projects`, "Projects");
         await s.click({ sel: "a, button", text: "New project" }, 700);
-        await s.think("Workflow automation. That's it.");
-        await s.click({ sel: "label.option", text: "Workflow automation" }, 500);
+        await s.think("Security readiness. That's the closest.");
+        await s.click({ sel: "label.option", text: "Security readiness" }, 500);
         await s.click({ sel: "button", text: /^Next$/ }, 700);
         await s.type("#n", PROJECT.name);
         await s.type("#s", PROJECT.today);
         await s.type("#o", PROJECT.outcome);
-        await s.think("Last month's mix-up is the best example.");
+        await s.think("The backup question is the best example.");
         await s.type("#x", PROJECT.example);
         await s.click({ sel: "button", text: /^Next$/ }, 700);
-        await s.think("How I'd know it worked: no more missed orders.");
-        await s.type("#mt0", "Orders missed or double-booked");
-        await s.type("#mu0", "a month");
-        await s.type("#mb0", "2");
-        await s.type("#mg0", "0");
+        await s.think("How I'd know it worked: fewer questions I can't answer.");
+        await s.type("#mt0", "Form questions we can't answer");
+        await s.type("#mu0", "questions");
+        await s.type("#mb0", "16");
+        await s.type("#mg0", "2");
         await s.click({ sel: "button", text: /^Next$/ }, 900);
         await s.click({ sel: "button", text: "Create project" }, 1600);
       },
@@ -167,7 +168,7 @@ export const JOURNEY: Show = {
       id: "free-ask",
       title: "Ask for an assessment",
       run: async (s) => {
-        await s.say("From Home she asks for an assessment, or a free 15-minute call");
+        await s.say("From Home she asks for an assessment, then books the free 30-minute call");
         await s.go(`${await shop()}/workspace`, "Home");
         await s.hover(".next-step-ask", 900);
         await s.type("#ask-note", "Weekday mornings are best if a call helps.", 300);
@@ -199,26 +200,26 @@ export const JOURNEY: Show = {
         await s.click({ sel: "nav.tabs a", text: "Needs" }, 900);
         await s.click({ sel: ".item-open", text: "One real example" }, 900);
         await s.say("He asks his question in a comment, which she sees in 1NEON and by email");
-        await s.type('textarea[aria-label="Write a comment"]', "Thanks, Lena. About how many wedding orders a month, and do deposits come by card or cash?");
+        await s.type('textarea[aria-label="Write a comment"]', "Thanks, Noor. How many people use the office PC, and is the register on the same network?");
         await s.click({ sel: ".comment-box button", text: "Send" }, 1000);
         await s.click('dialog[open] button[aria-label="Close"]', 600);
       },
     },
     {
       id: "free-reply",
-      title: "Lena replies",
+      title: "Noor replies",
       run: async (s) => {
-        await become(s, LENA, `${await shop()}/workspace`);
-        await s.say("Back on Lena's screen, the bell has something new");
+        await become(s, NOOR, `${await shop()}/workspace`);
+        await s.say("Back on Noor's screen, the bell has something new");
         await s.click(".bell-btn", 1400);
         await s.think("Pradeep has a question.");
         await s.click({ sel: ".bell-list a.note", text: /comment/i }, 1000);
         await s.think("It took me to the item he asked about.");
         await s.click({ sel: ".item-open", text: "One real example" }, 900);
-        await s.type('textarea[aria-label="Write a comment"]', "About 25 a month in season. Deposits are by card, through the shop's card reader.");
+        await s.type('textarea[aria-label="Write a comment"]', "Five people use it, and yes, the register is on the same network. The insurer wants the form back by the end of next month.");
         await s.click({ sel: ".comment-box button", text: "Send" }, 1000);
         await s.click('dialog[open] button[aria-label="Close"]', 600);
-        await s.say("They talk for fifteen minutes, and she'd like to go ahead");
+        await s.say("They talk for thirty minutes, and she'd like to go ahead");
         await s.wait(1200);
       },
     },
@@ -230,7 +231,7 @@ export const JOURNEY: Show = {
         await become(s, PRADEEP, "/all/prospects");
         await s.say("Pradeep's side again: Potentials lists everyone who signed themselves up");
         await s.hover({ sel: "section.prospect", text: SHOP }, 1200);
-        await s.think("Riverside Florist, Troy, found us on Google Maps. Promote.");
+        await s.think("Calder Building Supply, Hudson, found us on Google Maps. Promote.");
         await s.click({ sel: "section.prospect button", text: "Promote" }, 900);
         await s.say("Promoting gives the next client ID and lifts every limit. Nothing in her work changes");
         await s.click({ sel: "dialog[open] button", text: "Promote" }, 1400);
@@ -240,8 +241,8 @@ export const JOURNEY: Show = {
       id: "free-client",
       title: "A client account",
       run: async (s) => {
-        await become(s, LENA, `${await shop()}/workspace`);
-        await s.say("On Lena's Home, the free-account note and the keep date are gone");
+        await become(s, NOOR, `${await shop()}/workspace`);
+        await s.say("On Noor's Home, the free-account note and the keep date are gone");
         await s.hover("h1", 1000);
         await s.think("No more expiry date. I'm a client now.");
         await s.say("Her project is right where she left it, and the work goes on from there");

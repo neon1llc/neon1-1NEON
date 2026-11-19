@@ -107,4 +107,5 @@ describe.each([["feedback", good], ["bug", { where: "site", what: good.what, pag
     const r = await post(form, { ...base, what: "<script>alert(7)</script>", kind: "<script>alert(7)</script>", where: "<script>alert(7)</script>", gate: await solve(form) });
     expect(await r.text()).not.toContain("alert(7)");
   });
-});
+// The challenge is solved by real work (a hash search), which a loaded CI machine can stretch past the default 5 seconds
+}, 30_000);

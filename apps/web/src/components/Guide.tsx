@@ -236,7 +236,7 @@ export function RequestBuilder({ onSubmit, onCancel, busy, timeZone }: { onSubmi
           {/* Each line reads as part of one sentence; blanks are chips or short fields */}
           <div className="line"><span>I'd like to</span><Goals value={n.goals} onChange={(goals) => set(i, { goals })} /></div>
           <div className="line"><span>for</span><input aria-label="Who or what it's for" value={n.who} onChange={(e) => set(i, { who: e.target.value })} maxLength={80} placeholder="your workflow, system, or space" /></div>
-          <div className="line"><span>Currently,</span><textarea rows={1} aria-label="What happens now" value={n.now} onChange={(e) => set(i, { now: e.target.value.replace(/\n/g, " ") })} maxLength={300} placeholder="e.g. forms get retyped" /></div>
+          <div className="line"><span>Currently,</span><textarea rows={1} aria-label="What happens now" value={n.now} onChange={(e) => set(i, { now: e.target.value.replace(/\n/g, " ") })} maxLength={300} placeholder="e.g. counts differ between two systems" /></div>
           <div className="line"><span>It happens</span><Pick label="How often" options={OFTEN} value={n.often} onChange={(often) => set(i, { often })} /></div>
           <div className="line">
             <span>and it's due</span>

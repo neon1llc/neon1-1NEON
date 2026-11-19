@@ -88,6 +88,8 @@ module "api" {
   user_pool_arn         = module.auth.user_pool_arn
   client_id             = module.auth.client_id
   sms_number_arn        = module.sms.number_arn
+  sms_number            = module.sms.number
+  sms_inbound_topic_arn = var.texts_live ? module.sms.inbound_topic_arn : ""
   texts_live            = var.texts_live
   neo_model             = var.neo_model
   neo_monthly_usd       = var.neo_monthly_usd
@@ -111,8 +113,9 @@ import {
   id = "phone-a146035facd5411888e8b680bcc4f08d"
 }
 module "sms" {
-  source = "../../modules/sms"
-  name   = local.name
+  source          = "../../modules/sms"
+  name            = local.name
+  two_way_enabled = var.texts_live
 }
 
 

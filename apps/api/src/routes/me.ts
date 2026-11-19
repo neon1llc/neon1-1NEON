@@ -7,7 +7,9 @@ import { z } from "zod";
 import { assurance } from "../lib/assurance.ts";
 import { body, defined, fail, now, who } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
+import { outboxOp } from "../outbox.ts";
 import { codeText, e164, hashCode, smsAfterSave, smsFactorOn, smsState } from "../sms.ts";
+import { ConflictError } from "../store/types.ts";
 
 
 export function meRoutes(app: App, k: Kit) {
@@ -65,11 +67,35 @@ export function meRoutes(app: App, k: Kit) {
     // factor change, that needs a confirmed session, so an email-only session can't swap in its own
     const offNumber = patch.phone !== undefined && e164(patch.phone) !== e164(user.phone);
     if (smsFactorOn(user) && (offNumber || smsConsent === false) && !actor.strongSession) fail(403, "strong_auth_required", "Text codes are on for this number. Confirm it's you before changing it or turning texts off.");
+    if (!offNumber && smsConsent === true && !e164(patch.phone ?? user.phone)) fail(400, "invalid_phone", "Add a valid phone number before turning texts on.");
     // Agreeing to texts is recorded with its time and wording version, as carriers expect. A new
-    // number clears consent and verification, so nothing goes to it until its holder proves it
-    const sms = smsAfterSave(user, patch.phone, smsConsent);
+    // number always needs a separate opt-in save, so consent cannot carry over from the previous phone
+    const consent = offNumber ? false : smsConsent;
+    const sms = smsAfterSave(user, patch.phone, consent);
     const next: User = { ...user, ...defined(patch), ...sms, version: user.version + 1, updatedAt: now(), updatedBy: user.id };
-    await repo.saveUser(next, version);
+    const ops = [repo.userOp(next, version)];
+    const oldPhone = e164(user.smsPendingPhone ?? user.smsPhone);
+    const newPhone = e164(next.smsPendingPhone ?? next.smsPhone);
+    const startConsent = Boolean(next.smsConsentAt && next.smsPendingPhone && next.smsConsentAt !== user.smsConsentAt);
+    if (startConsent) {
+      const ownerKey = { PK: `SMSPHONE#${newPhone}`, SK: "OWNER" };
+      const owner = await repo.table.get(ownerKey.PK, ownerKey.SK);
+      if (owner && owner.userId !== user.id) fail(409, "phone_in_use", "This number is already connected to another 1NEON account. Remove it there first or use another number.");
+      ops.push({ put: { ...ownerKey, type: "sms-owner", userId: user.id, version: Number(owner?.version ?? 0) + 1 }, guard: owner ? { version: Number(owner.version) } : { create: true } });
+      ops.push(outboxOp(`S#${user.id}#SETUP#${next.smsConsentAt}`, { kind: "sms-confirmation", userId: user.id, to: newPhone!, consentAt: next.smsConsentAt! }));
+    }
+    if (oldPhone && (!next.smsConsentAt || oldPhone !== newPhone)) {
+      const ownerKey = { PK: `SMSPHONE#${oldPhone}`, SK: "OWNER" };
+      const owner = await repo.table.get(ownerKey.PK, ownerKey.SK);
+      if (owner?.userId === user.id) ops.push({ delete: ownerKey, guard: { version: Number(owner.version) } });
+    }
+    try {
+      await repo.table.write(ops);
+    } catch (error) {
+      // Do not reveal which account owns a phone number when two people opt in at once
+      if (error instanceof ConflictError && error.current?.type === "sms-owner") fail(409, "phone_in_use", "This number is already connected to another 1NEON account. Remove it there first or use another number.");
+      throw error;
+    }
     return c.json(next);
   });
 
@@ -96,7 +122,7 @@ export function meRoutes(app: App, k: Kit) {
     const live = await countPhoneTry(user.id, "verify", jti);
     const fresh = (await repo.getUser(user.id))!;
     if (live.hash !== (await hashCode(user.id, code)) || live.phone !== e164(fresh.phone)) fail(400, "wrong_code", "That code didn't match. Check the newest text.");
-    await consumeCode(live, [repo.userOp({ ...fresh, smsPhone: String(live.phone), smsVerifiedAt: now(), version: fresh.version + 1, updatedAt: now(), updatedBy: user.id }, fresh.version)]);
+    await consumeCode(live, [repo.userOp({ ...fresh, smsPhone: String(live.phone), smsPendingPhone: undefined, smsVerifiedAt: now(), version: fresh.version + 1, updatedAt: now(), updatedBy: user.id }, fresh.version)]);
     return c.json({ ok: true });
   });
 }

@@ -1,4 +1,4 @@
-// apps/web/src/pages/Me.tsx - Your profile: name, title, phone, theme, menu, and notices (saved together),
+// apps/web/src/pages/Me.tsx - Your profile: name, title, phone, menu, and notices (saved together),
 // motion (this browser's, at once),
 // then two-step verification, the tutorial, and signing out (each takes effect right away).
 
@@ -6,10 +6,9 @@
 import type { User } from "@1neon/domain";
 import type { SmsState } from "../lib/types.ts";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
-import { applyAccountTheme, changeTheme, useSession, useTopBar } from "../components/Shell.tsx";
-import { normalizeLook, resolveTheme, saveLook } from "../lib/style.ts";
+import { useSession, useTopBar } from "../components/Shell.tsx";
 import { Avatar, useAsk, useToast } from "../components/ui.tsx";
 import { api, BASE_PATH, devUser, LIVE, pickPerson } from "../lib/api.ts";
 import { menuOf, NOTIFY_GROUPS } from "@1neon/domain";
@@ -29,8 +28,8 @@ const SMS_NOTE: Record<SmsState, string> = {
   unavailable: "Texts aren't switched on for 1NEON yet. Email notices work now.",
   no_number: "",
   not_agreed: "",
-  opted_out: "You replied STOP, so texts are off. Tick the box and save to turn them back on.",
-  unverified: "One more step: we text a code to this number to make sure it's yours. Texts start after that.",
+  opted_out: "You replied STOP, so texts are off. Reply START to the number 1NEON texts come from, then check Text me and save to confirm again.",
+  unverified: "We sent a setup text. Reply YES to confirm this number, or ask for a code here. Texts start after confirmation.",
   ready: "Texts are on for this number.",
 };
 
@@ -56,22 +55,16 @@ export function MePage() {
   const [totpOpen, setTotpOpen] = useState(false);
   useTopBar(<span>Your profile</span>, []);
   // Edits stay local until Save
-  const [draft, setDraft] = useState({ name: me.user.name, title: me.user.title, phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), theme: me.user.theme, menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) });
+  const [draft, setDraft] = useState({ name: me.user.name, title: me.user.title, phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) });
   const [busy, setBusy] = useState(false);
   // Motion is this browser's choice, not the account's, so it changes at once and isn't part of Save
   const deviceLess = deviceLessMotion();
   const [less, setLess] = useState(() => deviceLess || chosenLessMotion());
   // Anything that differs from what's saved; Save waits for a change
-  const saved = { name: me.user.name, title: me.user.title, phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), theme: me.user.theme, menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) };
-  const [themePicked, setThemePicked] = useState(false);
-  const dirty = themePicked || JSON.stringify(draft) !== JSON.stringify(saved);
-  // The radio that shows: a named theme as the landing's style reads it (an account that says awake shows as providence when the landing chose sentinel)
-  const shownTheme = draft.theme === "device" ? "device" : !themePicked ? resolveTheme(draft.theme) : draft.theme;
-  // A previewed theme that was never saved goes back to the saved one on leaving the page
-  const savedTheme = useRef(me.user.theme);
-  savedTheme.current = me.user.theme;
-  // Leaving the profile unsaved puts the saved theme and menu style back
-  useEffect(() => () => { applyAccountTheme(savedTheme.current); previewMenu(undefined); }, []);
+  const saved = { name: me.user.name, title: me.user.title, phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) };
+  const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
+  // Leaving the profile unsaved puts the menu preview back to its saved style
+  useEffect(() => () => { previewMenu(undefined); }, []);
   // The phone check: a code is texted, then typed here
   const [code, setCode] = useState<string | undefined>(undefined);
   // A new account has no texts: no number to add, no text notices, no text codes
@@ -93,24 +86,26 @@ export function MePage() {
     try {
       await api("/me/phone/confirm", { method: "POST", body: { code } });
       setCode(undefined);
-      toast("Number confirmed. Texts are on.");
+      toast("Number confirmed. Text notices are on. You can add Text message under Two-step verification.");
       qc.invalidateQueries({ queryKey: ["me"] });
     } catch (e) {
       toast(problem(e));
     }
   };
-  // Save the profile; the theme applies immediately and is kept with the account
+  // Save the profile; shared theme controls live in the menu, so this form leaves the account theme untouched
   const save = async () => {
     setBusy(true);
     try {
+      const changingPhone = draft.phone !== me.user.phone;
+      const startingTexts = draft.smsConsent && !me.user.smsConsentAt && draft.phone === me.user.phone;
       const user = await api<User>("/me", { method: "PATCH", body: { version: me.user.version, ...draft } });
       qc.setQueryData(["me"], { ...me, user });
-      // A saved theme also sets the style (the one neon1.tech's landing switch sets), so the two always agree
-      if (themePicked && draft.theme !== "device") saveLook(normalizeLook(draft.theme));
-      setThemePicked(false);
+      setDraft((current) => ({ ...current, phone: user.phone, smsConsent: Boolean(user.smsConsentAt) }));
       // The text state depends on what was saved; read it back fresh
       qc.invalidateQueries({ queryKey: ["me"] });
-      toast("Saved");
+      toast(startingTexts
+        ? "Saved. Reply YES to the 1NEON text to confirm this number."
+        : changingPhone && draft.smsConsent ? "Phone saved. Check Text me and save to opt in to this number." : "Saved");
     } catch (e) {
       toast(problem(e));
       qc.invalidateQueries({ queryKey: ["me"] });
@@ -175,9 +170,11 @@ export function MePage() {
       <h1 className="page-title" style={{ display: "flex", gap: 12, alignItems: "center" }}><Avatar id={me.user.id} name={me.user.name || me.user.email} size={40} />Your profile</h1>
       <p className="lead">{me.user.email}{me.operator ? " · neon1 operator" : ""}</p>
       {/* Name, title, and mobile number */}
-      {/* Two columns on a wide screen: who you are and how it looks, beside notifications; one column when narrow */}
+      {/* Two columns on a wide screen: profile and preferences beside notifications; one column when narrow */}
       <div className="cols2">
-      <form id="profile" className="form" onSubmit={(e) => { e.preventDefault(); void save(); }}>
+      <form id="profile" className="form profile-form" onSubmit={(e) => { e.preventDefault(); void save(); }}>
+        <section className="card profile-section">
+          <h2 className="card-h">Your details</h2>
         <div><label htmlFor="nm">Name</label><input id="nm" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} maxLength={80} autoComplete="name" /></div>
         <div><label htmlFor="tt">Title</label><input id="tt" value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} maxLength={80} autoComplete="organization-title" /></div>
         {!noTexts && <div><label htmlFor="ph">Phone (only you see it)</label><input id="ph" type="tel" value={draft.phone} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} maxLength={32} autoComplete="tel" /></div>}
@@ -189,30 +186,9 @@ export function MePage() {
           </select>
           <span className="muted">Emails show times in this zone, with UTC beside them. Daylight saving follows it automatically.</span>
         </div>
-        {/* Theme previews immediately; Save keeps it with the account */}
-        <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
-          <legend style={{ marginBottom: 8 }}>Theme</legend>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {/* Four themes in two styles: the matrix one (the neon) and the still sentinel one. neon1.tech's landing switch picks the
-                style for everything, and picking a theme here sets it the same way */}
-            {([["Matrix", ["awake", "plugged"]], ["Sentinel", ["providence", "desert-of-the-real"]]] as const).map(([group, themes]) => (
-              <div key={group} role="group" aria-label={group} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-                <span className="muted small" aria-hidden="true">{group}</span>
-                {themes.map((t) => (
-                  <label key={t} className={`chip${shownTheme === t ? " on" : ""}`} style={{ cursor: "pointer" }}>
-                    <input type="radio" name="theme" className="sr" checked={shownTheme === t} onChange={() => { setThemePicked(true); setDraft({ ...draft, theme: t }); changeTheme(t); }} />
-                    {t === "awake" ? "Awake (light)" : t === "plugged" ? "Plugged (dark)" : t === "providence" ? "Providence (light)" : "Desert of the real (dark)"}
-                  </label>
-                ))}
-              </div>
-            ))}
-            <label className={`chip${shownTheme === "device" ? " on" : ""}`} style={{ cursor: "pointer" }}>
-              <input type="radio" name="theme" className="sr" checked={shownTheme === "device"} onChange={() => { setThemePicked(true); setDraft({ ...draft, theme: "device" }); changeTheme("device"); }} />
-              Match my device
-            </label>
-          </div>
-          {themePicked && <p className="unsaved small" role="status">Showing this now. Press Save to keep it.</p>}
-        </fieldset>
+        </section>
+        <section className="card profile-section">
+          <h2 className="card-h">Preferences</h2>
         {/* Motion: smooth by default; Reduced turns every animation off in this browser at once, and a device
             that asks for less motion keeps it reduced (lib/motion.ts) */}
         <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
@@ -241,9 +217,7 @@ export function MePage() {
           <p className="muted small" style={{ margin: "6px 0 0" }}>{draft.menu === "mini" ? "A slim menu of icons stays on the left. The menu button opens the full menu over it." : "The menu button opens the full menu. A tap outside it, or the button again, closes it."}</p>
           {draft.menu !== menuOf(me.user.menu) && <p className="unsaved small" role="status">Showing this now. Press Save to keep it.</p>}
         </fieldset>
-        <div className="actions profile-save-inline">
-          <button className="btn btn-primary" type="submit" disabled={busy || !dirty}>{busy ? "Saving…" : "Save"}</button>
-        </div>
+        </section>
       </form>
       <div className="form">
         {/* Each notification kind keeps its email and text choices together */}
@@ -261,8 +235,8 @@ export function MePage() {
                   return (
                     <tr key={g.id}>
                       <th scope="row"><span>{g.label}{g.level === "critical" && <span className="tag rec">important</span>}</span><span className="muted">{g.hint}</span></th>
-                      <td><input type="checkbox" aria-label={`Email me: ${g.label}`} checked={cur.email} onChange={(e) => set({ email: e.target.checked })} /></td>
-                      <td><input type="checkbox" aria-label={`Text me: ${g.label}`} checked={textsAvailable && cur.sms} disabled={!textsAvailable} onChange={(e) => set({ sms: e.target.checked })} /></td>
+                      <td><label className="notify-hit"><input type="checkbox" aria-label={`Email me: ${g.label}`} checked={cur.email} onChange={(e) => set({ email: e.target.checked })} /></label></td>
+                      <td><label className="notify-hit"><input type="checkbox" aria-label={`Text me: ${g.label}`} checked={textsAvailable && cur.sms} disabled={!textsAvailable} onChange={(e) => set({ sms: e.target.checked })} /></label></td>
                     </tr>
                   );
                 })}
@@ -271,12 +245,12 @@ export function MePage() {
           </div>
           {!noTexts && <fieldset className="notify-texts" id="texts">
             <legend>Text messages</legend>
-            {/* Texts need a mobile number and a clear yes, worded the way carriers require */}
+            {/* Consent is distinct from proving the number; the setup message asks for an explicit YES reply */}
             {draft.phone.trim() ? (
               <label className="sms-consent">
                 <input type="checkbox" checked={draft.smsConsent} onChange={(e) => setDraft({ ...draft, smsConsent: e.target.checked })} />
                 <span>
-                  <b>Text me at {draft.phone.trim()}</b> with 1NEON project notices from neon1 LLC, for the kinds I choose below.
+                  <b>Text me at {draft.phone.trim()}</b> one setup text, then 1NEON project notices from neon1 LLC for the kinds I choose below. If I turn on Text message under Two-step verification, I may also get sign-in codes. Reply YES to confirm this number after saving.
                   <span className="muted"> Texts are optional and not required to use 1NEON. Message frequency varies. Message and data rates may apply. Reply STOP to opt out or HELP for help. See the <Link to="/privacy">Privacy policy</Link> and <Link to="/terms">Terms</Link>.</span>
                 </span>
               </label>
@@ -288,12 +262,12 @@ export function MePage() {
             {!smsDirty && sms === "unverified" && (code === undefined
               ? <button className="btn btn-ghost btn-sm" type="button" onClick={() => void sendCode()}>Text me a code</button>
               : (
-                <span className="sms-code">
-                  <label htmlFor="smscode">Code from the text</label>
-                  <input id="smscode" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (code.length === 6) void checkCode(); } }} />
-                  <button className="btn btn-primary btn-sm" type="button" disabled={code.length !== 6} onClick={() => void checkCode()}>Confirm</button>
+                <form className="sms-code" onSubmit={(e) => { e.preventDefault(); void checkCode(); }}>
+                  <label id="smscode-label" htmlFor="smscode">Code from the text</label>
+                  <input id="smscode" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} required />
+                  <button className="btn btn-primary btn-sm" type="submit" disabled={code.length !== 6}>Confirm</button>
                   <button className="linkish small" type="button" onClick={() => void sendCode()}>Send another</button>
-                </span>
+                </form>
               ))}
             {smsDirty && (draft.smsConsent || draft.phone !== me.user.phone) && draft.phone.trim() && <span className="muted">Save first, then confirm the number with a texted code.</span>}
           </fieldset>}

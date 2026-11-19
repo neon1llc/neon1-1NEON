@@ -90,7 +90,7 @@ const live = location.pathname.startsWith("/1NEON/live");
 // Built once per page: restore what this device saved, or start from the demo organizations
 const table = new MemoryTable();
 const storage = new MemoryStorage();
-// Mail and texts are kept (with their send time) so the short demos can show Maria's inbox and phone
+// Mail and texts are kept (with their send time) so the short demos can show the owner's inbox and phone
 const mailer = new MemoryMailer();
 const texter = new MemoryTexter();
 // The stand-in for Cognito's passkey list; the playback saves and restores its count with the rest,
@@ -192,7 +192,7 @@ export async function demoFetch(url: string, init: RequestInit = {}): Promise<Re
       const { liveStep } = await import("../live/signin.ts");
       return liveStep(req, new Repo(table), mailer, (s) => {
         // The full story shows the code sign-in, then moves on to the project without stopping for
-        // "Confirm it's you" (Maria has no passkey or app yet); the short demos about it keep the session
+        // "Confirm it's you" (the owner has no passkey or app yet); the short demos about it keep the session
         if (PLAY.show !== PROJECT) session = s;
         devUser.set(s.email);
       }, (email) => claimSignup({ repo: new Repo(table), cfg }, email));

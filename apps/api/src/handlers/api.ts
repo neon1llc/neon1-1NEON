@@ -21,6 +21,7 @@ import { bedrockNeo } from "../neo/bedrock.ts";
 import { DEFAULT_BUDGET } from "../routes/neo.ts";
 import { RealVetting } from "../vetting/real.ts";
 import { guardDirectory, guardMailer } from "../dev-guard.ts";
+import { handleInboundSms, type InboundSms } from "../sms-inbound.ts";
 
 
 // Built once per cold start and reused across invocations
@@ -111,6 +112,19 @@ const http = handle(app);
  * this function except through API Gateway, so that shape can't be forged by a visitor
  */
 export const handler = async (event: Parameters<typeof http>[0] | { source?: string }, context: Parameters<typeof http>[1]) => {
+  const records = (event as { Records?: { Sns?: { Message?: string } }[] }).Records;
+  if (records?.length && records.every((record) => typeof record.Sns?.Message === "string")) {
+    for (const record of records) {
+      try {
+        await handleInboundSms(repo, cfg, JSON.parse(record.Sns!.Message!) as InboundSms);
+      } catch (error) {
+        // Do not log phone numbers or message contents; SNS retries an unprocessed event
+        console.error(JSON.stringify({ level: "error", message: "inbound text processing failed", error: (error as Error).name || "Error" }));
+        throw error;
+      }
+    }
+    return { statusCode: 200, body: "ok" };
+  }
   if ((event as { source?: string }).source === "aws.events") {
     // One absolute end for the whole pass, from the time Lambda says is left (less room to log and
     // return). The outbox gets up to seven seconds of it and the file sweep the rest

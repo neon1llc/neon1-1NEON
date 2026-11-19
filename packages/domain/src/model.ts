@@ -181,6 +181,8 @@ export const User = z.object({
   // When this person agreed to texts, and under which version of the wording; texts are never sent without it
   smsConsentAt: isoDate.optional(),
   smsPolicy: z.string().max(20).optional(),
+  // A number waiting for its owner to reply YES to the setup text
+  smsPendingPhone: z.string().max(16).optional(),
   // The number a text code proved this person holds (E.164), and when. Texts go only there, and only
   // while it is still the profile's number; changing the number clears all three of these fields
   smsPhone: z.string().max(16).optional(),

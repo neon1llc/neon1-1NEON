@@ -13,12 +13,7 @@ import { problem } from "../lib/hooks.ts";
 import { prefs } from "../lib/prefs.ts";
 import { useOrg } from "./Shell.tsx";
 import { useToast } from "./ui.tsx";
-
-
-/** A link that leaves neon1: a new tab, no referrer, and the northeast arrow */
-export function OutLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return <a className="out" href={href} target="_blank" rel="noopener noreferrer">{children}<span className="out-arrow" aria-hidden="true" /></a>;
-}
+import { OutLink } from "./OutLink.tsx";
 
 
 /** The link as people read it: no https://, no trailing slash */

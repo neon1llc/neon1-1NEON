@@ -66,14 +66,15 @@ export function ComingUp({ tid, base }: { tid: string; base: string }) {
   const lead = (new Date(first + "T00:00:00Z").getUTCDay() + 6) % 7;
   const days = Array.from({ length: len }, (_, i) => addDays(first, i));
   const on = (d: string) => data.entries.filter((e) => covers(e, d));
-  const thisMonth = shown === today.slice(0, 7);
+  const currentMonth = today.slice(0, 7);
+  const thisMonth = shown === currentMonth;
   // The folds: what's passed this month, what's late, what's ahead, and what repeats
   const overdue = thisMonth ? [...data.overdue, ...data.entries.filter((e) => e.overdue)] : [];
   const past = data.entries.filter((e) => !e.overdue && (e.endDate ?? e.date) < today);
   const ahead = data.entries.filter((e) => !e.overdue && (e.endDate ?? e.date) >= today);
-  // Jump: a year back to two years ahead
-  const jumps = Array.from({ length: 37 }, (_, i) => shiftMonth(today.slice(0, 7), i - 12));
-  const go = (m: string) => setMonth(m === today.slice(0, 7) ? undefined : m);
+  // Jump: a year back to two years ahead, plus the viewed month if arrows took us outside that range
+  const jumps = [...new Set([...Array.from({ length: 37 }, (_, i) => shiftMonth(currentMonth, i - 12)), shown])].sort();
+  const go = (m: string) => setMonth(m === currentMonth ? undefined : m);
 
   return (
     <section className="card coming cal" data-tour="coming-up" aria-busy={cal.isFetching}>
@@ -83,11 +84,11 @@ export function ComingUp({ tid, base }: { tid: string; base: string }) {
         <div className="cal-nav">
           {!thisMonth && <button type="button" className="btn btn-ghost btn-sm" onClick={() => go(today.slice(0, 7))}>Today</button>}
           <button type="button" className="icon-btn" onClick={() => go(shiftMonth(shown, -1))} aria-label={`Previous month, ${monthName(shiftMonth(shown, -1))}`} title="Previous month"><ChevronLeft size={16} aria-hidden="true" /></button>
-          <button type="button" className="icon-btn" onClick={() => go(shiftMonth(shown, 1))} aria-label={`Next month, ${monthName(shiftMonth(shown, 1))}`} title="Next month"><ChevronRight size={16} aria-hidden="true" /></button>
           <select className="cal-jump" value={shown} onChange={(e) => go(e.target.value)} aria-label="Go to a month">
-            {!jumps.includes(shown) && <option value={shown}>{monthName(shown, "short")}</option>}
+            <option key="current-month-default" value={currentMonth}>{monthName(currentMonth, "short")}</option>
             {jumps.map((m) => <option key={m} value={m}>{monthName(m, "short")}</option>)}
           </select>
+          <button type="button" className="icon-btn" onClick={() => go(shiftMonth(shown, 1))} aria-label={`Next month, ${monthName(shiftMonth(shown, 1))}`} title="Next month"><ChevronRight size={16} aria-hidden="true" /></button>
         </div>
       </div>
       {overdue.length > 0 && <p className="cal-late"><span className="tag warn">{overdue.length} overdue</span></p>}
