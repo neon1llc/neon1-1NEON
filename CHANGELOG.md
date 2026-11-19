@@ -3,14 +3,30 @@
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
 ## Unreleased
+- Profile notification checkboxes are 75% larger on touch devices and have a 44px tap target; desktop sizing stays compact.
+- Neo's panel on unauthenticated 1NEON pages opens and closes from its bottom-left launcher; the demo also links back to sign-in above its policy links.
+- On phones, the menu closes by sliding away or clipping to the Mini rail at a fixed width, avoiding row reflow during the transition. Focusing a text field keeps its label, described help, and form action above the keyboard together when they fit.
+- The walkthrough's dark controls, narration cards, loading panels, chapter list, and thought bubbles use readable light text in Sentinel light mode; the mobile menu's Matrix and Sentinel toggle marks stay at their intended 14px size.
+- Closing the mobile menu keeps its backdrop fading with the drawer, removing the flash of the page behind it.
+- The menu family switch now uses the landing's Matrix rain mark and Sentinel briefcase mark, and a device-based account theme follows Sentinel by default.
+- The 1NEON mark in the menu sits on the same visual centerline as the top-bar controls.
+- The open menu now has the shared light/dark switch beside 1NEON and the Sentinel/Matrix switch beside neon1.tech. Sentinel is the site's default family, with light mode unchanged; choosing either axis carries across the site and portal.
+- The desktop Mini rail uses the same compact width and icon alignment as mobile. In the expanded menu, the neon1.tech link stays on the left and the theme switch aligns with the mode switch; Report a bug and Feedback stay docked above the footer. Contact, FAQ, and walkthrough email and phone links use the same outbound arrow as other links, and open their handler without an extra browser tab.
+- The profile no longer duplicates theme controls; its browser motion and menu preferences remain under Preferences.
+- The 1NEON and neon1.tech menu marks center within their rows, from the viewport edge to each divider.
+- “How free accounts work” uses the site's theme-aware outbound link style and opens in a new tab.
+- The calendar month chooser uses organization-picker insets, keeps the current month pinned above the option divider and in chronological order, and places Previous and Next around the chooser.
 
 ## v0.21.0 - 2026-11-18
 
 ### Changed
 - Matrix and Sentinel keep separate light or dark modes, with the four named looks shared with neon1.tech.
 - Profile saves preserve the selected family, and profile and Contact navigation keep the All clients context.
-- Email and text preferences remain side by side and scroll on narrow screens. A second profile save sits above notifications.
+- Email and text preferences remain side by side and scroll on narrow screens.
 - Neo's mobile panel follows the app frame and Mini rail, grows its question field, and closes when another portal control is used.
+- The landing theme switch chooses Matrix or Sentinel without changing light or dark mode. Mode switches say “light or dark.” Existing saved preferences remain readable.
+- Matrix has Awake (light) and Plugged (dark). Sentinel has Providence (light) and Desert of the Real (dark), with a leaf-green palette based on #39AB56 and still presentation.
+- Site and 1NEON public screens share the family and mode. The profile uses the same four names, and an unrelated profile save preserves the landing's family choice.
 
 ## v0.20.1 - 2026-11-17
 - Dev passkeys belong to dev.neon1.tech, so a device no longer offers a neon1.tech passkey to the dev site or a dev one to production. Production is unchanged.

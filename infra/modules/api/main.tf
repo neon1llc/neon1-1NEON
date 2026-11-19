@@ -27,6 +27,12 @@ variable "user_pool_arn" { type = string }
 variable "client_id" { type = string }
 # The toll-free number texts come from (its ARN)
 variable "sms_number_arn" { type = string }
+variable "sms_number" { type = string }
+variable "sms_inbound_topic_arn" { type = string }
+variable "sms_allowlist_parameter" {
+  type    = string
+  default = ""
+}
 # Whether the API offers texts. Off until the number's toll-free registration is approved, so the
 # profile says texts aren't available instead of sending codes carriers will drop
 variable "texts_live" {
@@ -160,6 +166,15 @@ data "aws_iam_policy_document" "api" {
     actions   = ["ssm:GetParameters"]
     resources = [aws_ssm_parameter.stripe_key.arn, aws_ssm_parameter.stripe_webhook.arn, aws_ssm_parameter.turnstile_secret.arn]
   }
+  # The dev API reads its allowed SMS destinations from a separately managed SecureString
+  dynamic "statement" {
+    for_each = var.sms_allowlist_parameter == "" ? [] : [var.sms_allowlist_parameter]
+    content {
+      sid       = "SmsAllowlist"
+      actions   = ["ssm:GetParameters"]
+      resources = ["arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${statement.value}"]
+    }
+  }
   # SecureString decryption, only through SSM
   statement {
     sid       = "StripeKeysDecrypt"
@@ -176,7 +191,7 @@ data "aws_iam_policy_document" "api" {
     actions   = ["cognito-idp:AdminGetUser", "cognito-idp:AdminCreateUser", "cognito-idp:AdminDisableUser", "cognito-idp:AdminEnableUser", "cognito-idp:AdminUserGlobalSignOut"]
     resources = [var.user_pool_arn]
   }
-  # Texts only where there's a number (dev has none)
+  # Texts only where this environment's sender is explicitly enabled
   dynamic "statement" {
     for_each = var.sms_number_arn == "" ? [] : [var.sms_number_arn]
     content {
@@ -317,7 +332,7 @@ resource "aws_lambda_function" "api" {
 
   # Everything config.ts reads; connection reuse keeps SDK calls fast between invocations
   environment {
-    variables = {
+    variables = merge({
       APP_ENV             = var.env
       TABLE_NAME          = var.table_name
       DOCS_BUCKET         = var.docs_bucket
@@ -346,7 +361,10 @@ resource "aws_lambda_function" "api" {
       ORIGIN_LOCK                         = var.origin_lock ? "on" : "off"
       NODE_OPTIONS                        = "--enable-source-maps"
       AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
-    }
+      }, var.texts_live ? {
+      SMS_NUMBER          = var.sms_number
+      SMS_ALLOWLIST_PARAM = var.sms_allowlist_parameter
+    } : {})
   }
 
   # JSON logs into the declared group, so retention applies
@@ -357,6 +375,26 @@ resource "aws_lambda_function" "api" {
 
   # Code ships through the deploy workflow, not Terraform
   lifecycle { ignore_changes = [filename, source_code_hash] }
+}
+
+
+# Inbound SMS replies invoke the API through a private SNS subscription
+resource "aws_lambda_permission" "sms_inbound" {
+  count         = var.sms_inbound_topic_arn == "" ? 0 : 1
+  statement_id  = "AllowInboundSms"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.api.function_name
+  principal     = "sns.amazonaws.com"
+  source_arn    = var.sms_inbound_topic_arn
+}
+
+
+resource "aws_sns_topic_subscription" "sms_inbound" {
+  count      = var.sms_inbound_topic_arn == "" ? 0 : 1
+  topic_arn  = var.sms_inbound_topic_arn
+  protocol   = "lambda"
+  endpoint   = aws_lambda_function.api.arn
+  depends_on = [aws_lambda_permission.sms_inbound]
 }
 
 

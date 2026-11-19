@@ -6,7 +6,7 @@ import { handle } from "hono/aws-lambda";
 import { createApp } from "../app.ts";
 import type { Deps } from "../lib/kit.ts";
 import { CognitoAuth } from "../auth.ts";
-import { loadConfig } from "../config.ts";
+import { loadConfig, type Config } from "../config.ts";
 import { GetParametersCommand, SSMClient } from "@aws-sdk/client-ssm";
 import { AwsTexter, CognitoDirectory, S3Records, S3Storage, SesMailer, TurnstileCheck } from "../services.ts";
 import { sweepSignups } from "../routes/signup.ts";
@@ -21,10 +21,12 @@ import { bedrockNeo } from "../neo/bedrock.ts";
 import { DEFAULT_BUDGET } from "../routes/neo.ts";
 import { RealVetting } from "../vetting/real.ts";
 import { guardDirectory, guardMailer } from "../dev-guard.ts";
+import { handleInboundSms, type InboundSms } from "../sms-inbound.ts";
+import { e164 } from "../sms.ts";
 
 
 // Built once per cold start and reused across invocations
-const cfg = loadConfig();
+const cfg = await loadSmsAllowlist(loadConfig());
 // Fail at cold start, loudly, rather than on the first request
 if (!cfg.table || !cfg.userPoolId || !cfg.clientId || !cfg.authDomain || !cfg.mailFrom || !cfg.docsBucket) {
   throw new Error("Missing configuration: TABLE_NAME, USER_POOL_ID, USER_POOL_CLIENT_ID, AUTH_DOMAIN, MAIL_FROM, DOCS_BUCKET");
@@ -38,6 +40,22 @@ const mailer = guardMailer(cfg, new SesMailer(cfg.mailFrom, cfg.sesConfigSet, cf
 // Texts only once the toll-free number is set up
 const texter = cfg.smsFrom ? new AwsTexter(cfg.smsFrom) : undefined;
 const storage = new S3Storage(cfg.docsBucket, cfg.malwareScan !== false);
+
+
+/** Read the development recipient list from SecureString; invalid or missing data disables SMS */
+async function loadSmsAllowlist(base: Config): Promise<Config> {
+  if (!base.smsAllowlistParameter) return base;
+  try {
+    const result = await new SSMClient({}).send(new GetParametersCommand({ Names: [base.smsAllowlistParameter], WithDecryption: true }));
+    const value = result.Parameters?.find((parameter) => parameter.Name === base.smsAllowlistParameter)?.Value;
+    const entries = value?.split(",").map((entry) => e164(entry.trim()));
+    if (!entries?.length || entries.some((entry) => !entry) || result.InvalidParameters?.length) throw new Error("InvalidAllowlist");
+    return { ...base, smsAllowedDestinations: [...new Set(entries as string[])] };
+  } catch (error) {
+    console.error(JSON.stringify({ level: "error", message: "SMS allowlist unreadable; SMS disabled for this deployment", error: (error as Error).name || "Error" }));
+    return { ...base, smsAllowedDestinations: [] };
+  }
+}
 
 // Stripe's keys stay in SSM (SecureString), read once at cold start; never in the environment or the repo.
 // Without both parameters, invoices are still issued and paid by check, Zelle, or wire
@@ -111,6 +129,19 @@ const http = handle(app);
  * this function except through API Gateway, so that shape can't be forged by a visitor
  */
 export const handler = async (event: Parameters<typeof http>[0] | { source?: string }, context: Parameters<typeof http>[1]) => {
+  const records = (event as { Records?: { Sns?: { Message?: string } }[] }).Records;
+  if (records?.length && records.every((record) => typeof record.Sns?.Message === "string")) {
+    for (const record of records) {
+      try {
+        await handleInboundSms(repo, cfg, JSON.parse(record.Sns!.Message!) as InboundSms);
+      } catch (error) {
+        // Do not log phone numbers or message contents; SNS retries an unprocessed event
+        console.error(JSON.stringify({ level: "error", message: "inbound text processing failed", error: (error as Error).name || "Error" }));
+        throw error;
+      }
+    }
+    return { statusCode: 200, body: "ok" };
+  }
   if ((event as { source?: string }).source === "aws.events") {
     // One absolute end for the whole pass, from the time Lambda says is left (less room to log and
     // return). The outbox gets up to seven seconds of it and the file sweep the rest

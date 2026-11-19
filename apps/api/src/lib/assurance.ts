@@ -10,7 +10,7 @@ import { newId } from "@1neon/domain";
 import { keys } from "../store/repo.ts";
 import { ConflictError, type Row, type WriteOp } from "../store/types.ts";
 import { bounded } from "../outbox.ts";
-import { accountAllows, isOptOut, CODE_MS, CODE_TRIES, CODES_PER_HOUR, CODES_PER_HOUR_PERSON, newCode } from "../sms.ts";
+import { smsSendAllowed, isOptOut, CODE_MS, CODE_TRIES, CODES_PER_HOUR, CODES_PER_HOUR_PERSON, newCode } from "../sms.ts";
 import { fail, now, who, type Env } from "./http.ts";
 import type { Kit } from "./kit.ts";
 
@@ -38,7 +38,7 @@ export function assurance(k: Kit) {
   /** Refuse a factor change the rule above doesn't allow; returns the inventory it read */
   async function mayChangeFactors(c: Context<Env>): Promise<FactorInventory> {
     const { user, actor } = who(c);
-    const inv = await factorInventory(repo, d.directory, user, tokenOf(c));
+    const inv = await factorInventory(repo, d.directory, user, tokenOf(c), d.cfg.smsAllowedDestinations);
     if (inv.any === "unknown" && !actor.strongSession) fail(503, "factors_unknown", "We couldn't check your sign-in methods just now. Confirm it's you, or try again in a minute.");
     if (inv.any === true && !actor.strongSession) fail(403, "strong_auth_required", "Confirm it's you with a passkey, authenticator app, or text code you already have, then try again.");
     return inv;
@@ -95,7 +95,7 @@ export function assurance(k: Kit) {
       const same = sends.filter((x) => x.to === to && x.purpose === purpose).length + legacy;
       if (same >= CODES_PER_HOUR || sends.length + legacy >= CODES_PER_HOUR_PERSON) fail(429, "too_many_codes", "Too many codes this hour. Try again later.");
       if (!counted) {
-        if (!(await accountAllows(repo))) fail(429, "texts_busy", "Texts are paused for today. Try again tomorrow.");
+        if (!(await smsSendAllowed(repo, user.id, to, d.cfg.smsAllowedDestinations))) fail(429, "texts_busy", "This number has reached its text limit. Try again later.");
         counted = true;
       }
       const next = await newCode(user.id);

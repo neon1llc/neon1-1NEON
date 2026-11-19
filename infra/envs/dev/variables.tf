@@ -28,3 +28,11 @@ variable "neo_model" {
   type        = string
   default     = ""
 }
+
+
+# Explicit opt-in only after the TFN registration is approved and the sandbox destination is verified
+variable "texts_live" {
+  description = "Enable dev SMS only after its TFN is approved and the sandbox destination is verified."
+  type        = bool
+  default     = false
+}

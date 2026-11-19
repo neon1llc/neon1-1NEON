@@ -13,7 +13,7 @@ import { actorHears, groupOf, isOwnOrg, isQuickFix, neon1Only, noticeSummary, wa
 import type { Config } from "./config.ts";
 import { inviteEmail, noticeEmail } from "./emails.ts";
 import type { Mailer, Texter } from "./services.ts";
-import { smsReady, smsSendAllowed, textNotice, isOptOut } from "./sms.ts";
+import { smsReady, smsSendAllowed, textNotice, welcomeText, confirmedText, isOptOut } from "./sms.ts";
 import type { Repo } from "./store/repo.ts";
 import { ConflictError, type Row, type WriteOp } from "./store/types.ts";
 
@@ -42,6 +42,8 @@ const RESERVE_MS = 1_000;
 /** What an outbox row carries: an audit event to fan out, or one invitation email */
 export type OutboxPayload =
   | { kind: "event"; event: AuditEvent }
+  | { kind: "sms-confirmation"; userId: string; to: string; consentAt: string }
+  | { kind: "sms-confirmed"; userId: string; to: string; verifiedAt: string }
   | { kind: "invite"; tenantId: string; userId: string; email: string; orgName: string; inviter: string; url: string };
 
 
@@ -199,7 +201,9 @@ interface Target {
 async function deliver(d: OutboxDeps, row: Row, clock: Clock): Promise<{ sent: number; open: number; deferred: number; ambiguous: number }> {
   const io = <T>(p: Promise<T>) => beforeDeadline(p, clock.deadline);
   const payload = row.payload as OutboxPayload;
-  const targets: Target[] = payload.kind === "invite" ? [{ key: payload.email, channel: "email", send: (signal) => sendInvite(d, payload, signal) }] : await eventTargets(d, payload.event, clock);
+  const targets: Target[] = payload.kind === "invite"
+    ? [{ key: payload.email, channel: "email", send: (signal) => sendInvite(d, payload, signal) }]
+    : payload.kind === "event" ? await eventTargets(d, payload.event, clock) : await smsSetupTarget(d, payload);
   let sent = 0;
   let open = 0;
   let deferred = 0;
@@ -279,13 +283,13 @@ async function eventTargets(d: OutboxDeps, e: AuditEvent, clock: Clock): Promise
       targets.push({ key: u.id, channel: "email", send: (signal) => d.mailer.send(u.email, mail.subject, mail.text, mail.html, undefined, signal) });
     }
     // Texts only to a verified number the person still has, within the budgets, with no project detail
-    if (d.texter && smsReady(u) && wants(u.notify, e.action, "sms")) {
+    if (d.texter && smsReady(u, cfg.smsAllowedDestinations) && wants(u.notify, e.action, "sms")) {
       const texter = d.texter;
       targets.push({
         key: u.id,
         channel: "sms",
         send: async (signal) => {
-          if (!(await smsSendAllowed(repo, u.id))) throw Object.assign(new Error("text budget reached"), { name: "TextBudget" });
+          if (!(await smsSendAllowed(repo, u.id, u.smsPhone!, cfg.smsAllowedDestinations))) throw Object.assign(new Error("text budget reached"), { name: "TextBudget" });
           await texter.send(u.smsPhone!, textNotice(cfg.publicUrl), signal);
         },
         optedOut: () => markOptedOut(repo, u),
@@ -293,6 +297,28 @@ async function eventTargets(d: OutboxDeps, e: AuditEvent, clock: Clock): Promise
     }
   }
   return targets;
+}
+
+
+/** Send an opt-in confirmation only while the same consent and number are still pending */
+async function smsSetupTarget(d: OutboxDeps, payload: Extract<OutboxPayload, { kind: "sms-confirmation" | "sms-confirmed" }>): Promise<Target[]> {
+  if (!d.texter) return [];
+  const user = await d.repo.getUser(payload.userId);
+  if (!user) return [];
+  const confirmation = payload.kind === "sms-confirmation";
+  const stillCurrent = confirmation
+    ? user.smsConsentAt === payload.consentAt && user.smsPendingPhone === payload.to && !user.smsVerifiedAt
+    : user.smsVerifiedAt === payload.verifiedAt && user.smsPhone === payload.to && smsReady(user, d.cfg.smsAllowedDestinations);
+  if (!stillCurrent) return [];
+  return [{
+    key: user.id,
+    channel: "sms",
+    send: async (signal) => {
+      if (!(await smsSendAllowed(d.repo, user.id, payload.to, d.cfg.smsAllowedDestinations))) throw Object.assign(new Error("text budget reached"), { name: "TextBudget" });
+      await d.texter!.send(payload.to, confirmation ? welcomeText() : confirmedText(), signal);
+    },
+    optedOut: () => markOptedOut(d.repo, user),
+  }];
 }
 
 
@@ -325,7 +351,7 @@ async function settleInvite(d: OutboxDeps, row: Row, state: "sent" | "failed", c
 async function markOptedOut(repo: Repo, u: User) {
   const cur = await repo.getUser(u.id);
   if (!cur) return;
-  await repo.saveUser({ ...cur, smsConsentAt: undefined, smsOptedOutAt: new Date().toISOString(), version: cur.version + 1 }, cur.version).catch(ignoreConflict);
+  await repo.saveUser({ ...cur, smsConsentAt: undefined, smsPendingPhone: undefined, smsPhone: undefined, smsVerifiedAt: undefined, smsFactorAt: undefined, smsOptedOutAt: new Date().toISOString(), version: cur.version + 1 }, cur.version).catch(ignoreConflict);
 }
 
 

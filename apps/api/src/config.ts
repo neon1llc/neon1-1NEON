@@ -24,6 +24,12 @@ export interface Config {
   sesConfigSet?: string;
   /** The toll-free number (its ARN) texts come from; unset means no texts */
   smsFrom?: string;
+  /** The E.164 number that owns inbound confirmation replies */
+  smsNumber?: string;
+  /** SecureString parameter holding the development-only SMS destination allowlist */
+  smsAllowlistParameter?: string;
+  /** Destinations that may receive texts; undefined means no application allowlist */
+  smsAllowedDestinations?: string[];
   /** Emails that get the operator role (Pradeep). Never stored in the database */
   operatorEmails: string[];
   /** Local development only: trust an `x-dev-user` header instead of Cognito */
@@ -81,6 +87,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     feedbackTo: env.FEEDBACK_TO?.trim() || undefined,
     sesConfigSet: env.SES_CONFIGURATION_SET || undefined,
     smsFrom: env.SMS_FROM || undefined,
+    smsNumber: env.SMS_NUMBER || undefined,
+    smsAllowlistParameter: env.SMS_ALLOWLIST_PARAM || undefined,
+    // Development texting must fail closed even if its SSM parameter is accidentally omitted.
+    smsAllowedDestinations: env.APP_ENV === "dev" ? [] : undefined,
     operatorEmails: (env.OPERATOR_EMAILS ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean),
     devAuth,
     neoModel: env.NEO_MODEL || undefined,

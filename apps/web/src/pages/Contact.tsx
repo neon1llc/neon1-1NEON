@@ -4,7 +4,7 @@
 
 
 import { Link } from "react-router";
-import { OutLink } from "../components/OrgFace.tsx";
+import { OutLink } from "../components/OutLink.tsx";
 import { useTopBar } from "../components/Shell.tsx";
 import { BOOK_A_CALL } from "../lib/prospect.ts";
 
@@ -31,8 +31,8 @@ export function ContactPage() {
         <section className="card contact-ways">
           <h2 className="card-h">Ways to reach me</h2>
           <dl className="facts">
-            <div><dt>Email</dt><dd><a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a></dd></div>
-            <div><dt>Call or text</dt><dd><a href={`tel:${CONTACT.phone}`} title={CONTACT.phoneDigits}>{CONTACT.phoneLabel}</a> <span className="muted small">{CONTACT.phoneDigits}</span></dd></div>
+            <div><dt>Email</dt><dd><OutLink href={`mailto:${CONTACT.email}`}>{CONTACT.email}</OutLink></dd></div>
+            <div><dt>Call or text</dt><dd><OutLink href={`tel:${CONTACT.phone}`} title={CONTACT.phoneDigits}>{CONTACT.phoneLabel}</OutLink> <span className="muted small">{CONTACT.phoneDigits}</span></dd></div>
             <div><dt>Talk it through</dt><dd><OutLink href={BOOK_A_CALL}>Book a free 15-minute call</OutLink></dd></div>
           </dl>
         </section>
