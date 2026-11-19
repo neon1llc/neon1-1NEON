@@ -84,7 +84,7 @@ export function factorRoutes(app: App, k: Kit) {
         if (jti) await repo.saveSession(jti, user.id, true);
         if (replaced) await factorChanged(c, "totp.replaced", "The authenticator app was replaced");
         else await repo.securityEvent(user.id, "totp.added", "An authenticator app was added");
-        await refreshEnrolled(user, { totp: true, sms: smsFactorOn(user), passkey: user.passkey ?? "unknown", cognitoTotp: "unknown", any: true }).catch(() => undefined);
+        await refreshEnrolled(user, { totp: true, sms: smsFactorOn(user, cfg.smsAllowedDestinations), passkey: user.passkey ?? "unknown", cognitoTotp: "unknown", any: true }).catch(() => undefined);
         await notice(user, replaced ? factorRemovedEmail({ zone: user.timeZone, email: user.email, url: `${cfg.publicUrl}/1NEON/me`, what: "Your authenticator app", how: "replaced" }) : passkeyEmail({ zone: user.timeZone, email: user.email, url: `${cfg.publicUrl}/1NEON/me`, what: "An authenticator app" }));
         return c.json({ ok: true });
       } catch (e) {
@@ -101,9 +101,9 @@ export function factorRoutes(app: App, k: Kit) {
   // already be proved with a texted code, so nobody can point them at a number they don't hold
   app.post("/me/text-factor", async (c) => {
     const { user } = who(c);
-    if (!d.texter) fail(503, "texts_unavailable", "Texts aren't available yet. Email notices still work.");
-    if (!smsReady(user)) fail(409, "number_unverified", "Confirm your number with a texted code first, under Notifications.");
-    if (smsFactorOn(user)) return c.json({ ok: true });
+    if (!d.texter || (cfg.smsAllowlistParameter && !cfg.smsAllowedDestinations?.length)) fail(503, "texts_unavailable", "Texts aren't available yet. Email notices still work.");
+    if (!smsReady(user, cfg.smsAllowedDestinations)) fail(409, "number_unverified", "Confirm your number with a texted code first, under Notifications.");
+    if (smsFactorOn(user, cfg.smsAllowedDestinations)) return c.json({ ok: true });
     await mayChangeFactors(c);
     const fresh = (await repo.getUser(user.id))!;
     await repo.saveUser({ ...fresh, smsFactorAt: now(), strongAuth: true, version: fresh.version + 1, updatedAt: now(), updatedBy: user.id }, fresh.version);
@@ -120,7 +120,7 @@ export function factorRoutes(app: App, k: Kit) {
     await repo.saveUser({ ...fresh, smsFactorAt: undefined, version: fresh.version + 1, updatedAt: now(), updatedBy: user.id }, fresh.version);
     await factorChanged(c, "sms.removed", "Text-message codes were turned off");
     const after = (await repo.getUser(user.id))!;
-    await refreshEnrolled(after, await factorInventory(repo, d.directory, after, tokenOf(c))).catch(() => undefined);
+    await refreshEnrolled(after, await factorInventory(repo, d.directory, after, tokenOf(c), cfg.smsAllowedDestinations)).catch(() => undefined);
     await notice(user, factorRemovedEmail({ zone: user.timeZone, email: user.email, url: `${cfg.publicUrl}/1NEON/me`, what: "Text-message confirmation", how: "removed" }));
     return c.json({ ok: true });
   });
@@ -128,7 +128,7 @@ export function factorRoutes(app: App, k: Kit) {
   // Text a code to confirm it's you
   app.post("/me/confirm/text", async (c) => {
     const { user, jti } = who(c);
-    if (!smsFactorOn(user)) fail(409, "no_text_factor", "Turn on text codes on your profile first.");
+    if (!smsFactorOn(user, cfg.smsAllowedDestinations)) fail(409, "no_text_factor", "Turn on text codes on your profile first.");
     await textCode(user, "confirm", jti, user.smsPhone!, confirmText);
     return c.json({ ok: true });
   });
@@ -142,11 +142,11 @@ export function factorRoutes(app: App, k: Kit) {
     const { user, jti } = who(c);
     const { code, via } = await body(c, z.object({ code: z.string().min(6).max(12), via: z.enum(["app", "text"]).default("app") }));
     if (via === "text") {
-      if (!smsFactorOn(user)) fail(409, "no_text_factor", "Turn on text codes on your profile first.");
+      if (!smsFactorOn(user, cfg.smsAllowedDestinations)) fail(409, "no_text_factor", "Turn on text codes on your profile first.");
       const live = await countPhoneTry(user.id, "confirm", jti);
       // Read the verified number again now: a number changed since the code was sent fails closed
       const fresh = await repo.getUser(user.id);
-      if (!fresh || !smsFactorOn(fresh)) fail(409, "no_text_factor", "Turn on text codes on your profile first.");
+      if (!fresh || !smsFactorOn(fresh, cfg.smsAllowedDestinations)) fail(409, "no_text_factor", "Turn on text codes on your profile first.");
       if (live.hash !== (await hashCode(user.id, code)) || live.phone !== fresh.smsPhone) fail(400, "wrong_code", "That code didn't match. Check the newest text.");
       await consumeCode(live, jti ? [repo.sessionOp(jti, user.id, true)] : []);
       return c.json({ ok: true });
@@ -166,7 +166,7 @@ export function factorRoutes(app: App, k: Kit) {
     if (!actor.strongSession) fail(403, "strong_auth_required", "Confirm it's you first.");
     await repo.deleteTotp(user.id);
     await factorChanged(c, "totp.removed", "The authenticator app was removed");
-    await refreshEnrolled(user, await factorInventory(repo, d.directory, user, tokenOf(c))).catch(() => undefined);
+    await refreshEnrolled(user, await factorInventory(repo, d.directory, user, tokenOf(c), cfg.smsAllowedDestinations)).catch(() => undefined);
     await notice(user, factorRemovedEmail({ zone: user.timeZone, email: user.email, url: `${cfg.publicUrl}/1NEON/me`, what: "Your authenticator app", how: "removed" }));
     return c.json({ ok: true });
   });

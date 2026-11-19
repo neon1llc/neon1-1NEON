@@ -294,13 +294,13 @@ async function eventTargets(d: OutboxDeps, e: AuditEvent, clock: Clock): Promise
       targets.push({ key: u.id, channel: "email", send: (signal) => d.mailer.send(u.email, mail.subject, mail.text, mail.html, mail.replyTo, signal, undefined, mail.as) });
     }
     // Texts only to a verified number the person still has, within the budgets, with no project detail
-    if (d.texter && smsReady(u) && wants(u.notify, e.action, "sms")) {
+    if (d.texter && smsReady(u, cfg.smsAllowedDestinations) && wants(u.notify, e.action, "sms")) {
       const texter = d.texter;
       targets.push({
         key: u.id,
         channel: "sms",
         send: async (signal) => {
-          if (!(await smsSendAllowed(repo, u.id, u.smsPhone!))) throw Object.assign(new Error("text budget reached"), { name: "TextBudget" });
+          if (!(await smsSendAllowed(repo, u.id, u.smsPhone!, cfg.smsAllowedDestinations))) throw Object.assign(new Error("text budget reached"), { name: "TextBudget" });
           await texter.send(u.smsPhone!, textNotice(cfg.publicUrl), signal);
         },
         optedOut: () => markOptedOut(repo, u),
@@ -319,13 +319,13 @@ async function smsSetupTarget(d: OutboxDeps, payload: Extract<OutboxPayload, { k
   const confirmation = payload.kind === "sms-confirmation";
   const stillCurrent = confirmation
     ? user.smsConsentAt === payload.consentAt && user.smsPendingPhone === payload.to && !user.smsVerifiedAt
-    : user.smsVerifiedAt === payload.verifiedAt && user.smsPhone === payload.to && smsReady(user);
+    : user.smsVerifiedAt === payload.verifiedAt && user.smsPhone === payload.to && smsReady(user, d.cfg.smsAllowedDestinations);
   if (!stillCurrent) return [];
   return [{
     key: user.id,
     channel: "sms",
     send: async (signal) => {
-      if (!(await smsSendAllowed(d.repo, user.id, payload.to))) throw Object.assign(new Error("text budget reached"), { name: "TextBudget" });
+      if (!(await smsSendAllowed(d.repo, user.id, payload.to, d.cfg.smsAllowedDestinations))) throw Object.assign(new Error("text budget reached"), { name: "TextBudget" });
       await d.texter!.send(payload.to, confirmation ? welcomeText() : confirmedText(), signal);
     },
     optedOut: () => markOptedOut(d.repo, user),

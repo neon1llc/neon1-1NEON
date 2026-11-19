@@ -32,9 +32,9 @@ export interface FactorInventory {
  * request fails rather than guessing. A failed Cognito lookup becomes "unknown"; a passkey the
  * profile already recorded still counts, so an outage can only make an account look more enrolled.
  */
-export async function factorInventory(repo: Repo, directory: Directory, user: User, accessToken: string): Promise<FactorInventory> {
+export async function factorInventory(repo: Repo, directory: Directory, user: User, accessToken: string, smsAllowlist?: string[]): Promise<FactorInventory> {
   const totp = Boolean((await repo.getTotp(user.id))?.confirmed);
-  const sms = smsFactorOn(user);
+  const sms = smsFactorOn(user, smsAllowlist);
   const cognito = await directory.factors(accessToken).catch(() => undefined);
   const passkey: Known = cognito ? cognito.passkeys > 0 : user.passkey ? true : "unknown";
   const cognitoTotp: Known = cognito ? cognito.totp : "unknown";
