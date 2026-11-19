@@ -5,7 +5,7 @@ import type { Config } from "./config.ts";
 import { outboxOp } from "./outbox.ts";
 import { keys, Repo } from "./store/repo.ts";
 import { ConflictError } from "./store/types.ts";
-import { e164 } from "./sms.ts";
+import { e164, smsDestinationAllowedByConfig } from "./sms.ts";
 
 
 /** The provider's inbound SMS fields; message content is never logged */
@@ -24,7 +24,7 @@ export async function handleInboundSms(repo: Repo, cfg: Config, message: Inbound
   const expected = e164(cfg.smsNumber);
   const id = message.inboundMessageId;
   const body = message.messageBody?.trim().toUpperCase();
-  if (!from || !to || !expected || to !== expected || !id || id.length > 128 || !/^[a-zA-Z0-9-]+$/.test(id)) return;
+  if (!from || !to || !expected || to !== expected || !smsDestinationAllowedByConfig(from, cfg.smsAllowedDestinations) || !id || id.length > 128 || !/^[a-zA-Z0-9-]+$/.test(id)) return;
   if (body !== "YES" && !/^(STOP|STOPALL|UNSUBSCRIBE|CANCEL|END|QUIT)$/.test(body ?? "")) return;
 
   const inbound = keys.smsInbound(id);

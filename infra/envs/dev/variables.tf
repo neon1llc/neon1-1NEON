@@ -28,3 +28,11 @@ variable "neo_model" {
   type        = string
   default     = ""
 }
+
+
+# Keep this off during sender provisioning and boundary setup; turn it on only after both are ready
+variable "texts_live" {
+  description = "Enable dev SMS after its sender, allowlist, and IAM boundary are ready."
+  type        = bool
+  default     = true
+}

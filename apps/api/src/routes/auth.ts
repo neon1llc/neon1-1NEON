@@ -32,7 +32,7 @@ export function authRoutes(app: App, k: Kit) {
     const user = await repo.getUser(uid);
     // Refresh the profile's display hint of enrolled factors. An unknown lookup keeps what we knew,
     // and the app's own authenticator always counts, so an email sign-in can't erase enrollment
-    if (user) await refreshEnrolled(user, await factorInventory(repo, d.directory, user, r.accessToken)).catch(() => undefined);
+    if (user) await refreshEnrolled(user, await factorInventory(repo, d.directory, user, r.accessToken, d.cfg.smsAllowedDestinations)).catch(() => undefined);
     return "ok";
   }
 

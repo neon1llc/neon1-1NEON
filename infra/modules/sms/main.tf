@@ -25,7 +25,7 @@ resource "aws_pinpointsmsvoicev2_phone_number" "notify" {
   number_capabilities           = ["SMS"]
   opt_out_list_name             = aws_pinpointsmsvoicev2_opt_out_list.main.name
   two_way_channel_enabled       = var.two_way_enabled
-  two_way_channel_arn           = aws_sns_topic.inbound.arn
+  two_way_channel_arn           = var.two_way_enabled ? aws_sns_topic.inbound.arn : null
   self_managed_opt_outs_enabled = false
   deletion_protection_enabled   = true
   # A new toll-free number stays pending until its registration is approved, so don't wait on it

@@ -1,6 +1,6 @@
 # infra/envs/dev/main.tf - 1NEON dev: dev.neon1.tech/1NEON, a separate backend for trying changes with no
 # client data in reach. Same modules as production with dev names (1neon-dev, neon1-1neon-*-dev), its own
-# Cognito pool on auth-dev.neon1.tech, no texts, no malware scanning, and a one-day lock on test records.
+# Cognito pool on auth-dev.neon1.tech, allowlisted texts, no malware scanning, and a one-day lock on test records.
 # Mail goes out from production's notify.neon1.tech identity through a dev configuration set.
 #
 # Apply order (by hand, AWS_PROFILE=neon1): neon1-aws-infrastructure site-dev (portal=false), github
@@ -76,6 +76,9 @@ resource "aws_sesv2_configuration_set" "dev" {
 
   reputation_options { reputation_metrics_enabled = true }
   sending_options { sending_enabled = true }
+
+  # The provider reports the API's zero value as drift; leave the live delivery setting untouched.
+  lifecycle { ignore_changes = [delivery_options] }
 }
 
 locals {
@@ -83,39 +86,56 @@ locals {
 }
 
 
-# The API and the Cognito trigger. No texts: dev has no number
+# Dev uses its own registered sender, with app-level sends restricted to the SecureString test allowlist
+module "sms" {
+  source          = "../../modules/sms"
+  name            = local.name
+  two_way_enabled = var.texts_live
+}
+
+
+# The API and the Cognito trigger
 module "api" {
-  source                = "../../modules/api"
-  name                  = local.name
-  env                   = "dev"
-  boundary              = local.boundary
-  table_arn             = module.data.arn
-  table_name            = module.data.name
-  docs_bucket           = module.storage.bucket
-  malware_scan          = local.malware_scan
-  docs_bucket_arn       = module.storage.bucket_arn
-  records_bucket        = module.records.bucket
-  records_bucket_arn    = module.records.bucket_arn
-  public_url            = local.public_url
-  auth_domain           = local.auth_domain
-  mail_from             = local.mail_from
-  ses_identity_arn      = local.ses_identity_arn
-  ses_configuration_set = aws_sesv2_configuration_set.dev.configuration_set_name
-  operator_emails       = var.operator_emails
-  user_pool_id          = module.auth.user_pool_id
-  user_pool_arn         = module.auth.user_pool_arn
-  client_id             = module.auth.client_id
-  sms_number_arn        = ""
-  sms_number            = ""
-  sms_inbound_topic_arn = ""
-  texts_live            = false
-  neo_model             = var.neo_model
-  neo_monthly_usd       = 2
+  source                  = "../../modules/api"
+  name                    = local.name
+  env                     = "dev"
+  boundary                = local.boundary
+  table_arn               = module.data.arn
+  table_name              = module.data.name
+  docs_bucket             = module.storage.bucket
+  malware_scan            = local.malware_scan
+  docs_bucket_arn         = module.storage.bucket_arn
+  records_bucket          = module.records.bucket
+  records_bucket_arn      = module.records.bucket_arn
+  public_url              = local.public_url
+  auth_domain             = local.auth_domain
+  mail_from               = local.mail_from
+  ses_identity_arn        = local.ses_identity_arn
+  ses_configuration_set   = aws_sesv2_configuration_set.dev.configuration_set_name
+  operator_emails         = var.operator_emails
+  user_pool_id            = module.auth.user_pool_id
+  user_pool_arn           = module.auth.user_pool_arn
+  client_id               = module.auth.client_id
+  sms_number_arn          = var.texts_live ? module.sms.number_arn : ""
+  sms_number              = var.texts_live ? module.sms.number : ""
+  sms_inbound_topic_arn   = var.texts_live ? module.sms.inbound_topic_arn : ""
+  sms_allowlist_parameter = var.texts_live ? "/1neon/dev/sms/allowlist/pradeep_personal_cell" : ""
+  texts_live              = var.texts_live
+  neo_model               = var.neo_model
+  neo_monthly_usd         = 2
   # Prospect sign-up, tried here first with Cloudflare's invisible always-pass test key
   signup             = true
   turnstile_site_key = "1x00000000000000000000BB"
   # dev.neon1.tech sends the secret once site-dev/ is applied after this stack
   origin_lock = true
+}
+
+
+# Publish the sender ARN so the shared IAM-boundary stack can grant only this dev identity
+resource "aws_ssm_parameter" "sms_sender_arn" {
+  name  = "/1neon/dev/sms/sender_arn"
+  type  = "String"
+  value = module.sms.number_arn
 }
 
 
@@ -127,9 +147,8 @@ module "auth" {
   zone_id         = var.zone_id
   certificate_arn = data.aws_acm_certificate.site.arn
   public_url      = local.public_url
-  # Dev passkeys belong to dev.neon1.tech, so a device never offers a neon1.tech (production) passkey
-  # to dev, or a dev one to production
-  passkey_rp_id                  = "dev.${var.domain}"
+  # Keep the existing RP ID so already enrolled dev passkeys remain usable across this unrelated rollout.
+  passkey_rp_id                  = var.domain
   ses_identity_arn               = local.ses_identity_arn
   ses_configuration_set          = aws_sesv2_configuration_set.dev.configuration_set_name
   mail_from                      = local.mail_from
