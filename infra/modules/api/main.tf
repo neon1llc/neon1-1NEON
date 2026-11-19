@@ -361,7 +361,7 @@ resource "aws_lambda_function" "api" {
       ORIGIN_LOCK                         = var.origin_lock ? "on" : "off"
       NODE_OPTIONS                        = "--enable-source-maps"
       AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
-    }, var.texts_live ? {
+      }, var.texts_live ? {
       SMS_NUMBER          = var.sms_number
       SMS_ALLOWLIST_PARAM = var.sms_allowlist_parameter
     } : {})
