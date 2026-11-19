@@ -28,8 +28,8 @@ const SMS_NOTE: Record<SmsState, string> = {
   unavailable: "Texts aren't switched on for 1NEON yet. Email notices work now.",
   no_number: "",
   not_agreed: "",
-  opted_out: "You replied STOP, so texts are off. Tick the box and save to turn them back on.",
-  unverified: "One more step: we text a code to this number to make sure it's yours. Texts start after that.",
+  opted_out: "You replied STOP, so texts are off. Reply START to the number 1NEON texts come from, then check Text me and save to confirm again.",
+  unverified: "We sent a setup text. Reply YES to confirm this number, or ask for a code here. Texts start after confirmation.",
   ready: "Texts are on for this number.",
 };
 
@@ -86,7 +86,7 @@ export function MePage() {
     try {
       await api("/me/phone/confirm", { method: "POST", body: { code } });
       setCode(undefined);
-      toast("Number confirmed. Texts are on.");
+      toast("Number confirmed. Text notices are on. You can add Text message under Two-step verification.");
       qc.invalidateQueries({ queryKey: ["me"] });
     } catch (e) {
       toast(problem(e));
@@ -96,11 +96,16 @@ export function MePage() {
   const save = async () => {
     setBusy(true);
     try {
+      const changingPhone = draft.phone !== me.user.phone;
+      const startingTexts = draft.smsConsent && !me.user.smsConsentAt && draft.phone === me.user.phone;
       const user = await api<User>("/me", { method: "PATCH", body: { version: me.user.version, ...draft } });
       qc.setQueryData(["me"], { ...me, user });
+      setDraft((current) => ({ ...current, phone: user.phone, smsConsent: Boolean(user.smsConsentAt) }));
       // The text state depends on what was saved; read it back fresh
       qc.invalidateQueries({ queryKey: ["me"] });
-      toast("Saved");
+      toast(startingTexts
+        ? "Saved. Reply YES to the 1NEON text to confirm this number."
+        : changingPhone && draft.smsConsent ? "Phone saved. Check Text me and save to opt in to this number." : "Saved");
     } catch (e) {
       toast(problem(e));
       qc.invalidateQueries({ queryKey: ["me"] });
@@ -240,12 +245,12 @@ export function MePage() {
           </div>
           {!noTexts && <fieldset className="notify-texts" id="texts">
             <legend>Text messages</legend>
-            {/* Texts need a mobile number and a clear yes, worded the way carriers require */}
+            {/* Consent is distinct from proving the number; the setup message asks for an explicit YES reply */}
             {draft.phone.trim() ? (
               <label className="sms-consent">
                 <input type="checkbox" checked={draft.smsConsent} onChange={(e) => setDraft({ ...draft, smsConsent: e.target.checked })} />
                 <span>
-                  <b>Text me at {draft.phone.trim()}</b> with 1NEON project notices from neon1 LLC, for the kinds I choose below.
+                  <b>Text me at {draft.phone.trim()}</b> one setup text, then 1NEON project notices from neon1 LLC for the kinds I choose below. If I turn on Text message under Two-step verification, I may also get sign-in codes. Reply YES to confirm this number after saving.
                   <span className="muted"> Texts are optional and not required to use 1NEON. Message frequency varies. Message and data rates may apply. Reply STOP to opt out or HELP for help. See the <Link to="/privacy">Privacy policy</Link> and <Link to="/terms">Terms</Link>.</span>
                 </span>
               </label>
@@ -257,12 +262,12 @@ export function MePage() {
             {!smsDirty && sms === "unverified" && (code === undefined
               ? <button className="btn btn-ghost btn-sm" type="button" onClick={() => void sendCode()}>Text me a code</button>
               : (
-                <span className="sms-code">
-                  <label htmlFor="smscode">Code from the text</label>
-                  <input id="smscode" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (code.length === 6) void checkCode(); } }} />
-                  <button className="btn btn-primary btn-sm" type="button" disabled={code.length !== 6} onClick={() => void checkCode()}>Confirm</button>
+                <form className="sms-code" onSubmit={(e) => { e.preventDefault(); void checkCode(); }}>
+                  <label id="smscode-label" htmlFor="smscode">Code from the text</label>
+                  <input id="smscode" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} required />
+                  <button className="btn btn-primary btn-sm" type="submit" disabled={code.length !== 6}>Confirm</button>
                   <button className="linkish small" type="button" onClick={() => void sendCode()}>Send another</button>
-                </span>
+                </form>
               ))}
             {smsDirty && (draft.smsConsent || draft.phone !== me.user.phone) && draft.phone.trim() && <span className="muted">Save first, then confirm the number with a texted code.</span>}
           </fieldset>}

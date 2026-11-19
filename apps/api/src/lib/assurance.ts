@@ -10,7 +10,7 @@ import { newId } from "@1neon/domain";
 import { keys } from "../store/repo.ts";
 import { ConflictError, type Row, type WriteOp } from "../store/types.ts";
 import { bounded } from "../outbox.ts";
-import { accountAllows, isOptOut, CODE_MS, CODE_TRIES, CODES_PER_HOUR, CODES_PER_HOUR_PERSON, newCode } from "../sms.ts";
+import { smsSendAllowed, isOptOut, CODE_MS, CODE_TRIES, CODES_PER_HOUR, CODES_PER_HOUR_PERSON, newCode } from "../sms.ts";
 import { fail, now, who, type Env } from "./http.ts";
 import type { Kit } from "./kit.ts";
 
@@ -95,7 +95,7 @@ export function assurance(k: Kit) {
       const same = sends.filter((x) => x.to === to && x.purpose === purpose).length + legacy;
       if (same >= CODES_PER_HOUR || sends.length + legacy >= CODES_PER_HOUR_PERSON) fail(429, "too_many_codes", "Too many codes this hour. Try again later.");
       if (!counted) {
-        if (!(await accountAllows(repo))) fail(429, "texts_busy", "Texts are paused for today. Try again tomorrow.");
+        if (!(await smsSendAllowed(repo, user.id, to))) fail(429, "texts_busy", "This number has reached its text limit. Try again later.");
         counted = true;
       }
       const next = await newCode(user.id);

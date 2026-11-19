@@ -24,6 +24,8 @@ export interface Config {
   sesConfigSet?: string;
   /** The toll-free number (its ARN) texts come from; unset means no texts */
   smsFrom?: string;
+  /** The E.164 number that owns inbound confirmation replies */
+  smsNumber?: string;
   /** Emails that get the operator role (Pradeep). Never stored in the database */
   operatorEmails: string[];
   /** Local development only: trust an `x-dev-user` header instead of Cognito */
@@ -81,6 +83,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     feedbackTo: env.FEEDBACK_TO?.trim() || undefined,
     sesConfigSet: env.SES_CONFIGURATION_SET || undefined,
     smsFrom: env.SMS_FROM || undefined,
+    smsNumber: env.SMS_NUMBER || undefined,
     operatorEmails: (env.OPERATOR_EMAILS ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean),
     devAuth,
     neoModel: env.NEO_MODEL || undefined,

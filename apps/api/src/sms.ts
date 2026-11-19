@@ -8,7 +8,7 @@ import type { Repo } from "./store/repo.ts";
 
 
 // The consent wording version shown on the profile; recorded with each yes
-export const SMS_POLICY = "2026-11-09";
+export const SMS_POLICY = "2026-11-18";
 // A verification code lives ten minutes and allows five tries. A person may ask for three an hour for
 // each purpose (proving a number, confirming it's you) at each number, and six an hour in all. The
 // limits count sends, not unused codes, so using a code never frees another send
@@ -19,6 +19,9 @@ export const CODES_PER_HOUR_PERSON = 6;
 // Daily ceilings: per person for notices, and for every text the account sends (codes included)
 export const PERSON_DAILY = 10;
 export const ACCOUNT_DAILY = 200;
+// A destination shared across accounts receives at most three texts per hour and six per day
+export const DESTINATION_HOURLY = 3;
+export const DESTINATION_DAILY = 6;
 
 
 /** A phone number as E.164 (+15551234567), or undefined if it doesn't read as a US or full international number */
@@ -55,9 +58,9 @@ export function smsState(u: User, available: boolean): "unavailable" | "no_numbe
 export function smsAfterSave(u: User, phone: string | undefined, consent: boolean | undefined): Partial<User> {
   const changed = phone !== undefined && e164(phone) !== e164(u.phone);
   const out: Partial<User> = {};
-  if (changed) Object.assign(out, { smsConsentAt: undefined, smsPolicy: undefined, smsPhone: undefined, smsVerifiedAt: undefined });
-  if (consent === false) Object.assign(out, { smsConsentAt: undefined, smsPolicy: undefined });
-  if (consent === true && (changed || !u.smsConsentAt)) Object.assign(out, { smsConsentAt: new Date().toISOString(), smsPolicy: SMS_POLICY, smsOptedOutAt: undefined });
+  if (changed) Object.assign(out, { smsConsentAt: undefined, smsPolicy: undefined, smsPendingPhone: undefined, smsPhone: undefined, smsVerifiedAt: undefined, smsFactorAt: undefined });
+  if (consent === false) Object.assign(out, { smsConsentAt: undefined, smsPolicy: undefined, smsPendingPhone: undefined, smsPhone: undefined, smsVerifiedAt: undefined, smsFactorAt: undefined });
+  if (consent === true && !changed && !u.smsConsentAt) Object.assign(out, { smsConsentAt: new Date().toISOString(), smsPolicy: SMS_POLICY, smsPendingPhone: e164(phone ?? u.phone), smsOptedOutAt: undefined });
   // Agreeing again after a STOP needs a fresh code: the carrier keeps blocking the number until its
   // holder texts START, and the code is what shows they did
   if (consent === true && !u.smsConsentAt && u.smsOptedOutAt) Object.assign(out, { smsPhone: undefined, smsVerifiedAt: undefined });
@@ -89,6 +92,18 @@ export function codeText(code: string) {
 }
 
 
+/** Ask the person who owns a newly opted-in number to confirm by replying YES */
+export function welcomeText() {
+  return "1NEON: Texts are set up. Reply YES to confirm this number. Reply STOP to opt out or HELP for help. Msg & data rates may apply.";
+}
+
+
+/** Explain that the number is confirmed and text-message sign-in checks are a separate setting */
+export function confirmedText() {
+  return "1NEON: Your number is confirmed. Text notices are on for the kinds you chose. To use texts as a sign-in check, turn on Text message under Profile > Two-step verification.";
+}
+
+
 /**
  * A fresh six-digit code and its hash (only the hash is stored). Web Crypto, not node:crypto, so the
  * browser demo runs the same code; draws above the last whole million are redrawn to stay uniform
@@ -110,17 +125,31 @@ export async function hashCode(uid: string, code: string) {
 
 
 /** Count one text against the person's and the account's budgets for today; false means over */
-export async function smsSendAllowed(repo: Repo, uid: string) {
+export async function smsSendAllowed(repo: Repo, uid: string, to: string) {
   const day = new Date().toISOString().slice(0, 10);
-  const person = await repo.table.increment(`USER#${uid}`, `SMSCOUNT#${day}`);
+  const expiresAt = Math.floor(Date.now() / 1000) + 8 * 86400;
+  const person = await repo.table.increment(`USER#${uid}`, `SMSCOUNT#${day}`, 1, expiresAt);
   if (person > PERSON_DAILY) return false;
-  return accountAllows(repo, day);
+  if (!(await accountAllows(repo, day, expiresAt))) return false;
+  return smsDestinationAllowed(repo, to);
+}
+
+
+/** Limit all sends to one phone across accounts, including setup and code requests */
+export async function smsDestinationAllowed(repo: Repo, to: string) {
+  const hour = Math.floor(Date.now() / 3_600_000);
+  const day = new Date().toISOString().slice(0, 10);
+  const ttl = Math.floor(Date.now() / 1000) + 2 * 86400;
+  const hourly = await repo.table.increment(`SMSPHONE#${to}`, `HOUR#${hour}`, 1, ttl);
+  if (hourly > DESTINATION_HOURLY) return false;
+  const daily = await repo.table.increment(`SMSPHONE#${to}`, `DAY#${day}`, 1, ttl);
+  return daily <= DESTINATION_DAILY;
 }
 
 
 /** Count one text against the account's daily budget */
-export async function accountAllows(repo: Repo, day = new Date().toISOString().slice(0, 10)) {
-  return (await repo.table.increment("COUNTER", `SMS#${day}`)) <= ACCOUNT_DAILY;
+export async function accountAllows(repo: Repo, day = new Date().toISOString().slice(0, 10), expiresAt = Math.floor(Date.now() / 1000) + 8 * 86400) {
+  return (await repo.table.increment("COUNTER", `SMS#${day}`, 1, expiresAt)) <= ACCOUNT_DAILY;
 }
 
 

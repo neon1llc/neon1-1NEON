@@ -106,6 +106,8 @@ module "api" {
   user_pool_arn         = module.auth.user_pool_arn
   client_id             = module.auth.client_id
   sms_number_arn        = ""
+  sms_number            = ""
+  sms_inbound_topic_arn = ""
   texts_live            = false
   neo_model             = var.neo_model
   neo_monthly_usd       = 2
