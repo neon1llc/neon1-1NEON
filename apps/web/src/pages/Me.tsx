@@ -1,4 +1,4 @@
-// apps/web/src/pages/Me.tsx - Your profile: name, title, phone, theme, menu, and notices (saved together),
+// apps/web/src/pages/Me.tsx - Your profile: name, title, phone, menu, and notices (saved together),
 // motion (this browser's, at once),
 // then two-step verification, the tutorial, and signing out (each takes effect right away).
 
@@ -6,10 +6,9 @@
 import type { User } from "@1neon/domain";
 import type { SmsState } from "../lib/types.ts";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
-import { applyAccountTheme, changeTheme, useSession, useTopBar } from "../components/Shell.tsx";
-import { normalizeLook, resolveTheme, saveLook } from "../lib/style.ts";
+import { useSession, useTopBar } from "../components/Shell.tsx";
 import { Avatar, useAsk, useToast } from "../components/ui.tsx";
 import { api, BASE_PATH, devUser, LIVE, pickPerson } from "../lib/api.ts";
 import { menuOf, NOTIFY_GROUPS } from "@1neon/domain";
@@ -56,22 +55,16 @@ export function MePage() {
   const [totpOpen, setTotpOpen] = useState(false);
   useTopBar(<span>Your profile</span>, []);
   // Edits stay local until Save
-  const [draft, setDraft] = useState({ name: me.user.name, title: me.user.title, phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), theme: me.user.theme, menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) });
+  const [draft, setDraft] = useState({ name: me.user.name, title: me.user.title, phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) });
   const [busy, setBusy] = useState(false);
   // Motion is this browser's choice, not the account's, so it changes at once and isn't part of Save
   const deviceLess = deviceLessMotion();
   const [less, setLess] = useState(() => deviceLess || chosenLessMotion());
   // Anything that differs from what's saved; Save waits for a change
-  const saved = { name: me.user.name, title: me.user.title, phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), theme: me.user.theme, menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) };
-  const [themePicked, setThemePicked] = useState(false);
-  const dirty = themePicked || JSON.stringify(draft) !== JSON.stringify(saved);
-  // The radio that shows: a named theme as the landing's style reads it (an account that says awake shows as providence when the landing chose sentinel)
-  const shownTheme = draft.theme === "device" ? "device" : !themePicked ? resolveTheme(draft.theme) : draft.theme;
-  // A previewed theme that was never saved goes back to the saved one on leaving the page
-  const savedTheme = useRef(me.user.theme);
-  savedTheme.current = me.user.theme;
-  // Leaving the profile unsaved puts the saved theme and menu style back
-  useEffect(() => () => { applyAccountTheme(savedTheme.current); previewMenu(undefined); }, []);
+  const saved = { name: me.user.name, title: me.user.title, phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) };
+  const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
+  // Leaving the profile unsaved puts the menu preview back to its saved style
+  useEffect(() => () => { previewMenu(undefined); }, []);
   // The phone check: a code is texted, then typed here
   const [code, setCode] = useState<string | undefined>(undefined);
   // A new account has no texts: no number to add, no text notices, no text codes
@@ -99,15 +92,12 @@ export function MePage() {
       toast(problem(e));
     }
   };
-  // Save the profile; the theme applies immediately and is kept with the account
+  // Save the profile; shared theme controls live in the menu, so this form leaves the account theme untouched
   const save = async () => {
     setBusy(true);
     try {
       const user = await api<User>("/me", { method: "PATCH", body: { version: me.user.version, ...draft } });
       qc.setQueryData(["me"], { ...me, user });
-      // A saved theme also sets the style (the one neon1.tech's landing switch sets), so the two always agree
-      if (themePicked && draft.theme !== "device") saveLook(normalizeLook(draft.theme));
-      setThemePicked(false);
       // The text state depends on what was saved; read it back fresh
       qc.invalidateQueries({ queryKey: ["me"] });
       toast("Saved");
@@ -175,7 +165,7 @@ export function MePage() {
       <h1 className="page-title" style={{ display: "flex", gap: 12, alignItems: "center" }}><Avatar id={me.user.id} name={me.user.name || me.user.email} size={40} />Your profile</h1>
       <p className="lead">{me.user.email}{me.operator ? " · neon1 operator" : ""}</p>
       {/* Name, title, and mobile number */}
-      {/* Two columns on a wide screen: who you are and how it looks, beside notifications; one column when narrow */}
+      {/* Two columns on a wide screen: profile and preferences beside notifications; one column when narrow */}
       <div className="cols2">
       <form id="profile" className="form profile-form" onSubmit={(e) => { e.preventDefault(); void save(); }}>
         <section className="card profile-section">
@@ -192,32 +182,8 @@ export function MePage() {
           <span className="muted">Emails show times in this zone, with UTC beside them. Daylight saving follows it automatically.</span>
         </div>
         </section>
-        {/* Theme previews immediately; Save keeps it with the account */}
         <section className="card profile-section">
-          <h2 className="card-h">Appearance</h2>
-        <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
-          <legend style={{ marginBottom: 8 }}>Theme</legend>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {/* Four themes in two styles: the matrix one (the neon) and the still sentinel one. neon1.tech's landing switch picks the
-                style for everything, and picking a theme here sets it the same way */}
-            {([["Matrix", ["awake", "plugged"]], ["Sentinel", ["providence", "desert-of-the-real"]]] as const).map(([group, themes]) => (
-              <div key={group} role="group" aria-label={group} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-                <span className="muted small" aria-hidden="true">{group}</span>
-                {themes.map((t) => (
-                  <label key={t} className={`chip${shownTheme === t ? " on" : ""}`} style={{ cursor: "pointer" }}>
-                    <input type="radio" name="theme" className="sr" checked={shownTheme === t} onChange={() => { setThemePicked(true); setDraft({ ...draft, theme: t }); changeTheme(t); }} />
-                    {t === "awake" ? "Awake (light)" : t === "plugged" ? "Plugged (dark)" : t === "providence" ? "Providence (light)" : "Desert of the real (dark)"}
-                  </label>
-                ))}
-              </div>
-            ))}
-            <label className={`chip${shownTheme === "device" ? " on" : ""}`} style={{ cursor: "pointer" }}>
-              <input type="radio" name="theme" className="sr" checked={shownTheme === "device"} onChange={() => { setThemePicked(true); setDraft({ ...draft, theme: "device" }); changeTheme("device"); }} />
-              Match my device
-            </label>
-          </div>
-          {themePicked && <p className="unsaved small" role="status">Showing this now. Press Save to keep it.</p>}
-        </fieldset>
+          <h2 className="card-h">Preferences</h2>
         {/* Motion: smooth by default; Reduced turns every animation off in this browser at once, and a device
             that asks for less motion keeps it reduced (lib/motion.ts) */}
         <fieldset style={{ border: 0, padding: 0, margin: 0 }}>

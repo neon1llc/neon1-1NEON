@@ -5,7 +5,8 @@
 ## Unreleased
 - The open menu now has the shared light/dark switch beside 1NEON and the Sentinel/Matrix switch beside neon1.tech. Sentinel is the site's default family, with light mode unchanged; choosing either axis carries across the site and portal.
 - The desktop Mini rail uses the same compact width and icon alignment as mobile. In the expanded menu, the neon1.tech link stays on the left and the theme switch aligns with the mode switch; Report a bug and Feedback stay docked above the footer. Contact, FAQ, and walkthrough email and phone links use the same outbound arrow as other links, and open their handler without an extra browser tab.
-- The profile uses one Save action after its details and notification choices, with personal details and appearance grouped separately.
+- The profile no longer duplicates theme controls; its browser motion and menu preferences remain under Preferences.
+- The 1NEON menu's brand row matches the top bar's centered 40px link, and its neon1.tech footer uses the same 60px total height as the mobile tab bar, including the top divider and safe area.
 
 ## v0.21.0 - 2026-11-18
 

@@ -960,9 +960,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
             <li><ReportBug kind="feedbackRow" /></li>
           </ul>
         </div>
-        {/* Edge to edge on the bottom bar's top edge; below it the way back to the neon1.tech site (outside the
-            app's routes), centered with that bar as the mark is with the top bar */}
-        <div className="edge edge-bottom" aria-hidden="true" />
+        {/* The footer's top border is the edge above its 60px row, aligned with the mobile tab bar */}
         <div className="menu-footer">
           <a className="site-link site-end" href="/" title="neon1.tech">
             {/* The site logo's mark (v5 set), drawn in the theme's accent inside a round border */}

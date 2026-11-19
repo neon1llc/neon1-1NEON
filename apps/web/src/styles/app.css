@@ -2012,7 +2012,6 @@ select:not(:disabled), select:not(:disabled)::picker-icon, select:not(:disabled)
    middle of its rule when the menu opens, and the rule closes over it when the rail returns */
 .side .edge { flex: none; height: 1px; background: var(--line); margin-left: calc(-1 * var(--padl)); margin-right: calc(-1 * var(--padr)); }
 .side .edge-top { margin-top: -1px; margin-bottom: 0; }
-.side .edge-bottom { margin-top: 6px; }
 .side .nav .sep > .gl, .side .gline { display: flex; align-items: center; height: var(--sep); }
 .side .nav .sep > .gl { position: static; width: auto; clip: auto; overflow: visible; padding: 0; }
 .side .nav .sep > .gl::before, .side .nav .sep > .gl::after, .side .gline::before { content: ""; flex: 1 1 0; height: 1px; background: var(--line); }
@@ -2028,8 +2027,8 @@ select:not(:disabled), select:not(:disabled)::picker-icon, select:not(:disabled)
 /* Shared appearance controls align with the wordmark and the site link in the expanded menu */
 .side-head { display: flex; align-items: center; flex: none; height: var(--top-h); margin-top: -8px; }
 .side-head .brand { width: auto; flex: 1; min-width: 0; margin: 0; }
-.side .side-head .brand { height: var(--top-h); min-height: var(--top-h); margin-top: 0; flex: 1; }
-.menu-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: var(--top-h); min-height: var(--top-h); flex: none; }
+.side .side-head .brand { height: 40px !important; min-height: 40px !important; margin-top: 0; flex: 1; }
+.menu-footer { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 12px; height: var(--top-h); min-height: var(--top-h); margin: 6px calc(-1 * var(--padr)) -8px calc(-1 * var(--padl)); padding: 0 var(--padr) 0 var(--padl); border-top: 1px solid var(--line); flex: none; }
 .side .menu-footer .site-end { width: auto; min-width: 0; margin: 0; }
 .shell.mini .side:not(.open) .menu-footer .site-end { width: 100%; }
 .menu-theme-switch { position: relative; flex: none; width: 52px; height: 28px; margin: 0 6px 0 0; padding: 0; border: 1px solid var(--line-strong); border-radius: 99px; background: var(--panel); color: var(--muted); cursor: pointer; }
@@ -2050,10 +2049,10 @@ select:not(:disabled), select:not(:disabled)::picker-icon, select:not(:disabled)
 /* The site mark in its round border: the accent is the logo's dark green in awake and matrix green in matrix */
 .side .ico.site-mark { border-radius: 50%; border-color: var(--accent); background: none; }
 .side .ico.site-mark svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 3.6; stroke-linecap: round; }
-/* The separator and site-link row together match the top bar and the bottom bar's visible height */
+/* The footer border plus its row match the 60px top and mobile bars. On phones, reserve the safe area
+   inside the footer while keeping the logo link centered in the visible 60px bar. */
 @media (max-width: 640px) {
-  .side .site-end { height: calc(var(--top-h) - 1px + env(safe-area-inset-bottom)) !important; min-height: calc(var(--top-h) - 1px + env(safe-area-inset-bottom)) !important; }
-  .side .menu-footer { height: calc(var(--top-h) + env(safe-area-inset-bottom)); min-height: calc(var(--top-h) + env(safe-area-inset-bottom)); }
+  .side .menu-footer { height: calc(var(--top-h) + env(safe-area-inset-bottom)); min-height: calc(var(--top-h) + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); }
 }
 /* The profile's avatar is already a circle: the current page's green fill must not box it */
 .side .nav a.active .ico.av-box { background: none; border-color: transparent; }
