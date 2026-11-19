@@ -7,6 +7,7 @@
 - The desktop Mini rail uses the same compact width and icon alignment as mobile. In the expanded menu, the neon1.tech link stays on the left and the theme switch aligns with the mode switch; Report a bug and Feedback stay docked above the footer. Contact, FAQ, and walkthrough email and phone links use the same outbound arrow as other links, and open their handler without an extra browser tab.
 - The profile no longer duplicates theme controls; its browser motion and menu preferences remain under Preferences.
 - The 1NEON menu's brand row matches the top bar's centered 40px link, and its neon1.tech footer uses the same 60px total height as the mobile tab bar, including the top divider and safe area.
+- The calendar month chooser uses organization-picker insets, keeps the current month pinned above the option divider and in chronological order, and places Previous and Next around the chooser.
 
 ## v0.21.0 - 2026-11-18
 

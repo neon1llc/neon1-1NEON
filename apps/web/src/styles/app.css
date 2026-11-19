@@ -1241,7 +1241,8 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 /* A stage section a link arrived at is marked for a moment */
 .stage-sec { scroll-margin-top: calc(var(--top-h) + 16px); border-radius: var(--r-sm); transition: background .6s ease; }
 .stage-sec.is-target { background: var(--accent-soft); }
-.cal-jump { padding-right: 28px; min-width: 112px; }
+.cal-jump { padding-left: 10px; padding-right: 28px; min-width: 112px; }
+@supports (appearance: base-select) { .cal-jump { padding-right: 8px; } }
 .cal .ag-group li { grid-template-columns: 76px minmax(0, 1fr) auto; }
 @media (max-width: 520px) { .cal .ag-group li { grid-template-columns: 64px minmax(0, 1fr); } }
 .cal-day-head { flex-wrap: wrap; }
