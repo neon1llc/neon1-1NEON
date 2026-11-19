@@ -168,7 +168,7 @@ export const JOURNEY: Show = {
       id: "free-ask",
       title: "Ask for an assessment",
       run: async (s) => {
-        await s.say("From Home she asks for an assessment, or a free 15-minute call");
+        await s.say("From Home she asks for an assessment, then books the free 15-minute call");
         await s.go(`${await shop()}/workspace`, "Home");
         await s.hover(".next-step-ask", 900);
         await s.type("#ask-note", "Weekday mornings are best if a call helps.", 300);

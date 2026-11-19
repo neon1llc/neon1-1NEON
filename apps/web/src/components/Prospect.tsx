@@ -31,7 +31,7 @@ export function useProspectEverywhere(me: Me): boolean | undefined {
 export function ProspectNote() {
   return (
     <p className="notice prospect-note" role="note">
-      <span>You're set up as a free account. Write down what your projects need, then ask for an assessment or a call under Next step. Other ways to reach neon1 are on <Link to="/contact">Contact</Link>, or <OutLink href={BOOK_A_CALL}>book a call</OutLink>.</span>
+      <span>You're set up as a free account. Write down what your projects need, then ask for an assessment under Next step and book the 15-minute call. Other ways to reach neon1 are on <Link to="/contact">Contact</Link>.</span>
     </p>
   );
 }
@@ -57,7 +57,7 @@ export function NextStep({ orgId }: { orgId: string }) {
       await api(`/t/${orgId}/requests`, { method: "POST", body: { kind, note } });
       setNote("");
       await qc.invalidateQueries({ queryKey: ["requests", orgId] });
-      toast(kind === "call" ? "Call requested. You'll get a reply by email." : "Assessment requested. You'll get a reply by email.");
+      toast("Assessment requested. You'll get a reply by email.");
     } catch (e) {
       setError(problem(e));
     }
@@ -67,17 +67,17 @@ export function NextStep({ orgId }: { orgId: string }) {
   return (
     <section className="card next-step-ask" aria-labelledby="next-step-h">
       <h2 className="section-h" id="next-step-h">Next step</h2>
-      <p className="muted small">An assessment is an approach and the first questions to settle, based on the needs written here. A call is a free 15 minutes to talk it through.</p>
+      <p className="muted small">The assessment is free: my read of what's written here, with a likely approach and the first questions to settle. Ask for it, then book the free 15-minute call, which is about your needs. I read the assessment request before we talk.</p>
       {error && <p className="notice" role="alert">{error}</p>}
       <label className="field-label" htmlFor="ask-note">Anything to look at first, or good times to talk <span className="muted">(optional)</span></label>
       <textarea id="ask-note" rows={2} maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)} />
       <div className="actions">
         <button type="button" className="btn btn-primary btn-sm" disabled={Boolean(busy)} onClick={() => void ask("assessment")}>{busy === "assessment" ? "Sending…" : "Ask for an assessment"}</button>
-        <button type="button" className="btn btn-sm" disabled={Boolean(busy)} onClick={() => void ask("call")}>{busy === "call" ? "Sending…" : "Ask for a call"}</button>
+        <OutLink className="btn btn-sm" href={BOOK_A_CALL}>Book the 15-minute call</OutLink>
       </div>
-      {(when("assessment") || when("call")) && (
+      {when("assessment") && (
         <p className="muted small" role="status">
-          {[when("assessment") && `Assessment asked for ${dateLabel(when("assessment"))}`, when("call") && `Call asked for ${dateLabel(when("call"))}`].filter(Boolean).join(" · ")}. The reply comes by email.
+          {`Assessment asked for ${dateLabel(when("assessment"))}`}. The reply comes by email.
         </p>
       )}
     </section>

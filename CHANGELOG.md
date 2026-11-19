@@ -3,6 +3,11 @@
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
 ## Unreleased
+
+## v0.22.0 - 2026-11-19
+
+### Changed
+- A free account's Next step asks for the free assessment, then links to booking the 15-minute call, instead of offering the assessment and the call as two separate requests. The sign-in note, the free-account note, the walkthrough, and the check-in email say the same.
 - The walkthroughs, the preview, the sample project, and the free-account journey now follow three made-up engagements instead of one: a three-store retailer reconciling stock across its systems, a software company moving report workers to container tasks, and an architecture firm segmenting a new office network. Each has a rejected or set-aside option, a failed test, and an accepted limit, and the same names, hours, and prices appear on every page. `?scenario=` on the sample page and the playback picks one.
 - The sample project shows real work: a stock exception report, a cost model, a canary and rollback log, an assistant evaluation, a network plan, a restore test, and an access review, each marked as running here or as an illustration, plus the figures its invoices come from.
 - Not every proposal has three options: the sample shows one with two, one with a set-aside option, and prices that are fixed as well as estimated.
