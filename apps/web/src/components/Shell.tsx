@@ -436,6 +436,7 @@ function SignIn() {
             ))}
           </div>
         )}
+        {PICKER && <p className="fine"><a className="linkish" href="/1NEON/">Back to sign-in</a></p>}
         {/* Step 1: the email */}
         {!PICKER && signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
           <SignUp info={signupInfo} email={email} remember={remember} onStep={signedUp} onBack={() => fade(() => setSigningUp(false))} local={pickPerson && !IN_LIVE} />

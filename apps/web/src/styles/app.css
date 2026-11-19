@@ -911,6 +911,8 @@ html[data-slide="back"]::view-transition-new(stage) { animation: .42s cubic-bezi
 
 /* Neo: bottom left on the public screens (sign-in, FAQs, legal), exactly as on neon1.tech; bottom right once inside the portal */
 body:not(:has(.shell:not(.example))) .n1chat-launch.n1chat-right, body:not(:has(.shell:not(.example))) .n1chat.n1chat-right { left: 16px; right: auto; }
+/* The shared widget keeps its right-corner motion class for portal use; on public screens, grow and fold from the left launcher */
+body:not(:has(.shell:not(.example))) .n1chat-right:is(.n1chat-grow, .n1chat-fold) { animation-name: n1chat-grow; }
 
 /* --- The demo (/1NEON/demo): a slim strip above the portal; the frame moves down to make room --- */
 .demo-bar { position: fixed; inset: 0 0 auto 0; z-index: 45; height: var(--demo-h, 36px); display: flex; align-items: center; gap: 12px; padding: 0 16px; background: var(--void, #0d0208); color: var(--m-ink-soft, #E3E7E4); font: 12px var(--mono); border-bottom: 1px solid rgba(0, 255, 65, .3); }
