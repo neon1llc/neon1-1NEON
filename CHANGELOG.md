@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+## v0.22.1 - 2026-11-19
+
+### Changed
+- The free first call is 30 minutes: Home's Next step, the sign-in note, Contact, and the walkthrough say so, and Neo's guide follows the corpus.
+
 ## v0.22.0 - 2026-11-19
 
 ### Changed
