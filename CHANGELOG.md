@@ -3,6 +3,7 @@
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
 ## Unreleased
+- Profile notification checkboxes are 75% larger on touch devices and have a 44px tap target; desktop sizing stays compact.
 - Neo's panel on unauthenticated 1NEON pages opens and closes from its bottom-left launcher; the demo also links back to sign-in above its policy links.
 - On phones, the menu closes by sliding away or clipping to the Mini rail at a fixed width, avoiding row reflow during the transition. Focusing a text field keeps its label, described help, and form action above the keyboard together when they fit.
 - The walkthrough's dark controls, narration cards, loading panels, chapter list, and thought bubbles use readable light text in Sentinel light mode; the mobile menu's Matrix and Sentinel toggle marks stay at their intended 14px size.

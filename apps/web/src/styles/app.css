@@ -1001,11 +1001,17 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 .notify-table tbody th > span { display: block; margin: 1px 0; }
 .notify-table tbody th .tag { margin-left: 6px; }
 .notify-table input { width: 18px; height: 18px; min-height: 0; accent-color: var(--accent); }
+.notify-table .notify-hit { display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.notify-table .notify-hit:has(input:disabled) { cursor: not-allowed; }
 .notify-table input:disabled { opacity: .4; cursor: not-allowed; }
 .profile-form { gap: 16px; }
 .profile-section { display: grid; gap: 12px; }
 .profile-section .card-h { margin: 0 0 2px; }
 @media (max-width: 640px) { .notify-table { min-width: 460px; } }
+@media (pointer: coarse) {
+  .notify-table .notify-hit { min-width: 44px; min-height: 44px; }
+  .notify-table .notify-hit input { width: 31.5px; height: 31.5px; }
+}
 
 /* The yes to texts: a checkbox with the carrier wording beside it */
 .notify .sms-consent { display: grid; font: 13px/1.5 var(--sans, inherit); color: var(--text); letter-spacing: 0; text-transform: none; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--bg); font-size: 13px; line-height: 1.5; }
