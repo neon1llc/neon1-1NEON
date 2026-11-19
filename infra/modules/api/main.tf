@@ -365,7 +365,7 @@ resource "aws_lambda_function" "api" {
 
 # Inbound SMS replies invoke the API through a private SNS subscription
 resource "aws_lambda_permission" "sms_inbound" {
-  count         = var.sms_inbound_topic_arn == "" ? 0 : 1
+  count         = var.texts_live ? 1 : 0
   statement_id  = "AllowInboundSms"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.api.function_name
@@ -375,7 +375,7 @@ resource "aws_lambda_permission" "sms_inbound" {
 
 
 resource "aws_sns_topic_subscription" "sms_inbound" {
-  count      = var.sms_inbound_topic_arn == "" ? 0 : 1
+  count      = var.texts_live ? 1 : 0
   topic_arn  = var.sms_inbound_topic_arn
   protocol   = "lambda"
   endpoint   = aws_lambda_function.api.arn
