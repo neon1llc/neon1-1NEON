@@ -109,6 +109,13 @@ input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outlin
 .shell.mini .side:not(.open) .nav .sep { margin: 3px 0; }
 .scrim { position: fixed; inset: 0; z-index: 39; background: rgba(13, 2, 8, .45); opacity: 1; transition: opacity .2s ease; }
 .scrim.closing { opacity: 0; }
+/* On phones, keep the drawer's width fixed while it closes. A transform slides a full menu away;
+   clipping keeps the Mini rail's icons stationary. Animating width reflows every menu row. */
+@media (max-width: 640px) {
+  .shell:not(.mini) .side { width: calc(272px + env(safe-area-inset-left)); transition: transform .2s ease, box-shadow .2s ease; }
+  .shell.mini .side { width: calc(272px + env(safe-area-inset-left)); clip-path: inset(0 0 0 0); transition: clip-path .2s ease, box-shadow .2s ease; }
+  .shell.mini .side:not(.open) { clip-path: inset(0 calc(100% - var(--rail) - env(safe-area-inset-left)) 0 0); }
+}
 /* Every entry is one row: a 28px box, then its label; collapsed, labels stay readable to screen readers only */
 .side .brand, .side .org-mini, .nav a, .site-link, .who-link { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 6px 6px; border-radius: var(--r-sm);
   color: var(--text); text-decoration: none; font: 14px var(--sans); background: none; border: 0; cursor: pointer; width: 100%; text-align: left; white-space: nowrap; }

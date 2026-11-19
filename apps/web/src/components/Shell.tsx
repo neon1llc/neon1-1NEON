@@ -919,7 +919,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
       {/* Scrim behind the full menu; a tap outside closes it */}
       {(open || scrimVisible) && <div className={`scrim${open ? "" : " closing"}`} onClick={() => setOpen(false)} aria-hidden="true" />}
       <aside ref={side} onScroll={keepRail} onTransitionEnd={(event) => {
-        if (!open && event.target === event.currentTarget && event.propertyName === "width") setScrimVisible(false);
+        if (!open && event.target === event.currentTarget && ["width", "transform", "clip-path"].includes(event.propertyName)) setScrimVisible(false);
       }} className={`side${open ? " open" : ""}`} aria-label="Menu" inert={tucked}>
         {/* The mark and name lead Home, from the open menu and the Mini rail alike. It sits exactly where
             the top bar's own mark sits, so opening the menu covers one with the other */}
