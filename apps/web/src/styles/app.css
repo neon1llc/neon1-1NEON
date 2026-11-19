@@ -107,7 +107,8 @@ input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outlin
 .shell.mini .side:not(.open) :is(.brand, .org-mini, .nav a, .site-link, .who-link) { min-height: var(--row); padding-top: 2px; padding-bottom: 2px; }
 .shell.mini .side:not(.open) .nav { gap: 0; margin-top: 2px; }
 .shell.mini .side:not(.open) .nav .sep { margin: 3px 0; }
-.scrim { position: fixed; inset: 0; z-index: 39; background: rgba(13, 2, 8, .45); }
+.scrim { position: fixed; inset: 0; z-index: 39; background: rgba(13, 2, 8, .45); opacity: 1; transition: opacity .2s ease; }
+.scrim.closing { opacity: 0; }
 /* Every entry is one row: a 28px box, then its label; collapsed, labels stay readable to screen readers only */
 .side .brand, .side .org-mini, .nav a, .site-link, .who-link { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 6px 6px; border-radius: var(--r-sm);
   color: var(--text); text-decoration: none; font: 14px var(--sans); background: none; border: 0; cursor: pointer; width: 100%; text-align: left; white-space: nowrap; }

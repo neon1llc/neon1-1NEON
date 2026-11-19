@@ -772,6 +772,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
   // The organization in view, when this frame is inside one, for hiding what a new account can't do
   const inOrg = useContext(OrgCtx);
   const [open, setOpen] = useState(false);
+  const [scrimVisible, setScrimVisible] = useState(false);
   const [neoOpen, setNeoOpen] = useState(false);
   const [search, setSearch] = useState(false);
   const [top, setTop] = useState<ReactNode>(null);
@@ -827,6 +828,26 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
   const tucked = !open && !mini;
   const side = useRef<HTMLElement>(null);
   const trigger = useRef<HTMLElement | null>(null);
+  // Keep the backdrop through the drawer's close transition so the page doesn't flash into view
+  useEffect(() => {
+    if (open) {
+      setScrimVisible(true);
+      return;
+    }
+    if (!scrimVisible) return;
+    const drawer = side.current;
+    const durations = drawer ? getComputedStyle(drawer).transitionDuration.split(",").map((value) => {
+      const duration = Number.parseFloat(value) || 0;
+      return value.trim().endsWith("ms") ? duration : duration * 1000;
+    }) : [];
+    const fallback = Math.max(0, ...durations) + 50;
+    if (fallback <= 50) {
+      setScrimVisible(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setScrimVisible(false), fallback);
+    return () => window.clearTimeout(timer);
+  }, [open, scrimVisible]);
   // Opening moves focus into the menu (to the page in view, or its first control) unless it's already
   // there; closing puts focus back on whatever opened it, if focus would otherwise be lost
   useEffect(() => {
@@ -896,8 +917,10 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
       <a className="skip" href="#main" onClick={(e) => { e.preventDefault(); document.getElementById("main")?.focus(); }}>Skip to content</a>
       {IN_DEMO && !IN_LIVE && <DemoBar />}
       {/* Scrim behind the full menu; a tap outside closes it */}
-      {open && <div className="scrim" onClick={() => setOpen(false)} aria-hidden="true" />}
-      <aside ref={side} onScroll={keepRail} className={`side${open ? " open" : ""}`} aria-label="Menu" inert={tucked}>
+      {(open || scrimVisible) && <div className={`scrim${open ? "" : " closing"}`} onClick={() => setOpen(false)} aria-hidden="true" />}
+      <aside ref={side} onScroll={keepRail} onTransitionEnd={(event) => {
+        if (!open && event.target === event.currentTarget && event.propertyName === "width") setScrimVisible(false);
+      }} className={`side${open ? " open" : ""}`} aria-label="Menu" inert={tucked}>
         {/* The mark and name lead Home, from the open menu and the Mini rail alike. It sits exactly where
             the top bar's own mark sits, so opening the menu covers one with the other */}
         <div className="side-head">
