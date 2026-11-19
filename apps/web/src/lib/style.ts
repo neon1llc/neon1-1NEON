@@ -5,6 +5,7 @@ export type Look = "awake" | "plugged" | "providence" | "desert-of-the-real";
 export type Style = "matrix" | "sentinel";
 const KEY_STYLE = "neon1.style";
 const KEY_MODE = "neon1.mode";
+const KEY_SHARED = "neon1.theme.shared";
 const memory = new Map<string, string>();
 
 // Storage may be blocked; a choice still applies for this page's lifetime
@@ -31,14 +32,22 @@ export function styleChoice(): Style | null {
   return null;
 }
 export function setStyleChoice(style: Style) { write(KEY_STYLE, style); }
+// Whether the person has chosen a browser-wide theme that takes priority over the saved profile
+export const sharedThemeChoice = () => read(KEY_SHARED) === "1";
+// The browser's mode, with older saved looks used until a shared choice exists
+export const modeChoice = (): "light" | "dark" => {
+  const value = read(KEY_MODE);
+  if (value === "light" || value === "dark") return value;
+  const old = read((styleChoice() ?? "sentinel") === "sentinel" ? "neon1.theme.business" : "neon1.theme");
+  return old && isDarkLook(old) ? "dark" : "light";
+};
 
 /** Prefer the common mode; migrate the active family's old saved choice once */
 export function readLook(): Look {
-  const style = styleChoice() ?? "matrix";
+  const style = styleChoice() ?? "sentinel";
   let mode = read(KEY_MODE);
   if (mode !== "light" && mode !== "dark") {
-    const old = read(style === "sentinel" ? "neon1.theme.business" : "neon1.theme");
-    mode = old && isDarkLook(old) ? "dark" : "light";
+    mode = modeChoice();
     write(KEY_MODE, mode);
   }
   return lookFor(style, mode === "dark");
@@ -48,10 +57,12 @@ export function readLook(): Look {
 export function saveLook(look: Look) {
   write(KEY_MODE, isDarkLook(look) ? "dark" : "light");
   setStyleChoice(isSentinel(look) ? "sentinel" : "matrix");
+  write(KEY_SHARED, "1");
 }
 
 /** The landing's family overrides the account's family, preserving the account's light/dark mode */
 export function resolveTheme(theme: string): string {
+  if (sharedThemeChoice()) return readLook();
   const style = styleChoice();
   if (theme === "device") return style === "sentinel" ? lookFor(style, darkDevice()) : "device";
   const look = normalizeLook(theme);

@@ -38,7 +38,7 @@ export function headFor(pathname: string): Head {
   }
   // Public pages for search and sharing
   if (path === "/1NEON/example") {
-    return { title: "Sample project: orders without retyping · 1NEON", description: "One made-up bakery project in the 1NEON portal, from the request to the handover, through Needs, Execute, Observe, and Normalize.", canonical: `${SITE}/1NEON/example` };
+    return { title: "Sample projects · 1NEON", description: "Three made-up projects in the 1NEON portal, each from the request to the handover, with the work and the setbacks along the way.", canonical: `${SITE}/1NEON/example` };
   }
   if (path === "/1NEON/faqs") {
     // The same answers are published in the knowledge center, which is the copy to credit

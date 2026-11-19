@@ -1,4 +1,4 @@
-// apps/web/src/live/props.ts - The pretend world around the portal that the short demos need: Maria's
+// apps/web/src/live/props.ts - The pretend world around the portal that the short demos need: the owner's
 // mail, her phone (an authenticator app and her texts), and the browser's own passkey prompt. Each
 // is a plain window drawn over the portal, filled with what 1NEON really sent: the emails come from
 // the in-browser API's outbox, rendered from the same templates real mail uses.
@@ -147,7 +147,7 @@ export class MailWindow {
 
 
 /**
- * Maria's phone, at the side of the screen (sliding up over the page on a phone-sized screen): an
+ * The owner's phone, at the side of the screen (sliding up over the page on a phone-sized screen): an
  * authenticator app that shows the real current code for a key, or her text messages.
  */
 export class Phone {
@@ -157,7 +157,7 @@ export class Phone {
   constructor() {
     this.el = document.createElement("div");
     this.el.className = "live-prop live-phone";
-    this.el.setAttribute("aria-label", "Maria's phone (part of the demo)");
+    this.el.setAttribute("aria-label", "The owner's phone (part of the demo)");
     this.el.innerHTML = `<div class="ph-notch"></div><div class="ph-screen"></div>`;
     this.screen = this.el.querySelector(".ph-screen")!;
     document.body.append(this.el);
@@ -256,7 +256,7 @@ export function fakePasskeys(email: string) {
     getClientExtensionResults: () => ({}),
     response: making
       ? { clientDataJSON: bytes("{}"), attestationObject: bytes("live"), getTransports: () => ["internal"] }
-      : { clientDataJSON: bytes("{}"), authenticatorData: bytes("live"), signature: bytes("live"), userHandle: bytes("maria") },
+      : { clientDataJSON: bytes("{}"), authenticatorData: bytes("live"), signature: bytes("live"), userHandle: bytes("owner") },
   });
   const swap = (making: boolean) => async () => {
     if (!(await ask(making))) throw new DOMException("The prompt was cancelled", "NotAllowedError");

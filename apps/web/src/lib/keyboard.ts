@@ -74,8 +74,23 @@ export function bringIntoView(el: HTMLElement) {
   const view = window_(el);
   const room = view.bottom - view.top;
   // The whole box when it fits; otherwise the line with the caret
-  const band = r.height <= room ? { top: r.top, bottom: r.bottom } : el instanceof HTMLTextAreaElement ? caretBand(el) : { top: r.top, bottom: Math.min(r.bottom, r.top + room) };
-  let delta = band.bottom > view.bottom ? band.bottom - view.bottom : band.top < view.top ? band.top - view.top : 0;
+  const focus = r.height <= room ? { top: r.top, bottom: r.bottom } : el instanceof HTMLTextAreaElement ? caretBand(el) : { top: r.top, bottom: Math.min(r.bottom, r.top + room) };
+  // Keep the focused field's label, its described help or error, and its form action in view together
+  // when they fit above the keyboard. Longer forms keep the field-first behavior.
+  const related: Element[] = [];
+  if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) related.push(...Array.from(el.labels ?? []));
+  const descriptions = el.getAttribute("aria-describedby")?.split(/\s+/).filter(Boolean) ?? [];
+  related.push(...descriptions.map((id) => document.getElementById(id)).filter((node): node is HTMLElement => Boolean(node)));
+  const form = el.closest("form");
+  const action = form?.querySelector<HTMLElement>('button[type="submit"], input[type="submit"], button:not([type])');
+  if (action) related.push(action);
+  const boxes = related.map((node) => node.getBoundingClientRect()).filter((box) => box.height > 0);
+  const band = boxes.length ? {
+    top: Math.min(focus.top, ...boxes.map((box) => box.top)),
+    bottom: Math.max(focus.bottom, ...boxes.map((box) => box.bottom)),
+  } : focus;
+  const target = band.bottom - band.top <= room ? band : focus;
+  let delta = target.bottom > view.bottom ? target.bottom - view.bottom : target.top < view.top ? target.top - view.top : 0;
   if (Math.abs(delta) < 2) return;
   // Each scrolling box around it takes what it can, then the page takes the rest
   for (let box = scrollerOf(el); box && Math.abs(delta) >= 1; box = scrollerOf(box)) {

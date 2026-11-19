@@ -4,6 +4,9 @@
 // once at load, before the in-browser API seeds, so the seed and the player agree.
 
 
+import { DEFAULT_SCENARIO, SCENARIO_IDS, type ScenarioId } from "../lib/scenarios.ts";
+
+
 // The short demos, by the id their ?play= link uses (their sections live in shorts.ts)
 // "preview" is the short outcome-first tour the bare /1NEON/live opens with
 // "free" starts a free account from the sign-in screen, before any call
@@ -23,6 +26,8 @@ export interface Play {
   at?: string;
   /** A link to one chapter (from the FAQs): that chapter plays on its own, not the rest of the story */
   focus?: boolean;
+  /** Which made-up engagement the walkthrough follows (?scenario=); the first when none is named */
+  scenario: ScenarioId;
 }
 
 
@@ -45,16 +50,20 @@ const isShort = (id: string | null | undefined): id is ShortId => SHORT_IDS.incl
  * short preview.
  */
 export const PLAY: Play = (() => {
-  const param = new URLSearchParams(location.search).get("play");
-  if (isShort(param)) return { show: param };
-  if (param === FULL) return { show: PROJECT };
-  if (param) return { show: PROJECT, at: param, focus: true };
+  const q = new URLSearchParams(location.search);
+  const param = q.get("play");
+  // A scenario named in the link wins, then the one a refresh saved, then the first
+  const named = q.get("scenario");
+  const pickScenario = (saved?: string): ScenarioId => (SCENARIO_IDS.find((id) => id === named) ?? SCENARIO_IDS.find((id) => id === saved) ?? DEFAULT_SCENARIO);
+  if (isShort(param)) return { show: param, scenario: pickScenario() };
+  if (param === FULL) return { show: PROJECT, scenario: pickScenario() };
+  if (param) return { show: PROJECT, at: param, focus: true, scenario: pickScenario() };
   const deep = !/^\/1NEON\/live\/?$/.test(location.pathname);
   if (deep) {
     try {
       const saved = JSON.parse(sessionStorage.getItem(KEY) ?? "null") as Play | null;
-      if (saved && (saved.show === PROJECT || isShort(saved.show))) return saved;
+      if (saved && (saved.show === PROJECT || isShort(saved.show))) return { ...saved, scenario: pickScenario(saved.scenario) };
     } catch { /* unreadable: start over */ }
   }
-  return { show: "preview" };
+  return { show: "preview", scenario: pickScenario() };
 })();

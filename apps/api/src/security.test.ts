@@ -285,7 +285,10 @@ describe("text codes to confirm it's you", () => {
   /** Agree to texts and prove the number, as the profile does */
   async function verifyNumber(sess: { email: string; jti: string }) {
     const me = await call(sess, "GET", "/me");
-    const saved = await call(sess, "PATCH", "/me", { version: me.json.user.version, phone: "(555) 010-2030", smsConsent: true });
+    // A new number is saved first; agreeing to texts is a separate save, so consent never carries over
+    const numbered = await call(sess, "PATCH", "/me", { version: me.json.user.version, phone: "(555) 010-2030" });
+    expect(numbered.status).toBe(200);
+    const saved = await call(sess, "PATCH", "/me", { version: numbered.json.version, smsConsent: true });
     expect(saved.status).toBe(200);
     expect((await call(sess, "POST", "/me/phone/verify", {})).status).toBe(200);
     expect((await call(sess, "POST", "/me/phone/confirm", { code: lastCode() })).status).toBe(200);
@@ -355,7 +358,8 @@ describe("text codes to confirm it's you", () => {
 
     it("refuses the fourth send in an hour even after earlier codes were used", async () => {
       const dana = await ready();
-      for (let i = 0; i < 3; i++) {
+      // A number gets three texts an hour in all, and proving it already used one, so two more go out
+      for (let i = 0; i < 2; i++) {
         expect((await call(dana, "POST", "/me/confirm/text", {})).status).toBe(200);
         expect((await call(dana, "POST", "/me/confirm", { via: "text", code: lastCode() })).status).toBe(200);
       }
@@ -369,7 +373,8 @@ describe("text codes to confirm it's you", () => {
       // Three proofs at one number, three at a second (six in all), then a third number is refused
       for (const [i, phone] of ["5550102030", "5550104040", "5550105050"].entries()) {
         const me = (await call(dana, "GET", "/me")).json.user;
-        expect((await call(dana, "PATCH", "/me", { version: me.version, phone, smsConsent: true })).status).toBe(200);
+        const numbered = await call(dana, "PATCH", "/me", { version: me.version, phone });
+        expect((await call(dana, "PATCH", "/me", { version: numbered.json.version, smsConsent: true })).status).toBe(200);
         const sends = i < 2 ? 3 : 0;
         for (let n = 0; n < sends; n++) expect((await call(dana, "POST", "/me/phone/verify", {})).status).toBe(200);
       }

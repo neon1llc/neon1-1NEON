@@ -27,6 +27,8 @@ variable "user_pool_arn" { type = string }
 variable "client_id" { type = string }
 # The toll-free number texts come from (its ARN)
 variable "sms_number_arn" { type = string }
+variable "sms_number" { type = string }
+variable "sms_inbound_topic_arn" { type = string }
 # Whether the API offers texts. Off until the number's toll-free registration is approved, so the
 # profile says texts aren't available instead of sending codes carriers will drop
 variable "texts_live" {
@@ -333,6 +335,7 @@ resource "aws_lambda_function" "api" {
       FEEDBACK_TO                         = "feedback@neon1.tech"
       SES_CONFIGURATION_SET               = var.ses_configuration_set
       SMS_FROM                            = var.texts_live ? var.sms_number_arn : ""
+      SMS_NUMBER                          = var.texts_live ? var.sms_number : ""
       OPERATOR_EMAILS                     = var.operator_emails
       NEO_MODEL                           = var.neo_model
       NEO_MONTHLY_USD                     = tostring(var.neo_monthly_usd)
@@ -357,6 +360,26 @@ resource "aws_lambda_function" "api" {
 
   # Code ships through the deploy workflow, not Terraform
   lifecycle { ignore_changes = [filename, source_code_hash] }
+}
+
+
+# Inbound SMS replies invoke the API through a private SNS subscription
+resource "aws_lambda_permission" "sms_inbound" {
+  count         = var.sms_inbound_topic_arn == "" ? 0 : 1
+  statement_id  = "AllowInboundSms"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.api.function_name
+  principal     = "sns.amazonaws.com"
+  source_arn    = var.sms_inbound_topic_arn
+}
+
+
+resource "aws_sns_topic_subscription" "sms_inbound" {
+  count      = var.sms_inbound_topic_arn == "" ? 0 : 1
+  topic_arn  = var.sms_inbound_topic_arn
+  protocol   = "lambda"
+  endpoint   = aws_lambda_function.api.arn
+  depends_on = [aws_lambda_permission.sms_inbound]
 }
 
 

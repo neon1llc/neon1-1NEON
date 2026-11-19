@@ -92,7 +92,7 @@ input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outlin
    rail on screen at every size, and the page makes room for it */
 .shell { min-height: 100%; }
 .shell.mini .main { padding-left: calc(var(--rail) + env(safe-area-inset-left)); }
-:root { --rail: 61px; --box: 28px; }
+:root { --rail: 53px; --box: 28px; }
 /* The rail is its icon row (a 28px box and 6px either side, 40px), the same gap on both sides, and the
    border: so a row's highlight sits evenly around its icon. The menu scrolls without a visible bar
    (the page's own content keeps its bar) */
@@ -107,7 +107,15 @@ input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outlin
 .shell.mini .side:not(.open) :is(.brand, .org-mini, .nav a, .site-link, .who-link) { min-height: var(--row); padding-top: 2px; padding-bottom: 2px; }
 .shell.mini .side:not(.open) .nav { gap: 0; margin-top: 2px; }
 .shell.mini .side:not(.open) .nav .sep { margin: 3px 0; }
-.scrim { position: fixed; inset: 0; z-index: 39; background: rgba(13, 2, 8, .45); }
+.scrim { position: fixed; inset: 0; z-index: 39; background: rgba(13, 2, 8, .45); opacity: 1; transition: opacity .2s ease; }
+.scrim.closing { opacity: 0; }
+/* On phones, keep the drawer's width fixed while it closes. A transform slides a full menu away;
+   clipping keeps the Mini rail's icons stationary. Animating width reflows every menu row. */
+@media (max-width: 640px) {
+  .shell:not(.mini) .side { width: calc(272px + env(safe-area-inset-left)); transition: transform .2s ease, box-shadow .2s ease; }
+  .shell.mini .side { width: calc(272px + env(safe-area-inset-left)); clip-path: inset(0 0 0 0); transition: clip-path .2s ease, box-shadow .2s ease; }
+  .shell.mini .side:not(.open) { clip-path: inset(0 calc(100% - var(--rail) - env(safe-area-inset-left)) 0 0); }
+}
 /* Every entry is one row: a 28px box, then its label; collapsed, labels stay readable to screen readers only */
 .side .brand, .side .org-mini, .nav a, .site-link, .who-link { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 6px 6px; border-radius: var(--r-sm);
   color: var(--text); text-decoration: none; font: 14px var(--sans); background: none; border: 0; cursor: pointer; width: 100%; text-align: left; white-space: nowrap; }
@@ -375,6 +383,9 @@ body:has(.live-bar) .signin .n1-bar { display: none; }
 .signin .remember input:checked::after { content: ""; width: 4px; height: 8px; border: solid var(--void); border-width: 0 2px 2px 0; transform: translateY(-1px) rotate(45deg); }
 .signin .remember input:focus-visible { outline: 2px solid var(--neon); outline-offset: 2px; }
 .signin .fine a { color: var(--m-muted, #CBD1CC); }
+.signin:not(.awake) .fine a.out { color: var(--neon); font-weight: 600; text-decoration-color: color-mix(in srgb, currentColor 55%, transparent); }
+.signin:not(.awake) .fine a.out:hover { color: var(--neon); text-decoration-color: currentColor; }
+.signin.awake .fine a.out, .signin.awake .fine a.out:hover { color: var(--accent); font-weight: 600; text-decoration: none; }
 .signin .legal-links { margin-top: 8px; white-space: nowrap; }
 /* Who the portal is for, the visible email label, what Continue leads to, and the ways in without an
    account. Text colors are the shared matrix tokens (--m-muted 12:1, --m-ink 17:1 on the void), and stay above 5.5:1
@@ -499,8 +510,7 @@ fieldset legend { font: 12px var(--mono); color: var(--muted); }
 /* Phone tab bar: hidden until phone widths */
 .tabbar { display: none; }
 @media (max-width: 640px) {
-  /* Phones: a slimmer mini rail, and the tab bar starts where it ends */
-  .shell.mini { --rail: 53px; }
+  /* Phones keep the compact rail, and the tab bar starts where it ends */
   .shell.mini .side:not(.open) { --padl: calc(6px + env(safe-area-inset-left)); --padr: 6px; }
   .shell.mini .tabbar { left: calc(var(--rail) + env(safe-area-inset-left)); }
   .content { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
@@ -901,6 +911,8 @@ html[data-slide="back"]::view-transition-new(stage) { animation: .42s cubic-bezi
 
 /* Neo: bottom left on the public screens (sign-in, FAQs, legal), exactly as on neon1.tech; bottom right once inside the portal */
 body:not(:has(.shell:not(.example))) .n1chat-launch.n1chat-right, body:not(:has(.shell:not(.example))) .n1chat.n1chat-right { left: 16px; right: auto; }
+/* The shared widget keeps its right-corner motion class for portal use; on public screens, grow and fold from the left launcher */
+body:not(:has(.shell:not(.example))) .n1chat-right:is(.n1chat-grow, .n1chat-fold) { animation-name: n1chat-grow; }
 
 /* --- The demo (/1NEON/demo): a slim strip above the portal; the frame moves down to make room --- */
 .demo-bar { position: fixed; inset: 0 0 auto 0; z-index: 45; height: var(--demo-h, 36px); display: flex; align-items: center; gap: 12px; padding: 0 16px; background: var(--void, #0d0208); color: var(--m-ink-soft, #E3E7E4); font: 12px var(--mono); border-bottom: 1px solid rgba(0, 255, 65, .3); }
@@ -936,7 +948,7 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 .example-body { max-width: 920px; margin: 0 auto; padding-top: 40px; }
 .example-layer { margin-top: 48px; scroll-margin-top: 80px; }
 .example-h { display: flex; align-items: center; gap: 10px; font-size: 26px; margin: 0 0 4px; }
-.example-cards { display: grid; gap: 14px; margin-top: 14px; }
+.example-cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin-top: 14px; }
 .example-cards h3 { margin: 0 0 8px; font-size: 16px; }
 .example-list { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 8px; }
 .example-list li { position: relative; padding-left: 26px; }
@@ -944,6 +956,28 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 .example-list li.done::before, .example-list li.picked::before { background: var(--accent); border-color: var(--accent); }
 .example-list li.now::before { border-color: var(--accent); box-shadow: inset 0 0 0 3px var(--panel), inset 0 0 0 10px var(--accent); }
 .example-list .tag { margin-left: 8px; }
+.example-list li.set-aside { opacity: .8; }
+.example-list li.set-aside::before { border-style: dashed; }
+/* Which sample: three cards that wrap, the current one marked */
+.example-picker { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin: 22px 0 14px; }
+.example-picker a { display: grid; gap: 2px; padding: 10px 14px; border: 1px solid var(--line-strong); border-radius: 10px; color: inherit; text-decoration: none; }
+.example-picker a span { font-size: 13px; color: var(--muted); }
+.example-picker a[aria-current="page"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+/* A piece of the work itself: its kind, a note, and the table, scrolling inside the card on a phone */
+.piece-kind { margin: 4px 0 6px; }
+.piece-scroll { overflow-x: auto; margin-top: 8px; }
+.piece-table { width: 100%; border-collapse: collapse; margin: 4px 0 10px; font-size: 13px; min-width: 520px; }
+.piece-table th { text-align: left; font: 11px var(--mono); color: var(--muted); font-weight: 400; padding: 4px 14px 4px 0; border-bottom: 1px solid var(--line-strong); white-space: nowrap; }
+.piece-table td { padding: 7px 14px 7px 0; border-bottom: 1px solid var(--line); vertical-align: top; text-align: left; }
+.piece-table td.num { text-align: right; font-family: var(--mono); white-space: nowrap; }
+.piece-diagram { width: 100%; height: auto; margin-top: 8px; }
+.piece-diagram .pd-fw { fill: none; stroke: var(--accent); stroke-width: 1.5; }
+.piece-diagram .pd-box { fill: none; stroke: var(--line-strong); stroke-width: 1.5; }
+.piece-diagram .pd-guest { stroke-dasharray: 5 4; }
+.piece-diagram .pd-l { stroke: var(--line-strong); stroke-width: 1.5; }
+.piece-diagram text { fill: var(--text, currentColor); font-size: 12px; }
+.piece-diagram .pd-b { font-weight: 600; font-size: 14px; }
+.piece-diagram .pd-s { fill: var(--muted); font-size: 11px; }
 .example-end { margin: 48px 0 24px; }
 @media (max-width: 640px) { .example-body { padding-top: 24px; } .example .top-acts a[href="/"] { display: none; } }
 /* The narrowest phones (320px): the two buttons tighten so they fit beside the title without a sideways scroll */
@@ -989,9 +1023,17 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 .notify-table tbody th > span { display: block; margin: 1px 0; }
 .notify-table tbody th .tag { margin-left: 6px; }
 .notify-table input { width: 18px; height: 18px; min-height: 0; accent-color: var(--accent); }
+.notify-table .notify-hit { display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.notify-table .notify-hit:has(input:disabled) { cursor: not-allowed; }
 .notify-table input:disabled { opacity: .4; cursor: not-allowed; }
-.profile-save-inline { justify-content: center; margin: 4px 0 24px; }
+.profile-form { gap: 16px; }
+.profile-section { display: grid; gap: 12px; }
+.profile-section .card-h { margin: 0 0 2px; }
 @media (max-width: 640px) { .notify-table { min-width: 460px; } }
+@media (pointer: coarse) {
+  .notify-table .notify-hit { min-width: 44px; min-height: 44px; }
+  .notify-table .notify-hit input { width: 31.5px; height: 31.5px; }
+}
 
 /* The yes to texts: a checkbox with the carrier wording beside it */
 .notify .sms-consent { display: grid; font: 13px/1.5 var(--sans, inherit); color: var(--text); letter-spacing: 0; text-transform: none; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--bg); font-size: 13px; line-height: 1.5; }
@@ -1026,7 +1068,7 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
    Section rules and their labels take the same 14px either way: a thin line closed, the word open */
 /* Rows never go under 24px (WCAG 2.2 target size) on the mini rail, and the open menu keeps full 40px
  * rows and scrolls instead of squeezing them (AP-02) */
-.side { --row: clamp(24px, calc((100dvh - var(--demo-h, 0px) - 70px) / 16), 40px); --sep: 14px; gap: 0; padding-top: 8px; padding-bottom: 8px; }
+.side { --row: clamp(24px, calc((100dvh - var(--demo-h, 0px) - 70px) / 16), 40px); --sep: 14px; gap: 0; padding-top: 0; padding-bottom: 0; }
 /* Short screens: the chooser keeps only the organization's name, so it fits the row */
 @media (max-height: 500px) { .side .org-full .org small { display: none; } }
 .side :is(.brand, .org-mini, .nav a, .site-link, .who-link),
@@ -1127,7 +1169,7 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 /* Phones keep the mark alone, so the page's crumbs keep their room */
 @media (max-width: 480px) { .top-brand .lbl { display: none; } .top-brand { margin-right: -8px; } }
 /* The menu's mark row: the top bar's height, from the very top of the menu */
-.side .brand, .shell.mini .side:not(.open) .brand, .side.open .brand { height: var(--top-h) !important; min-height: var(--top-h) !important; margin-top: -8px; flex: none; }
+.side .brand, .shell.mini .side:not(.open) .brand, .side.open .brand { height: var(--top-h) !important; min-height: var(--top-h) !important; margin-top: 0; flex: none; }
 .side .brand { color: var(--accent); }
 /* The other fourteen rows share what's left of the height (the mark row now has its own) */
 .side { --row: clamp(24px, calc((100dvh - var(--demo-h, 0px) - 70px - var(--top-h) + 48px) / 14), 40px); }
@@ -1240,7 +1282,8 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 /* A stage section a link arrived at is marked for a moment */
 .stage-sec { scroll-margin-top: calc(var(--top-h) + 16px); border-radius: var(--r-sm); transition: background .6s ease; }
 .stage-sec.is-target { background: var(--accent-soft); }
-.cal-jump { padding-right: 28px; min-width: 112px; }
+.cal-jump { padding-left: 10px; padding-right: 28px; min-width: 112px; }
+@supports (appearance: base-select) { .cal-jump { padding-right: 8px; } }
 .cal .ag-group li { grid-template-columns: 76px minmax(0, 1fr) auto; }
 @media (max-width: 520px) { .cal .ag-group li { grid-template-columns: 64px minmax(0, 1fr); } }
 .cal-day-head { flex-wrap: wrap; }
@@ -1467,7 +1510,7 @@ dialog.demo-checkout .dlg { padding: 0; }
    other browsers it sits off screen */
 @media (hover: none) and (pointer: coarse) {
   :root { --under: 40vh; }
-  .side { bottom: calc(-1 * var(--under)); padding-bottom: calc(8px + var(--under)); }
+  .side { bottom: calc(-1 * var(--under)); padding-bottom: var(--under); }
   .scrim { bottom: calc(-1 * var(--under)); }
 }
 /* DuckDuckGo on iPhone clips anything fixed at its toolbar's top edge, overhang included, so the
@@ -2011,7 +2054,6 @@ select:not(:disabled), select:not(:disabled)::picker-icon, select:not(:disabled)
    middle of its rule when the menu opens, and the rule closes over it when the rail returns */
 .side .edge { flex: none; height: 1px; background: var(--line); margin-left: calc(-1 * var(--padl)); margin-right: calc(-1 * var(--padr)); }
 .side .edge-top { margin-top: -1px; margin-bottom: 0; }
-.side .edge-bottom { margin-top: 6px; }
 .side .nav .sep > .gl, .side .gline { display: flex; align-items: center; height: var(--sep); }
 .side .nav .sep > .gl { position: static; width: auto; clip: auto; overflow: visible; padding: 0; }
 .side .nav .sep > .gl::before, .side .nav .sep > .gl::after, .side .gline::before { content: ""; flex: 1 1 0; height: 1px; background: var(--line); }
@@ -2023,18 +2065,41 @@ select:not(:disabled), select:not(:disabled)::picker-icon, select:not(:disabled)
 .side .out-group :is(.bug-row) { font: 13px var(--mono); color: var(--muted); }
 .side .out-group .lbl { text-transform: lowercase; }
 /* neon1.tech: quiet monospace lowercase, the height of the top bar so it centers with the bottom bar */
-.side .site-end { font: 13px var(--mono); color: var(--muted); margin: 0 0 -8px; height: calc(var(--top-h) - 1px) !important; min-height: calc(var(--top-h) - 1px) !important; flex: none; }
+.side .site-end { font: 13px var(--mono); color: var(--muted); margin: 0; height: calc(var(--top-h) - 1px) !important; min-height: calc(var(--top-h) - 1px) !important; flex: none; }
+/* Shared appearance controls align with the wordmark and the site link in the expanded menu */
+.side-head { display: flex; align-items: center; flex: none; height: var(--top-h); margin-top: 0; }
+.side-head .brand { width: auto; flex: 1; min-width: 0; margin: 0; }
+.side .side-head .brand { height: var(--top-h) !important; min-height: var(--top-h) !important; margin: 0; flex: 1; }
+.menu-footer { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 12px; height: var(--top-h); min-height: var(--top-h); margin: 6px calc(-1 * var(--padr)) 0 calc(-1 * var(--padl)); padding: 0 var(--padr) 0 var(--padl); border-top: 1px solid var(--line); flex: none; }
+.side .menu-footer .site-end { width: auto; min-width: 0; margin: 0; }
+.shell.mini .side:not(.open) .menu-footer .site-end { width: 100%; }
+.menu-theme-switch { position: relative; flex: none; width: 52px; height: 28px; margin: 0 6px 0 0; padding: 0; border: 1px solid var(--line-strong); border-radius: 99px; background: var(--panel); color: var(--muted); cursor: pointer; }
+.menu-theme-switch svg { position: absolute; top: 50%; z-index: 1; width: 14px; height: 14px; margin-top: -7px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.menu-theme-switch .switch-sun { left: 6px; }
+.menu-theme-switch .switch-moon { right: 6px; }
+.menu-theme-switch[aria-checked="true"] .switch-knob { transform: translateX(24px); }
+.menu-theme-switch[aria-checked="false"] .switch-sun, .menu-theme-switch[aria-checked="true"] .switch-moon { color: var(--accent); }
+.menu-theme-switch[aria-checked="false"] .switch-moon, .menu-theme-switch[aria-checked="true"] .switch-sun { opacity: .6; }
+.menu-theme-switch .switch-knob { position: absolute; top: 2px; left: 2px; width: 22px; height: 22px; border-radius: 50%; background: var(--accent-soft); transition: transform .3s cubic-bezier(.2, .8, .2, 1); }
+.menu-theme-switch:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.menu-theme-switch:hover { border-color: var(--accent); }
+.menu-theme-switch:active { background: var(--accent-soft); }
+.style-switch .switch-knob { opacity: .7; }
+@media (forced-colors: active) { .menu-theme-switch .switch-knob { border: 1px solid ButtonText; } .menu-theme-switch svg { color: ButtonText; opacity: 1; } }
 .side .site-end .lbl { text-transform: lowercase; }
 .side .who-link { border-radius: var(--r-sm); }
 /* The site mark in its round border: the accent is the logo's dark green in awake and matrix green in matrix */
 .side .ico.site-mark { border-radius: 50%; border-color: var(--accent); background: none; }
 .side .ico.site-mark svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 3.6; stroke-linecap: round; }
-/* The separator and site-link row together match the top bar and the bottom bar's visible height */
-@media (max-width: 640px) { .side .site-end { height: calc(var(--top-h) - 1px + env(safe-area-inset-bottom)) !important; min-height: calc(var(--top-h) - 1px + env(safe-area-inset-bottom)) !important; } }
+/* The footer border plus its row match the 60px top and mobile bars. On phones, reserve the safe area
+   inside the footer while keeping the logo link centered in the visible 60px bar. */
+@media (max-width: 640px) {
+  .side .menu-footer { height: calc(var(--top-h) + env(safe-area-inset-bottom)); min-height: calc(var(--top-h) + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); }
+}
 /* The profile's avatar is already a circle: the current page's green fill must not box it */
 .side .nav a.active .ico.av-box { background: none; border-color: transparent; }
-/* Lowercase monospace sits a hair low beside its icon box: nudge the three links' words up 1px (open menu only; the rail's labels are hidden) */
-.side.open :is(.out-group, .site-end) .lbl { position: relative; top: -1px; }
+/* Lowercase monospace sits a hair low beside bug and feedback icons (open menu only; the rail's labels are hidden) */
+.side.open .out-group .lbl { position: relative; top: -1px; }
 /* The organization picker is one icon-box tall (--box), starting where the icons start and ending the same
    distance from the menu's edge, centered in the row the Mini rail's initials button takes, so it never meets
    the rule above and its space matches the icon rows. Its id line shows in the list instead */

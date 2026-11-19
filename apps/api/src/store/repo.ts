@@ -30,6 +30,10 @@ export const keys = {
   assurance: (uid: string) => ({ PK: `USER#${uid}`, SK: "ASSURANCE" }),
   // One texted code waiting to be used, per purpose: confirming it's you, or proving a new number
   smsChallenge: (uid: string, purpose: "confirm" | "verify") => ({ PK: `USER#${uid}`, SK: purpose === "confirm" ? "SMSCONFIRM" : "SMSVERIFY" }),
+  // One account owns each number while it has consented, preventing duplicate setup texts across accounts
+  smsOwner: (phone: string) => ({ PK: `SMSPHONE#${phone}`, SK: "OWNER" }),
+  // Duplicate SNS deliveries must not confirm a number or queue another acknowledgment
+  smsInbound: (id: string) => ({ PK: "SMSINBOUND", SK: id }),
   // The person's recent code texts (time, number, purpose), kept apart from the codes themselves so
   // using or replacing a code never resets the hourly limit; expires an hour after the latest send
   smsSent: (uid: string) => ({ PK: `USER#${uid}`, SK: "SMSSENT" }),

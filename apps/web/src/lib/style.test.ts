@@ -13,7 +13,7 @@ beforeEach(() => {
 
 describe("theme and mode", () => {
   it("does not inherit the device's dark mode when changing family", () => {
-    expect(readLook()).toBe("awake");
+    expect(readLook()).toBe("providence");
     setStyleChoice("sentinel");
     expect(readLook()).toBe("providence");
   });
