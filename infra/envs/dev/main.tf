@@ -1,6 +1,6 @@
 # infra/envs/dev/main.tf - 1NEON dev: dev.neon1.tech/1NEON, a separate backend for trying changes with no
 # client data in reach. Same modules as production with dev names (1neon-dev, neon1-1neon-*-dev), its own
-# Cognito pool on auth-dev.neon1.tech, allowlisted texts, no malware scanning, and a one-day lock on test records.
+# Cognito pool on auth-dev.neon1.tech, SMS off until its TFN is approved, no malware scanning, and a one-day lock on test records.
 # Mail goes out from production's notify.neon1.tech identity through a dev configuration set.
 #
 # Apply order (by hand, AWS_PROFILE=neon1): neon1-aws-infrastructure site-dev (portal=false), github
@@ -88,7 +88,7 @@ locals {
 }
 
 
-# Dev uses its own registered sender, with app-level sends restricted to the SecureString test allowlist
+# Dev uses its own sender; app-level sends remain off until registration and sandbox checks pass
 module "sms" {
   source          = "../../modules/sms"
   name            = local.name

@@ -30,9 +30,9 @@ variable "neo_model" {
 }
 
 
-# Keep this off during sender provisioning and boundary setup; turn it on only after both are ready
+# Explicit opt-in only after the TFN registration is approved and the sandbox destination is verified
 variable "texts_live" {
-  description = "Enable dev SMS after its sender, allowlist, and IAM boundary are ready."
+  description = "Enable dev SMS only after its TFN is approved and the sandbox destination is verified."
   type        = bool
-  default     = true
+  default     = false
 }

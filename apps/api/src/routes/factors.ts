@@ -101,7 +101,7 @@ export function factorRoutes(app: App, k: Kit) {
   // already be proved with a texted code, so nobody can point them at a number they don't hold
   app.post("/me/text-factor", async (c) => {
     const { user } = who(c);
-    if (!d.texter || (cfg.smsAllowlistParameter && !cfg.smsAllowedDestinations?.length)) fail(503, "texts_unavailable", "Texts aren't available yet. Email notices still work.");
+    if (!d.texter || (cfg.env === "dev" && !cfg.smsAllowedDestinations?.length)) fail(503, "texts_unavailable", "Texts aren't available yet. Email notices still work.");
     if (!smsReady(user, cfg.smsAllowedDestinations)) fail(409, "number_unverified", "Confirm your number with a texted code first, under Notifications.");
     if (smsFactorOn(user, cfg.smsAllowedDestinations)) return c.json({ ok: true });
     await mayChangeFactors(c);

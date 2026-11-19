@@ -89,6 +89,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     smsFrom: env.SMS_FROM || undefined,
     smsNumber: env.SMS_NUMBER || undefined,
     smsAllowlistParameter: env.SMS_ALLOWLIST_PARAM || undefined,
+    // Development texting must fail closed even if its SSM parameter is accidentally omitted.
+    smsAllowedDestinations: env.APP_ENV === "dev" ? [] : undefined,
     operatorEmails: (env.OPERATOR_EMAILS ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean),
     devAuth,
     neoModel: env.NEO_MODEL || undefined,

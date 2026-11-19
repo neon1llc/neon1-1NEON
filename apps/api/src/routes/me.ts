@@ -48,7 +48,7 @@ export function meRoutes(app: App, k: Kit) {
       // from the profile, and passkeys from the profile's hint (refreshed at each sign-in)
       factors: { totp, sms: smsFactorOn(user, d.cfg.smsAllowedDestinations), passkey: Boolean(user.passkey), any: totp || smsFactorOn(user, d.cfg.smsAllowedDestinations) || Boolean(user.passkey) || user.strongAuth },
       // Where texts stand: unavailable (no sending number yet), no number, not agreed, opted out, unverified, or ready
-      sms: { state: smsState(user, Boolean(d.texter) && (!d.cfg.smsAllowlistParameter || Boolean(d.cfg.smsAllowedDestinations?.length)), d.cfg.smsAllowedDestinations) },
+      sms: { state: smsState(user, Boolean(d.texter) && (d.cfg.env !== "dev" || Boolean(d.cfg.smsAllowedDestinations?.length)), d.cfg.smsAllowedDestinations) },
       // Whether Neo for signed-in people is wired here; without it the window stays the public one
       neo: Boolean(d.neo),
       orgs: tenants
@@ -108,7 +108,7 @@ export function meRoutes(app: App, k: Kit) {
   // Send a code to the profile's number
   app.post("/me/phone/verify", async (c) => {
     const { user, jti } = who(c);
-    if (!d.texter || (d.cfg.smsAllowlistParameter && !d.cfg.smsAllowedDestinations?.length)) fail(503, "texts_unavailable", "Texts aren't available yet. Email notices still work.");
+    if (!d.texter || (d.cfg.env === "dev" && !d.cfg.smsAllowedDestinations?.length)) fail(503, "texts_unavailable", "Texts aren't available yet. Email notices still work.");
     const to = e164(user.phone);
     if (!to) fail(400, "no_number", "Add a mobile number to your profile first.");
     if (!user.smsConsentAt) fail(400, "not_agreed", "Agree to texts on your profile first.");
