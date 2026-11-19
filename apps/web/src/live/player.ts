@@ -1,5 +1,5 @@
 // apps/web/src/live/player.ts - The live playback's engine: a cursor that moves, hovers, clicks,
-// drags, and types on the real portal, Maria's thoughts riding beside it, and a player that runs a
+// drags, and types on the real portal, the client's thoughts riding beside it, and a player that runs a
 // show section by section. Every step checks for pause and for a jump, so Back, Next, and the
 // section list cut cleanly, and a stumble recovers on its own before it ever asks for a choice.
 
@@ -12,6 +12,7 @@ import { pageScroller } from "../lib/edge.ts";
 import { keepAwake } from "./awake.ts";
 import { opening } from "./opening.ts";
 import { SHORTS } from "./shorts.ts";
+import { S } from "./scenario.ts";
 import { PLAY, PROJECT, remember } from "./where.ts";
 import { lessMotion } from "../lib/motion.ts";
 
@@ -21,7 +22,7 @@ export interface Section {
   id: string;
   title: string;
   run: (s: Stage) => Promise<void>;
-  /** Maria's reason for coming, when a walkthrough starts here (a link from the FAQs): she thinks it on
+  /** The client's reason for coming, when a walkthrough starts here (a link from the FAQs): she thinks it on
    * the sign-in screen, signs in for real, and walks to this section's page before it plays */
   why?: string;
 }
@@ -247,7 +248,7 @@ function instant(on: boolean) {
 }
 
 
-// --- Maria's thoughts ------------------------------------------------------------
+// --- The client's thoughts ------------------------------------------------------------
 
 
 /**
@@ -342,7 +343,7 @@ class Cursor {
       <svg class="c-beam" viewBox="0 0 24 24"><path d="M9 3h2.5a1.5 1.5 0 0 1 1.5 1.5V19.5A1.5 1.5 0 0 1 11.5 21H9m6-18h-2.5A1.5 1.5 0 0 0 11 4.5v15a1.5 1.5 0 0 0 1.5 1.5H15"/></svg>
       <span class="c-ring"></span>`;
     document.body.append(this.el);
-    this.thought = new Thought("Maria");
+    this.thought = new Thought(S.owner.first);
     this.place();
   }
   // Draw at the current point, the thought alongside
@@ -448,7 +449,7 @@ export class Player {
     const project = full.sections;
     const short = SHORTS.find((s) => s.id === PLAY.show);
     this.show = short ?? full;
-    // A link from the FAQs names one chapter: it plays on its own, start to finish. Maria signs in with
+    // A link from the FAQs names one chapter: it plays on its own, start to finish. The owner signs in with
     // her reason for coming, walks to the page, does that one thing, and the walkthrough ends there.
     // The story before it (what that chapter needs in place) is set up out of sight first, so nothing
     // unrelated to the question plays
@@ -459,10 +460,10 @@ export class Player {
       this.show = {
         id: PROJECT, title: sec.title, blurb: "One part of the story, on its own", length: "a few minutes",
         intro: { text: [
-          `One part of a longer story, on its own: “${sec.title}”. Maria owns a fictional bakery, and Pradeep at neon1 is helping her stop retyping orders every night.`,
+          `One part of a longer story, on its own: “${sec.title}”. ${S.voice.previewIntro}`,
           "The story up to this point is set up first, out of sight, which takes a few seconds. Then she signs in and does this one thing.",
         ] },
-        sections: [{ id: `${sec.id}-in`, title: "Sign in to Home", run: (st) => opening(`${sec.id}-in`, "Maria opens 1NEON and signs in", sec.why!, this.prepPath).run(st) }, sec],
+        sections: [{ id: `${sec.id}-in`, title: "Sign in to Home", run: (st) => opening(`${sec.id}-in`, `${S.owner.first} opens 1NEON and signs in`, sec.why!, this.prepPath).run(st) }, sec],
         end: `That was “${sec.title}”.`,
         recap: "It's one chapter of the full story, which plays every step of a project from the first sign-in to ongoing care.",
       };
@@ -642,7 +643,7 @@ export class Player {
     let current = i;
     const engine = await liveEngine();
     if (!engine) return;
-    // A single chapter from the FAQs: set the story up to it once, out of sight, then sign Maria out, so
+    // A single chapter from the FAQs: set the story up to it once, out of sight, then sign the owner out, so
     // the show's own first section is her coming in the front door. That point is the show's start
     // Setting up can stumble once (a page slow to arrive on a busy device): it starts over from the
     // seed by itself, and only a second stumble shows the card
@@ -713,7 +714,7 @@ export class Player {
           pageScroller().scrollTo({ top: 0 });
           await sleep(300);
           this.emit({ skipping: false, caption: "", note: "", progress: 0 });
-          await opening(`${this.sections[i]!.id}-in`, "Maria opens 1NEON and signs in", this.sections[i]!.why ?? "Let me sign in to 1NEON.", path).run(this.stage(token));
+          await opening(`${this.sections[i]!.id}-in`, `${S.owner.first} opens 1NEON and signs in`, this.sections[i]!.why ?? "Let me sign in to 1NEON.", path).run(this.stage(token));
         }
       }
       // Then play from i to the end at watching speed
@@ -723,7 +724,7 @@ export class Player {
         this.steps = 0;
         // A single chapter remembers its chapter, so a refresh plays that chapter again; the full story
         // remembers where it is in the story
-        remember(this.prep ? { show: PROJECT, at: this.sections[1]!.id, focus: true } : { show: this.show.id as never, at: this.sections[k]!.id });
+        remember(this.prep ? { show: PROJECT, at: this.sections[1]!.id, focus: true, scenario: S.id } : { show: this.show.id as never, at: this.sections[k]!.id, scenario: S.id });
         this.emit({ index: k, title: this.sections[k]!.title, caption: "", note: "", progress: 0, skipping: false, done: false, paused: false, failed: false });
         await this.sections[k]!.run(this.stage(token));
         this.stumbles.delete(k);
@@ -755,7 +756,7 @@ export class Player {
         for (const k of [...this.snaps.keys()]) if (k > 0) this.snaps.delete(k);
         void this.goTo(current, true);
       } else {
-        // The card takes over: nothing of Maria's is left floating on top of it
+        // The card takes over: nothing of hers is left floating on top of it
         this.cursor?.thought.clear();
         this.cursor?.hide(true);
         this.emit({ paused: true, skipping: false, failed: true, caption: "", note: "" });
@@ -952,7 +953,7 @@ export class Player {
         p.lastCaption = { at: p.clock(), read: p.pace(500 + caption.length * 12) };
       },
       /**
-       * What Maria is thinking, beside the cursor. A new thought waits until the last one has been on
+       * What the client is thinking, beside the cursor. A new thought waits until the last one has been on
        * screen long enough to read, so quick actions never flash words past
        */
       think: async (text: string) => {

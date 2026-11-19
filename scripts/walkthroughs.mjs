@@ -43,6 +43,10 @@ const DDG_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebK
 const shows = arg("shows", [...SHORTS, ...CHAPTERS].join(",")).split(",").filter(Boolean);
 const sizes = arg("sizes", "desktop,phone").split(",").filter(Boolean);
 const scenarios = arg("scenarios", "play").split(",").filter(Boolean);
+// The made-up engagements the story can follow (?scenario=); the first is what the bare address plays. A
+// plain run also plays the other two through the preview and the full story, so none of them rots
+const ENGAGEMENTS = ["harborline", "quillwork", "fenwick"];
+const engagements = arg("engagements", "").split(",").filter(Boolean);
 const engine = { chromium, firefox, webkit }[arg("browser", "chromium")];
 const workers = Number(arg("workers", "4"));
 const verbose = process.argv.includes("--verbose");
@@ -154,7 +158,11 @@ async function until(page, test, what, limit = LIMIT) {
   throw new Error(`timed out waiting for ${what}; last seen "${s?.title}" / "${s?.line}" / card "${s?.card}"`);
 }
 
-const address = (show) => (show === "demo" ? `${BASE}/1NEON/demo/` : `${BASE}/1NEON/live${show === "preview" ? "" : `?play=${show}`}`);
+const address = (show, engagement) => {
+  if (show === "demo") return `${BASE}/1NEON/demo/`;
+  const q = [show === "preview" ? "" : `play=${show}`, engagement ? `scenario=${engagement}` : ""].filter(Boolean).join("&");
+  return `${BASE}/1NEON/live${q ? `?${q}` : ""}`;
+};
 const press = (page, label) => page.locator(".live-card .live-btn", { hasText: label }).first().click();
 
 
@@ -165,11 +173,11 @@ const SCENARIOS = {
    * there and bottom right once a person is picked, and "report a bug" is a new-tab link inside */
   async demo(page) {
     const { width } = page.viewportSize();
-    const theme = await page.evaluate(() => { try { return localStorage.getItem("neon1.theme"); } catch { return null; } });
+    const mode = await page.evaluate(() => { try { return localStorage.getItem("neon1.mode"); } catch { return null; } });
     await page.waitForSelector(".signin .demo-pick", { timeout: 20_000 });
     if (!(await page.locator(".n1-bar.pub-bar .n1-logo").count()) || !(await page.locator(".n1-bar.pub-bar [role=switch]").count())) throw new Error("the demo landing lacks the sign-in's bar (logo left, theme switch right)");
     const awake = (await page.locator(".signin.awake").count()) > 0;
-    if (awake !== (theme !== "matrix")) throw new Error(`the demo landing shows ${awake ? "awake" : "matrix"} while the saved theme is ${theme ?? "unset"}`);
+    if (awake !== (mode !== "dark")) throw new Error(`the demo landing shows ${awake ? "awake" : "dark"} while the saved mode is ${mode ?? "unset"}`);
     const side = async () => { const b = await page.locator(".n1chat-launch").first().boundingBox({ timeout: 15_000 }); return b.x + b.width / 2 < width / 2 ? "left" : "right"; };
     if ((await side()) !== "left") throw new Error("Neo isn't bottom left on the demo landing");
     await page.getByRole("button", { name: /Raj Patel/ }).click();
@@ -307,6 +315,15 @@ const SCENARIOS = {
 const browser = await engine.launch();
 const jobs = [];
 for (const show of shows) for (const size of sizes) for (const scenario of scenarios) jobs.push({ show, size, scenario });
+// The other engagements: the preview and the full story, on the first size named (the phone's the
+// tighter one, so a plain run uses it for the preview and the desktop for the full story). Longest first
+{
+  const named = engagements.length ? engagements : process.argv.some((a) => a === "--shows" || a.startsWith("--shows=")) ? [] : ENGAGEMENTS.slice(1);
+  for (const engagement of named) {
+    if (shows.includes("full") || !process.argv.includes("--shows")) jobs.unshift({ show: "full", size: sizes[0], scenario: "play", engagement });
+    if (shows.includes("preview") || !process.argv.includes("--shows")) jobs.push({ show: "preview", size: sizes.at(-1), scenario: "play", engagement });
+  }
+}
 // The demo's landing is checked in both themes; "--shows demo --scenarios demo" runs only it
 const demoJobs = (sizes) => sizes.flatMap((size) => ["awake", "matrix"].map((theme) => ({ show: "demo", size, scenario: "demo", theme })));
 // With no --shows given, the demo's landing is checked too, in both themes, at each size
@@ -318,10 +335,11 @@ let done = 0;
 const retried = [];
 
 /** One walkthrough, one screen size, one scenario, in a fresh browser profile at double speed */
-async function run({ show, size, scenario, theme }, tries = RETRIES) {
-  const name = `${show} · ${size} · ${scenario}${theme ? ` · ${theme}` : ""}`;
+async function run({ show, size, scenario, theme, engagement }, tries = RETRIES) {
+  const name = `${show} · ${size} · ${scenario}${theme ? ` · ${theme}` : ""}${engagement ? ` · ${engagement}` : ""}`;
   const ctx = await browser.newContext({ viewport: SIZES[size], ignoreHTTPSErrors: true, hasTouch: ["phone", "small", "landscape", "tablet", "ddg"].includes(size), ...(size === "ddg" ? { userAgent: DDG_UA } : {}) });
-  if (theme) await ctx.addInitScript((t) => { try { localStorage.setItem("neon1.theme", t); } catch { /* blocked */ } }, theme);
+  // The landing's theme: the browser's mode (and the matrix family when dark), as the site and portal share them
+  if (theme) await ctx.addInitScript((t) => { try { localStorage.setItem("neon1.mode", t === "matrix" ? "dark" : "light"); localStorage.setItem("neon1.style", "matrix"); } catch { /* blocked */ } }, theme);
   await ctx.addInitScript((speed) => { try { localStorage.setItem("1neon.liveSpeed", `2:${speed}`); } catch { /* blocked */ } }, SPEED);
   const page = await ctx.newPage();
   const problems = [];
@@ -330,14 +348,14 @@ async function run({ show, size, scenario, theme }, tries = RETRIES) {
   page.on("pageerror", (e) => problems.push(`page error: ${String(e).slice(0, 240)}`));
   const t0 = Date.now();
   try {
-    await page.goto(address(show));
+    await page.goto(address(show, engagement));
     await SCENARIOS[scenario](page, show);
     // A missing shared file or a blocked font isn't the walkthrough's doing; anything else is
     const real = problems.filter((p) => !/Failed to load resource|net::ERR|favicon/.test(p));
     if (real.length) throw new Error(real.join("\n      "));
     if (verbose) console.log(`ok    ${name} (${Math.round((Date.now() - t0) / 1000)}s)`);
   } catch (e) {
-    const shot = join(ROOT, `walkthrough-failure-${show}-${size}-${scenario}.png`);
+    const shot = join(ROOT, `walkthrough-failure-${show}-${size}-${scenario}${engagement ? `-${engagement}` : ""}.png`);
     await page.screenshot({ path: shot }).catch(() => undefined);
     // Where the page was and what it was saying: a refused request shows as a notice, not in the console
     const seen = await page.evaluate(() => `at ${location.pathname.replace("/1NEON/live", "") || "/"}${location.hash}${[...document.querySelectorAll(".toast, [role=alert]")].map((n) => `; on screen: ${n.textContent.trim().slice(0, 160)}`).join("")}`).catch(() => "");
@@ -346,7 +364,7 @@ async function run({ show, size, scenario, theme }, tries = RETRIES) {
       console.log(`retry ${name}`);
       retried.push(why);
       await ctx.close();
-      return run({ show, size, scenario, theme }, tries - 1);
+      return run({ show, size, scenario, theme, engagement }, tries - 1);
     }
     failures.push(why);
     console.log(`FAIL  ${name}`);

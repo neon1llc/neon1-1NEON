@@ -948,7 +948,7 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 .example-body { max-width: 920px; margin: 0 auto; padding-top: 40px; }
 .example-layer { margin-top: 48px; scroll-margin-top: 80px; }
 .example-h { display: flex; align-items: center; gap: 10px; font-size: 26px; margin: 0 0 4px; }
-.example-cards { display: grid; gap: 14px; margin-top: 14px; }
+.example-cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin-top: 14px; }
 .example-cards h3 { margin: 0 0 8px; font-size: 16px; }
 .example-list { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 8px; }
 .example-list li { position: relative; padding-left: 26px; }
@@ -956,6 +956,28 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 .example-list li.done::before, .example-list li.picked::before { background: var(--accent); border-color: var(--accent); }
 .example-list li.now::before { border-color: var(--accent); box-shadow: inset 0 0 0 3px var(--panel), inset 0 0 0 10px var(--accent); }
 .example-list .tag { margin-left: 8px; }
+.example-list li.set-aside { opacity: .8; }
+.example-list li.set-aside::before { border-style: dashed; }
+/* Which sample: three cards that wrap, the current one marked */
+.example-picker { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin: 22px 0 14px; }
+.example-picker a { display: grid; gap: 2px; padding: 10px 14px; border: 1px solid var(--line-strong); border-radius: 10px; color: inherit; text-decoration: none; }
+.example-picker a span { font-size: 13px; color: var(--muted); }
+.example-picker a[aria-current="page"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+/* A piece of the work itself: its kind, a note, and the table, scrolling inside the card on a phone */
+.piece-kind { margin: 4px 0 6px; }
+.piece-scroll { overflow-x: auto; margin-top: 8px; }
+.piece-table { width: 100%; border-collapse: collapse; margin: 4px 0 10px; font-size: 13px; min-width: 520px; }
+.piece-table th { text-align: left; font: 11px var(--mono); color: var(--muted); font-weight: 400; padding: 4px 14px 4px 0; border-bottom: 1px solid var(--line-strong); white-space: nowrap; }
+.piece-table td { padding: 7px 14px 7px 0; border-bottom: 1px solid var(--line); vertical-align: top; text-align: left; }
+.piece-table td.num { text-align: right; font-family: var(--mono); white-space: nowrap; }
+.piece-diagram { width: 100%; height: auto; margin-top: 8px; }
+.piece-diagram .pd-fw { fill: none; stroke: var(--accent); stroke-width: 1.5; }
+.piece-diagram .pd-box { fill: none; stroke: var(--line-strong); stroke-width: 1.5; }
+.piece-diagram .pd-guest { stroke-dasharray: 5 4; }
+.piece-diagram .pd-l { stroke: var(--line-strong); stroke-width: 1.5; }
+.piece-diagram text { fill: var(--text, currentColor); font-size: 12px; }
+.piece-diagram .pd-b { font-weight: 600; font-size: 14px; }
+.piece-diagram .pd-s { fill: var(--muted); font-size: 11px; }
 .example-end { margin: 48px 0 24px; }
 @media (max-width: 640px) { .example-body { padding-top: 24px; } .example .top-acts a[href="/"] { display: none; } }
 /* The narrowest phones (320px): the two buttons tighten so they fit beside the title without a sideways scroll */

@@ -3,6 +3,12 @@
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
 ## Unreleased
+- The walkthroughs, the preview, the sample project, and the free-account journey now follow three made-up engagements instead of one: a three-store retailer reconciling stock across its systems, a software company moving report workers to container tasks, and an architecture firm segmenting a new office network. Each has a rejected or set-aside option, a failed test, and an accepted limit, and the same names, hours, and prices appear on every page. `?scenario=` on the sample page and the playback picks one.
+- The sample project shows real work: a stock exception report, a cost model, a canary and rollback log, an assistant evaluation, a network plan, a restore test, and an access review, each marked as running here or as an illustration, plus the figures its invoices come from.
+- Not every proposal has three options: the sample shows one with two, one with a set-aside option, and prices that are fixed as well as estimated.
+- A new project template, Networks and connected systems, starts with a sites-and-devices asset, a rule that guest and device traffic can't reach business systems, an outage measure, and a restore or failover check.
+- The free-account journey follows a building-supply yard with an insurer's security questionnaire.
+- Dev checks: the SMS tests follow the consent and destination-limit rules, and the walkthrough runner reads the shared mode and family settings and plays all three engagements.
 - Profile notification checkboxes are 75% larger on touch devices and have a 44px tap target; desktop sizing stays compact.
 - Neo's panel on unauthenticated 1NEON pages opens and closes from its bottom-left launcher; the demo also links back to sign-in above its policy links.
 - On phones, the menu closes by sliding away or clipping to the Mini rail at a fixed width, avoiding row reflow during the transition. Focusing a text field keeps its label, described help, and form action above the keyboard together when they fit.

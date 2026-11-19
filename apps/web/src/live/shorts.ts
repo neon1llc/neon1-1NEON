@@ -1,6 +1,6 @@
 // apps/web/src/live/shorts.ts - The short demos: one thing each, start to finish, linked from the
 // FAQs and the live playback's menu. Each plays at /1NEON/live?play=<id>, on the real portal, with
-// Maria's mail, phone, and passkey prompt drawn around it (props.ts).
+// The owner's mail, phone, and passkey prompt drawn around it (props.ts).
 
 
 import { liveEngine } from "../lib/api.ts";
@@ -8,15 +8,18 @@ import type { Show, Stage, Target } from "./player.ts";
 import { opening } from "./opening.ts";
 import { fakePasskeys, MailWindow, Phone } from "./props.ts";
 import { PREVIEW } from "./preview.ts";
-import { MARIA, SAM } from "./seed.ts";
+import { COLLEAGUE, OWNER } from "./seed.ts";
+import { S } from "./scenario.ts";
 import { JOURNEY } from "./journey.ts";
 
 
-// The bakery's pages
-const base = "/o/maple-street";
+// The client's pages, and the first names the captions use
+const owner = S.owner.first;
+const mate = S.colleague.first;
+const base = `/o/${S.org.slug}`;
 // The number 1NEON texts come from
 const TEXTS_FROM = "1NEON · (844) 701-1281";
-// Maria's mobile, made up
+// The owner's mobile, made up
 const MOBILE = "(555) 010-2030";
 
 const engine = async () => (await liveEngine())!;
@@ -26,15 +29,15 @@ const phone = () => innerWidth <= 640;
 // --- Pieces the short demos share -------------------------------------------------------
 
 
-/** Open Maria's mail with everything sent to her so far; the caller closes it */
+/** Open the owner's mail with everything sent to her so far; the caller closes it */
 async function openMail(s: Stage) {
-  const mail = new MailWindow(MARIA);
+  const mail = new MailWindow(OWNER);
   mail.fill((await engine()).outbox());
   await s.wait(700);
   return mail;
 }
 
-/** Open the newest message whose subject matches, as Maria would: click its row */
+/** Open the newest message whose subject matches, as the owner would: click its row */
 async function read(s: Stage, mail: MailWindow, subject: string | RegExp) {
   await s.click(() => mail.row(subject), 300);
   mail.open([...mail.el.querySelectorAll(".mail-row")].indexOf(mail.row(subject)!));
@@ -46,7 +49,7 @@ async function putDown(ph: Phone) {
   if (phone()) await ph.close();
 }
 
-/** The newest text to Maria's phone, read off the phone (codes are its six digits) */
+/** The newest text to the owner's phone, read off the phone (codes are its six digits) */
 async function lastText() {
   const t = (await engine()).textsSent().at(-1);
   return t?.body ?? "";
@@ -55,10 +58,10 @@ async function lastText() {
 /** Passkey prompts stay pretend for the whole short demo, wherever it starts */
 let restorePasskeys: (() => void) | undefined;
 function pretendPasskeys() {
-  restorePasskeys ??= fakePasskeys(MARIA);
+  restorePasskeys ??= fakePasskeys(OWNER);
 }
 
-/** Open the profile from the menu, the way Maria would (go opens the menu first when it's tucked away) */
+/** Open the profile from the menu, the way the owner would (go opens the menu first when it's tucked away) */
 async function profile(s: Stage, section?: string) {
   const route = location.pathname.replace(/^\/1NEON\/(?:live|demo)/, "");
   await s.go(route.startsWith("/all/") ? "/all/me" : "/me");
@@ -66,11 +69,11 @@ async function profile(s: Stage, section?: string) {
   if (section) await s.hover(section, 500);
 }
 
-/** Invite Sam: an admin action, so 1NEON asks Maria to confirm it's her first */
-async function inviteSam(s: Stage) {
+/** Invite a teammate: an admin action, so 1NEON asks the owner to confirm it's her first */
+async function inviteColleague(s: Stage) {
   await s.go(`${base}/people`, "People");
   await s.click({ sel: "button", text: "Invite people" }, 500);
-  await s.type("#emails", SAM, 300);
+  await s.type("#emails", COLLEAGUE, 300);
   await s.click({ sel: "button", text: "Send invitation" }, 1000);
 }
 
@@ -78,8 +81,8 @@ async function inviteSam(s: Stage) {
 async function sendAgain(s: Stage) {
   await s.wait(500);
   await s.click({ sel: "button", text: "Send invitation" }, 1200);
-  await s.waitFor({ sel: "tbody tr", text: SAM }, 8000);
-  await s.hover({ sel: "tbody tr", text: SAM }, 900);
+  await s.waitFor({ sel: "tbody tr", text: COLLEAGUE }, 8000);
+  await s.hover({ sel: "tbody tr", text: COLLEAGUE }, 900);
 }
 
 // The confirm dialog, once it's open
@@ -94,7 +97,7 @@ const invite: Show = {
   id: "invite",
   title: "Join from an invitation",
   blurb: "From the invite email to a first sign-in",
-  intro: { text: ["Maria owns a fictional bakery, and Pradeep at neon1 has invited her to its organization in 1NEON. Watch her open the invitation email, sign in with a code and no password, and take her first look around."] },
+  intro: { text: [`${owner} is made up, and so is the company where she works. Pradeep at neon1 has invited her to its organization in 1NEON. Watch her open the invitation email, sign in with a code and no password, and take her first look around.`] },
   length: "about two minutes",
   end: "Invited to signed in, with no password at all.",
   sections: [
@@ -104,19 +107,19 @@ const invite: Show = {
       run: async (s) => {
         // The tour is offered once per browser session; this demo always shows the offer
         try { sessionStorage.removeItem("1neon.tour-offered"); } catch { /* storage blocked */ }
-        await s.say("Maria gets an email: Pradeep invited her bakery to 1NEON");
+        await s.say(`${owner} gets an email: Pradeep invited ${S.org.name} to 1NEON`);
         const mail = await openMail(s);
         try {
           await s.think("An email from neon1. That must be the invite Pradeep mentioned.");
           await read(s, mail, "You're invited");
-          await s.think("Pradeep invited me to Maple Street Bakery. No password to make. Good.");
+          await s.think(`Pradeep invited me to ${S.org.name}. No password to make. Good.`);
           await s.hover(() => mail.link("Join"), 900);
           await s.click(() => mail.link("Join"), 600);
         } finally {
           await mail.close();
         }
         // The invite link opens 1NEON with her email filled in
-        await s.open(`/?email=${encodeURIComponent(MARIA)}`);
+        await s.open(`/?email=${encodeURIComponent(OWNER)}`);
         await s.wait(900);
       },
     },
@@ -153,7 +156,7 @@ const invite: Show = {
         await s.say("The first time in, 1NEON asks her name and offers a one-minute tour");
         await s.waitFor({ sel: "dialog[open] h2", text: "New here?" }, 8000);
         await s.think("It wants my name, so the team knows who I am.");
-        await s.type("#welcome-name", "Maria Lopez", 400);
+        await s.type("#welcome-name", S.owner.name, 400);
         await s.think("A one-minute tour? Sure.");
         await s.click({ sel: "dialog[open] button", text: "Start the tour" }, 1200);
         // Step through the whole tour, with a thought at the stops that matter most to her
@@ -185,17 +188,17 @@ const passkey: Show = {
   id: "passkey",
   title: "Add a passkey",
   blurb: "Your fingerprint or face, for confirming and signing in",
-  intro: { text: ["A passkey signs you in with your fingerprint, your face, or your device's PIN instead of a code. Watch Maria, who owns a fictional bakery, add one, use it to confirm an admin action, and sign in with it."] },
+  intro: { text: [`A passkey signs you in with your fingerprint, your face, or your device's PIN instead of a code. Watch ${owner}, ${S.owner.role} (a made-up company), add one, use it to confirm an admin action, and sign in with it.`] },
   length: "about three minutes",
   end: "A passkey: no codes to wait for, and nothing to phish.",
   sections: [
-    opening("passkey-in", "Maria opens 1NEON to add a passkey", "Pradeep said a passkey makes signing in and confirming things quicker. Let me sign in and add one."),
+    opening("passkey-in", `${owner} opens 1NEON to add a passkey`, "Pradeep said a passkey makes signing in and confirming things quicker. Let me sign in and add one."),
     {
       id: "passkey-add",
       title: "Make a passkey",
       run: async (s) => {
         pretendPasskeys();
-        await s.say("Maria adds a passkey from her profile");
+        await s.say(`${owner} adds a passkey from her profile`);
         await s.think("Passkeys are on my profile, in the menu.");
         await profile(s, "#security");
         await s.think("A passkey uses my fingerprint. Add.");
@@ -222,8 +225,8 @@ const passkey: Show = {
       run: async (s) => {
         pretendPasskeys();
         await s.say("Inviting someone is an admin action, so 1NEON asks her to confirm it's her");
-        await s.think("Now let me invite Sam.");
-        await inviteSam(s);
+        await s.think(`Now let me invite ${mate}.`);
+        await inviteColleague(s);
         await s.waitFor(CONFIRM);
         await s.think("It wants me to confirm it's me. That's what the passkey is for.");
         await s.click({ sel: "dialog[open] button", text: "Use my passkey" }, 900);
@@ -242,7 +245,7 @@ const passkey: Show = {
         await s.think("Let me see how signing in works now.");
         await profile(s);
         await s.click({ sel: "button", text: "Sign out" }, 1400);
-        await s.type("#email", MARIA, 300);
+        await s.type("#email", OWNER, 300);
         await s.click({ sel: "form button", text: "Continue" }, 900);
         await s.think("It offers my passkey first.");
         await s.click({ sel: "button", text: "Use my passkey" }, 900);
@@ -260,16 +263,16 @@ const authenticator: Show = {
   id: "authenticator",
   title: "Add an authenticator app",
   blurb: "A 6-digit code from an app on your phone",
-  intro: { text: ["An authenticator app shows a fresh 6-digit code every 30 seconds. Watch Maria, who owns a fictional bakery, scan 1NEON's code with her phone, then use the app to confirm it's her."] },
+  intro: { text: [`An authenticator app shows a fresh 6-digit code every 30 seconds. Watch ${owner}, ${S.owner.role} (a made-up company), scan 1NEON's code with her phone, then use the app to confirm it's her.`] },
   length: "about two minutes",
   end: "An authenticator app: a fresh code every 30 seconds, even offline.",
   sections: [
-    opening("totp-in", "Maria opens 1NEON to add her authenticator app", "I already use an authenticator app on my phone. Let me sign in and add 1NEON to it."),
+    opening("totp-in", `${owner} opens 1NEON to add her authenticator app`, "I already use an authenticator app on my phone. Let me sign in and add 1NEON to it."),
     {
       id: "totp-scan",
       title: "Scan the code",
       run: async (s) => {
-        await s.say("Maria sets up an authenticator app from her profile");
+        await s.say(`${owner} sets up an authenticator app from her profile`);
         await s.think("Two-step verification is on my profile.");
         await profile(s, "#security");
         await s.click({ sel: "#security li button", text: "Set up" }, 1000);
@@ -283,7 +286,7 @@ const authenticator: Show = {
           ph.camera();
           await s.hover({ sel: "dialog[open] img" }, 1200);
           const key = (document.querySelector("dialog[open] code.key")?.textContent ?? "").replace(/\s/g, "");
-          ph.authenticator(key, MARIA);
+          ph.authenticator(key, OWNER);
           await s.think("Scanned. neon1 is in the app now.");
           await s.hover(".live-phone .ph-code", 1200);
           await s.say("She types the code the app shows");
@@ -306,13 +309,13 @@ const authenticator: Show = {
         // Setting the app up confirmed her for the day; this is the next day, when it has run out
         await (await engine()).nextDay();
         await s.say("The next day: inviting someone is an admin action, so 1NEON asks her to confirm it's her");
-        await s.think("Now let me invite Sam.");
-        await inviteSam(s);
+        await s.think(`Now let me invite ${mate}.`);
+        await inviteColleague(s);
         await s.waitFor(CONFIRM);
         const ph = new Phone();
         try {
           const key = await totpKey();
-          ph.authenticator(key, MARIA);
+          ph.authenticator(key, OWNER);
           await s.think("It wants a code from my authenticator app.");
           await s.hover(".live-phone .ph-code", 1000);
           const code = ph.code();
@@ -329,7 +332,7 @@ const authenticator: Show = {
   ],
 };
 
-// The authenticator's key, read from the in-browser API's own record (as Maria's phone holds it)
+// The authenticator's key, read from the in-browser API's own record (as the owner's phone holds it)
 async function totpKey() {
   const e = await engine();
   const row = (e.snapshot().rows as { PK: string; SK: string; secret?: string; confirmed?: boolean }[]).find((r) => r.SK === "TOTP" && r.confirmed);
@@ -342,19 +345,22 @@ const texts: Show = {
   id: "texts",
   title: "Texts and text codes",
   blurb: "Notices by text, and a texted code to confirm it's you",
-  intro: { text: ["1NEON can text the notices you choose, and text a code when it needs to confirm it's you. Watch Maria, who owns a fictional bakery, add her number, agree to texts, and pick what reaches her."] },
+  intro: { text: [`1NEON can text the notices you choose, and text a code when it needs to confirm it's you. Watch ${owner}, ${S.owner.role} (a made-up company), add her number, agree to texts, and pick what reaches her.`] },
   length: "about three minutes",
   end: "Texts for what matters to her, and a texted code whenever 1NEON asks.",
   sections: [
-    opening("texts-in", "Maria opens 1NEON to get notices by text", "I'm on my feet all day. Texts would reach me faster than email. Let me sign in and set them up."),
+    opening("texts-in", `${owner} opens 1NEON to get notices by text`, "I'm on my feet all day. Texts would reach me faster than email. Let me sign in and set them up."),
     {
       id: "texts-number",
       title: "Add your number",
       run: async (s) => {
-        await s.say("Maria adds her mobile number and agrees to texts");
+        await s.say(`${owner} adds her mobile number and agrees to texts`);
         await s.think("My number goes on my profile.");
         await profile(s);
         await s.type("#ph", MOBILE, 300);
+        // A new number is saved first; agreeing to texts is its own save, so consent is always for the number on file
+        await s.click({ sel: "button", text: /^Save$/ }, 1200);
+        await s.say("Agreeing to texts is its own step, bound to that number");
         await s.hover("#notifications .sms-consent", 900);
         await s.think("Texts are optional, and I can reply STOP anytime. Yes.");
         await s.click("#notifications .sms-consent input", 500);
@@ -400,8 +406,8 @@ const texts: Show = {
         await profile(s, "#security");
         await s.think("I can use texted codes for the extra check, too. Turn on.");
         await s.click({ sel: "#security li button", text: "Turn on" }, 1200);
-        await s.think("Now let me invite Sam.");
-        await inviteSam(s);
+        await s.think(`Now let me invite ${mate}.`);
+        await inviteColleague(s);
         await s.waitFor(CONFIRM);
         await s.think("It wants me to confirm. I'll get a text.");
         await s.click({ sel: "dialog[open] button", text: "Text me a code" }, 900);
@@ -443,11 +449,11 @@ const calendar: Show = {
   id: "calendar",
   title: "Plan around time off",
   blurb: "Leave, office days, and a monthly call on Home's calendar",
-  intro: { text: ["Home's calendar shows project dates beside the team's own: days off, office days, and regular calls. Watch Maria, who owns a fictional bakery, add two days away and a monthly check-in."] },
+  intro: { text: [`Home's calendar shows project dates beside the team's own: days off, office days, and regular calls. Watch ${owner}, ${S.owner.role} (a made-up company), add two days away and a monthly check-in.`] },
   length: "about a minute and a half",
   end: "On the calendar, where neon1 and the team plan around it.",
   sections: [
-    opening("calendar-in", "Maria opens 1NEON to add her days off", "I'm away at the flour mill for two days, and Pradeep wants a monthly check-in. Let me put both on the calendar."),
+    opening("calendar-in", `${owner} opens 1NEON to add her days off`, "I'm away for two days, and Pradeep wants a monthly check-in. Let me put both on the calendar."),
     {
       id: "calendar-leave",
       title: "Days off",
@@ -461,8 +467,8 @@ const calendar: Show = {
         await s.say("A day opens with a short form; leave can name who's away");
         await s.choose("#ce-kind", "leave", 400);
         await s.think("Leave, for me.");
-        await s.choose("#ce-who", [...document.querySelectorAll<HTMLOptionElement>("#ce-who option")].find((o) => o.text.startsWith("Maria"))?.value ?? "", 400);
-        await s.type("#ce-title", "Maria at the flour mill", 300);
+        await s.choose("#ce-who", [...document.querySelectorAll<HTMLOptionElement>("#ce-who option")].find((o) => o.text.startsWith(owner))?.value ?? "", 400);
+        await s.type("#ce-title", `${owner} away`, 300);
         await s.choose("#ce-end", back, 500);
         await s.click({ sel: ".cal-form button", text: "Add" }, 1200);
         await s.say("Both days carry a band, and Home lists who's away this week");

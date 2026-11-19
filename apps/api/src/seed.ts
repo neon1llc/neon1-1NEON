@@ -141,16 +141,16 @@ export async function seed(repo: Repo, operatorEmail = "pradeep@neon1.tech") {
   await cal(acme, { title: "Office closed for staff training", kind: "office", date: day(15).slice(0, 10) });
   await cal(acme, { title: "Monthly check-in call", kind: "care", date: day(9).slice(0, 10), time: "16:00", repeat: "monthly", projectId: backup.id });
 
-  // A prospect that signed itself up from the site (prospect.ts): Sam at a bakery, one project of needs,
+  // A prospect that signed itself up from the site (prospect.ts): Noor at a building-supply yard, one project of needs,
   // with neon1 in it as every prospect organization has. It has a prospect number, not a client ID
-  const sam = user("sam@kimbakery.example", "Sam Kim", "");
-  await repo.createUser(sam);
-  const bakery: Tenant = { id: newId("t"), slug: "kim-bakery-3f9a1c", clientId: formatProspectId(1), name: "Kim Bakery", place: "Flushing, NY", status: "active", stages: DEFAULT_STAGES, prospect: { since: day(-3), terms: PORTAL_TERMS_EDITION }, version: 1, createdAt: day(-3), updatedAt: day(-3), updatedBy: sam.id };
-  await repo.createTenant(bakery);
-  await member(bakery, sam, "admin");
-  await member(bakery, pradeep, "admin");
-  const orders = await project(bakery, "NEED-1", "Online orders land in one place", "intake", "not_started", "Orders come by phone, email, and two delivery apps, and get copied onto paper.", [], 1);
-  await item(orders, "request", "Orders from the delivery apps in one list");
+  const noor = user("noor@calderbuildingsupply.example", "Noor Haddad", "");
+  await repo.createUser(noor);
+  const calder: Tenant = { id: newId("t"), slug: "calder-building-supply-3f9a1c", clientId: formatProspectId(1), name: "Calder Building Supply", place: "Hudson, NY", status: "active", stages: DEFAULT_STAGES, prospect: { since: day(-3), terms: PORTAL_TERMS_EDITION }, version: 1, createdAt: day(-3), updatedAt: day(-3), updatedBy: noor.id };
+  await repo.createTenant(calder);
+  await member(calder, noor, "admin");
+  await member(calder, pradeep, "admin");
+  const form = await project(calder, "NEED-1", "Answer the insurer's security questions", "intake", "not_started", "Our insurer sent a cyber-coverage form, and our files sit on one office PC and a USB drive.", [], 1);
+  await item(form, "request", "Honest answers to the insurer's form, with the gaps listed");
 
-  return { pradeep, dana, raj, lee, neon1, acme, harbor, bakery, sam };
+  return { pradeep, dana, raj, lee, neon1, acme, harbor, calder, noor };
 }

@@ -1,4 +1,4 @@
-// apps/web/src/live/opening.ts - How every walkthrough begins: Maria on the sign-in screen with a
+// apps/web/src/live/opening.ts - How every walkthrough begins: the client's decision maker on the sign-in screen with a
 // thought about what she's come to do, the real email-code sign-in, and then the walk, click by click,
 // from Home to the page where that thing lives. The full story, the short preview, the short demos,
 // and a link from the FAQs into the middle of the story all start this way.
@@ -7,7 +7,7 @@
 import { liveEngine } from "../lib/api.ts";
 import type { Section, Stage } from "./player.ts";
 import { MailWindow } from "./props.ts";
-import { MARIA } from "./seed.ts";
+import { OWNER } from "./seed.ts";
 
 
 const engine = async () => (await liveEngine())!;
@@ -17,11 +17,11 @@ class Skip extends Error {}
 
 
 /**
- * The real sign-in, as Maria does it: her email, Continue, the code from her inbox, and in. While
+ * The real sign-in, as the owner does it: her email, Continue, the code from her inbox, and in. While
  * catching up (fast), the code is read without opening the mail on screen
  */
 export async function signInWithCode(s: Stage, opts: { email?: string; prefilled?: boolean } = {}) {
-  const email = opts.email ?? MARIA;
+  const email = opts.email ?? OWNER;
   if (!opts.prefilled) await s.type("#email", email, 400);
   await s.click({ sel: "form button", text: "Continue" }, 1000);
   // The code field shows once the code email is out, so it's in her inbox from here
@@ -102,7 +102,7 @@ export async function walkTo(s: Stage, path: string) {
 
 /**
  * The opening section of a walkthrough: why she's here, the sign-in, and the walk to `path` (Home if
- * left out). `thought` is Maria's own reason, in her words, matching the question the walkthrough answers
+ * left out). `thought` is the owner's own reason, in her words, matching the question the walkthrough answers
  */
 export function opening(id: string, caption: string, thought: string, path?: string): Section {
   return {

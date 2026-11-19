@@ -594,6 +594,20 @@ describe("texts", () => {
     const r = await call("raj@acmedental.example", "POST", `/t/${s.acme.id}/projects/${p.id}/move`, { version: p.version, stageId, reason: "Testing" });
     expect(r.status, JSON.stringify(r.json)).toBeLessThan(300);
   };
+  /** Save a new number, then agree to texts in a separate save: consent never rides along with a new number */
+  const optIn = async (who: string, phone: string, extra: Record<string, unknown> = {}) => {
+    const cur = (await call(who, "GET", "/me")).json.user;
+    const numbered = await call(who, "PATCH", "/me", { version: cur.version, phone, ...extra });
+    return call(who, "PATCH", "/me", { version: numbered.json.version, smsConsent: true });
+  };
+  /** Clear one number's per-destination counters, to test a limit that sits behind the destination's three an hour */
+  const freshDestination = async (to: string) => {
+    const day = new Date().toISOString().slice(0, 10);
+    for (const sk of [`HOUR#${Math.floor(Date.now() / 3_600_000)}`, `DAY#${day}`]) {
+      const n = await repo.table.increment(`SMSPHONE#${to}`, sk, 0);
+      await repo.table.increment(`SMSPHONE#${to}`, sk, -n);
+    }
+  };
   /** The six-digit code in the latest verification text */
   const lastCode = (texter: MemoryTexter) => /code: (\d{6})/.exec(texter.sent.at(-1)!.body)![1]!;
 
@@ -639,7 +653,7 @@ describe("texts", () => {
     expect((await call(dana, "POST", "/me/phone/verify", {})).status).toBe(503);
     const texter = new MemoryTexter();
     app = createApp({ cfg: { env: "local", publicUrl: "https://neon1.tech", operatorEmails: [OP], devAuth: true }, repo, directory: new MemoryDirectory(), mailer, storage: new MemoryStorage(), texter });
-    await call(dana, "PATCH", "/me", { version: none.json.user.version, phone: "5550102030", smsConsent: true });
+    await optIn(dana, "5550102030");
     for (let i = 0; i < 3; i++) expect((await call(dana, "POST", "/me/phone/verify", {})).status).toBe(200);
     expect((await call(dana, "POST", "/me/phone/verify", {})).status).toBe(429);
     const wrong = lastCode(texter) === "000000" ? "111111" : "000000";
@@ -653,7 +667,7 @@ describe("texts", () => {
     const texter = new MemoryTexter();
     app = createApp({ cfg: { env: "local", publicUrl: "https://neon1.tech", operatorEmails: [OP], devAuth: true }, repo, directory: new MemoryDirectory(), mailer, storage: new MemoryStorage(), texter });
     const me = await call(dana, "GET", "/me");
-    await call(dana, "PATCH", "/me", { version: me.json.user.version, phone: "5550102030", smsConsent: true, notify: { workflow: { email: false, sms: true } } });
+    await optIn(dana, "5550102030", { notify: { workflow: { email: false, sms: true } } });
     await call(dana, "POST", "/me/phone/verify", {});
     await call(dana, "POST", "/me/phone/confirm", { code: lastCode(texter) });
     // The carrier now refuses: the number opted out
@@ -670,6 +684,7 @@ describe("texts", () => {
     expect(blocked.status).toBe(409);
     expect(blocked.json.error).toBe("carrier_opted_out");
     // After START the code goes through and notices resume
+    await freshDestination("+15550102030");
     const ok = new MemoryTexter();
     texter.send = ok.send.bind(ok);
     expect((await call(dana, "POST", "/me/phone/verify", {})).status).toBe(200);
@@ -681,7 +696,7 @@ describe("texts", () => {
     const texter = new MemoryTexter();
     app = createApp({ cfg: { env: "local", publicUrl: "https://neon1.tech", operatorEmails: [OP], devAuth: true }, repo, directory: new MemoryDirectory(), mailer, storage: new MemoryStorage(), texter });
     const me = await call(dana, "GET", "/me");
-    await call(dana, "PATCH", "/me", { version: me.json.user.version, phone: "5550102030", smsConsent: true, notify: { workflow: { email: false, sms: true } } });
+    await optIn(dana, "5550102030", { notify: { workflow: { email: false, sms: true } } });
     await call(dana, "POST", "/me/phone/verify", {});
     await call(dana, "POST", "/me/phone/confirm", { code: lastCode(texter) });
     const codes = texter.sent.length;
@@ -699,12 +714,15 @@ describe("texts", () => {
     expect(texter.sent).toHaveLength(codes);
     // Back on and verified: at most ten notices a day, however much happens
     u = (await call(dana, "GET", "/me")).json.user;
-    await call(dana, "PATCH", "/me", { version: u.version, phone: "5550102030", smsConsent: true });
+    await optIn(dana, "5550102030");
     await call(dana, "POST", "/me/phone/verify", {});
     await call(dana, "POST", "/me/phone/confirm", { code: lastCode(texter) });
     const before = texter.sent.length;
-    for (let i = 0; i < 12; i++) await move(i % 2 ? "verify" : "build");
-    expect(texter.sent.length - before).toBe(10);
+    // Codes and setup texts count against the same daily ten, so notices get what's left
+    const day = new Date().toISOString().slice(0, 10);
+    const left = 10 - (await repo.table.increment(`USER#${u.id}`, `SMSCOUNT#${day}`, 0));
+    for (let i = 0; i < 12; i++) { await freshDestination("+15550102030"); await move(i % 2 ? "verify" : "build"); }
+    expect(texter.sent.length - before).toBe(left);
     expect(texter.sent.slice(before).every((t) => t.body.length <= 160)).toBe(true);
   });
 });

@@ -1431,7 +1431,7 @@ function Options({ items, all, docs, path, project }: { items: Item[]; all: Item
         {inForce && (
           <>
             <label htmlFor="why">Why change? (required)</label>
-            <textarea id="why" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={1000} placeholder="e.g. the holiday rush moved up, so we need the smaller option first" />
+            <textarea id="why" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={1000} placeholder="e.g. the move date came forward, so we need the smaller option first" />
           </>
         )}
         <label htmlFor="cond">Conditions (optional)</label>

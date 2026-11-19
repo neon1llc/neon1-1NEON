@@ -147,6 +147,19 @@ export const TEMPLATES: Template[] = [
     ],
   },
   {
+    id: "network_systems",
+    name: "Networks and connected systems",
+    keyPrefix: "NET",
+    summary: "Design a network or connected devices that stay reliable, separated, and documented.",
+    items: [
+      ...common,
+      { kind: "asset", title: "Sites, devices, and what connects to what" },
+      { kind: "requirement", title: "Guest and device traffic can't reach business systems", fields: { priority: "must" } },
+      { kind: "metric", title: "Unplanned outages per quarter", fields: { category: "reliability", unit: "outages", direction: "down" } },
+      { kind: "check", title: "Failover or restore tested once" },
+    ],
+  },
+  {
     id: "ai_assistant",
     name: "AI assistant",
     keyPrefix: "AI",

@@ -1,6 +1,6 @@
 /* apps/web/src/live/live.css - /1NEON/live's own layer over the portal: the controls bar, the
    chapter menu, the card before Start and the one at the end, the narration line, the cursor and
-   Maria's thoughts, the notes from the other side, and the pretend windows the short demos use.
+   The client's thoughts, the notes from the other side, and the pretend windows the short demos use.
    Dark and green like the site, so it never reads as part of the portal. */
 
 
@@ -130,7 +130,7 @@ body:has(.signin) .live-veil { background: var(--live-bg); }
 
 /* --- The narration: a band under the controls, above the page ---------------------------------
    What's happening, in one place that never covers the page: the page starts below it. Calm and
-   steady, so Maria's thoughts beside the cursor stay the voice to follow; the player never changes
+   steady, so The client's thoughts beside the cursor stay the voice to follow; the player never changes
    the two at the same moment (player.ts). Two lines' room at every width, so a longer line never
    moves anything */
 .live-sub { position: fixed; inset: var(--demo-h) 0 auto 0; z-index: 2147483636; height: var(--sub-h); box-sizing: border-box; display: grid; place-items: center; padding: 0 16px; background: #14200f; background: color-mix(in srgb, var(--live-bg) 88%, #1f5130); border-bottom: 1px solid rgba(0, 255, 65, .22); color: var(--live-ink); font: 500 15px/1.35 var(--sans, system-ui); text-align: center; text-wrap: balance; pointer-events: none; }
@@ -194,7 +194,7 @@ body:has(.signin) .live-veil { background: var(--live-bg); }
 .live-cursor.gone { opacity: 0; }
 
 
-/* --- Maria's thoughts: a bubble below and right of the cursor, two small circles leading back to it */
+/* --- The client's thoughts: a bubble below and right of the cursor, two small circles leading back to it */
 .live-think { position: fixed; left: 0; top: 0; z-index: 2147483637; max-width: min(270px, calc(100vw - 20px)); box-sizing: border-box; padding: 8px 12px 9px; border-radius: 14px; background: rgba(13, 2, 8, .94); color: var(--live-ink); border: 1px solid var(--live-line); box-shadow: 0 10px 28px rgba(0, 0, 0, .28), 0 0 0 1px rgba(0, 0, 0, .2); font: 13.5px/1.4 var(--sans, system-ui); pointer-events: none; opacity: 0; transition: opacity .25s ease; will-change: transform; }
 .live-think.on { opacity: 1; }
 .live-think.gone { opacity: 0; }
@@ -242,7 +242,7 @@ body:has(.signin) .live-veil { background: var(--live-bg); }
 dialog.live-modal { box-shadow: 0 24px 64px rgba(0, 0, 0, .25), 0 0 0 100vmax rgba(13, 2, 8, .45); }
 @media (min-width: 641px) { dialog.sheet.live-modal { height: auto; max-height: none; } }
 
-/* --- The short demos' pretend world: Maria's mail, her phone, and the passkey prompt ------
+/* --- The short demos' pretend world: The owner's mail, her phone, and the passkey prompt ------
    Neutral and light, like the apps they stand for, so they never read as part of 1NEON. Above
    the portal, below the cursor and her thoughts; each slides in with .on */
 .live-prop { --p-ink: #1f2328; --p-dim: #59636e; --p-line: #d1d9e0; --p-soft: #f6f8fa; --p-hi: #0969da; color: var(--p-ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; opacity: 0; transition: opacity .25s ease, transform .3s ease; }

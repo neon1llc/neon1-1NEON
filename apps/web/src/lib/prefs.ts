@@ -1,5 +1,5 @@
 // apps/web/src/lib/prefs.ts - Small view preferences (a page's list or timeline, the last organization)
-// kept in this browser. The live playback keeps its own copy in memory: Maria's clicks never change
+// kept in this browser. The live playback keeps its own copy in memory: the client's clicks never change
 // the visitor's own choices, and the visitor's choices never change what the playback finds on screen
 
 

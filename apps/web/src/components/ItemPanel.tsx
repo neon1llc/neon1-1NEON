@@ -447,15 +447,15 @@ function KindFields({ kind, f, onChange }: { kind: ItemKind; f: Record<string, s
         <span className="small muted">One per line: piece of work | hours.{f.basis?.trim() ? ` ${hoursText(parseBasis(f.basis).reduce((n, x) => n + x.hours, 0))} in all.` : ""}</span>
       </label>
       {/* What the client pays vendors directly, and the checkable result */}
-      <label>Outside costs<input value={f.outsideCosts ?? ""} onChange={(e) => set("outsideCosts", e.target.value)} placeholder="e.g. none; uses your Google account" maxLength={160} /></label>
-      <label>Result<input value={f.result ?? ""} onChange={(e) => set("result", e.target.value)} placeholder="e.g. every order in one list by 7pm" maxLength={300} /></label>
+      <label>Outside costs<input value={f.outsideCosts ?? ""} onChange={(e) => set("outsideCosts", e.target.value)} placeholder="e.g. none; runs in your existing AWS account" maxLength={160} /></label>
+      <label>Result<input value={f.result ?? ""} onChange={(e) => set("result", e.target.value)} placeholder="e.g. the exception list is in your inbox by 7 am" maxLength={300} /></label>
       {/* What the option expects to be bought; the client buys unless a line says neon1 */}
       <label style={{ gridColumn: "1 / -1" }}>Expected purchases
         <textarea rows={3} value={f.purchases ?? ""} onChange={(e) => set("purchases", e.target.value)} placeholder="One per line: name | estimate | client or neon1 | why | example" />
         <span className="small muted">One per line: name | estimate | client or neon1 | why | example. neon1 buys only with the client's initials, paid back at cost.</span>
       </label>
       <label className="check"><input type="checkbox" checked={f.recommended === "yes"} onChange={(e) => set("recommended", e.target.checked ? "yes" : "")} /> Recommended</label>
-      <label style={{ gridColumn: "1 / -1" }}>Why this one, or when to pick it<textarea rows={2} value={f.why ?? ""} onChange={(e) => set("why", e.target.value)} maxLength={400} placeholder="e.g. It ends the retyping without asking customers to change anything." /></label>
+      <label style={{ gridColumn: "1 / -1" }}>Why this one, or when to pick it<textarea rows={2} value={f.why ?? ""} onChange={(e) => set("why", e.target.value)} maxLength={400} placeholder="e.g. It fixes the cause without changing how your team works day to day." /></label>
       {/* The three ratings read as one group, on one line at every width */}
       <fieldset className="ratings">
         <legend>Ratings</legend>
