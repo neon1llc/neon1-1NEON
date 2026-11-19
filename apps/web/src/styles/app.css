@@ -2036,7 +2036,7 @@ select:not(:disabled), select:not(:disabled)::picker-icon, select:not(:disabled)
 .side .menu-footer .site-end { width: auto; min-width: 0; margin: 0; }
 .shell.mini .side:not(.open) .menu-footer .site-end { width: 100%; }
 .menu-theme-switch { position: relative; flex: none; width: 52px; height: 28px; margin: 0 6px 0 0; padding: 0; border: 1px solid var(--line-strong); border-radius: 99px; background: var(--panel); color: var(--muted); cursor: pointer; }
-.menu-theme-switch svg { position: absolute; top: 50%; z-index: 1; margin-top: -7px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.menu-theme-switch svg { position: absolute; top: 50%; z-index: 1; width: 14px; height: 14px; margin-top: -7px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .menu-theme-switch .switch-sun { left: 6px; }
 .menu-theme-switch .switch-moon { right: 6px; }
 .menu-theme-switch[aria-checked="true"] .switch-knob { transform: translateX(24px); }
