@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+### Changed
+- The contact form's email to neon1 is laid out like the bug report and feedback emails: a left-aligned table (from, organization, about, timing, how they found neon1, their local time, when it was sent), then what happens today and what would be better in their own blocks. The plain-text version uses aligned columns.
+
 ## v0.21.0 - 2026-11-18
 
 ### Changed
