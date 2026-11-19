@@ -918,7 +918,12 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
       {IN_DEMO && !IN_LIVE && <DemoBar />}
       {/* Scrim behind the full menu; a tap outside closes it */}
       {(open || scrimVisible) && <div className={`scrim${open ? "" : " closing"}`} onClick={() => setOpen(false)} aria-hidden="true" />}
-      <aside ref={side} onScroll={keepRail} onTransitionEnd={(event) => {
+      {/* Start the drawer's exit on the selecting tap, before the route commits; modifier clicks keep this tab open */}
+      <aside ref={side} onScroll={keepRail} onClickCapture={(event) => {
+        const target = event.target;
+        const link = target instanceof Element ? target.closest<HTMLAnchorElement>("a[href]") : null;
+        if (link && event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && link.target !== "_blank") setOpen(false);
+      }} onTransitionEnd={(event) => {
         if (!open && event.target === event.currentTarget && ["width", "transform", "clip-path"].includes(event.propertyName)) setScrimVisible(false);
       }} className={`side${open ? " open" : ""}`} aria-label="Menu" inert={tucked}>
         {/* The mark and name lead Home, from the open menu and the Mini rail alike. It sits exactly where

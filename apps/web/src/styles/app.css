@@ -383,6 +383,9 @@ body:has(.live-bar) .signin .n1-bar { display: none; }
 .signin .remember input:checked::after { content: ""; width: 4px; height: 8px; border: solid var(--void); border-width: 0 2px 2px 0; transform: translateY(-1px) rotate(45deg); }
 .signin .remember input:focus-visible { outline: 2px solid var(--neon); outline-offset: 2px; }
 .signin .fine a { color: var(--m-muted, #CBD1CC); }
+.signin:not(.awake) .fine a.out { color: var(--neon); font-weight: 600; text-decoration-color: color-mix(in srgb, currentColor 55%, transparent); }
+.signin:not(.awake) .fine a.out:hover { color: var(--neon); text-decoration-color: currentColor; }
+.signin.awake .fine a.out, .signin.awake .fine a.out:hover { color: var(--accent); font-weight: 600; text-decoration: none; }
 .signin .legal-links { margin-top: 8px; white-space: nowrap; }
 /* Who the portal is for, the visible email label, what Continue leads to, and the ways in without an
    account. Text colors are the shared matrix tokens (--m-muted 12:1, --m-ink 17:1 on the void), and stay above 5.5:1
@@ -1035,7 +1038,7 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
    Section rules and their labels take the same 14px either way: a thin line closed, the word open */
 /* Rows never go under 24px (WCAG 2.2 target size) on the mini rail, and the open menu keeps full 40px
  * rows and scrolls instead of squeezing them (AP-02) */
-.side { --row: clamp(24px, calc((100dvh - var(--demo-h, 0px) - 70px) / 16), 40px); --sep: 14px; gap: 0; padding-top: 8px; padding-bottom: 8px; }
+.side { --row: clamp(24px, calc((100dvh - var(--demo-h, 0px) - 70px) / 16), 40px); --sep: 14px; gap: 0; padding-top: 0; padding-bottom: 0; }
 /* Short screens: the chooser keeps only the organization's name, so it fits the row */
 @media (max-height: 500px) { .side .org-full .org small { display: none; } }
 .side :is(.brand, .org-mini, .nav a, .site-link, .who-link),
@@ -1136,7 +1139,7 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 /* Phones keep the mark alone, so the page's crumbs keep their room */
 @media (max-width: 480px) { .top-brand .lbl { display: none; } .top-brand { margin-right: -8px; } }
 /* The menu's mark row: the top bar's height, from the very top of the menu */
-.side .brand, .shell.mini .side:not(.open) .brand, .side.open .brand { height: var(--top-h) !important; min-height: var(--top-h) !important; margin-top: -8px; flex: none; }
+.side .brand, .shell.mini .side:not(.open) .brand, .side.open .brand { height: var(--top-h) !important; min-height: var(--top-h) !important; margin-top: 0; flex: none; }
 .side .brand { color: var(--accent); }
 /* The other fourteen rows share what's left of the height (the mark row now has its own) */
 .side { --row: clamp(24px, calc((100dvh - var(--demo-h, 0px) - 70px - var(--top-h) + 48px) / 14), 40px); }
@@ -1477,7 +1480,7 @@ dialog.demo-checkout .dlg { padding: 0; }
    other browsers it sits off screen */
 @media (hover: none) and (pointer: coarse) {
   :root { --under: 40vh; }
-  .side { bottom: calc(-1 * var(--under)); padding-bottom: calc(8px + var(--under)); }
+  .side { bottom: calc(-1 * var(--under)); padding-bottom: var(--under); }
   .scrim { bottom: calc(-1 * var(--under)); }
 }
 /* DuckDuckGo on iPhone clips anything fixed at its toolbar's top edge, overhang included, so the
@@ -2032,14 +2035,12 @@ select:not(:disabled), select:not(:disabled)::picker-icon, select:not(:disabled)
 .side .out-group :is(.bug-row) { font: 13px var(--mono); color: var(--muted); }
 .side .out-group .lbl { text-transform: lowercase; }
 /* neon1.tech: quiet monospace lowercase, the height of the top bar so it centers with the bottom bar */
-.side .site-end { font: 13px var(--mono); color: var(--muted); margin: 0 0 -8px; height: calc(var(--top-h) - 1px) !important; min-height: calc(var(--top-h) - 1px) !important; flex: none; }
+.side .site-end { font: 13px var(--mono); color: var(--muted); margin: 0; height: calc(var(--top-h) - 1px) !important; min-height: calc(var(--top-h) - 1px) !important; flex: none; }
 /* Shared appearance controls align with the wordmark and the site link in the expanded menu */
-.side-head { display: flex; align-items: center; flex: none; height: var(--top-h); margin-top: -8px; }
+.side-head { display: flex; align-items: center; flex: none; height: var(--top-h); margin-top: 0; }
 .side-head .brand { width: auto; flex: 1; min-width: 0; margin: 0; }
-.side .side-head .brand { height: 40px !important; min-height: 40px !important; margin-top: 0; flex: 1; }
-/* The menu wordmark sits slightly high against the top-bar controls in the rendered frame */
-.side .side-head .brand { transform: translateY(3px); }
-.menu-footer { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 12px; height: var(--top-h); min-height: var(--top-h); margin: 6px calc(-1 * var(--padr)) -8px calc(-1 * var(--padl)); padding: 0 var(--padr) 0 var(--padl); border-top: 1px solid var(--line); flex: none; }
+.side .side-head .brand { height: var(--top-h) !important; min-height: var(--top-h) !important; margin: 0; flex: 1; }
+.menu-footer { box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; gap: 12px; height: var(--top-h); min-height: var(--top-h); margin: 6px calc(-1 * var(--padr)) 0 calc(-1 * var(--padl)); padding: 0 var(--padr) 0 var(--padl); border-top: 1px solid var(--line); flex: none; }
 .side .menu-footer .site-end { width: auto; min-width: 0; margin: 0; }
 .shell.mini .side:not(.open) .menu-footer .site-end { width: 100%; }
 .menu-theme-switch { position: relative; flex: none; width: 52px; height: 28px; margin: 0 6px 0 0; padding: 0; border: 1px solid var(--line-strong); border-radius: 99px; background: var(--panel); color: var(--muted); cursor: pointer; }
@@ -2067,8 +2068,8 @@ select:not(:disabled), select:not(:disabled)::picker-icon, select:not(:disabled)
 }
 /* The profile's avatar is already a circle: the current page's green fill must not box it */
 .side .nav a.active .ico.av-box { background: none; border-color: transparent; }
-/* Lowercase monospace sits a hair low beside its icon box: nudge the three links' words up 1px (open menu only; the rail's labels are hidden) */
-.side.open :is(.out-group, .site-end) .lbl { position: relative; top: -1px; }
+/* Lowercase monospace sits a hair low beside bug and feedback icons (open menu only; the rail's labels are hidden) */
+.side.open .out-group .lbl { position: relative; top: -1px; }
 /* The organization picker is one icon-box tall (--box), starting where the icons start and ending the same
    distance from the menu's edge, centered in the row the Mini rail's initials button takes, so it never meets
    the rule above and its space matches the icon rows. Its id line shows in the list instead */

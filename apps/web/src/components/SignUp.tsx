@@ -10,6 +10,7 @@ import { Link } from "react-router";
 import { api, HttpError, Unconfirmed } from "../lib/api.ts";
 import { elapsedSince, needsOrg, orgRequired, signUpBody, signUpProblems, signUpReady, type SignUpInfo } from "../lib/signup.ts";
 import { loadTurnstile, widgetOptions } from "../lib/turnstile.ts";
+import { OutLink } from "./OutLink.tsx";
 import type { Step } from "./Shell.tsx";
 
 
@@ -227,7 +228,7 @@ export function SignUp({ info: known, email: start, remember, onStep, onBack, lo
       <div ref={box} className="check full su-end1" />
       <button className="btn btn-primary full su-end2" type="submit" disabled={!ready || busy || waiting}>{busy || waiting ? "One moment…" : "Create account"}</button>
       {/* The link moves to the next line as a whole when the line runs out (styles: .whole) */}
-      <p className="fine next-hint full su-end3">You'll get a code by email to finish. No password. <a className="whole" href="/knowledge/guides/free-accounts/" target="_blank" rel="noopener">How free accounts work</a></p>
+      <p className="fine next-hint full su-end3">You'll get a code by email to finish. No password. <OutLink className="whole" href="/knowledge/guides/free-accounts/">How free accounts work</OutLink></p>
       <p className="fine full su-end4"><button className="linkish" type="button" onClick={onBack}>Back to sign-in</button></p>
     </form>
   );
