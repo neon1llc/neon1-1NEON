@@ -31,7 +31,7 @@ export function useProspectEverywhere(me: Me): boolean | undefined {
 export function ProspectNote() {
   return (
     <p className="notice prospect-note" role="note">
-      <span>You're set up as a free account. Write down what your projects need, then ask for an assessment under Next step and book the 15-minute call. Other ways to reach neon1 are on <Link to="/contact">Contact</Link>.</span>
+      <span>You're set up as a free account. Write down what your projects need, then ask for an assessment under Next step and book the 30-minute call. Other ways to reach neon1 are on <Link to="/contact">Contact</Link>.</span>
     </p>
   );
 }
@@ -67,13 +67,13 @@ export function NextStep({ orgId }: { orgId: string }) {
   return (
     <section className="card next-step-ask" aria-labelledby="next-step-h">
       <h2 className="section-h" id="next-step-h">Next step</h2>
-      <p className="muted small">The assessment is free: my read of what's written here, with a likely approach and the first questions to settle. Ask for it, then book the free 15-minute call, which is about your needs. I read the assessment request before we talk.</p>
+      <p className="muted small">The assessment is free: my read of what's written here, with a likely approach and the first questions to settle. Ask for it, then book the free 30-minute call, which is about your needs. I read the assessment request before we talk.</p>
       {error && <p className="notice" role="alert">{error}</p>}
       <label className="field-label" htmlFor="ask-note">Anything to look at first, or good times to talk <span className="muted">(optional)</span></label>
       <textarea id="ask-note" rows={2} maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)} />
       <div className="actions">
         <button type="button" className="btn btn-primary btn-sm" disabled={Boolean(busy)} onClick={() => void ask("assessment")}>{busy === "assessment" ? "Sending…" : "Ask for an assessment"}</button>
-        <OutLink className="btn btn-sm" href={BOOK_A_CALL}>Book the 15-minute call</OutLink>
+        <OutLink className="btn btn-sm" href={BOOK_A_CALL}>Book the 30-minute call</OutLink>
       </div>
       {when("assessment") && (
         <p className="muted small" role="status">

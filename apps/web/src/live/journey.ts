@@ -168,7 +168,7 @@ export const JOURNEY: Show = {
       id: "free-ask",
       title: "Ask for an assessment",
       run: async (s) => {
-        await s.say("From Home she asks for an assessment, then books the free 15-minute call");
+        await s.say("From Home she asks for an assessment, then books the free 30-minute call");
         await s.go(`${await shop()}/workspace`, "Home");
         await s.hover(".next-step-ask", 900);
         await s.type("#ask-note", "Weekday mornings are best if a call helps.", 300);
@@ -219,7 +219,7 @@ export const JOURNEY: Show = {
         await s.type('textarea[aria-label="Write a comment"]', "Five people use it, and yes, the register is on the same network. The insurer wants the form back by the end of next month.");
         await s.click({ sel: ".comment-box button", text: "Send" }, 1000);
         await s.click('dialog[open] button[aria-label="Close"]', 600);
-        await s.say("They talk for fifteen minutes, and she'd like to go ahead");
+        await s.say("They talk for thirty minutes, and she'd like to go ahead");
         await s.wait(1200);
       },
     },

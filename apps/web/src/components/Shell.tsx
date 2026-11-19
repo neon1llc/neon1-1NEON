@@ -412,7 +412,7 @@ function SignIn() {
           // Sign-up: who it's for and what happens next, in place of the sign-in note
           <>
             <h2 className="signin-h">Start in 1NEON</h2>
-            <p className="signin-lead">Free. Write down what your project needs, then ask for an assessment from your account and book a 15-minute call.
+            <p className="signin-lead">Free. Write down what your project needs, then ask for an assessment from your account and book a 30-minute call.
               {/* Before anything is typed: the project limit and how long it's kept (Pradeep: the other limits show in use) */}
               <span className="signin-limits">Up to {PROSPECT_LIMITS.projects} projects, kept {PROSPECT_FINAL_DAYS + PROSPECT_GRACE_DAYS} days after your last change.</span>
             </p>
