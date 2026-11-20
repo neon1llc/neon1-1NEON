@@ -9,8 +9,8 @@ import { useTopBar } from "../components/Shell.tsx";
 import { BOOK_A_CALL } from "../lib/prospect.ts";
 
 
-// The contact form on the website, where a need can be written out without an account
-const SITE_CONTACT = "/#contact";
+// The website's contact form, opened on its message box, where a need can be written out without an account
+const SITE_CONTACT = "/#contact?message=1";
 
 
 // The same numbers and address the neon1.tech site shows

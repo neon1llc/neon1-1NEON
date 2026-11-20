@@ -4,6 +4,16 @@
 
 ## Unreleased
 
+### Changed
+- One type scale and one spacing scale replace the per-line sizes. Every size is a named step (--fs-xs to --fs-3xl, --sp-0 to --sp-7, in rem), the `--type` multiplier is gone, and a test fails when a size is written as a number. The app is about 10% smaller on a desktop, which is what 90% browser zoom used to show. Helper text is never larger than a card title.
+- Home's Next step is two cards: Next step (how far each project is outlined, and Outline another project) and Request assessment (the note, the projects, the button). The line under the note is fixed text; a problem with the note shows below it once the field is left, instead of replacing it. A free account no longer repeats its projects in Projects at a glance.
+- Get to know 1NEON marks every link that leaves the app with the outbound arrow. Contact's website link opens the site's message box (/#contact?message=1).
+- Settings groups Organization, Your data, Something not working?, and Board stages under titled sections, with the organization's facts as labelled rows.
+- The open desktop menu shortens its rows with the window's height so the whole menu fits without scrolling down to about 700px high.
+
+### Fixed
+- The 1NEON wordmark's capitals are centered on the top bar at every zoom level; they sat 0.5 to 1px high at 90% to 100%.
+
 ### Fixed
 - Sign-up has its own address, /1NEON/?signup=1, however it is reached. "Start for free" on the sign-in screen opens it as a new history entry, Back returns to the sign-in screen and Forward to sign-up, and the link on neon1.tech lands on the same address. Arriving by the link, the way back to sign-in replaces the address instead of leaving the page. Finishing or restarting sign-up drops the query.
 - Closing the phone menu starts in the frame of the tap and the rest of the page waits until the slide is over.

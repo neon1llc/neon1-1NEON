@@ -8,18 +8,27 @@ import { describe, expect, it } from "vitest";
 const css = readFileSync(join(__dirname, "app.css"), "utf8");
 const sentinel = readFileSync(join(__dirname, "sentinel.css"), "utf8");
 
-describe("desktop type scale", () => {
-  it("is 1.1 on desktop, so 100% zoom reads like the 110% it was designed at, and 1 on a phone", () => {
-    expect(css).toMatch(/:root \{ --type: 1; \}\s*@media \(min-width: 901px\) \{ :root \{ --type: 1\.1; \} \}/);
+describe("type and spacing scales", () => {
+  it("has one named scale and no scale multiplier", () => {
+    expect(css).not.toMatch(/--type\b/);
+    for (const t of ["xs", "sm", "ui", "md", "lg", "xl", "2xl", "3xl", "title", "input"]) expect(css).toMatch(new RegExp(`--fs-${t}:`));
+    for (let i = 0; i <= 7; i++) expect(css).toMatch(new RegExp(`--sp-${i}:`));
   });
-  it("grows the pixel-fixed controls and widths with it", () => {
-    for (const rule of [/\.btn \{[^}]*min-height: calc\(36px \* var\(--type\)\)/, /\.content \{[^}]*max-width: calc\(1280px \* var\(--type\) \+ 2 \* var\(--gut\)\)/, /\.example-body \{ max-width: calc\(920px \* var\(--type\)\)/, /input, textarea, select \{[^}]*min-height: calc\(40px \* var\(--type\)\)/]) expect(css).toMatch(rule);
+  it("sizes text only by naming a step (a size written as a number is the rare, commented exception)", () => {
+    const loose = [...css.matchAll(/(?<![\w-])font(?:-size)?:([^;{}]*)/g)].map((m) => m[0]).filter((d) => /\d(px|rem)\b/.test(d) && !/^font(-size)?: *(var\(--fs-|clamp\()/.test(d) && !/var\(--fs-/.test(d));
+    expect(loose.filter((d) => !/clamp\(|1em\/0/.test(d))).toEqual([]);
+  });
+  it("keeps helper and caption text no larger than card titles", () => {
+    const px = (n: string) => Number(css.match(new RegExp(`--fs-${n}: ([\\d.]+)rem`))![1]) * 16;
+    expect(px("sm")).toBeLessThan(px("md"));
+    expect(css).toMatch(/\.card-h \{[^}]*font-size: var\(--fs-md\)/);
+    expect(css).toMatch(/\.section-h \{[^}]*font-size: var\(--fs-md\)/);
   });
 });
 
 describe("page content", () => {
   it("is centered, with the gutter either side on top of its 1280px, so a wide screen leaves equal space and 1440 has 28px each", () => {
-    expect(css).toMatch(/\.content \{[^}]*max-width: calc\(1280px \* var\(--type\) \+ 2 \* var\(--gut\)\); width: 100%; margin-inline: auto;/);
+    expect(css).toMatch(/\.content \{[^}]*max-width: calc\(1280px \+ 2 \* var\(--gut\)\); width: 100%; margin-inline: auto;/);
   });
 });
 
@@ -28,11 +37,11 @@ describe("a free account's Home", () => {
     // A rule on whatever contains `.keep-card` once squeezed that card into a fifth of its column
     expect(css).not.toMatch(/:has\(> \.keep-card\)/);
     expect(css).toMatch(/\.home \{ display: grid; grid-template-columns: minmax\(0, 3fr\) minmax\(0, 2fr\);/);
-    expect(css).toMatch(/\.home-side \{ display: grid; gap: 16px; \}/);
+    expect(css).toMatch(/\.home-side \{ display: grid; gap: var\(--sp-4\); \}/);
   });
   it("leaves no other margin between the cards for the column's own 16px gap to add to", () => {
     expect(css).not.toMatch(/\.next-step-ask\) \+ \.card/);
-    expect(css).toMatch(/\.home-main \{ display: grid; gap: 16px;/);
+    expect(css).toMatch(/\.home-main \{ display: grid; gap: var\(--sp-4\);/);
   });
 });
 
