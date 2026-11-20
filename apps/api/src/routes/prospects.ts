@@ -302,7 +302,7 @@ export function quietEmail(t: Tenant, portal: string, step: "nudge" | "final", w
       title: "Checking in",
       sub: t.name,
       preheader: "Add or update your needs any time, or reply to talk it through.",
-      intro: [`I wanted to check in on ${t.name}. If your needs have changed, update them in 1NEON, then ask for an assessment from Next step on Home and book the call.`, "If it's easier to talk, reply to this email and we'll find a time."],
+      intro: [`Checking in on ${t.name}. If your needs have changed, update them in 1NEON, then ask for an assessment from Next step on Home and book the call.`, "If it's easier to talk, reply to this email and we'll find a time."],
       facts: [{ k: "Organization", v: t.name }, sent],
       action: { label: "Open 1NEON", url: portal },
       why: `You have a free 1NEON account for ${t.name}, and nothing has changed in it for a while.`,

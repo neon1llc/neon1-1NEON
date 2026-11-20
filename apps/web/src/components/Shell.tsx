@@ -390,7 +390,7 @@ function SignIn() {
           // Sign-up: who it's for and what happens next, in place of the sign-in note
           <>
             <h2 className="signin-h">Start in 1NEON</h2>
-            <p className="signin-lead">Free. Write down what your project needs, then ask for an assessment from your account and book a 30-minute call.
+            <p className="signin-lead">Free. Outline what your project needs, ask for an assessment, and book a 30-minute call.
               {/* Before anything is typed: the project limit and how long it's kept (Pradeep: the other limits show in use) */}
               <span className="signin-limits">Up to {PROSPECT_LIMITS.projects} projects, kept {PROSPECT_FINAL_DAYS + PROSPECT_GRACE_DAYS} days after your last change.</span>
             </p>
@@ -401,8 +401,8 @@ function SignIn() {
             <p className="signin-lead" style={signupOpen === undefined ? { visibility: "hidden" } : undefined}>{signupOpen ? "Sign in to your 1NEON account. New here? Start for free." : "Sign in to your 1NEON account."}</p>
           </>
         )}
-        {problem === "not_invited" && <p className="notice" role="alert">That email hasn't been invited yet. Ask your organization's admin, or neon1.</p>}
-        {unsure && <p className="notice" role="alert">We couldn't confirm this finished. If a code arrives by email, use it, or try again.</p>}
+        {problem === "not_invited" && <p className="notice" role="alert">That email has no invite. Ask your organization's admin or neon1.</p>}
+        {unsure && <p className="notice" role="alert">I couldn't confirm that finished. If a code arrives, use it, or try again.</p>}
         {problem === "failed" && <p className="notice" role="alert">{fromLink ? "That link works only in the browser where you asked for the code. Type the code there, or start again here." : "Sign-in didn't finish. Try again."}</p>}
         {/* The demo: no accounts, just pick who to be */}
         {PICKER && (

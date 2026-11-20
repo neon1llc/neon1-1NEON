@@ -222,7 +222,7 @@ function DayPanel({ tid, base, day, entries, events, canWrite, close }: { tid: s
   useEffect(() => setEditing(entries.length ? undefined : canWrite ? "new" : undefined), [day]); // eslint-disable-line react-hooks/exhaustive-deps
   const remove = async (ev: CalEvent) => {
     const many = ev.repeat !== "none";
-    if (!(await ask({ title: `Remove "${ev.title}"?`, body: many ? "It leaves the calendar on every day it repeats. The activity record notes the removal." : "It comes off the calendar. The activity record keeps a note that it was removed.", yes: "Remove", danger: true }))) return;
+    if (!(await ask({ title: `Remove "${ev.title}"?`, body: many ? "It leaves the calendar on every day it repeats." : "It comes off the calendar.", yes: "Remove", danger: true }))) return;
     try {
       await api(`/t/${tid}/events/${ev.id}?version=${ev.version}`, { method: "DELETE" });
       toast(`Removed "${ev.title}".`);

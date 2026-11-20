@@ -216,7 +216,7 @@ export function requestRoutes(app: App, k: Kit) {
     for (const key of keys) if (!list.some((p) => p.key === key && !p.decided)) fail(400, "projects", `${key} isn't a project waiting for an assessment here.`);
     const hour = Math.floor(at.getTime() / 3_600_000);
     if ((await repo.table.increment("COUNTER", `REQSAVE#${t.id}#${hour}`, 1, hour * 3600 + 7200)) > SAVES_HOURLY) {
-      fail(429, "too_many", "That's a lot of changes this hour. What's saved is kept; try again in a little while.");
+      fail(429, "too_many", "That's a lot of changes this hour. What's saved is kept. Try again soon.");
     }
     // Written over the row as read, so a save never undoes an email the pass recorded meanwhile; a save
     // that loses that race reads again and goes on top

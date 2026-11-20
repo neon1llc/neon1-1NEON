@@ -29,7 +29,6 @@ export function ContactPage() {
   return (
     <>
       <h1 className="page-title">Contact neon1</h1>
-      <p className="lead">Reach me whichever way suits you.</p>
       {/* Two cards side by side on a wide screen: the ways in, then when to expect an answer */}
       <div className="cols2">
         <section className="card contact-ways">
@@ -44,7 +43,7 @@ export function ContactPage() {
         <section className="card contact-ways">
           <h2 className="card-h">When I answer</h2>
           <p style={{ margin: 0 }}>Monday to Thursday 6pm to 9pm, Friday 6pm to 8pm, and weekends 8am to 8pm, Eastern time, usually within a day.</p>
-          <p className="muted small">About a project? Write in the project itself, so everything stays together. More answers in the <Link to="/faqs">FAQs</Link>.</p>
+          <p className="muted small">About a project? Write in the project itself. More answers in the <Link to="/faqs">FAQs</Link>.</p>
         </section>
       </div>
     </>

@@ -395,7 +395,7 @@ export const STORY: Section[] = [
       await s.think("Looks right. Create it.");
       await s.click({ sel: "button", text: "Create project" }, 1600);
       await s.say("Its Overview says how ready it is for Execute, and what would help next");
-      await s.think("Five of the six parts are written already. It says who and what it touches is still open, and where to write it.");
+      await s.think("Five of six parts are written. It says who and what it touches is still open, and where to write it.");
       await s.hover(".readiness", 1500);
     },
   },
@@ -497,7 +497,7 @@ export const STORY: Section[] = [
       await s.think("The next step is mine: choose an option.");
       await s.hover(".next-step, .card", 900);
       await s.click({ sel: "nav.tabs a", text: "Overview" }, 1000);
-      await s.say("Overview shows how ready the project is for Execute: the outline, the assessment, and the options are done");
+      await s.say("Overview shows the project's readiness for Execute: outline, assessment, and options done");
       await s.think("Eighty percent. The only step left is mine: approve one option.");
       await s.hover(".readiness", 1400);
     },
@@ -566,7 +566,7 @@ export const STORY: Section[] = [
       await s.top();
       await s.think("Good, the decision is written down, condition and all.");
       await s.hover(".decision", 1200);
-      await s.say("Once she approves, Ready for Execute is done and goes away: her outline becomes the plan, its measure is tracked in Observe, and its people and tools shape the handover");
+      await s.say("Once she approves, Ready for Execute goes away. Her outline becomes the plan, its measure moves to Observe, and its people and tools shape the handover");
     },
   },
   {
@@ -593,7 +593,7 @@ export const STORY: Section[] = [
       await s.top();
       await s.say("Pay opens Stripe's payment page. 1NEON never sees her bank or card details");
       await s.click({ sel: ".pp-tools button", text: /^Pay / }, 1200);
-      await s.say("No money moves in a walkthrough, so a stand-in opens, laid out like Stripe's page: the amount, then how to pay");
+      await s.say("No money moves in a walkthrough, so a stand-in opens, laid out like Stripe's page");
       await s.think(`${MONEY.deposit} to neon1. Right amount.`);
       await s.hover(".dc-amount", 1000);
       await s.say("She pays from the organization's bank account: pick the bank, then the account");
@@ -664,7 +664,7 @@ export const STORY: Section[] = [
       await s.others(async () => { await moveTo("verify"); await failedDryRun(); await reviseTerms(); }, 1200, "Pradeep posted the failed dry run and revised terms");
       await s.click({ sel: "nav.tabs a", text: "Overview" }, 1000);
       await s.say("His update says what went wrong, including that it was his assumption");
-      await s.think("He says the dry run flagged more than it should have, and that he assumed the wrong thing. Straight talk.");
+      await s.think("He says the dry run flagged too much because he assumed the wrong thing.");
       await s.hover({ sel: ".card, article, section", text: S.updates.fail.title }, 1600);
       await s.say("The fix is outside what she approved, so it comes as revised terms, not a surprise on the invoice");
       await s.click({ sel: "nav.tabs a", text: "Needs" }, 1000);

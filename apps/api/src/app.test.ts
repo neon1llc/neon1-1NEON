@@ -119,7 +119,7 @@ describe("email", () => {
     expect(mail.as).toBe("portal");
     expect(mail.replyTo).toBe("hello@neon1.tech");
     expect(mail.html).toMatch(/>Sent<\/td><td[^>]*>.+ E[SD]T \(\d\d:\d\d UTC(, [A-Z][a-z]{2} \d+)?\)</);
-    expect(mail.text).toContain("how it becomes routine");
+    expect(mail.text).toContain("stay in one place");
     expect(mail.text).toContain("Why you got this:");
   });
 

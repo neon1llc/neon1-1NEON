@@ -20,7 +20,7 @@ export function inviteEmail(opts: { orgName: string; inviter: string; url: strin
     title: `Join ${opts.orgName}`,
     sub: "on 1NEON",
     preheader: `${opts.inviter} invited you to ${opts.orgName}.`,
-    intro: [`${opts.inviter} invited you to ${opts.orgName} on 1NEON, where your projects with neon1 stay in one place: what you need, the work, the results, and how it becomes routine.`],
+    intro: [`${opts.inviter} invited you to ${opts.orgName} on 1NEON, where your projects with neon1 stay in one place.`],
     facts: [
       { k: "Organization", v: opts.orgName },
       { k: "Invited by", v: opts.inviter },
@@ -28,7 +28,7 @@ export function inviteEmail(opts: { orgName: string; inviter: string; url: strin
       { k: "Sent", v: when(at, opts.zone) },
     ],
     action: { label: `Join ${opts.orgName}`, url: opts.url },
-    why: `${opts.inviter} invited this address to ${opts.orgName}. Ignore this email if you weren't expecting it; nothing happens until someone signs in.`,
+    why: `${opts.inviter} invited this address to ${opts.orgName}. Ignore this email if you weren't expecting it. Nothing happens until someone signs in.`,
     reply: "Reply to this email to ask me a question.",
   });
   return { subject: subjectOf("Invitation", `${opts.orgName}, from ${opts.inviter}`, 90), ...mail, as: "portal" as SenderKind, replyTo: HELLO };
@@ -262,7 +262,7 @@ export function requestEmail(o: { kind: "assessment" | "call"; what: string; upd
     title,
     sub: o.org,
     preheader: `${name} asked for ${o.what}${o.note ? `: ${gist(o.note, 80)}` : ""}`,
-    intro: [o.updated ? `${name} changed their request for ${o.what}. This is the whole request as it stands now.` : `${name} asked neon1 for ${o.what}.`],
+    intro: [o.updated ? `${name} changed their request for ${o.what}. This is the full request now.` : `${name} asked neon1 for ${o.what}.`],
     facts: [
       { k: "Who", v: o.who ? `${o.who} <${o.email}>` : o.email },
       { k: "Organization", v: `${o.org}${o.ref ? ` (${o.ref}${o.free ? ", free account" : ""})` : ""}` },

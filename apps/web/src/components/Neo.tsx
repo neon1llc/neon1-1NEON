@@ -301,7 +301,7 @@ export function Neo({ open, setOpen }: { open: boolean; setOpen: (open: boolean)
       </div>
       <div ref={log} className="n1chat-log" role="log" aria-live="polite">
         <div className="n1chat-msg n1chat-bot">
-          <p>I'm Neo, 1NEON's automated assistant. Ask about anything here. I can point you to it, show you around, or offer to do it with you.</p>
+          <p>I'm Neo, 1NEON's automated assistant. Ask about anything here, and I can point you to it, show you around, or offer to do it with you.</p>
         </div>
         {!msgs.length && (
           <div className="n1chat-chips">

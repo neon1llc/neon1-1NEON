@@ -211,7 +211,7 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
     return (
       <section className="card next-step-ask is-waiting" aria-labelledby="next-step-h" data-tour="next-step-ask">
         <h2 className="section-h" id="next-step-h">Next step</h2>
-        <p className="ns-note">You can outline up to {limit} <Link to={`${base}/projects`}>projects</Link>, after which you can request an assessment for any or all right here. Time spent defining your needs before an assessment pays off on our call.</p>
+        <p className="ns-note">Outline up to {limit} <Link to={`${base}/projects`}>projects</Link>, then request an assessment for any of them here. The more you write first, the more our call can cover.</p>
         <p className="muted ns-intro">{intro}</p>
         <div className="actions next-actions">
           <Link className="btn btn-primary btn-sm" to={`${base}/projects/new`}>Start a project</Link>
@@ -235,7 +235,7 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
     {prospect && (
       <section className="card next-step-ask" aria-labelledby="next-step-h" aria-busy={asked.isPending} data-tour="next-step-ask">
         <h2 className="section-h" id="next-step-h">Next step</h2>
-        <p className="ns-note">You can outline up to {limit} <Link to={`${base}/projects`}>projects</Link>, after which you can request an assessment for any or all right here. Time spent defining your needs before an assessment pays off on our call.</p>
+        <p className="ns-note">Outline up to {limit} <Link to={`${base}/projects`}>projects</Link>, then request an assessment for any of them here. The more you write first, the more our call can cover.</p>
         {/* One line per project, how far along it is, and what would help most */}
         {list.length > 0 && (
           <ul className="outline-list" aria-label="How your projects are coming along">
@@ -268,8 +268,8 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
       {!prospect && sentKeys.length > 0 && <p className="muted" role="status">{keys(sentKeys)} sent for assessment {dateLabel(sentKeys[0]!.sentAt)}.</p>}
       {error && <p className="notice" role="alert">{error}</p>}
       <form className="next-form" onSubmit={(e) => { e.preventDefault(); if (ready && !locked) setReview(true); }}>
-        {prospect && !saved && <p className="ns-closing">I see you've outlined {keys(unsent.length ? unsent : list)}. If you're ready for eyes, request the assessment below.</p>}
-        <label className="field-label" htmlFor="ask-note">Add some final thoughts, concerns, or requirements you'd like me to keep in mind as I take a look:<sup className="req" aria-hidden="true">*</sup></label>
+        {prospect && !saved && <p className="ns-closing">I see you've outlined {keys(unsent.length ? unsent : list)}. Request the assessment when you're ready.</p>}
+        <label className="field-label" htmlFor="ask-note">What should I keep in mind?<sup className="req" aria-hidden="true">*</sup></label>
         <textarea id="ask-note" rows={3} maxLength={NOTE_MAX} required readOnly={locked} aria-readonly={locked} value={shownNote} onChange={(e) => setNote(e.target.value)} onBlur={() => setTouched(true)} aria-invalid={touched && Boolean(noteProblem)} aria-describedby={touched && noteProblem ? "ask-note-h ask-note-e" : "ask-note-h"} placeholder="e.g. the intake form matters most; we're on Google Workspace; nothing can change during tax season" />
         {/* The helper is fixed text; a problem is a separate line under it, after the field has been left */}
         {!locked && <small id="ask-note-h" className="helper">At least {minNote} characters. It reaches me {wait} minutes after you request it, so you can still change it.</small>}
@@ -309,9 +309,9 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
         <blockquote className="ns-quote">{note}</blockquote>
         {short.length > 0 && (
           <>
-            <p className="muted small">Everything else is optional, and I can work with what's written.</p>
+            <p className="muted small">Everything else is optional.</p>
             <ul className="small review-list">
-              {short.map((p) => <li key={p.key}>You can still optionally {outlineTip(p.outline.missing, 6)} to <Link to={`${base}/projects/${p.key}`} onClick={() => setReview(false)}>{p.key}</Link>.</li>)}
+              {short.map((p) => <li key={p.key}>You can still {outlineTip(p.outline.missing, 6)} to <Link to={`${base}/projects/${p.key}`} onClick={() => setReview(false)}>{p.key}</Link>.</li>)}
             </ul>
           </>
         )}

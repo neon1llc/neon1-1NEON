@@ -97,7 +97,7 @@ export function Settings() {
         </div>
       </div>
       <h2 className="section-h">Board stages</h2>
-      <p className="helper">Each row is a board column, in order: name, layer, when it's done, and an optional project limit. A hidden stage still shows while projects are in it.</p>
+      <p className="helper">Each row is a board column, in order: name, layer, when it's done, and an optional project limit. A hidden stage still shows while a project is in it.</p>
       {!canAdmin && <p className="helper">{prospect ? "Stages open up once we're working together." : "Only admins can change stages."}</p>}
       {/* One row per stage: name, layer, exit rule, limit, and order controls; phones stack each stage as a card */}
       <div className="stages" data-tour="stages">

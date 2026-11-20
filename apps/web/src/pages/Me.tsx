@@ -199,7 +199,7 @@ export function MePage() {
       toast("Passkey added. Use it whenever 1NEON asks you to confirm it's you.");
       qc.invalidateQueries({ queryKey: ["me"] });
     } catch (e) {
-      toast(e instanceof DOMException ? "The passkey wasn't made. Try again when you're ready." : problem(e));
+      toast(e instanceof DOMException ? "The passkey wasn't added. Try again." : problem(e));
     }
   };
   // Text codes: on once the number is proved; off needs a confirmed session (the API asks)
@@ -292,7 +292,7 @@ export function MePage() {
               </label>
             ))}
           </div>
-          <p className="muted small" style={{ margin: "6px 0 0" }}>{draft.menu === "mini" ? "A slim menu of icons stays on the left. The menu button opens the full menu over it." : "The menu button opens the full menu. A tap outside it, or the button again, closes it."}</p>
+          <p className="muted small" style={{ margin: "6px 0 0" }}>{draft.menu === "mini" ? "A slim menu of icons stays on the left. The menu button opens the full menu over it." : "The menu button opens the full menu. Tap outside it to close it."}</p>
         </fieldset>
         </section>
       </form>

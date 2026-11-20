@@ -43,15 +43,15 @@ export const GUIDES: Record<PageKey, Guide> = {
   home: {
     title: "Home",
     purpose: "Your starting point: what needs you, and what changed lately.",
-    howto: ["Under Next step, outline a project, then ask for an assessment.", "Work through Needs you, top to bottom.", "A whole month. Use the arrows to move, and choose a day to see it or add leave, an office event, a meeting, or a care plan date.", "Insights in the menu has charts of how work is going."],
+    howto: ["Under Next step, outline a project, then ask for an assessment.", "Work through Needs you, top to bottom.", "Use the calendar arrows to change month. Choose a day to see it or add leave, an office event, a meeting, or a care plan date.", "Insights in the menu has charts of how work is going."],
     tour: [
-      { at: "next-step-ask", title: "Next step", text: "Outline a project, then ask for an assessment of up to three. The note is required, and a call is another way in. A request can be repeated after two weeks, a call after one." },
+      { at: "next-step-ask", title: "Next step", text: "Outline a project, then ask for an assessment of up to three. The note is required. You can ask again after two weeks, or for a call after one." },
       { at: "needs-you", title: "Needs you", text: "Things waiting on you: approvals, tasks, and files to send. Open one to act on it." },
-      { at: "coming-up", title: "Calendar", text: "The month at a glance: work due, milestones, targets, and your events. Choose a day to see or add. Past, Overdue, Upcoming, and Repeated fold open below." },
-      { at: "glance", title: "Projects at a glance", text: "Each project's stage, health, how much work is done, what's late, and what's next." },
+      { at: "coming-up", title: "Calendar", text: "Work due, milestones, targets, and your events. Choose a day to see or add. Past, Overdue, Upcoming, and Repeated open below." },
+      { at: "glance", title: "Projects at a glance", text: "Each project's stage, health, progress, late work, and what's next." },
       { at: "get-to-know", title: "Get to know 1NEON", text: "A sample project, a walkthrough, the demo, and the FAQs. Hide it when you're done." },
-      { at: "get-started", title: "Get started", text: "A short setup checklist. It disappears once everything is done." },
-      { at: "activity", title: "Recent activity", text: "What people did lately, newest first, with exactly what each edit changed." },
+      { at: "get-started", title: "Get started", text: "A short setup checklist. It goes away when done." },
+      { at: "activity", title: "Recent activity", text: "What people did lately, newest first, with each edit's changes." },
     ],
   },
   board: {
@@ -68,7 +68,7 @@ export const GUIDES: Record<PageKey, Guide> = {
     purpose: "All projects in one list.",
     howto: ["Switch between List and Timeline at the top.", "Filter by layer, or sort by stage, target date, or recent changes.", "Start one with New project."],
     tour: [
-      { at: "new-project", title: "New project", text: "Answer a few questions and the project starts with the right checklist." },
+      { at: "new-project", title: "New project", text: "Answer a few questions to start with the right checklist." },
       { at: "project-list", title: "Your projects", text: "Each row shows the stage, health, and target date." },
     ],
   },
@@ -78,16 +78,16 @@ export const GUIDES: Record<PageKey, Guide> = {
     howto: ["Start with Next step: it says what to do now.", "Tap any item to open it: change its status, owner, or due date, and comment.", "Ready for Execute on the Overview shows how far the outline has come. Write a part and the percent moves.", "The onion beside the name fills as each layer's work gets done.", "Post an update to say how it's going."],
     tour: [
       { at: "next-step", title: "Next step", text: "What has to happen now, and who it's waiting on." },
-      { at: "readiness", title: "Ready for Execute", text: "0 to 100% before the work starts: six outline parts, the assessment, options, and a decision. Each part says where to write it and where it goes." },
+      { at: "readiness", title: "Ready for Execute", text: "0 to 100% before work starts: six outline parts, the assessment, options, and a decision." },
       { at: "stage", title: "Stage", text: "Where the project is. It moves on when this stage's work is done." },
       { at: "layers", title: "The four layers", text: "Needs: what's wanted. Execute: the work. Observe: the results. Normalize: making it last." },
     ],
   },
   newproject: {
     title: "New project",
-    purpose: "Start a project by answering a few short questions.",
+    purpose: "Start a project with a few questions.",
     howto: ["Pick the kind of project that fits best.", "Name it in plain words.", "Add how you'll measure success, if you know."],
-    tour: [{ at: "wizard", title: "A few questions", text: "Go step by step. You can change everything later." }],
+    tour: [{ at: "wizard", title: "A few questions", text: "You can change everything later." }],
   },
   layer: {
     title: "Layer",
@@ -134,7 +134,7 @@ export const GUIDES: Record<PageKey, Guide> = {
   },
   contact: {
     title: "Contact",
-    purpose: "Every way to reach neon1: email, call or text, or a booked call.",
+    purpose: "Email, call or text, or book a call.",
     howto: ["Tap the email or number to open your mail or phone app.", "For anything about a project, write in that project so it stays together."],
     tour: [],
   },
@@ -230,10 +230,10 @@ const FRAME: Step[] = [
   { at: "nav-home", title: "Home", text: "Start here. It shows what needs you." },
   { at: "nav-board", title: "Board", text: "Every project, in the stage it's in." },
   { at: "nav-projects", title: "Projects and files", text: "Each project keeps its needs, work, results, and files together." },
-  { at: "nav-layers", title: "N E O N", text: "Needs, Execute, Observe, Normalize: the four layers every project moves through." },
+  { at: "nav-layers", title: "N E O N", text: "Needs, Execute, Observe, Normalize: the four layers of every project." },
   { at: "menu", title: "Menu", text: "Every page and the four layers. Choose Mini on your profile to keep the menu's icons on screen." },
   { at: "search", title: "Search", text: "Jump to any page or project, or start something new." },
-  { at: "help", title: "Help", text: "Stuck? Tap ? on any page for a short guide to that page." },
+  { at: "help", title: "Help", text: "Tap ? on any page for a short guide to it." },
 ];
 const LAST: Step = { at: "help", title: "You're set", text: "Replay this tour anytime from ? or from your profile." };
 

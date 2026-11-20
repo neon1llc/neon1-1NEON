@@ -153,7 +153,7 @@ function Proposal({ snapshot: s, rev, latestRev, decided, inForce, timeZone, slu
         </span>
       </div>
       {/* Where this copy stands: a draft, an earlier revision, or one past its price check */}
-      {!rev && <p className="pp-state" role="status">Draft, not issued. It shows the project as it is now; neon1 issues it as a numbered revision before an option can be approved.</p>}
+      {!rev && <p className="pp-state" role="status">Draft, not issued. It shows the project as it is now. I issue it as a numbered revision before an option can be approved.</p>}
       {older && <p className="pp-state" role="status">This is an earlier revision. <Link to={`${base}/proposal`}>Read the latest, r{latestRev}</Link>.</p>}
       {stale && <p className="pp-state warn" role="status">Prices may have changed since {longDate(rev!.issuedAt)}. Ask neon1 to refresh this proposal before choosing an option.</p>}
     <article className={`proposal${stale || older ? " pp-faded" : ""}`} aria-labelledby="pp-h1">

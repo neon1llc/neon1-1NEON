@@ -44,7 +44,7 @@ export function Readiness({ project: p, items, orgId, slug, canWrite, prospect, 
     <section className="card readiness" aria-labelledby="ready-h" data-tour="readiness">
       <h2 className="section-h" id="ready-h">Ready for Execute <small>{r.percent}%</small></h2>
       <span className="ready-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={r.percent} aria-label="Ready for Execute"><i style={{ width: `${r.percent}%` }} /></span>
-      <p className="small muted">Before the work starts, a project goes from an outline to one agreed option. Everything you write here is optional, and each part makes the assessment and our call sharper.</p>
+      <p className="small muted">Before work starts, a project goes from an outline to one agreed option. Everything here is optional, and each part sharpens the assessment and our call.</p>
       <ol className="ready-steps">
         <li className={r.steps.outline ? "done" : ""}>
           <details open={!r.steps.outline && canWrite}>
@@ -76,7 +76,7 @@ export function Readiness({ project: p, items, orgId, slug, canWrite, prospect, 
         </li>
         <li>
           {tick(false)}
-          <span><b>Decision</b> <span className="small muted">One option approved with a signature. Then Execute starts: the outline becomes the plan, its measure is tracked in Observe, and its people and tools shape the handover in Normalize.</span></span>
+          <span><b>Decision</b> <span className="small muted">One option approved with a signature. Then Execute starts: the outline becomes the plan, its measure moves to Observe, and its people and tools shape the handover.</span></span>
         </li>
       </ol>
     </section>

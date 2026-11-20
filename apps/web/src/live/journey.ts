@@ -74,7 +74,7 @@ export const JOURNEY: Show = {
       id: "free-start",
       title: "Start for free",
       run: async (s) => {
-        await s.say("Noor runs a fictional building-supply yard. She wants help with an insurance form, but not a call just yet");
+        await s.say("Noor runs a fictional building-supply yard. She wants help with an insurance form, not a call yet");
         await s.think("I'd rather write it down first. Start for free.");
         await s.click({ sel: "button", text: "Start for free" }, 900);
         await s.say("Before she types anything, the form says what a free account holds");
