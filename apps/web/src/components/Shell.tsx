@@ -724,6 +724,25 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
   // The organization in view, when this frame is inside one, for hiding what a new account can't do
   const inOrg = useContext(OrgCtx);
   const [open, setOpen] = useState(false);
+  const side = useRef<HTMLElement>(null);
+  // Closing starts on the element itself: the drawer's class and the scrim's change in the frame of the tap, and the re-render that
+  // follows (the whole shell, tens of milliseconds on a phone) waits until the slide is over, so it never holds up a frame of it
+  const shutTurn = useRef(0);
+  const shut = () => {
+    const turn = ++shutTurn.current;
+    side.current?.classList.remove("open");
+    side.current?.classList.add("leaving");
+    document.querySelector(".scrim")?.classList.add("closing");
+    window.setTimeout(() => { if (turn === shutTurn.current) setOpen(false); }, 230);
+  };
+  // Opening again during the slide puts back what the early close changed
+  useLayoutEffect(() => {
+    if (!open) return;
+    shutTurn.current++;
+    side.current?.classList.add("open");
+    side.current?.classList.remove("leaving");
+    document.querySelector(".scrim")?.classList.remove("closing");
+  }, [open]);
   const [scrimVisible, setScrimVisible] = useState(false);
   // The page behind the open menu turns inert only once the menu has finished moving, and stays so until it has finished
   // closing: changing inert restyles the whole page, and in the frame the menu starts to move that was a visible stutter
@@ -775,14 +794,15 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
   }, [section]);
   useEffect(() => {
     if (!open) return;
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && shut();
     addEventListener("keydown", esc);
     return () => removeEventListener("keydown", esc);
   }, [open]);
   // Offscreen means out of the focus order: the menu is inert while it's tucked away behind the menu
   // buttons, and while it's open as an overlay the page behind it is inert instead
-  const tucked = !open && !mini;
-  const side = useRef<HTMLElement>(null);
+  // Still moving out on a phone (the page behind is inert until it is over): the rows keep their size and labels meanwhile
+  const leaving = !open && behind;
+  const tucked = !open && !mini && !leaving;
   const trigger = useRef<HTMLElement | null>(null);
   // Keep the backdrop through the drawer's close transition so the page doesn't flash into view
   useEffect(() => {
@@ -882,19 +902,19 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
       <a className="skip" href="#main" onClick={(e) => { e.preventDefault(); document.getElementById("main")?.focus(); }}>Skip to content</a>
       {IN_DEMO && !IN_LIVE && <DemoBar />}
       {/* Scrim behind the full menu; a tap outside closes it */}
-      {(open || scrimVisible) && <div className={`scrim${open ? "" : " closing"}`} onClick={() => setOpen(false)} aria-hidden="true" />}
+      {(open || scrimVisible) && <div className={`scrim${open ? "" : " closing"}`} onClick={shut} aria-hidden="true" />}
       {/* Start the drawer's exit on the selecting tap, before the route commits; modifier clicks keep this tab open */}
       <aside ref={side} onScroll={keepRail} onClickCapture={(event) => {
         const target = event.target;
         const link = target instanceof Element ? target.closest<HTMLAnchorElement>("a[href]") : null;
-        if (link && event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && link.target !== "_blank") setOpen(false);
+        if (link && event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && link.target !== "_blank") shut();
       }} onTransitionEnd={(event) => {
         if (!open && event.target === event.currentTarget && ["width", "transform", "clip-path"].includes(event.propertyName)) setScrimVisible(false);
-      }} className={`side${open ? " open" : ""}`} aria-label="Menu" inert={tucked}>
+      }} className={`side${open ? " open" : ""}${leaving ? " leaving" : ""}`} aria-label="Menu" inert={tucked}>
         {/* The mark and name lead Home, from the open menu and the Mini rail alike. It sits exactly where
             the top bar's own mark sits, so opening the menu covers one with the other */}
         <div className="side-head">
-          <Link className="brand" to={home} onClick={() => setOpen(false)} title="Home" aria-label="1NEON, Home">
+          <Link className="brand" to={home} onClick={shut} title="Home" aria-label="1NEON, Home">
             <span className="ico mark" aria-hidden="true"><Rings /></span>
             <span className="lbl">1NEON</span>
           </Link>
@@ -978,7 +998,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
         <header className="top">
           {/* The mark and name, Home's way in, before the menu button; in Mini the rail shows the mark instead */}
           {!mini && <Link className="top-brand" to={home} title="Home" aria-label="1NEON, Home"><span className="mark-box" aria-hidden="true"><Rings /></span><span className="lbl">1NEON</span></Link>}
-          <button className="icon-btn menu-btn" onClick={() => setOpen(!open)} aria-expanded={open} aria-label="Menu" title="Menu" data-tour="menu"><MenuIcon size={18} /></button>
+          <button className="icon-btn menu-btn" onClick={() => (open ? shut() : setOpen(true))} aria-expanded={open} aria-label="Menu" title="Menu" data-tour="menu"><MenuIcon size={18} /></button>
           <div className="crumb">{top}</div>
           <span className="spacer" />
           <button className="search-btn" onClick={() => { setNeoOpen(false); setSearch(true); }} data-tour="search" aria-label="Search">
@@ -1008,7 +1028,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
         ) : (
           <NavLink to="/"><HomeIcon size={20} aria-hidden="true" /><span>Home</span></NavLink>
         )}
-        <button type="button" className="menu-btn" onClick={() => setOpen(!open)} aria-expanded={open}><MenuIcon size={20} aria-hidden="true" /><span>Menu</span></button>
+        <button type="button" className="menu-btn" onClick={() => (open ? shut() : setOpen(true))} aria-expanded={open}><MenuIcon size={20} aria-hidden="true" /><span>Menu</span></button>
       </nav>
       <Palette me={me} org={org} prospect={inOrg?.prospect} open={search} setOpen={setSearch} onHelp={help.open} onTour={help.welcomeTour} />
       <ConfirmDialog me={me} />

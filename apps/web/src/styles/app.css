@@ -123,6 +123,12 @@ input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outlin
   .shell.mini .side { width: calc(272px + env(safe-area-inset-left)); clip-path: inset(0 0 0 0); transition: clip-path .2s ease, box-shadow .2s ease; }
   .shell.mini .side:not(.open) { clip-path: inset(0 calc(100% - var(--rail) - env(safe-area-inset-left)) 0 0); }
 }
+/* A phone's drawer slides away with its rows as they were: collapsing the labels and row heights in the frame it starts to move
+   reflowed every row and made the close stutter (the rail's own sizes return once it has gone) */
+@media (max-width: 640px) {
+  .side.leaving:not(.open) .lbl { position: static; width: auto; height: auto; overflow: visible; clip: auto; }
+  .shell.mini .side.leaving:not(.open) :is(.brand, .org-mini, .nav a, .site-link, .who-link) { min-height: 40px; padding-top: 6px; padding-bottom: 6px; }
+}
 /* Every entry is one row: a 28px box, then its label; collapsed, labels stay readable to screen readers only */
 .side .brand, .side .org-mini, .nav a, .site-link, .who-link { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 6px 6px; border-radius: var(--r-sm);
   color: var(--text); text-decoration: none; font: calc(14px * var(--type)) var(--sans); background: none; border: 0; cursor: pointer; width: 100%; text-align: left; white-space: nowrap; }
