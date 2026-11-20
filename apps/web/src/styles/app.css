@@ -2294,7 +2294,9 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
   .top-brand { min-width: 44px; height: 44px; }
   .top .crumb { min-width: 0; }
   .side, .side.open, .shell.mini .side:not(.open) { --row: 44px; }
-  .side .org-full .org, .side.open .org-full .org { height: 44px; }
+  /* The picker stays one icon box tall, centered in its 44px row so it clears the rules above and below; the rest of the row is its hit area */
+  .side .org-full .org { position: relative; }
+  .side .org-full .org::after { content: ""; position: absolute; inset: -8px 0; }
   .side.open .org-full { margin: 0 6px; }
   .shell.mini .side:not(.open) .org-mini { margin-top: 0; }
   .side .menu-theme-switch::after { content: ""; position: absolute; inset: -9px 0; }

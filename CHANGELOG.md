@@ -5,6 +5,7 @@
 ## Unreleased
 
 ### Fixed (audit, November 20)
+- On a phone, the menu's organization picker is one icon box tall again, with even space above and below, instead of filling its 44px row and touching the line above. The rest of the row still takes the tap.
 - Pages are centered with equal gutters on a wide screen (28px each at 1440), not pushed left with the spare room on the right.
 - The search window takes the cursor, so typing goes in the box. Every window now puts focus on what asked for it, so a confirmation opens on Cancel and not on the destructive button.
 - The page heading no longer shows a green box when a page loads.
