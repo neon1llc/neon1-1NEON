@@ -58,7 +58,7 @@ export function GuideCard({ me, prospect }: { me: Me; prospect: boolean }) {
     }
   };
   return (
-    <section className="card guide-card" aria-labelledby="guide-h">
+    <section className="card guide-card" aria-labelledby="guide-h" data-tour="get-to-know">
       <h2 className="section-h" id="guide-h">Get to know 1NEON <button type="button" className="linkish small" disabled={busy} onClick={() => void hide()}>Hide</button></h2>
       <ul className="guide-links">
         <li><Link to="/example">A sample project</Link><span className="muted small">Three made-up clients, start to finish</span></li>
@@ -75,7 +75,7 @@ export function GuideCard({ me, prospect }: { me: Me; prospect: boolean }) {
 
 
 // Next step's answer from routes/requests.ts: when each kind was last asked, and the open projects
-type RequestProject = { key: string; name: string; outline: Outline; sentAt?: string };
+type RequestProject = { key: string; name: string; outline: Outline; sentAt?: string; decided?: boolean };
 type Asked = { assessment?: { at: string }; call?: { at: string }; projects: RequestProject[]; limit: number };
 // A project sent this recently is still with neon1 (routes/requests.ts RESEND_MS)
 const RESEND_MS = 14 * 24 * 60 * 60 * 1000;
@@ -108,7 +108,8 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
   const [error, setError] = useState("");
   const [review, setReview] = useState(false);
   const base = `/o/${slug}`;
-  const list = asked.data?.projects ?? [];
+  // Projects already agreed are past assessing; a client with none left to assess sees no card at all
+  const list = (asked.data?.projects ?? []).filter((p) => !p.decided);
   const limit = asked.data?.limit ?? 3;
   const open = list.filter((p) => !waiting(p));
   const sent = list.filter(waiting);
@@ -118,8 +119,12 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
   const noteProblem = note.trim() ? messageProblem(note) : undefined;
   const ready = chosen.length > 0 && Boolean(note.trim()) && !noteProblem;
   const toggle = (key: string) => setPicked(chosen.includes(key) ? chosen.filter((k) => k !== key) : [...chosen, key].slice(-limit));
-  const intro = "The assessment is free: my read of what's written here, plausible approaches, and the first questions to settle. I read it before we talk.";
-  const call = <span className="muted small next-call">Rather talk first? <OutLink href={BOOK_A_CALL}>Book the free 30-minute call</OutLink></span>;
+  const intro = prospect
+    ? "The assessment is free: my read of what's written here, plausible approaches, and the first questions to settle. I read it before we talk."
+    : "An assessment is my read of what's written here, plausible approaches, and the first questions to settle, before any options or prices.";
+  const call = prospect
+    ? <span className="muted small next-call">Rather talk first? <OutLink href={BOOK_A_CALL}>Book the free 30-minute call</OutLink></span>
+    : <span className="muted small next-call">Rather talk it through? <Link to="/contact">Contact neon1</Link></span>;
 
   const send = async () => {
     setReview(false);
@@ -137,10 +142,12 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
     setBusy(false);
   };
 
+  // A client with nothing waiting for an assessment: no card. Free accounts always see it
+  if (!prospect && (!asked.data || list.length === 0)) return null;
   // Nothing outlined yet: the card says what comes first, dimmed until there's something to assess
   if (asked.data && list.length === 0) {
     return (
-      <section className="card next-step-ask is-waiting" aria-labelledby="next-step-h">
+      <section className="card next-step-ask is-waiting" aria-labelledby="next-step-h" data-tour="next-step-ask">
         <h2 className="section-h" id="next-step-h">Next step</h2>
         <p>{prospect
           ? <>Outline up to {limit} <Link to={`${base}/projects`}>projects</Link>, then ask here for a free assessment of any or all of them. Take as much or as little time as you like: the clearer the needs, the more our call can cover.</>
@@ -155,7 +162,7 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
   }
 
   return (
-    <section className="card next-step-ask" aria-labelledby="next-step-h" aria-busy={asked.isPending}>
+    <section className="card next-step-ask" aria-labelledby="next-step-h" aria-busy={asked.isPending} data-tour="next-step-ask">
       <h2 className="section-h" id="next-step-h">Next step</h2>
       {list.length > 0 && <p>{outlineLine(open.length ? open : list)}{open.length > 0 && " When you're ready for a second pair of eyes, ask for the assessment below."}</p>}
       {list.length > 0 && (

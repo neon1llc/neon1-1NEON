@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Check } from "lucide-react";
 import { Link } from "react-router";
 import { read } from "../lib/reads.ts";
+import { useOrg } from "./Shell.tsx";
 import { dateLabel, layerSlug } from "./ui.tsx";
 
 
@@ -22,7 +23,11 @@ export function Readiness({ project: p, items, orgId, slug, canWrite, prospect, 
 }) {
   const asked = useQuery({ queryKey: ["requests", orgId], queryFn: () => read<Asked>(`/t/${orgId}/requests`, { projects: "array" }), enabled: canWrite });
   const sentAt = asked.data?.projects.find((x) => x.key === p.key)?.sentAt;
-  const r = readinessOf(p, items, sentAt);
+  // A client's project that neon1 has moved past the first stage is already being assessed in person
+  const { org } = useOrg();
+  const first = (org.stages.find((x) => !x.hidden) ?? org.stages[0])?.id;
+  const moved = !prospect && p.stageId !== first;
+  const r = readinessOf(p, items, sentAt ?? (moved ? p.stageEnteredAt : undefined));
   if (r.steps.decide) return null;
   const base = `/o/${slug}/projects/${p.key}`;
   // Where each part is written: the basics on this page, the example and people in Needs, measures in Observe
@@ -36,7 +41,7 @@ export function Readiness({ project: p, items, orgId, slug, canWrite, prospect, 
   const n = r.outline.have.length;
 
   return (
-    <section className="card readiness" aria-labelledby="ready-h">
+    <section className="card readiness" aria-labelledby="ready-h" data-tour="readiness">
       <h2 className="section-h" id="ready-h">Ready for Execute <small>{r.percent}%</small></h2>
       <span className="ready-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={r.percent} aria-label="Ready for Execute"><i style={{ width: `${r.percent}%` }} /></span>
       <p className="small muted">Before the work starts, a project goes from an outline to one agreed option. Everything you write here is optional, and each part makes the assessment and our call sharper.</p>
@@ -63,7 +68,7 @@ export function Readiness({ project: p, items, orgId, slug, canWrite, prospect, 
         </li>
         <li className={r.steps.assess ? "done" : ""}>
           {tick(r.steps.assess)}
-          <span><b>Assessment</b> <span className="small muted">{sentAt ? `Sent ${dateLabel(sentAt)}. The reply comes by email.` : r.steps.assess ? "Done." : <>Free: my read of what's written, plausible approaches, and the first questions to settle. Ask for it under <Link to={`/o/${slug}/workspace`}>Next step</Link> on Home.</>}</span></span>
+          <span><b>Assessment</b> <span className="small muted">{sentAt ? `Sent ${dateLabel(sentAt)}. The reply comes by email.` : moved && !r.steps.options ? "Under way with neon1." : r.steps.assess ? "Done." : <>{prospect ? "Free: m" : "M"}y read of what's written, plausible approaches, and the first questions to settle. Ask for it under <Link to={`/o/${slug}/workspace`}>Next step</Link> on Home.</>}</span></span>
         </li>
         <li className={r.steps.options ? "done" : ""}>
           {tick(r.steps.options)}
