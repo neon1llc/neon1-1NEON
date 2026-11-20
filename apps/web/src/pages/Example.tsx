@@ -40,7 +40,7 @@ function storyOf(s: Scenario): Record<Layer, { lead: string; cards: Card[] }> {
       lead: "What the client wants, what neon1 learned by listening, the ways to get there, and the choice.",
       cards: [
         { title: "Request", lines: [["Currently", s.project.today], ["Goal", s.project.outcome], ["Example", s.project.example]] },
-        { title: "What neon1 learned", lines: ["After the free 30-minute call and a look at real records, written into the project where the client can correct it."], list: [
+        { title: "What neon1 learned", lines: ["After the first call and a look at real records, written into the project where the client can correct it."], list: [
           ...s.learned.map(([q, a]) => ({ text: `${q} ${a}` })),
           ...s.constraints.slice(0, 2).map(([title, body]) => ({ text: `A limit, said before any option was written: ${lower(title)}. ${body}` })),
         ] },
@@ -208,7 +208,7 @@ function ReadySection({ s }: { s: Scenario }) {
     <section id="ready" className="example-layer" aria-labelledby="ready-h">
       <p className="eyebrow">Before step 1</p>
       <h2 id="ready-h" className="example-h">Ready for Execute <small className="ready-pct">{path[3]!.r.percent}%</small></h2>
-      <p className="muted">Every project gets ready first: an outline, a free assessment, options, and one signed decision. In a real project this meter sits on the Overview and starts wherever the outline does. The outline is what gets carried into the work.</p>
+      <p className="muted">Every project gets ready first: an outline, an assessment, options, and one signed decision. In a real project this meter sits on the Overview and starts wherever the outline does. The outline is what gets carried into the work.</p>
       <div className="card ready-example">
         <ol className="ready-path">
           {path.map((x) => (
@@ -332,7 +332,7 @@ export function Example() {
           <p>That's the whole loop. A real project follows the same steps, with its own need, its own setbacks, and its own numbers.</p>
           <div className="actions">
             <a className="btn btn-primary" href={`/1NEON/live${q(s.id)}`}>Watch it (about 3 minutes)</a>
-            <OutLink className="btn btn-ghost" href="https://calendly.com/1isgladtobeofservice/neon1-consultation">Book a free call</OutLink>
+            <OutLink className="btn btn-ghost" href="https://calendly.com/1isgladtobeofservice/neon1-consultation">Book a call</OutLink>
           </div>
           <p className="small muted">Would rather click around yourself? <a href="/1NEON/demo/">Try the interactive demo</a>.</p>
         </section>

@@ -57,7 +57,7 @@ export function outlineEmail(t: Tenant, list: Unfinished[], step: number, portal
     one
       ? `${one.p.key} ${one.p.name} has ${one.have} of ${OUTLINE_PARTS.length} outline parts written. A few words on what's missing make the assessment and our call sharper.`
       : `${shown.length} projects in ${t.name} have outlines still to finish. A few words on what's missing make the assessment and our call sharper.`,
-    `When it reads right to you, ask for ${free ? "the free" : "an"} assessment from Next step on Home.${last ? " This is the last reminder about it." : ""}`,
+    `When it reads right to you, ask for an assessment from Next step on Home.${last ? " This is the last reminder about it." : ""}`,
   ];
   const mail = factMail({
     kicker: free ? "free account tip" : "outline tip",

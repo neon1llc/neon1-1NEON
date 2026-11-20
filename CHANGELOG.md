@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+### Changed
+- "No account needed" is gone from the guided walkthrough's bar and page description. The call button reads "Book a 30-minute call" and the assessment is no longer called free in every line; "free" stays where it names the free account and its assessment. Neo's guide is refreshed from the corpus wording.
+
 ## v0.23.0 - 2026-11-20
 
 ### Fixed (audit, November 20)

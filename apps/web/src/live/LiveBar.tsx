@@ -115,7 +115,7 @@ export function LiveBar({ player }: { player: Player }) {
         {/* What this is, at every chapter: a fictional walkthrough, with a way to try it by hand and
             a way out that doesn't depend on anything the story is doing underneath */}
         <div className="live-meta">
-          <span className="live-what"><b>Guided walkthrough</b><span className="live-fiction">Fictional<span className="wide"> project</span> · no account needed</span></span>
+          <span className="live-what"><b>Guided walkthrough</b><span className="live-fiction">Fictional<span className="wide"> project</span></span></span>
           <span className="live-exits">
             <a href="/1NEON/demo/">Try it<span className="wide"> yourself</span></a>
             <a href={exit.href} className="live-exit">Exit<span className="wide"> tour</span></a>

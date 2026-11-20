@@ -8,7 +8,7 @@ Signed in? Tap **?** at the top right of any page for help with that page.
 The portal where we run your projects together: what you need, the work, the results, and the handover. [Watch it](/1NEON/live).
 
 ### Can I try it first?
-Yes, with no account. The [guided walkthrough](/1NEON/live) takes about three minutes and plays a made-up project on the real portal, and the full story takes about 20 minutes. The [sample project](/1NEON/example) is one made-up project to read. The [interactive demo](/1NEON/demo/) is a working copy where you pick who to be, and changes stay in your browser until **Start over**. [From free account to client](/1NEON/live?play=free) follows one free account from sign-up to client. Short walkthroughs show one thing: [joining from an invitation](/1NEON/live?play=invite), [adding a passkey](/1NEON/live?play=passkey), [adding an authenticator app](/1NEON/live?play=authenticator), and [texts and text codes](/1NEON/live?play=texts).
+Yes, without signing in. The [guided walkthrough](/1NEON/live) takes about three minutes and plays a made-up project on the real portal, and the full story takes about 20 minutes. The [sample project](/1NEON/example) is one made-up project to read. The [interactive demo](/1NEON/demo/) is a working copy where you pick who to be, and changes stay in your browser until **Start over**. [From free account to client](/1NEON/live?play=free) follows one free account from sign-up to client. Short walkthroughs show one thing: [joining from an invitation](/1NEON/live?play=invite), [adding a passkey](/1NEON/live?play=passkey), [adding an authenticator app](/1NEON/live?play=authenticator), and [texts and text codes](/1NEON/live?play=texts).
 
 ### How do I get in?
 When sign-up is open, choose **Start for free** on the sign-in screen to make a free account. Otherwise, open the link in an invite email from neon1 or your organization. Sign in with a code sent to your email, or with a passkey. No password needed. Watch [starting a free account](/1NEON/live?play=free) or [joining from an invite](/1NEON/live?play=invite).
@@ -20,7 +20,7 @@ Check spam or promotions, wait a minute, and choose **Send a new code**. Codes w
 Yes, at your first sign-in. Replay it from **?** or your profile. [Watch it](/1NEON/live?play=invite).
 
 ### What do I do first in a free account?
-Outline up to three projects, then ask for a free assessment under **Next step** on Home. **Get to know 1NEON**, beside it, links to a sample project, a walkthrough, the demo, and these FAQs. [Watch it](/1NEON/live?play=free).
+Outline up to three projects, then ask for an assessment under **Next step** on Home. **Get to know 1NEON**, beside it, links to a sample project, a walkthrough, the demo, and these FAQs. [Watch it](/1NEON/live?play=free).
 
 ### What is an outline?
 What you write down about a project before I assess it, in six parts: what it is, how it works today, what done looks like, who and what it touches, a measure, and timing and limits. Every part is optional, and a short answer is enough. **Next step** on Home and a project's **Overview** show what's written, with a tip for each missing part. [Outlining a project](/knowledge/guides/outline-a-project/) has examples.
@@ -28,11 +28,11 @@ What you write down about a project before I assess it, in six parts: what it is
 ### What is Ready for Execute?
 The percent on a project's **Overview**, before the work starts. Each outline part is 10, the assessment 10, options 10, and an approved option 20, so 100% needs a decision. Then the outline carries into the work: its measure is tracked in **Observe**, its people and tools shape the handover in **Normalize**, and what done looks like becomes the checks in Verify. [Watch it](/1NEON/live?play=free).
 
-### How do I ask for a free assessment?
+### How do I ask for an assessment?
 Under **Next step** on Home, write the note (required, a sentence or two), choose one to three projects, and choose **Request assessment**. You get one last look, then **Submit request**. It goes to me 30 minutes after your last change, so you can **Edit** or **Withdraw** it until then. An edit after it's sent goes out as an update. I reply by email.
 
 ### Do I need a call first?
-No. The assessment and the free 30-minute call are two ways in, and neither needs the other first. **Next step** has **Book the free 30-minute call**, or **ask me to reach out** to have me write to you (once a week).
+No. The assessment and the call are two ways in, and neither needs the other first. **Next step** has **Book a 30-minute call**, or **ask me to reach out** to have me write to you (once a week).
 
 ### Will I get emails about my outline?
 In a free account, yes: while an outline is unfinished and nothing is waiting for me, tips arrive about 3 and 7 days after your last change, then no more. Turn them off under **Outline tips** in your profile's **Notifications**. Clients don't get them unless they turn them on.

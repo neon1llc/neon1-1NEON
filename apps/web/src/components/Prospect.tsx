@@ -133,7 +133,7 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
     ? <span className="muted small next-call">Rather talk it through? <Link to="/contact">Contact neon1</Link></span>
     : callAsked
       ? <span className="small next-call" role="status">Call requested {dateLabel(callAsked.at)}. I'll reply by email. You can ask again from {dateLabel(callAsked.again)}.</span>
-      : <span className="muted small next-call">Rather talk first? <OutLink href={BOOK_A_CALL}>Book the free 30-minute call</OutLink> or <button type="button" className="linkish" onClick={() => { setError(""); setCallOpen(true); }}>ask me to reach out</button>.</span>;
+      : <span className="muted small next-call">Rather talk first? <OutLink href={BOOK_A_CALL}>Book a 30-minute call</OutLink> or <button type="button" className="linkish" onClick={() => { setError(""); setCallOpen(true); }}>ask me to reach out</button>.</span>;
   const refresh = () => qc.invalidateQueries({ queryKey: ["requests", orgId] });
 
   const startEdit = () => {
@@ -209,7 +209,7 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
     return (
       <section className="card next-step-ask is-waiting" aria-labelledby="next-step-h" data-tour="next-step-ask">
         <h2 className="section-h" id="next-step-h">Next step</h2>
-        <p className="ns-note">You can outline up to {limit} <Link to={`${base}/projects`}>projects</Link>, after which you can request a free assessment for any or all right here. Time spent defining your needs before an assessment pays off on our call.</p>
+        <p className="ns-note">You can outline up to {limit} <Link to={`${base}/projects`}>projects</Link>, after which you can request an assessment for any or all right here. Time spent defining your needs before an assessment pays off on our call.</p>
         <p>{intro}</p>
         <div className="actions next-actions">
           <Link className="btn btn-primary btn-sm" to={`${base}/projects/new`}>Start a project</Link>
@@ -230,7 +230,7 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
   return (
     <section className={`card next-step-ask${locked ? " is-locked" : ""}`} aria-labelledby="next-step-h" aria-busy={asked.isPending} data-tour="next-step-ask">
       <h2 className="section-h" id="next-step-h">Next step</h2>
-      {prospect && <p className="ns-note">You can outline up to {limit} <Link to={`${base}/projects`}>projects</Link>, after which you can request a free assessment for any or all right here. Time spent defining your needs before an assessment pays off on our call.</p>}
+      {prospect && <p className="ns-note">You can outline up to {limit} <Link to={`${base}/projects`}>projects</Link>, after which you can request an assessment for any or all right here. Time spent defining your needs before an assessment pays off on our call.</p>}
       <p>{intro}</p>
       {/* A free account: one line per project, how far along it is, and what would help most */}
       {prospect && list.length > 0 && (

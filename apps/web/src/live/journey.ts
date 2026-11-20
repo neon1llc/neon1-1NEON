@@ -63,7 +63,7 @@ export const JOURNEY: Show = {
     heading: "Meet Noor",
     text: [
       "Noor runs Calder Building Supply, a fictional lumber and hardware yard with eleven employees. Her insurer sent a security questionnaire she can't fully answer. She isn't a client yet and would rather write things down before any call.",
-      "Watch her start a free 1NEON account, write down what her project needs, and ask for an assessment. Then switch to Pradeep at neon1: he reads her request, answers in her project, and, after they talk, makes her account a client account.",
+      "Watch her start a 1NEON account, write down what her project needs, and ask for an assessment. Then switch to Pradeep at neon1: he reads her request, answers in her project, and, after they talk, makes her account a client account.",
     ],
   },
   length: "about six minutes",

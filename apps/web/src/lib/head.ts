@@ -30,7 +30,7 @@ export function headFor(pathname: string): Head {
   const path = pathname.replace(/\/+$/, "") || "/";
   // Temporary, in-browser routes: useful to visit, not to rank
   if (path === "/1NEON/live" || path.startsWith("/1NEON/live/")) {
-    return { title: "Guided walkthrough · 1NEON", description: "A fictional project played on the real 1NEON portal, in about three minutes. No account needed.", noindex: true };
+    return { title: "Guided walkthrough · 1NEON", description: "A fictional project played on the real 1NEON portal, in about three minutes.", noindex: true };
   }
   if (path === "/1NEON/demo" || path.startsWith("/1NEON/demo/")) {
     const section = sectionOf(path.slice("/1NEON/demo".length));
@@ -49,7 +49,7 @@ export function headFor(pathname: string): Head {
   if (path === "/1NEON/terms") return { title: "Terms of use · 1NEON", description: `The terms for using neon1.tech and the 1NEON portal. ${PORTAL}`, canonical: `${SITE}/knowledge/policies/terms/` };
   if (path === "/1NEON/cookies") return { title: "Cookies and browser storage · 1NEON", description: `The cookies the portal needs and what it saves in your browser. ${PORTAL}`, canonical: `${SITE}/knowledge/policies/cookies/` };
   // Sign-in and everything behind it: for clients, not for search
-  if (path === "/1NEON") return { title: "Sign in · 1NEON client portal", description: `Sign in to your 1NEON account, or start one for free. ${PORTAL}`, noindex: true };
+  if (path === "/1NEON") return { title: "Sign in · 1NEON client portal", description: `Sign in to your 1NEON account, or start one. ${PORTAL}`, noindex: true };
   const section = sectionOf(path.slice("/1NEON".length));
   return { title: `${section ? `${section} · ` : ""}1NEON`, description: PORTAL, noindex: true };
 }
