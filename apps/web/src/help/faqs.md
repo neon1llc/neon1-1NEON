@@ -19,13 +19,31 @@ Check spam or promotions, wait a minute, and choose **Send a new code**. Codes w
 ### Is there a tour?
 Yes, at your first sign-in. Replay it from **?** or your profile. [Watch it](/1NEON/live?play=invite).
 
+### What do I do first in a free account?
+Outline up to three projects, then ask for a free assessment under **Next step** on Home. **Get to know 1NEON**, beside it, links to a sample project, a walkthrough, the demo, and these FAQs. [Watch it](/1NEON/live?play=free).
+
+### What is an outline?
+What you write down about a project before I assess it, in six parts: what it is, how it works today, what done looks like, who and what it touches, a measure, and timing and limits. Every part is optional, and a short answer is enough. **Next step** on Home and a project's **Overview** show what's written, with a tip for each missing part. [Outlining a project](/knowledge/guides/outline-a-project/) has examples.
+
+### What is Ready for Execute?
+The percent on a project's **Overview**, before the work starts. Each outline part is 10, the assessment 10, options 10, and an approved option 20, so 100% needs a decision. Then the outline carries into the work: its measure is tracked in **Observe**, its people and tools shape the handover in **Normalize**, and what done looks like becomes the checks in Verify. [Watch it](/1NEON/live?play=free).
+
+### How do I ask for a free assessment?
+Under **Next step** on Home, choose one to three projects, write the note (required), and choose **Request assessment**. If a project could say more, you get one last look first and can send it anyway. I reply by email. A project already sent waits 14 days before it can be sent again.
+
+### Do I need a call first?
+No. The assessment and the free 30-minute call are two ways in, and neither needs the other first. **Book the free 30-minute call** is on **Next step** too.
+
+### How do I hide or bring back Get to know 1NEON?
+Choose **Hide** on the card. To bring it back, open your profile and choose **Show Get to know 1NEON on Home** under Tutorial.
+
 ## Projects and the four layers
 
 ### What are Needs, Execute, Observe, and Normalize?
 The four layers of every project. **Needs** is what you want and the options, **Execute** the work, **Observe** the results against the goals, and **Normalize** the handover, training, and care. [Watch it](/1NEON/live).
 
 ### What should I do first on a project?
-Look at **Next step** at the top. It says what has to happen now and who it's waiting on. [Watch it](/1NEON/live?play=propose).
+Look at **Next step** at the top. It says what has to happen now and who it's waiting on. On a new project's **Overview**, **Ready for Execute** says what to write next. [Watch it](/1NEON/live?play=propose).
 
 ### What do Not assessed, On track, At risk, and Off track mean?
 They're the project's health, as the team assesses it. A new project is **Not assessed** until the team sets it, and moving stages doesn't change it. Items have their own status: To do, In progress, Blocked, or Done. [Watch it](/1NEON/live?play=build).
