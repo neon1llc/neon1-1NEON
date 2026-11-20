@@ -77,6 +77,8 @@ resource "aws_sesv2_configuration_set" "main" {
 output "identity_arn" { value = aws_sesv2_email_identity.notify.arn }
 output "configuration_set" { value = aws_sesv2_configuration_set.main.configuration_set_name }
 output "from" { value = "1NEON <noreply@${var.domain}>" }
+# Cognito's sign-in and confirmation codes read as security mail at a glance
+output "from_security" { value = "1NEON Security <security@${var.domain}>" }
 
 
 # Cognito sends sign-in codes from this identity on the pool's behalf

@@ -14,6 +14,8 @@ locals {
   auth_domain = "auth-dev.${var.domain}"
   boundary    = "neon1-boundary-1neon-dev"
   mail_from   = "\"[DEV] 1NEON\" <noreply@notify.${var.domain}>"
+  # Cognito's codes, as the API's security notices are named
+  security_from = "\"[DEV] 1NEON Security\" <security@notify.${var.domain}>"
 
   # No GuardDuty scan in dev (nothing there comes from a client); the bucket and the API must agree
   malware_scan = false
@@ -132,7 +134,7 @@ module "auth" {
   passkey_rp_id                  = "dev.${var.domain}"
   ses_identity_arn               = local.ses_identity_arn
   ses_configuration_set          = aws_sesv2_configuration_set.dev.configuration_set_name
-  mail_from                      = local.mail_from
+  mail_from                      = local.security_from
   pre_sign_up_arn                = module.api.trigger_arn
   google_client_id               = ""
   google_client_secret_parameter = "/1neon/dev/google_client_secret"

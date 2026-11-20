@@ -4,8 +4,7 @@
 
 
 import type { CustomMessageTriggerEvent, PreSignUpTriggerEvent } from "aws-lambda";
-import { signInCodeEmail } from "../emails.ts";
-import { branded, link } from "../mail.ts";
+import { codeEmail, signInCodeEmail } from "../emails.ts";
 import { DynamoTable } from "../store/dynamo.ts";
 import { Repo } from "../store/repo.ts";
 
@@ -28,41 +27,31 @@ export async function handler(event: PreSignUpTriggerEvent | CustomMessageTrigge
 }
 
 
-// The wording for each kind of code Cognito sends; {####} is where Cognito puts the code. Subjects
-// carry no code: Cognito documents the placeholder for the message body only
-// carry no code: Cognito documents the placeholder for the message body only. `says` is the plain
-// sentence that names the code ("Your 1NEON reset code is 123456"), which mail apps that offer to copy a
-// code look for
-const CODES: Record<string, { subject: string; label: string; heading: string; says: string; lead: string }> = {
-  CustomMessage_Authentication: { subject: "Your 1NEON sign-in code", label: "your sign-in code", heading: "Your sign-in code", says: "Your 1NEON sign-in code is", lead: `Use it to sign in to ${link("1NEON", PORTAL)}.` },
-  CustomMessage_ForgotPassword: { subject: "Your 1NEON reset code", label: "your reset code", heading: "Your reset code", says: "Your 1NEON reset code is", lead: "Enter it to choose a new password." },
-  CustomMessage_UpdateUserAttribute: { subject: "Confirm your new email for 1NEON", label: "confirm your email", heading: "Confirm your new email", says: "Your 1NEON confirmation code is", lead: `Enter it in ${link("1NEON", PORTAL)} to confirm this address.` },
-  CustomMessage_VerifyUserAttribute: { subject: "Confirm your email for 1NEON", label: "confirm your email", heading: "Confirm your email", says: "Your 1NEON confirmation code is", lead: `Enter it in ${link("1NEON", PORTAL)} to confirm this address.` },
+// The wording for each kind of code Cognito sends; {####} is where Cognito puts the code. Subjects carry no code:
+// Cognito documents the placeholder for the message body only. `says` is the plain sentence that names the code
+// ("Your 1NEON reset code is 123456"), which mail apps that offer to copy a code look for
+const CODES: Record<string, { subject: string; kind: string; title: string; says: string; lead: string }> = {
+  CustomMessage_ForgotPassword: { subject: "Your 1NEON reset code", kind: "reset code", title: "Your reset code", says: "Your 1NEON reset code is", lead: "Enter it to choose a new password." },
+  CustomMessage_UpdateUserAttribute: { subject: "Confirm your new email for 1NEON", kind: "email confirmation", title: "Confirm your new email", says: "Your 1NEON confirmation code is", lead: "Enter it in 1NEON to confirm this address." },
+  CustomMessage_VerifyUserAttribute: { subject: "Confirm your email for 1NEON", kind: "email confirmation", title: "Confirm your email", says: "Your 1NEON confirmation code is", lead: "Enter it in 1NEON to confirm this address." },
 };
 
 
-/** Custom message: put the code in the branded design; any other message keeps Cognito's default */
+/** Custom message: put the code in the 1NEON email design; any other message keeps Cognito's default. Cognito sends
+ * the HTML only, from the "1NEON Security" address set in Terraform */
 export function message(event: CustomMessageTriggerEvent, at = new Date(), zone?: string) {
-  const kind = CODES[event.triggerSource];
-  if (!kind) return event;
   // Sign-in codes share their template with the browser demo
   if ((event.triggerSource as string) === "CustomMessage_Authentication") {
-    const mail = signInCodeEmail({ code: (event as CustomMessageTriggerEvent).request.codeParameter, portal: PORTAL, at, zone });
+    const mail = signInCodeEmail({ code: event.request.codeParameter, portal: PORTAL, at, zone });
     event.response.emailSubject = mail.subject;
     event.response.emailMessage = mail.html;
     return event;
   }
-  event.response.emailSubject = kind.subject;
-  event.response.emailMessage = branded({
-    label: kind.label,
-    preheader: `${kind.says} ${event.request.codeParameter}. It works for a few minutes.`,
-    heading: kind.heading,
-    body: `<p style="margin:0">${kind.says} <b>${event.request.codeParameter}</b>. ${kind.lead}</p>`,
-    code: event.request.codeParameter,
-    note: "It works for a few minutes. If you didn't ask for it, you can ignore this email.",
-    at,
-    zone,
-  });
+  const kind = CODES[event.triggerSource];
+  if (!kind) return event;
+  const mail = codeEmail({ ...kind, code: event.request.codeParameter, portal: PORTAL, at, zone });
+  event.response.emailSubject = mail.subject;
+  event.response.emailMessage = mail.html;
   return event;
 }
 

@@ -1,8 +1,10 @@
-// apps/api/src/lib/factmail.ts - The one layout for mail that tells neon1 or a client what happened: a kicker line,
-// a title, a left-aligned table of facts, then optional blocks (what someone wrote), one button, and a footer. The
-// contact, bug, and feedback emails, the request email, and every portal notice use it, so they read the same way.
-// Plain text carries the same rows in aligned columns, so mail apps without HTML read it too.
-import { esc } from "../mail.ts";
+// apps/api/src/lib/factmail.ts - The one layout for every email neon1 and 1NEON send: a headline that says what
+// happened, a left-aligned table of key facts, optional blocks (what someone wrote), one primary action, and small
+// print that says why the mail arrived and how to change that. The plain text carries the same parts in the same
+// order, so a mail app without HTML reads it as clearly. Inline styles carry the light look, since mail clients
+// strip many style sheets; a small style block adds dark mode and a stacked table on a narrow phone where the
+// client keeps it, and where it doesn't, the inline look is already readable.
+import { MARK, esc } from "../mail.ts";
 
 const BRAND = "#035704", PAPER = "#F2F4F2", INK = "#12241A", MUTED = "#56665c", LINE = "rgba(18,36,26,.14)";
 const MONO = "'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace";
@@ -13,77 +15,127 @@ export interface Fact { k: string; v: string; mono?: boolean; small?: boolean; h
 
 /** One piece of mail: everything that varies */
 export interface FactMail {
-  kicker: string; // after "neon1 ·" at the top, such as "request"
+  kicker: string; // after "neon1 ·" at the top: the kind of mail, such as "free account alert"
   title: string; // the one-line statement of what happened
-  sub?: string; // muted words after the title
+  sub?: string; // muted words after the title, such as the organization
   preheader: string; // the inbox preview line
+  intro?: string[]; // one or two plain sentences under the title
+  code?: string; // a sign-in code, shown large; may be Cognito's {####} placeholder
   facts: Fact[];
   blocks?: [string, string][]; // what someone wrote, each under its own label
   todo?: string; // what to do about it, in a sentence under the table
-  action?: { label: string; url: string };
+  action?: { label: string; url: string }; // the one primary action
   extraHtml?: string; // after the blocks (screenshots, notes)
   extraText?: string[]; // the same, for the plain text
-  footer: string[]; // small print lines
+  why: string; // why this email arrived, such as "You're a member of Kim Dental on 1NEON."
+  settings?: { text: string; url?: string; label?: string }; // how to change that, with where
+  reply?: string; // what a reply does, when it does something
   textHead?: string; // first line of the plain text; defaults to the title
 }
+
+/** A link that opens a reply to someone, with the subject already "Re: ..." */
+export const replyTo = (email: string, subject: string) => `mailto:${email}?subject=${encodeURIComponent(`Re: ${subject}`)}`;
 
 /** One line of text for a subject or preview: no newlines, cut at a word */
 export const gist = (s: string, n = 60) => { const t = s.replace(/\s+/g, " ").trim(); return t.length <= n ? t : `${t.slice(0, n).replace(/\s+\S*$/, "")}…`; };
 
-const label = (s: string, color = MUTED) => `font:600 11px ${MONO};letter-spacing:.06em;text-transform:uppercase;color:${color}`;
+/** A short, scannable subject: what happened, then who or where. Details stay in the body */
+export const subjectOf = (what: string, who: string, n = 80) => gist(`${what} — ${who}`, n);
+
+// Each class has its light look inline; the style block below changes it for dark mode and narrow screens
+const label = (color = MUTED) => `font:600 12px ${MONO};letter-spacing:.06em;text-transform:uppercase;color:${color}`;
 
 /** One row of the fact table */
 export function cell(f: Fact) {
-  const face = f.mono ? `13px ${MONO}` : f.small ? `11px ${MONO}` : `14px ${SANS}`;
+  const face = f.mono ? `13px ${MONO}` : f.small ? `12px ${MONO}` : `15px ${SANS}`;
+  const cls = f.small ? "muted" : "ink";
   const color = f.small ? MUTED : INK;
-  const value = f.href ? `<a href="${esc(f.href)}" style="color:${BRAND};text-decoration:underline">${esc(f.v)}</a>` : esc(f.v);
-  return `<tr><td style="padding:7px 14px 7px 0;border-bottom:1px solid ${LINE};${label(f.k)};vertical-align:top;white-space:nowrap">${esc(f.k)}</td><td style="padding:7px 0;border-bottom:1px solid ${LINE};font:${face};color:${color};vertical-align:top;word-break:break-word">${value}</td></tr>`;
+  const value = f.href ? `<a class="lk" href="${esc(f.href)}" style="color:${BRAND};text-decoration:underline">${esc(f.v)}</a>` : esc(f.v);
+  return `<tr><td class="k muted rule" style="padding:8px 16px 8px 0;border-bottom:1px solid ${LINE};${label()};vertical-align:top;white-space:nowrap">${esc(f.k)}</td><td class="v ${cls} rule" style="padding:8px 0;border-bottom:1px solid ${LINE};font:${face};color:${color};vertical-align:top;word-break:break-word;overflow-wrap:anywhere">${value}</td></tr>`;
 }
 
 /** A labelled block for what someone wrote */
 export const block = (k: string, v: string) =>
-  `<p style="margin:0 0 8px;${label(k)}">${esc(k)}</p>
-<div style="margin:0 0 22px;padding:12px 14px;background:${PAPER};border-left:3px solid ${BRAND};border-radius:4px;font:15px/1.55 ${SANS};color:${INK};white-space:pre-wrap;word-break:break-word">${esc(v)}</div>`;
+  `<p class="muted" style="margin:0 0 8px;${label()}">${esc(k)}</p>
+<div class="quote ink" style="margin:0 0 22px;padding:12px 14px;background:${PAPER};border-left:3px solid ${BRAND};border-radius:4px;font:15px/1.55 ${SANS};color:${INK};white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere">${esc(v)}</div>`;
 
-/** The card around everything, with the kicker and title above the table */
-export function shell(m: Pick<FactMail, "kicker" | "title" | "sub" | "preheader">, inner: string, footer: string) {
-  return `<!doctype html><html><head><meta charset="utf-8"><meta name="color-scheme" content="light only"><meta name="viewport" content="width=device-width"></head>
-<body style="margin:0;background:${PAPER};font:15px/1.55 ${SANS};color:${INK}">
-<span style="display:none;max-height:0;overflow:hidden">${esc(m.preheader)}</span>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${PAPER}"><tr><td align="center" style="padding:20px 10px 24px">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:640px;background:#fff;border:1px solid ${LINE};border-radius:12px"><tr><td style="padding:22px 24px 20px;text-align:left">
-<p style="margin:0 0 4px;font:600 12px ${MONO};letter-spacing:.06em;color:${BRAND}">neon1 · ${esc(m.kicker)}</p>
-<h1 style="margin:0 0 16px;font:700 22px ${MONO};color:${INK}">${esc(m.title)}${m.sub ? ` <span style="font:500 14px ${SANS};color:${MUTED}">· ${esc(m.sub)}</span>` : ""}</h1>
-${inner}
+// Dark mode and the narrow-phone table. Dark colors keep AA contrast: light text on #16241c, bright green links and a
+// bright green button with dark text
+const STYLES = `
+:root{color-scheme:light dark;supported-color-schemes:light dark}
+@media (prefers-color-scheme:dark){
+.page{background:#0e1712 !important}
+.card{background:#16241c !important;border-color:rgba(255,255,255,.18) !important}
+.ink{color:#e9f0ea !important}
+.muted{color:#aebdb2 !important}
+.brand,.lk{color:#6fe36f !important}
+.rule{border-color:rgba(255,255,255,.18) !important}
+.quote{background:#1d2f25 !important;border-left-color:#6fe36f !important}
+.btn{background:#6fe36f !important;color:#08210a !important}
+.code{background:#0e1712 !important;color:#6fe36f !important;border-color:rgba(111,227,111,.5) !important}
+.warn{color:#fbbf24 !important}
+.mark{filter:invert(1) hue-rotate(180deg)}
+}
+@media (max-width:480px){
+.pad{padding:18px 16px 16px !important}
+.k{display:block !important;padding:10px 0 0 !important;border-bottom:0 !important}
+.v{display:block !important;padding:2px 0 10px !important}
+.btn{display:block !important;text-align:center !important}
+}`;
+
+/** The card around everything: the brand line, the title, then what the caller puts inside, then the small print */
+export function shell(m: Pick<FactMail, "kicker" | "title" | "sub" | "preheader" | "intro">, inner: string, footer: string) {
+  const intro = (m.intro ?? []).map((p) => `<p class="ink" style="margin:0 0 14px;font:16px/1.55 ${SANS};color:${INK}">${esc(p)}</p>`).join("");
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark"><title>${esc(m.title)}${m.sub ? ` · ${esc(m.sub)}` : ""}</title><style>${STYLES}</style></head>
+<body class="page" style="margin:0;background:${PAPER};font:15px/1.55 ${SANS};color:${INK}">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all">${esc(m.preheader)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="page" style="background:${PAPER}"><tr><td align="center" style="padding:20px 10px 24px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="card" style="max-width:600px;background:#fff;border:1px solid ${LINE};border-radius:12px"><tr><td class="pad" style="padding:22px 24px 20px;text-align:left">
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 14px"><tr><td style="vertical-align:middle;padding-right:8px"><img class="mark" src="${MARK}" width="24" height="24" alt="" style="display:block;width:24px;height:24px;border:0"></td><td class="brand" style="vertical-align:middle;font:600 12px ${MONO};letter-spacing:.06em;color:${BRAND}">neon1 · ${esc(m.kicker)}</td></tr></table>
+<h1 class="ink" style="margin:0 0 14px;font:700 22px/1.3 ${MONO};color:${INK}">${esc(m.title)}${m.sub ? ` <span class="muted" style="display:block;font:500 15px/1.4 ${SANS};color:${MUTED};margin-top:4px">${esc(m.sub)}</span>` : ""}</h1>
+${intro}${inner}
 ${footer}
 </td></tr></table></td></tr></table></body></html>`;
 }
 
-/** The footer's small print */
-export const small = (lines: string[]) => `<p style="margin:14px 0 0;padding-top:12px;border-top:1px solid ${LINE};font:12px/1.6 ${MONO};color:${MUTED}">${lines.map(esc).join("<br>")}</p>`;
+/** The footer's small print, each line its own paragraph so a screen reader reads them apart */
+export const small = (lines: (string | { text: string; url?: string; label?: string })[]) =>
+  `<div class="muted rule" style="margin:14px 0 0;padding-top:12px;border-top:1px solid ${LINE};font:12px/1.65 ${SANS};color:${MUTED}">${lines.map((l) => (typeof l === "string" ? `<p style="margin:0 0 4px">${esc(l)}</p>` : `<p style="margin:0 0 4px">${esc(l.text)}${l.url ? ` <a class="lk" href="${esc(l.url)}" style="color:${BRAND};text-decoration:underline">${esc(l.label ?? "Notification settings")}</a>` : ""}</p>`)).join("")}</div>`;
 
-/** A button that opens the thing in 1NEON, left-aligned under the table */
+/** The one primary action, left-aligned under the table, tall enough to tap */
 const button = (a: { label: string; url: string }) =>
-  `<p style="margin:0 0 20px"><a href="${esc(a.url)}" style="display:inline-block;background:${BRAND};color:#fff;text-decoration:none;padding:11px 20px;border-radius:8px;font:600 13px ${MONO};letter-spacing:.02em">${esc(a.label)}</a></p>`;
+  `<p style="margin:0 0 20px"><a class="btn" href="${esc(a.url)}" style="display:inline-block;background:${BRAND};color:#fff;text-decoration:none;padding:13px 22px;min-height:20px;border-radius:8px;font:600 14px ${MONO};letter-spacing:.02em">${esc(a.label)}</a></p>`;
+
+/** A sign-in code: one unbroken text node that selects whole on a tap or double click */
+const codeBox = (code: string) =>
+  `<p style="margin:4px 0 22px"><span class="code" style="display:inline-block;font:700 30px ${MONO};letter-spacing:.2em;color:${BRAND};background:#fff;border:1px solid rgba(3,87,4,.4);border-radius:10px;padding:14px 14px 14px 20px;-webkit-user-select:all;user-select:all">${code}</span></p>`;
 
 /** The HTML and plain text of one fact mail */
 export function factMail(m: FactMail) {
-  const table = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${LINE};margin:0 0 20px">${m.facts.map(cell).join("")}</table>`;
-  const todo = m.todo ? `<p style="margin:0 0 18px;font:15px/1.55 ${SANS};color:${INK}"><b>What to do:</b> ${esc(m.todo)}</p>` : "";
-  const html = shell(m, `${table}${(m.blocks ?? []).map(([k, v]) => block(k, v)).join("\n")}${m.extraHtml ?? ""}${todo}${m.action ? button(m.action) : ""}`, small(m.footer));
+  const table = m.facts.length
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="rule" style="border-top:1px solid ${LINE};margin:0 0 20px">${m.facts.map(cell).join("")}</table>`
+    : "";
+  const todo = m.todo ? `<p class="ink" style="margin:0 0 18px;font:15px/1.55 ${SANS};color:${INK}"><b>What to do:</b> ${esc(m.todo)}</p>` : "";
+  const footer = small([m.why, ...(m.settings ? [m.settings] : []), ...(m.reply ? [m.reply] : [])]);
+  const html = shell(m, `${m.code ? codeBox(m.code) : ""}${table}${(m.blocks ?? []).map(([k, v]) => block(k, v)).join("\n")}${m.extraHtml ?? ""}${todo}${m.action ? button(m.action) : ""}`, footer);
   const pad = Math.max(0, ...m.facts.map((f) => f.k.length)) + 2;
   const rule = "-".repeat(60);
   const text = [
     m.textHead ?? m.title,
+    ...(m.sub ? [m.sub] : []),
     rule,
+    ...(m.intro ?? []).flatMap((p) => [p, ""]),
+    ...(m.code ? [`Code: ${m.code}`, ""] : []),
     ...m.facts.map((f) => `${f.k.padEnd(pad)}${f.v}`),
-    ...(m.blocks ?? []).flatMap(([k, v]) => [rule, k.toUpperCase(), "", v, ""]),
+    ...(m.blocks ?? []).flatMap(([k, v]) => ["", k.toUpperCase(), v]),
     ...(m.extraText ?? []),
     ...(m.todo ? ["", `What to do: ${m.todo}`] : []),
     ...(m.action ? ["", `${m.action.label}: ${m.action.url}`] : []),
     "",
     rule,
-    ...m.footer,
+    `Why you got this: ${m.why}`,
+    ...(m.settings ? [`${m.settings.text}${m.settings.url ? ` ${m.settings.label ?? "Notification settings"}: ${m.settings.url}` : ""}`] : []),
+    ...(m.reply ? [m.reply] : []),
   ].join("\n");
   return { html, text };
 }

@@ -9,8 +9,7 @@ import { isProspect } from "@1neon/domain";
 import { z } from "zod";
 import { actorId, body, fail, need, who } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
-import { gist, factMail, type Fact } from "../lib/factmail.ts";
-import { sentAt } from "../mail.ts";
+import { requestEmail } from "../emails.ts";
 import { CONTACT_TO } from "./contact.ts";
 
 
@@ -50,31 +49,10 @@ export function requestRoutes(app: App, k: Kit) {
       fail(429, "too_many", "That's a few requests today already. They've arrived; you'll get a reply by email.");
     }
     const what = REQUEST_KINDS[input.kind];
-    const who2 = user.name ? `${user.name} <${user.email}>` : user.email;
-    const portal = `${cfg.publicUrl}/1NEON/o/${t.slug}/workspace`;
-    const ref = t.clientId ? ` (${t.clientId}${isProspect(t) ? ", free account" : ""})` : "";
-    const rows: [string, string][] = [
-      ["From", who2], ["Organization", `${t.name}${ref}`],
-      ...(t.place ? [["Where", t.place] as [string, string]] : []), ...(t.link ? [["Link", t.link] as [string, string]] : []),
-      ["Asked for", what], ...(input.note ? [["Note", input.note] as [string, string]] : []),
-    ];
-    // The title says what was asked for, so that row is dropped; their note reads best in its own block; a link is a link
-    const title = input.kind === "assessment" ? "Assessment requested" : "Call requested";
-    const { text, html } = factMail({
-      kicker: "free account alert",
-      title,
-      sub: t.name,
-      preheader: `${user.name || user.email} asked for ${what}${input.note ? `: ${gist(input.note, 80)}` : ""}`,
-      facts: [
-        ...rows.filter(([k]) => k !== "Asked for" && k !== "Note").map(([k, v]): Fact => (k === "From" ? { k: "Who", v: `${who2} (reply to this email)` } : k === "Link" ? { k, v, href: /^https?:\/\//i.test(v) ? v : undefined } : { k, v })),
-        { k: "Sent", v: sentAt(at).replace(/^Sent /, "") },
-      ],
-      blocks: rows.filter(([k]) => k === "Note").map(([, v]): [string, string] => ["Their note", v]),
-      action: { label: "Open the account", url: portal },
-      footer: ["Reply to this email to answer them directly."],
-    });
-    // From "1NEON Reach": the portal telling neon1 about a free account's request
-    await d.mailer.send(CONTACT_TO, `${title} · ${t.name}`, text, html, user.email, undefined, undefined, "reach");
+    const free = isProspect(t);
+    const mail = requestEmail({ kind: input.kind, what, note: input.note, who: user.name, email: user.email, org: t.name, ref: t.clientId, free, place: t.place, link: t.link, url: `${cfg.publicUrl}/1NEON/o/${t.slug}/workspace`, at });
+    // From "1NEON Reach" (a free account's request) or "neon1 Alerts" (a client's)
+    await d.mailer.send(CONTACT_TO, mail.subject, mail.text, mail.html, user.email, undefined, undefined, mail.as);
     await repo.table.write([
       { put: { PK: `T#${t.id}`, SK: `REQUEST#${input.kind}`, at: at.toISOString(), by: user.id }, guard: { always: true } },
       repo.auditOp({ tenantId: t.id, actorId: actorId(c), action: `request.${input.kind}`, target: t.id, summary: `Asked neon1 for ${what}${input.note ? `: ${input.note.slice(0, 140)}` : ""}` }),

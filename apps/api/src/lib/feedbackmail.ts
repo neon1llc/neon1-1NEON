@@ -2,7 +2,7 @@
 // (reference, kind, where, time, sender, page, theme, browser, window), then what they wrote in its own block. Plain
 // text carries the same rows in aligned columns.
 import { sentAt } from "../mail.ts";
-import { factMail, gist } from "./factmail.ts";
+import { factMail, gist, replyTo, subjectOf } from "./factmail.ts";
 import { browserName } from "./bugmail.ts";
 
 /** What the page sent and the route fixed: everything one piece of feedback holds */
@@ -21,9 +21,9 @@ export interface Feedback {
 
 const when = (iso: string) => sentAt(new Date(iso)).replace(/^Sent /, "");
 
-/** The subject: the reference, the kind, and what it is about; "neon1 Feedback" as the sender says the rest */
+/** The subject: what it is and where ("Feedback FDB-G8889Y — Concern, Neo chat") */
 export function feedbackSubject(f: Feedback) {
-  return `${f.ref} · ${f.kind} · ${f.where}`;
+  return subjectOf(`Feedback ${f.ref}`, `${f.kind}, ${f.where}`);
 }
 
 export function feedbackMail(f: Feedback) {
@@ -32,6 +32,7 @@ export function feedbackMail(f: Feedback) {
     kicker: "feedback",
     title: f.ref,
     sub: `${f.kind} · ${f.where}`,
+    intro: [`${f.email || "Someone"} sent feedback about ${f.where}.`],
     preheader: `${f.kind}: ${gist(f.what, 90)}`,
     facts: [
       { k: "Reference", v: f.ref, mono: true },
@@ -45,7 +46,9 @@ export function feedbackMail(f: Feedback) {
       ...(f.viewport ? [{ k: "Window", v: f.viewport, mono: true }] : []),
     ],
     blocks: [["What they wrote", f.what]],
-    footer: [f.email ? "Reply to this email to answer them." : "They left no email."],
+    action: f.email ? { label: "Reply to them", url: replyTo(f.email, feedbackSubject(f)) } : undefined,
+    why: "Someone sent this with Feedback on neon1.tech or in 1NEON.",
+    reply: f.email ? "Reply to this email to answer them." : "They left no email.",
     textHead: `${f.ref}  ${f.kind}  ${f.where}`,
   });
 }

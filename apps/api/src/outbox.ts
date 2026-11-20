@@ -11,7 +11,7 @@
 
 import { actorHears, groupOf, isOwnOrg, isProspect, isQuickFix, neon1Only, noticeSummary, wants, type AuditEvent, type Member, type User } from "@1neon/domain";
 import type { Config } from "./config.ts";
-import { inviteEmail, noticeEmail } from "./emails.ts";
+import { inviteEmail, noticeEmail, prospectFacts } from "./emails.ts";
 import type { Mailer, Texter } from "./services.ts";
 import { smsReady, smsSendAllowed, textNotice, welcomeText, confirmedText, isOptOut } from "./sms.ts";
 import type { Repo } from "./store/repo.ts";
@@ -288,6 +288,8 @@ async function eventTargets(d: OutboxDeps, e: AuditEvent, clock: Clock): Promise
         action: e.action, summary, projectKey: key, projectUrl: key ? `${home}/projects/${key}` : undefined,
         url: invoiceUrl ?? `${home}/workspace`, button: invoiceUrl ? "See the invoice" : undefined,
         zone: u.timeZone, important: groupOf(e.action).level === "critical", operator, quick,
+        // What neon1 knows of a free account goes into its alerts as facts, not into the sentence
+        details: operator && tenant && isProspect(tenant) ? prospectFacts(tenant) : undefined, settingsUrl: `${cfg.publicUrl}/1NEON/me`, at: Number.isNaN(Date.parse(e.at)) ? undefined : new Date(e.at), changes: e.details,
       });
       targets.push({ key: u.id, channel: "email", send: (signal) => d.mailer.send(u.email, mail.subject, mail.text, mail.html, mail.replyTo, signal, undefined, mail.as) });
     }
@@ -334,7 +336,7 @@ async function smsSetupTarget(d: OutboxDeps, payload: Extract<OutboxPayload, { k
 /** Send one invitation email */
 async function sendInvite(d: OutboxDeps, p: Extract<OutboxPayload, { kind: "invite" }>, signal?: AbortSignal) {
   const mail = inviteEmail({ orgName: p.orgName, inviter: p.inviter, url: p.url });
-  await d.mailer.send(p.email, mail.subject, mail.text, mail.html, undefined, signal);
+  await d.mailer.send(p.email, mail.subject, mail.text, mail.html, mail.replyTo, signal, undefined, mail.as);
 }
 
 

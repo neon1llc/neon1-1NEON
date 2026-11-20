@@ -113,12 +113,14 @@ describe("email", () => {
     await call("raj@acmedental.example", "POST", `/t/${s.acme.id}/members/invite`, { people: [{ email: "x@y.example" }] });
     const mail = mailer.sent.at(-1)!;
     expect(mail.html.match(/neon1-mark\.png/g)).toHaveLength(1);
-    expect(mail.html).toContain('alt="neon1"');
-    expect(mail.html).toContain("your invitation");
-    expect(mail.html).toContain('href="https://neon1.tech/1NEON/"');
-    expect(mail.html).toContain('href="https://neon1.tech/"');
-    expect(mail.html).toMatch(/1 is glad to be of service\.<\/div><div style="white-space:nowrap[^"]*">Sent .+ E[SD]T \(\d\d:\d\d UTC(, [A-Z][a-z]{2} \d+)?\)<\/div>/);
+    expect(mail.html).toContain("neon1 · invitation");
+    expect(mail.html).toContain('<html lang="en">');
+    expect(mail.subject).toBe("Invitation — Acme Dental, from Raj Patel");
+    expect(mail.as).toBe("portal");
+    expect(mail.replyTo).toBe("hello@neon1.tech");
+    expect(mail.html).toMatch(/>Sent<\/td><td[^>]*>.+ E[SD]T \(\d\d:\d\d UTC(, [A-Z][a-z]{2} \d+)?\)</);
     expect(mail.text).toContain("how it becomes routine");
+    expect(mail.text).toContain("Why you got this:");
   });
 
   it("puts the sign-in code in one selectable piece under a plain subject", () => {
@@ -126,18 +128,17 @@ describe("email", () => {
     const out = message(event, new Date("2026-11-06T20:22:00Z"));
     expect(out.response.emailSubject).toBe("Your 1NEON sign-in code");
     expect(out.response.emailMessage).toMatch(/user-select:all">\{####\}<\/span>/);
-    expect(out.response.emailMessage).toContain('sign in to <a href="https://neon1.tech/1NEON/"');
-    expect(out.response.emailMessage).toContain("Sent Nov 6, 2026, 3:22 PM EST (20:22 UTC)");
-    expect(out.response.emailMessage).toContain("neon1 · your sign-in code");
+    expect(out.response.emailMessage).toContain("Your 1NEON sign-in code is {####}. Use it to sign in to 1NEON.");
+    expect(out.response.emailMessage).toContain("Nov 6, 2026, 3:22 PM EST (20:22 UTC)");
+    expect(out.response.emailMessage).toContain("neon1 · sign-in code");
     // The link finishes sign-in with the code in the fragment, never in a server-visible query
     expect(out.response.emailMessage).toContain('href="https://neon1.tech/1NEON/#code={####}"');
-    expect(out.response.emailMessage).not.toContain("<h1");
   });
 
   it("shows the sign-in code's time in the person's own zone when 1NEON has one", () => {
     const event = { triggerSource: "CustomMessage_Authentication", request: { codeParameter: "{####}", userAttributes: {} }, response: {} } as unknown as CustomMessageTriggerEvent;
     const out = message(event, new Date("2026-11-06T20:22:00Z"), "Europe/Berlin");
-    expect(out.response.emailMessage).toContain("Sent Nov 6, 2026, 9:22 PM GMT+1 (20:22 UTC)");
+    expect(out.response.emailMessage).toContain("Nov 6, 2026, 9:22 PM GMT+1 (20:22 UTC)");
   });
 
   it("leaves messages it doesn't brand to Cognito", () => {
@@ -193,7 +194,7 @@ describe("access levels", () => {
     // Raj has strong auth; Dana is an editor
     expect((await call("dana@acmedental.example", "POST", `/t/${s.acme.id}/members/invite`, { people: [{ email: "x@y.example" }] })).status).toBe(403);
     expect((await call("raj@acmedental.example", "POST", `/t/${s.acme.id}/members/invite`, { people: [{ email: "x@y.example" }] })).status).toBe(201);
-    expect(mailer.sent.at(-1)?.subject).toBe("You're invited to Acme Dental on 1NEON");
+    expect(mailer.sent.at(-1)?.subject).toBe("Invitation — Acme Dental, from Raj Patel");
   });
 
   it("keeps at least one admin", async () => {
