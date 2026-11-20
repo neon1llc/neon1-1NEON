@@ -308,7 +308,7 @@ const authenticator: Show = {
       run: async (s) => {
         // Setting the app up confirmed her for the day; this is the next day, when it has run out
         await (await engine()).nextDay();
-        await s.say("The next day: inviting someone is an admin action, so 1NEON asks her to confirm it's her");
+        await s.say("The next day, inviting someone is an admin action, so 1NEON asks her to confirm it's her");
         await s.think(`Now let me invite ${mate}.`);
         await inviteColleague(s);
         await s.waitFor(CONFIRM);
@@ -464,7 +464,7 @@ const calendar: Show = {
         await s.think("The whole month. My days off are this week.");
         await toMonth(s, off);
         await s.click(dayButton(off), 700);
-        await s.say("A day opens with a short form; leave can name who's away");
+        await s.say("A day opens with a short form. Leave can name who's away");
         await s.choose("#ce-kind", "leave", 400);
         await s.think("Leave, for me.");
         await s.choose("#ce-who", [...document.querySelectorAll<HTMLOptionElement>("#ce-who option")].find((o) => o.text.startsWith(owner))?.value ?? "", 400);

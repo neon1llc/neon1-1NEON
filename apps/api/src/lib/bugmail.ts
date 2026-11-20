@@ -37,7 +37,7 @@ export function browserName(ua: string): string {
 const size = (n: number) => (n >= 1024 * 1024 ? `${(n / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`);
 const when = (iso: string) => sentAt(new Date(iso)).replace(/^Sent /, "");
 
-/** The subject: what it is and where ("Bug report BUG-2KNJ49 — Neo chat"); the preview line has the start of the report */
+/** The subject: what it is and where ("Bug report BUG-2KNJ49: Neo chat"); the preview line has the start of the report */
 export function bugSubject(r: BugReport) {
   return subjectOf(`Bug report ${r.ref}`, r.where);
 }

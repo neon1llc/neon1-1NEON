@@ -152,7 +152,7 @@ export function InvoicePage() {
           <section className="pp-section">
             <h2 className="pp-bar">How to pay</h2>
             <ul className="pp-list">
-              <li>Online in 1NEON: open this invoice or the project's invoices and choose <b>Pay</b>. A bank transfer (ACH) is preferred; cards are accepted too.</li>
+              <li>Online in 1NEON: open this invoice or the project's invoices and choose <b>Pay</b>. A bank transfer (ACH) is preferred, and cards are accepted too.</li>
               <li>By check to neon1 LLC, 418 Broadway, Ste R, Albany, NY 12207, with {f.number} in the memo.</li>
               <li>By Zelle or wire: ask at hello@neon1.tech for the details, and put {f.number} in the note.</li>
             </ul>

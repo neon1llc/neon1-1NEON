@@ -186,7 +186,7 @@ function Proposal({ snapshot: s, rev, latestRev, decided, inForce, timeZone, slu
       <table className="pp-facts">
         <tbody>
           <tr><th>Prepared for</th><td>{s.preparedFor ? `${s.preparedFor.name}${s.preparedFor.title ? `, ${s.preparedFor.title}` : ""}` : s.orgName}</td><th>Prepared by</th><td>Pradeep Tathineni, neon1</td></tr>
-          <tr><th>Organization</th><td>{s.orgName}</td><th>Prices checked</th><td>{rev ? `${longDate(rev.issuedAt)}; recheck after ${longDate(rev.checkBy)}` : "when issued"}</td></tr>
+          <tr><th>Organization</th><td>{s.orgName}</td><th>Prices checked</th><td>{rev ? `${longDate(rev.issuedAt)}. Recheck after ${longDate(rev.checkBy)}` : "when issued"}</td></tr>
           <tr><th>Contact</th><td>{s.preparedFor?.email ?? "—"}</td><th>Wanted by</th><td>{s.project.targetDate ? longDate(s.project.targetDate) : "—"}</td></tr>
         </tbody>
       </table>
@@ -282,7 +282,7 @@ function Proposal({ snapshot: s, rev, latestRev, decided, inForce, timeZone, slu
             {s.options.map((o) => <tr key={o.id}><td><span className="pp-code">{o.code}</span> {o.title}</td><td>{o.fields.hours || "—"}</td><td>{o.fields.timeline || "—"}</td><td>{o.fields.cost || "—"}</td><td>{o.fields.outsideCosts || "None"}</td></tr>)}
           </tbody>
         </table>
-        <p className="pp-small">Prices are for the work described. A fixed price is the whole price for that work. An estimate is billed for the hours worked, at the rate shown, and never above its high end unless you approve a change first; every hour is listed in 1NEON as it's logged. Accounts and subscriptions are in your name and billed to you directly, so nothing is marked up and nothing is lost if we stop working together. Items to buy are bought by you, unless you agree with your initials that neon1 buys them; those are paid back at cost, with the receipt.</p>
+        <p className="pp-small">Prices are for the work described. A fixed price is the whole price for that work. An estimate is billed for the hours worked, at the rate shown, and never above its high end unless you approve a change first. Every hour is listed in 1NEON as it's logged. Accounts and subscriptions are in your name and billed to you directly, so nothing is marked up and nothing is lost if we stop working together. Items to buy are bought by you, unless you agree with your initials that neon1 buys them. Those are paid back at cost, with the receipt.</p>
       </Section>
 
       {/* Shared and individual responsibilities, in the "You will / I will" pairs of neon1's proposals */}

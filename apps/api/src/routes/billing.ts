@@ -256,7 +256,7 @@ export function billingRoutes(app: App, k: Kit, pay: ReturnType<typeof stripeWeb
     neon1(c);
     const p = await project(c);
     const it = await invoiceOf(c, p);
-    if (it.status !== "issued") fail(409, "not_issued", it.status === "draft" ? "A draft isn't issued yet; delete it instead." : "Only an open invoice can be voided.");
+    if (it.status !== "issued") fail(409, "not_issued", it.status === "draft" ? "A draft isn't issued yet. Delete it instead." : "Only an open invoice can be voided.");
     const input = await body(c, VoidInvoiceInput);
     if (input.version !== it.version) fail(409, "conflict", "This invoice changed since you opened it.", it);
     const items = await repo.listItems(p.tenantId, p.id);

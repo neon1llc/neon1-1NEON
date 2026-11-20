@@ -758,7 +758,7 @@ describe("asking neon1 for an assessment or a call", () => {
     expect(toNeon1()).toHaveLength(0);
     expect(await sweep(HOUR / 2 + 1000)).toMatchObject({ sent: 1 });
     const mail = toNeon1()[0]!;
-    expect(mail.subject).toMatch(/^Assessment requested — Kim Dental \(NP-\d{4}\)$/);
+    expect(mail.subject).toMatch(/^Assessment requested: Kim Dental \(NP-\d{4}\)$/);
     expect(mail.as).toBe("reach");
     expect(mail.replyTo).toBe("r@example.com");
     expect(mail.text).toContain(NOTE);

@@ -115,7 +115,7 @@ describe("email", () => {
     expect(mail.html.match(/neon1-mark\.png/g)).toHaveLength(1);
     expect(mail.html).toContain("neon1 · invitation");
     expect(mail.html).toContain('<html lang="en">');
-    expect(mail.subject).toBe("Invitation — Acme Dental, from Raj Patel");
+    expect(mail.subject).toBe("Invitation: Acme Dental, from Raj Patel");
     expect(mail.as).toBe("portal");
     expect(mail.replyTo).toBe("hello@neon1.tech");
     expect(mail.html).toMatch(/>Sent<\/td><td[^>]*>.+ E[SD]T \(\d\d:\d\d UTC(, [A-Z][a-z]{2} \d+)?\)</);
@@ -194,7 +194,7 @@ describe("access levels", () => {
     // Raj has strong auth; Dana is an editor
     expect((await call("dana@acmedental.example", "POST", `/t/${s.acme.id}/members/invite`, { people: [{ email: "x@y.example" }] })).status).toBe(403);
     expect((await call("raj@acmedental.example", "POST", `/t/${s.acme.id}/members/invite`, { people: [{ email: "x@y.example" }] })).status).toBe(201);
-    expect(mailer.sent.at(-1)?.subject).toBe("Invitation — Acme Dental, from Raj Patel");
+    expect(mailer.sent.at(-1)?.subject).toBe("Invitation: Acme Dental, from Raj Patel");
   });
 
   it("keeps at least one admin", async () => {

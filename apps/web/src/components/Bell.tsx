@@ -86,7 +86,7 @@ export function Bell({ tid, slug }: { tid: string; slug: string }) {
           <div className="bell-head"><b>Notifications{fresh.size > 0 && <small className="bell-new"> {fresh.size} new</small>}</b><Link to="/me#notifications" onClick={() => setOpen(false)} className="small">Choose what reaches you</Link></div>
           {/* "Nothing yet" only when the list really answered empty; a failure says so instead */}
           <Stale reads={[q]} />
-          {wait ?? (!q.data?.events.length && <p className="muted small bell-empty">Nothing yet. Changes others make here will show up in this list.</p>)}
+          {wait ?? (!q.data?.events.length && <p className="muted small bell-empty">Nothing yet. Others' changes appear here.</p>)}
           {/* New since you last looked, then Earlier; opening the list is what marks them seen */}
           {!wait && (q.data?.events.length ?? 0) > 0 && [
             ["New", q.data!.events.filter((e) => fresh.has(e.id))],

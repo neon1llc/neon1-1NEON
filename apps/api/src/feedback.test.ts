@@ -33,7 +33,7 @@ describe("feedback", () => {
     expect(t).toMatch(/About\s+1NEON/);
     expect(t).toMatch(/Page\s+https:\/\/neon1.tech\/1NEON\//);
     expect(t).not.toContain("?x=1");
-    expect(mailer.sent[0]!.subject).toMatch(/^Feedback FDB-\w{6} — Concern, 1NEON$/);
+    expect(mailer.sent[0]!.subject).toMatch(/^Feedback FDB-\w{6}: Concern, 1NEON$/);
   });
   it("goes to the feedback address when one is configured", async () => {
     const cfg = { env: "local" as const, publicUrl: "https://neon1.tech", operatorEmails: [], devAuth: true, feedbackTo: "feedback@neon1.tech" };

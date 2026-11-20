@@ -228,7 +228,7 @@ export function requestRoutes(app: App, k: Kit) {
         await repo.table.write([
           { put: rowOf(t.id, next), guard: sameAs(row) },
           { put: { PK: PENDING, SK: t.id, dueAt, version: next.version }, guard: { always: true as const } },
-          repo.auditOp({ tenantId: t.id, actorId: actorId(c as never), action: "request.saved", target: t.id, summary: `Saved an assessment request (${keys.join(", ")}); it goes to neon1 30 minutes after the last change` }),
+          repo.auditOp({ tenantId: t.id, actorId: actorId(c as never), action: "request.saved", target: t.id, summary: `Saved an assessment request (${keys.join(", ")}). It goes to neon1 30 minutes after the last change` }),
         ]);
         break;
       } catch (e) {

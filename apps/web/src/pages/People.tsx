@@ -52,7 +52,7 @@ export function People() {
     const off = m.status !== "deactivated";
     if (off && !(await ask({
       title: `Deactivate ${m.name || m.email}?`,
-      body: `They can't sign in to ${org.name} or get its emails and texts from now on, and any invitation they haven't accepted stops working. What they did here stays, with their name on it, and you can reactivate them at any time.`,
+      body: `They lose access to ${org.name}, its emails, and its texts, and any unaccepted invitation stops working. What they did here stays under their name. You can reactivate them any time.`,
       yes: "Deactivate",
       danger: true,
     }))) return;

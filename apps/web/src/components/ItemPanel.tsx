@@ -252,7 +252,7 @@ export function ItemPanel({ item, label, path, open, onClose }: { item: Item; la
       // A 409 carries the newer record for items; without it, keep the draft and say what happened
       const theirs = e instanceof HttpError && e.status === 409 ? (e.body.current as Item | undefined) : undefined;
       if (theirs?.id === item.id) setConflict(theirs);
-      else toast(e instanceof HttpError && e.status === 409 ? "Someone changed this first. Your text is still here; check the newer version, then save again." : problem(e));
+      else toast(e instanceof HttpError && e.status === 409 ? "Someone changed this first. Your text is still here. Check the newer version, then save again." : problem(e));
     }
     refresh();
   });
@@ -447,7 +447,7 @@ function KindFields({ kind, f, onChange }: { kind: ItemKind; f: Record<string, s
         <span className="small muted">One per line: piece of work | hours.{f.basis?.trim() ? ` ${hoursText(parseBasis(f.basis).reduce((n, x) => n + x.hours, 0))} in all.` : ""}</span>
       </label>
       {/* What the client pays vendors directly, and the checkable result */}
-      <label>Outside costs<input value={f.outsideCosts ?? ""} onChange={(e) => set("outsideCosts", e.target.value)} placeholder="e.g. none; runs in your existing AWS account" maxLength={160} /></label>
+      <label>Outside costs<input value={f.outsideCosts ?? ""} onChange={(e) => set("outsideCosts", e.target.value)} placeholder="e.g. none. Runs in your existing AWS account" maxLength={160} /></label>
       <label>Result<input value={f.result ?? ""} onChange={(e) => set("result", e.target.value)} placeholder="e.g. the exception list is in your inbox by 7 am" maxLength={300} /></label>
       {/* What the option expects to be bought; the client buys unless a line says neon1 */}
       <label style={{ gridColumn: "1 / -1" }}>Expected purchases

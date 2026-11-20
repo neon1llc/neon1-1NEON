@@ -109,7 +109,7 @@ export function useUpload(target: FileTarget, onDone?: () => void) {
     const what = (n: number) => (n === 1 ? "1 file" : `${n} files`);
     if (!bad.length) {
       const name = ok.length === 1 ? ok[0]!.file.name : what(ok.length);
-      toast(checking ? `Uploaded ${name}. A quick malware check runs first; it opens once that's done.` : `Uploaded ${name}`);
+      toast(checking ? `Uploaded ${name}. A quick malware check runs first. It opens once that's done.` : `Uploaded ${name}`);
       onDone?.();
     } else {
       toast(`${ok.length ? `${what(ok.length)} uploaded; ` : ""}${what(bad.length)} didn't: ${bad.map((j) => `${j.file.name} (${j.error})`).join(", ")}.`);
@@ -131,7 +131,7 @@ export function useUpload(target: FileTarget, onDone?: () => void) {
     const detail = await api<{ items: Item[] }>(`/t/${org.id}/projects/${target.projectId}`).catch(() => undefined);
     const rev = detail && revisions(detail.items).find((r) => r.p.number === ref.number && r.p.rev === ref.rev);
     if (!rev) return undefined;
-    const yes = await ask({ title: `Is this an edited copy of Proposal ${proposalRef(ref.number, ref.rev)}?`, body: `${file.name} carries that proposal's ID, so it looks like a copy someone changed (in Word, Google Docs, or Pages). Kept with r${ref.rev}, 1NEON compares it with what was issued and shows neon1 each change, ready to apply to the options; neon1 answers with the next revision.`, yes: "Yes, compare it", no: "No, keep it as an ordinary file" });
+    const yes = await ask({ title: `Is this an edited copy of Proposal ${proposalRef(ref.number, ref.rev)}?`, body: `${file.name} carries that proposal's ID, so it looks like a copy someone changed (in Word, Google Docs, or Pages). Kept with r${ref.rev}, 1NEON compares it with what was issued and shows neon1 each change, ready to apply to the options. neon1 answers with the next revision.`, yes: "Yes, compare it", no: "No, keep it as an ordinary file" });
     return yes ? rev.id : undefined;
   };
   const run = async (files: File[]) => {

@@ -143,7 +143,7 @@ function Definitions({ unknown }: { unknown: number }) {
       <ul className="small">
         <li><b>Finished per week</b> counts items by the week they were marked done. Editing a finished item doesn't move it. If an item is reopened and finished again, the latest finish counts.</li>
         <li><b>Finished on time</b> is items finished on or before their due date, out of finished items that have both a due date and a known finish date.</li>
-        <li><b>Open items</b> are items not done, not approved options, and not status updates; overdue ones are past their due date.</li>
+        <li><b>Open items</b> are items not done, not approved options, and not status updates. Overdue ones are past their due date.</li>
         <li><b>Project health</b> is what the team last set on each active project. "Not assessed" means nobody has set it yet.</li>
         {unknown > 0 && <li><b>Completion date unknown:</b> {unknown} finished {unknown === 1 ? "item was" : "items were"} marked done before finish dates were recorded, so {unknown === 1 ? "it isn't" : "they aren't"} in the weekly or on-time numbers.</li>}
       </ul>

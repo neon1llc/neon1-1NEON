@@ -453,7 +453,7 @@ export const STORY: Section[] = [
     title: "neon1 listens",
     why: "Pradeep asked me for a few things. Let me sign in and see what's new.",
     run: async (s) => {
-      await s.say("Pradeep reads it, calls for thirty minutes, and writes down what he heard, including the limits");
+      await s.say("Pradeep reads it, calls for thirty minutes, and writes down what he heard, limits included");
       await s.others(async () => {
         await moveTo("intake");
         await moveTo("listen");
@@ -598,7 +598,7 @@ export const STORY: Section[] = [
       await s.hover(".dc-amount", 1000);
       await s.say("She pays from the organization's bank account: pick the bank, then the account");
       await bankCheckout(s, "Bank transfer, like the invoice suggests.");
-      await s.say("Paid by bank, it's started, not finished: the bank takes a few business days to clear it");
+      await s.say("A bank payment is started, not finished. It clears in a few business days");
       await s.think("Started. Back to 1NEON.");
       await s.click({ sel: "dialog[open] .dc-done button", text: "Return to 1NEON" }, 1000);
       await s.say("Until the bank clears it, the invoice says it's on its way and Pay is gone");
@@ -745,7 +745,7 @@ export const STORY: Section[] = [
         await s.think(thought);
         await s.click(`input[aria-label="Done: ${t}"]`, 450);
       }
-      await s.say(`${mate} takes the walkthrough; ${owner} marks the training done`);
+      await s.say(`${mate} takes the walkthrough, and ${owner} marks the training done`);
       await s.think(`${mate} walked through it, start to finish, with the runbook open.`);
       await s.click(`input[aria-label="Done: ${TRAINING}"]`, 600);
       await s.say(S.voice.acceptSay);

@@ -40,7 +40,7 @@ export const replyTo = (email: string, subject: string) => `mailto:${email}?subj
 export const gist = (s: string, n = 60) => { const t = s.replace(/\s+/g, " ").trim(); return t.length <= n ? t : `${t.slice(0, n).replace(/\s+\S*$/, "")}…`; };
 
 /** A short, scannable subject: what happened, then who or where. Details stay in the body */
-export const subjectOf = (what: string, who: string, n = 80) => gist(`${what} — ${who}`, n);
+export const subjectOf = (what: string, who: string, n = 80) => gist(`${what}: ${who}`, n);
 
 // Each class has its light look inline; the style block below changes it for dark mode and narrow screens
 const label = (color = MUTED) => `font:600 12px ${MONO};letter-spacing:.06em;text-transform:uppercase;color:${color}`;

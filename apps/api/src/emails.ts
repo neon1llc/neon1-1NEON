@@ -63,7 +63,7 @@ export function codeEmail(o: { kind: string; title: string; says: string; lead: 
     // never send to a server, and only works where sign-in started
     action: signIn ? { label: o.action!, url: `${o.portal}#code=${o.code}` } : { label: "Open 1NEON", url: o.portal },
     why: signIn
-      ? "Someone asked to sign in to 1NEON with this email address. The link works in the browser where you asked for the code; the code works anywhere for a few minutes."
+      ? "Someone asked to sign in to 1NEON with this email address. The link works in the browser where you asked for the code. The code works anywhere for a few minutes."
       : "Someone asked for this code for your 1NEON account.",
     settings: { text: "If it wasn't you, ignore this email. The code expires on its own." },
   });

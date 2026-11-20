@@ -199,7 +199,7 @@ function ExportData() {
                 {missed.slice(0, SHOWN).map((f) => <li key={f.id}>{f.path}: {f.reason}</li>)}
                 {missed.length > SHOWN && <li>and {missed.length - SHOWN} more, listed in manifest.json and README.txt</li>}
               </ul>
-              <span className="muted">Download {missed.length === 1 ? "it" : "these"} from Files, then try again.{missed.some((f) => f.reason === "the upload never finished") ? " An upload that never finished needs uploading again." : ""}{missed.some((f) => f.trashed) ? " Files in Trash don't show in Files; ask neon1 for those." : ""}</span>
+              <span className="muted">Download {missed.length === 1 ? "it" : "these"} from Files, then try again.{missed.some((f) => f.reason === "the upload never finished") ? " An upload that never finished needs uploading again." : ""}{missed.some((f) => f.trashed) ? " Files in Trash don't show in Files. Ask neon1 for those." : ""}</span>
             </>
           )}
         </div>

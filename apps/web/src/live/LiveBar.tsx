@@ -179,7 +179,7 @@ export function LiveBar({ player }: { player: Player }) {
           <div className="live-load">
             <p className="live-card-eye">{player.focused ? "Guided walkthrough" : `Chapter ${v.index + 1} of ${player.sections.length}`}</p>
             <h2>{player.focused ? show.title : v.title}</h2>
-            <p>Setting up the story so far, so this starts where it should. It takes a few seconds.</p>
+            <p>Setting up the story so far. This takes a few seconds.</p>
             <div className="live-load-bar" aria-hidden="true"><i style={{ transform: `scaleX(${Math.max(0.04, v.loading)})` }} /></div>
           </div>
         </div>, document.body)}
@@ -208,7 +208,7 @@ export function LiveBar({ player }: { player: Player }) {
             {resumeAt !== undefined && <button className="live-btn" onClick={() => void player.start(0)}>Start from the beginning</button>}
             <a className="live-btn" href="/1NEON/demo/">Try it yourself instead</a>
           </div>
-          <p className="live-card-foot">Everything here is made up and stays in this browser. The bar above pauses, steps between chapters, and changes the speed; Space and the arrow keys do the same.</p>
+          <p className="live-card-foot">Everything here is made up and stays in this browser. The bar above pauses, steps between chapters, and changes the speed. Space and the arrow keys do the same.</p>
         </Card>
       )}
 

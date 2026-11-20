@@ -98,7 +98,7 @@ export const PREVIEW: Show = {
       id: "p-approve",
       title: "Approve one",
       run: async (s) => {
-        await s.say(`${owner} approves one; the decision is kept with the exact terms she saw`);
+        await s.say(`${owner} approves one, and the decision is kept with the exact terms she saw`);
         await s.click({ sel: `${article(S.chosen)} button`, text: "Approve this option" }, 600);
         await s.think(S.voice.conditionThink);
         await s.type("#cond", S.condition);
@@ -114,7 +114,7 @@ export const PREVIEW: Show = {
       id: "p-progress",
       title: "See progress",
       run: async (s) => {
-        await s.say("The work shows up as it happens, with updates she can read in a minute, including what didn't work");
+        await s.say("The work shows up as it happens, in updates she can read in a minute, failures included");
         await s.others(async () => {
           await moveTo("build");
           await planWork();

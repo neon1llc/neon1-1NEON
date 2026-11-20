@@ -215,7 +215,7 @@ describe("event notices", () => {
     const before = mailer.sent.length;
     await pass();
     const toRaj = mailer.sent.slice(before).filter((m) => m.to === s.raj.email);
-    expect(toRaj.map((m) => m.subject)).toEqual([expect.stringMatching(/^Decision approved — FLOW-1 · /)]);
+    expect(toRaj.map((m) => m.subject)).toEqual([expect.stringMatching(/^Decision approved: FLOW-1 · /)]);
     expect(toRaj[0]!.text).toMatch(/Who\s+You\n/);
   });
 });

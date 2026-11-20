@@ -132,7 +132,7 @@ describe("suggested lines", () => {
     expect(paymentPlan(priceOf({ ...est, depositPercent: 20 })!)[0]).toBe("$700.00 when you approve (20% of the low end, as a deposit)");
     const none = rec("d5", "decision", "approved", { terms: { cost: "$1,700 fixed", pricing: "fixed", depositPercent: 0 } });
     expect(depositLines(none)).toEqual([]);
-    expect(paymentPlan(priceOf({ cost: "$1,700 fixed", depositPercent: 0 })!)).toEqual(["Nothing up front; $1,700.00 when you accept the handover"]);
+    expect(paymentPlan(priceOf({ cost: "$1,700 fixed", depositPercent: 0 })!)).toEqual(["Nothing up front, then $1,700.00 when you accept the handover"]);
     // A draft deposit asks for nothing until it's issued, so a second draft still suggests the full share
     const draft = inv("i9", "draft", { type: "deposit", lines: depositLines(twenty) });
     expect(depositLines(twenty, undefined, [draft])).toHaveLength(1);
@@ -192,7 +192,7 @@ describe("quick fix quotes", () => {
     expect(f).toMatchObject({ cost: "$300 to $750 estimate", hours: "2 to 5 hours", depositPercent: 0, recommended: true });
     const p = priceOf(f)!;
     expect(depositLines({ id: "d", title: "x", fields: { terms: f } })).toEqual([]);
-    expect(paymentPlan(p)).toEqual(["Nothing up front; the hours worked when you accept the handover"]);
+    expect(paymentPlan(p)).toEqual(["Nothing up front, then the hours worked when you accept the handover"]);
   });
 
   it("drops hours and rate from a fixed quote, and keeps the option's other fields", () => {

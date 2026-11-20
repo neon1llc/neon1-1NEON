@@ -398,7 +398,7 @@ function SignIn() {
         ) : (
           <>
             <h2 className="signin-h">Client portal</h2>
-            <p className="signin-lead" style={signupOpen === undefined ? { visibility: "hidden" } : undefined}>{signupOpen ? "Sign in to your 1NEON account. New here? Start for free." : "Sign in to your 1NEON account."}</p>
+            <p className="signin-lead" style={signupOpen === undefined ? { visibility: "hidden" } : undefined}>{signupOpen ? "Sign in to your 1NEON account. New here? Create one." : "Sign in to your 1NEON account."}</p>
           </>
         )}
         {problem === "not_invited" && <p className="notice" role="alert">That email has no invite. Ask your organization's admin or neon1.</p>}

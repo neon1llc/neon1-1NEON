@@ -81,7 +81,7 @@ export function FaceForm({ ask = false, onDone }: { ask?: boolean; onDone?: () =
   return (
     <form className={`face-form${ask ? " card" : ""}`} onSubmit={(e) => { e.preventDefault(); if (ready && changed && !busy) void save(); }}>
       {ask && <h2 className="section-h">Where can I see your business?</h2>}
-      <p className="muted small">{ask ? "If you'd like, add your website or a public page (Google, Yelp, LinkedIn), or where you're based, so I know who I'm working with. One is enough, and you can skip it." : "Your website or a public page, and where you're based. Both are optional."}</p>
+      <p className="muted small">{ask ? "Add your website or a public page (Google, Yelp, LinkedIn), or where you're based, so I know who I'm working with. One is enough, and you can skip it." : "Your website or a public page, and where you're based. Both are optional."}</p>
       {error && <p className="notice" role="alert">{error}</p>}
       <label className="field-label" htmlFor="face-link">Website or public page</label>
       <input id="face-link" inputMode="url" maxLength={200} autoComplete="url" placeholder="yourbusiness.com" aria-invalid={linkMsg ? true : undefined} aria-describedby={linkMsg ? "face-link-error" : undefined} value={link} onChange={(e) => { setLink(e.target.value); setFieldErrs(({ link: _l, ...r }) => r); }} />

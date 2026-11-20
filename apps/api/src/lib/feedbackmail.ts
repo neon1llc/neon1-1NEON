@@ -21,7 +21,7 @@ export interface Feedback {
 
 const when = (iso: string) => sentAt(new Date(iso)).replace(/^Sent /, "");
 
-/** The subject: what it is and where ("Feedback FDB-G8889Y — Concern, Neo chat") */
+/** The subject: what it is and where ("Feedback FDB-G8889Y: Concern, Neo chat") */
 export function feedbackSubject(f: Feedback) {
   return subjectOf(`Feedback ${f.ref}`, `${f.kind}, ${f.where}`);
 }

@@ -119,7 +119,7 @@ function missing(t: Target): string {
     : shut && !shut.hasAttribute("data-live-inert") ? `is inside an inert <${shut.tagName.toLowerCase()} class="${shut.className}">`
     : cs.visibility === "hidden" || cs.display === "none" || Number(cs.opacity) <= 0.05 ? "is hidden by its style"
     : `reads "${(el.innerText || "").trim().slice(0, 40)}"`;
-  return ` (${all.length} on ${at}; the first ${why})`;
+  return ` (${all.length} on ${at}. The first ${why})`;
 }
 
 /** The first visible element matching a target, or undefined */
@@ -586,7 +586,7 @@ export class Player {
   }
   pause() {
     this.autoPaused = false;
-    this.emit({ paused: true, note: "Paused. The page is yours to try; Play picks this chapter up again." });
+    this.emit({ paused: true, note: "Paused. The page is yours to try. Play picks this chapter up again." });
   }
   resume() {
     this.autoPaused = false;

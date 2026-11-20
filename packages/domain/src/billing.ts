@@ -284,7 +284,7 @@ export function priceMeaning(p: Price): string {
 /** When the money is due, as short lines: the deposit at approval, and the rest at handover */
 export function paymentPlan(p: Price, percent = p.depositPercent ?? DEPOSIT_PERCENT): string[] {
   // Nothing up front: the whole of it is billed at handover
-  if (percent <= 0) return p.kind === "fixed" ? [`Nothing up front; ${money(p.totalCents)} when you accept the handover`] : ["Nothing up front; the hours worked when you accept the handover"];
+  if (percent <= 0) return p.kind === "fixed" ? [`Nothing up front, then ${money(p.totalCents)} when you accept the handover`] : ["Nothing up front, then the hours worked when you accept the handover"];
   if (p.kind === "fixed") {
     const first = Math.round((p.totalCents * percent) / 100);
     return [`${money(first)} when you approve (${percent}% deposit)`, `${money(p.totalCents - first)} when you accept the handover`];
@@ -431,7 +431,7 @@ export function refundCredit(d: Decision, items: Rec[]): { appliesTo: string; li
   const note = (price.kind === "fixed"
     ? "The option you changed to costs less than what was already invoiced, so the difference is refunded, as the service agreement says."
     : "The work took fewer hours than the deposit covered, so the difference is refunded, as the service agreement says.")
-    + (give < due ? ` ${money(due - give)} more is owed back on another invoice; credit it separately.` : "");
+    + (give < due ? ` ${money(due - give)} more is owed back on another invoice. Credit it separately.` : "");
   return { appliesTo: target.id, lines: [{ text: text.slice(0, 200), qty: 1, unitCents: give, ref: d.id }], note };
 }
 

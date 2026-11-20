@@ -546,7 +546,7 @@ function Overview({ project: p, items, docs }: { project: Project; items: Item[]
             {/* Posting sets the project's health, so a difference from the current one is said out loud */}
             {post.health !== p.health && <p id="up-h-now" className="small muted" style={{ margin: "4px 0 0" }}>The project is {HEALTH_LABEL[p.health as keyof typeof HEALTH_LABEL]?.toLowerCase() ?? p.health} now; posting changes it.</p>}
           </div>
-          <div><label htmlFor="up-t">In a sentence</label><textarea id="up-t" rows={2} style={{ minHeight: 0 }} value={post.title} onChange={(e) => setPost({ ...post, title: e.target.value })} maxLength={160} placeholder="e.g. migration finished; testing starts Monday" /></div>
+          <div><label htmlFor="up-t">In a sentence</label><textarea id="up-t" rows={2} style={{ minHeight: 0 }} value={post.title} onChange={(e) => setPost({ ...post, title: e.target.value })} maxLength={160} placeholder="e.g. migration finished. Testing starts Monday" /></div>
           <div className="actions"><button className="btn btn-primary" disabled={!post.title.trim() || sending}>{sending ? "Posting…" : "Post"}</button><button type="button" className="btn btn-ghost" onClick={() => setPosting(false)}>Cancel</button></div>
         </form>
       </Dialog>
@@ -670,7 +670,7 @@ function MetricCard({ item, path, onReading }: { item: Item; path: string; onRea
       </div>
       <ItemPanel item={item} label="Measure" path={path} open={open} onClose={() => setOpen(false)} />
       <div className="val">{latest ? `${latest.value}${m.unit ? ` ${m.unit}` : ""}` : m.baseline !== undefined ? `${m.baseline}${m.unit ? ` ${m.unit}` : ""}` : "–"}</div>
-      <div className="range">{latest ? `Latest, ${dateLabel(latest.at)}` : "Where it starts; no readings yet"}</div>
+      <div className="range">{latest ? `Latest, ${dateLabel(latest.at)}` : "Where it starts. No readings yet"}</div>
       <div className="range">
         {latest && <>From {m.baseline ?? "?"} · </>}Target {m.target ?? "?"} {m.unit} · {betterWhen(m) === "down" ? "lower is better" : "higher is better"}
       </div>
@@ -735,7 +735,7 @@ function LayerTab({ layer, project, items, docs, edits }: { layer: Layer; projec
       await api(`${path}/items/${item.id}`, { method: "PATCH", body: { version: item.version, ...body } });
       ok = true;
     } catch (e) {
-      if (e instanceof HttpError && e.status === 409) toast(`Someone changed "${item.title}" first. Showing the latest now; your entry is still in the box.`);
+      if (e instanceof HttpError && e.status === 409) toast(`Someone changed "${item.title}" first. Showing the latest now. Your entry is still in the box.`);
       else toast(problem(e));
     }
     refresh();
@@ -914,7 +914,7 @@ function AddItem({ kind, path, taken, decided }: { kind: ItemKind; path: string;
       session.current = "";
       if (drafts.length > 1) toast(`${drafts.length} requests sent`);
     } catch (e) {
-      toast(sent ? `${sent} of ${drafts.length} sent. ${problem(e)} Send again to finish; the ones already sent won't repeat.` : problem(e));
+      toast(sent ? `${sent} of ${drafts.length} sent. ${problem(e)} Send again to finish. The ones already sent won't repeat.` : problem(e));
     }
     refresh();
   });
@@ -1170,7 +1170,7 @@ function ProposalStrip({ all, docs, path, project, decider }: { all: Item[]; doc
         <h2>{cur ? `Issue revision ${cur.p.rev + 1}?` : "Issue the proposal?"}</h2>
         <p className="small muted">This freezes the proposal as it is now, gives every option an ID, and tells the client. Prices are marked checked today and due a recheck in 30 days. Earlier revisions stay readable.</p>
         <label htmlFor="iss-note">What changed (optional)</label>
-        <textarea id="iss-note" rows={2} value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} placeholder={cur ? "e.g. prices rechecked; option B adds a scanner" : "e.g. first issue"} />
+        <textarea id="iss-note" rows={2} value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} placeholder={cur ? "e.g. prices rechecked. Option B adds a scanner" : "e.g. first issue"} />
         <div className="actions">
           <button className="btn btn-primary" disabled={busy} onClick={() => void issue()}>{busy ? "Issuing…" : "Issue"}</button>
           <button className="btn btn-ghost" onClick={() => setIssuing(false)}>Cancel</button>
@@ -1289,9 +1289,9 @@ function Options({ items, all, docs, path, project }: { items: Item[]; all: Item
   const held = (o: Item) => {
     const snap = inRev(o);
     if (!cur) return quick ? "neon1 issues the quote before it can be approved" : "neon1 issues the proposal before an option can be approved";
-    if (!snap) return `not in ${word} ${proposalRef(cur.p.number, cur.p.rev)} yet; neon1 adds it in the next revision`;
-    if (snap.version !== o.version) return `changed since r${cur.p.rev}; neon1 issues the next revision`;
-    if (stale) return "prices may have changed; ask neon1 to refresh";
+    if (!snap) return `not in ${word} ${proposalRef(cur.p.number, cur.p.rev)} yet. neon1 adds it in the next revision`;
+    if (snap.version !== o.version) return `changed since r${cur.p.rev}. neon1 issues the next revision`;
+    if (stale) return "prices may have changed. Ask neon1 to refresh";
     return undefined;
   };
   // Why a replaced option can't be chosen again yet: its approval moved it past the issued revision,
@@ -1299,7 +1299,7 @@ function Options({ items, all, docs, path, project }: { items: Item[]; all: Item
   const heldAgain = (o: Item) => {
     const snap = inRev(o);
     if (!cur || !snap || snap.version !== o.version) return "neon1 confirms it in the next revision of the proposal";
-    if (stale) return "prices may have changed; ask neon1 to refresh";
+    if (stale) return "prices may have changed. Ask neon1 to refresh";
     return undefined;
   };
   const a = approving && OptionFields.parse(approving.fields);
@@ -1390,7 +1390,7 @@ function Options({ items, all, docs, path, project }: { items: Item[]; all: Item
       </div>
       {/* What the scores mean, once for all the options */}
       {!quick && <p className="small muted assess-rubric">
-        <b>neon1's assessment</b>, from 1 to 5, where more filled dots is always better. <b>Cost</b>: the total cost. <b>Quality</b>: how fully it meets the agreed requirements. <b>Effort</b>: your team's effort to adopt and run it. The written price on each option is the price you'd accept{DEMO ? "; every figure in this demo is illustrative" : ""}.
+        <b>neon1's assessment</b>, from 1 to 5, where more filled dots is always better. <b>Cost</b>: the total cost. <b>Quality</b>: how fully it meets the agreed requirements. <b>Effort</b>: your team's effort to adopt and run it. The written price on each option is the price you'd accept{DEMO ? ". Every figure in this demo is illustrative" : ""}.
       </p>}
       {opened && <ItemPanel item={opened} label="Option" path={path} open onClose={() => setOpenId(undefined)} />}
       {/* Approval restates exactly what's being accepted, so nobody recalls terms from another screen */}
@@ -1450,7 +1450,7 @@ function Options({ items, all, docs, path, project }: { items: Item[]; all: Item
           </section>
         )}
         {signed || oneScreen ? <SignBox id="approve-sign" value={sign} onChange={setSign} /> : <AgreementNeeded />}
-        <p className="small muted">{inForce ? "Signing replaces the decision in force with this option's scope and price under your service agreement. 1NEON keeps both decisions, your reason, and your signature; none of it can be edited afterwards." : `Signing approves ${quick ? "this quote's" : "this option's"} scope and price under your service agreement. 1NEON keeps a copy of these terms with your signature, who signed and when; none of it can be edited afterwards.`} Invoices follow as the {word.toLowerCase()} says.</p>
+        <p className="small muted">{inForce ? "Signing replaces the decision in force with this option's scope and price under your service agreement. 1NEON keeps both decisions, your reason, and your signature. None of it can be edited afterwards." : `Signing approves ${quick ? "this quote's" : "this option's"} scope and price under your service agreement. 1NEON keeps a copy of these terms with your signature, who signed and when. None of it can be edited afterwards.`} Invoices follow as the {word.toLowerCase()} says.</p>
         <div className="actions">
           <button className="btn btn-primary" disabled={(!signed && !(oneScreen && agreeRead && agreement.data)) || !signReady(sign) || (Boolean(inForce) && reason.trim().length < 3)} onClick={() => void approve()}>{inForce ? `Sign and change to ${aCode ?? ""}` : quick ? (oneScreen ? "Sign both and approve the quote" : "Sign and approve the quote") : `Sign and approve ${aCode ?? ""}`}</button>
           <button className="btn btn-ghost" onClick={() => setApproving(undefined)}>Cancel</button>

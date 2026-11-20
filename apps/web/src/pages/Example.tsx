@@ -127,7 +127,7 @@ function NetworkDiagram() {
   const W = 760, H = 250, box = 128, gap = 20;
   const x = (i: number) => 12 + i * (box + gap);
   return (
-    <svg className="piece-diagram" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Five network segments behind one firewall: staff, servers, devices, security, and guest. Guest reaches the internet only; security reaches nothing but two update hosts.">
+    <svg className="piece-diagram" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Five network segments behind one firewall: staff, servers, devices, security, and guest. Guest reaches the internet only. Security reaches nothing but two update hosts.">
       <rect x={12} y={12} width={W - 24} height={42} rx={8} className="pd-fw" />
       <text x={W / 2} y={38} textAnchor="middle" className="pd-t">Firewall, with the rule table between every segment</text>
       {VLANS.map((v, i) => (

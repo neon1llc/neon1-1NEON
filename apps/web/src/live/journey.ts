@@ -129,7 +129,7 @@ export const JOURNEY: Show = {
           await s.think("A tour? Maybe later.");
           await s.click({ sel: "dialog[open] button", text: "Skip" }, 900);
         }
-        await s.say("Home says what a free account is for, with the sample project, walkthrough, and FAQs beside it");
+        await s.say("Home says what the account is for, with the sample project, walkthrough, and FAQs beside it");
         await s.hover(".prospect-note", 1400);
         await s.say("It also says how long the account is kept, and offers a download");
         await s.hover(".keep-card", 1200);

@@ -19,7 +19,7 @@ export interface KindGuide {
 // One entry per kind people add by hand; starters already on the project are hidden
 export const GUIDE: Partial<Record<ItemKind, KindGuide>> = {
   discovery: {
-    hint: "A question for the people who do the work. One question, answered in their words.",
+    hint: "A question for the people who do the work, answered in their words.",
     title: "Where does the work get stuck or wait?",
     body: "Why it matters, or what a good answer looks like",
     starters: [

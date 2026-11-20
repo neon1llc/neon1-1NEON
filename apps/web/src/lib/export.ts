@@ -114,7 +114,7 @@ export async function exportOrganization(org: Tenant, say: Progress, confirm: (w
     } catch (e) {
       await release(root, folder);
       // The browser's storage refused part way (full, or private mode): start again in memory
-      say(`Couldn't build it on this device's storage (${e instanceof Error ? e.message : String(e)}); starting again in memory…`);
+      say(`Couldn't build it on this device's storage (${e instanceof Error ? e.message : String(e)}). Starting again in memory…`);
       done = undefined;
     }
   }

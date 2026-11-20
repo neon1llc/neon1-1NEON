@@ -44,7 +44,7 @@ export function AgreementPage() {
     setBusy(true);
     try {
       await api(`/t/${org.id}/agreement/sign`, { method: "POST", body: { edition: a.edition, hash: a.hash, typedName: sign.typedName.trim(), consent: sign.consent } });
-      toast("Signed. Thank you; a copy is kept with your organization's records.");
+      toast("Signed. Thank you. A copy is kept with your organization's records.");
     } catch (e) {
       toast(problem(e));
     }

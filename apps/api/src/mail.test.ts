@@ -81,7 +81,7 @@ describe("notice emails", () => {
   it("says who did what in a short subject and a plain first sentence, with no placeholders like 'something changed'", async () => {
     const { noticeEmail } = await import("./emails.ts");
     const m = noticeEmail({ ...base, action: "doc.uploaded", summary: 'Uploaded "plan.pdf"', operator: true, important: true });
-    expect(m.subject).toBe("File uploaded — Pradeep Test (NP-0002)");
+    expect(m.subject).toBe("File uploaded: Pradeep Test (NP-0002)");
     expect(m.text).toContain('Alotta Pickles uploaded "plan.pdf"');
     expect(m.text).toMatch(/Who\s+Alotta Pickles <a@example.com>/);
     expect(m.text).toMatch(/Organization\s+Pradeep Test \(NP-0002, free account\)/);
@@ -92,7 +92,7 @@ describe("notice emails", () => {
   it("puts the project in its own row and out of the sentence", async () => {
     const { noticeEmail } = await import("./emails.ts");
     const m = noticeEmail({ ...base, trial: false, orgName: "Harborline", action: "task.created", summary: 'FLOW-1: added task "Map the stock export"', projectKey: "FLOW-1", projectUrl: "https://x/p/FLOW-1" });
-    expect(m.subject).toBe("Task added — FLOW-1 · Harborline");
+    expect(m.subject).toBe("Task added: FLOW-1 · Harborline");
     expect(m.text).toMatch(/Project\s+FLOW-1/);
     expect(m.text).toContain('Alotta Pickles added task "Map the stock export"');
     expect(m.html).toContain('href="https://x/p/FLOW-1"');
@@ -201,7 +201,7 @@ describe("every email", () => {
     const { noticeEmail, prospectFacts } = await import("./emails.ts");
     const details = prospectFacts({ place: "Queens, NY", link: "https://kimdental.example", prospect: { kind: "other", kindOther: "A dental practice", found: "other", foundOther: "LinkedIn" } });
     const m = noticeEmail({ orgName: "Kim Dental", trial: true, ref: "NP-0002", by: "Dana Kim", byEmail: "dana@example.com", action: "prospect.signedup", summary: "Dana Kim (dana@example.com) signed up as Kim Dental (NP-0002), A dental practice, Queens, NY", url: "https://x/ws", operator: true, important: true, details });
-    expect(m.subject).toBe("Free account created — Kim Dental (NP-0002)");
+    expect(m.subject).toBe("Free account created: Kim Dental (NP-0002)");
     expect(m.text).toMatch(/Where\s+Queens, NY/);
     expect(m.text).toMatch(/Link\s+https:\/\/kimdental\.example/);
     expect(m.text).toMatch(/Found neon1 via\s+LinkedIn/);
