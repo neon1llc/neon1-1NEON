@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+### Added
+- Matrix text fields have the site's green caret (shared/caret.js and shared/neon1.css from neon1.tech), dark green in light mode and Matrix green in dark. Sentinel is unchanged.
+
 ### Changed
 - Terms of use, the privacy policy, and the cookie notice state each retention schedule and repeated clause once, with no obligation, right, deadline, or number removed. The proposal and signing text no longer restate what the service agreement covers. The short walkthroughs and the full-account journey lose a third of their captions, and the sample stories lose their unused lines.
 - The live walkthrough's captions and thoughts are about a third shorter, one idea each, with the story beats unchanged. Sign-in's link now reads "Create an account" in place of "Start for free", and "free" is named once per page (sign-up lead, Home note, FAQ limits). Short labels and buttons follow verb and object: "Confirm code", "Sign with initials", "Move project", "Show the problem", "Tour this page".

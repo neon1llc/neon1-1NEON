@@ -2091,7 +2091,7 @@ html:has(.signin.awake), html:has(.signin.awake) body { background: var(--bg); c
   :root[data-theme="device"] { accent-color: var(--accent); }
   :root[data-theme="device"] ::selection { background: rgb(108 255 168 / .3); color: var(--text); }
   :where(:root[data-theme="device"]) :is(option, optgroup) { background-color: var(--panel); color: var(--text); }
-  :root[data-theme="device"] :is(input, textarea, select):-webkit-autofill, :root[data-theme="device"] :is(input, textarea, select):-webkit-autofill:is(:hover, :focus) { -webkit-text-fill-color: var(--text); caret-color: var(--text); box-shadow: 0 0 0 100px var(--panel) inset; transition: background-color 9999s; }
+  :root[data-theme="device"] :is(input, textarea, select):-webkit-autofill, :root[data-theme="device"] :is(input, textarea, select):-webkit-autofill:is(:hover, :focus) { -webkit-text-fill-color: var(--text); caret-color: var(--n1-caret, var(--text)); box-shadow: 0 0 0 100px var(--panel) inset; transition: background-color 9999s; }
   :root[data-theme="device"] :is(input, textarea):disabled { color: var(--faint); cursor: not-allowed; }
   :root[data-theme="device"] .btn:disabled { opacity: .6; }
   :root[data-theme="device"] .readonly-bar { color: var(--text); background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--amber) 14%, var(--bg)) 0 12px, color-mix(in srgb, var(--amber) 20%, var(--bg)) 12px 24px); border-bottom-color: var(--amber); }
@@ -2100,7 +2100,7 @@ html:has(.signin.awake), html:has(.signin.awake) body { background: var(--bg); c
 :root[data-theme="matrix"] { accent-color: var(--accent); }
 :root[data-theme="matrix"] ::selection { background: rgb(108 255 168 / .3); color: var(--text); }
 :where(:root[data-theme="matrix"]) :is(option, optgroup) { background-color: var(--panel); color: var(--text); }
-:root[data-theme="matrix"] :is(input, textarea, select):-webkit-autofill, :root[data-theme="matrix"] :is(input, textarea, select):-webkit-autofill:is(:hover, :focus) { -webkit-text-fill-color: var(--text); caret-color: var(--text); box-shadow: 0 0 0 100px var(--panel) inset; transition: background-color 9999s; }
+:root[data-theme="matrix"] :is(input, textarea, select):-webkit-autofill, :root[data-theme="matrix"] :is(input, textarea, select):-webkit-autofill:is(:hover, :focus) { -webkit-text-fill-color: var(--text); caret-color: var(--n1-caret, var(--text)); box-shadow: 0 0 0 100px var(--panel) inset; transition: background-color 9999s; }
 :root[data-theme="matrix"] :is(input, textarea):disabled { color: var(--faint); cursor: not-allowed; }
 :root[data-theme="matrix"] .btn:disabled { opacity: .6; }
 :root[data-theme="matrix"] .readonly-bar { color: var(--text); background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--amber) 14%, var(--bg)) 0 12px, color-mix(in srgb, var(--amber) 20%, var(--bg)) 12px 24px); border-bottom-color: var(--amber); }
