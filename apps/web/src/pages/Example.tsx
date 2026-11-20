@@ -4,12 +4,15 @@
 // demo and the live playback.
 
 
+import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from "react";
 import { useSearchParams } from "react-router";
 import type { Layer } from "@1neon/domain";
 import { OutLink } from "../components/OutLink.tsx";
 import { LayerBadge, LAYERS, layerHint, layerName } from "../components/ui.tsx";
 import { VLANS, type Table } from "../lib/artifacts.ts";
-import { CARE, moneyOf, SCENARIO_IDS, SCENARIOS, scenarioOf, summaryOf, type Piece, type Scenario } from "../lib/scenarios.ts";
+import { fade } from "../lib/motion.ts";
+import { CARE, moneyOf, SCENARIO_IDS, SCENARIOS, scenarioOf, summaryOf, type Piece, type Scenario, type ScenarioId } from "../lib/scenarios.ts";
+import { useSiteTheme } from "../lib/sitetheme.ts";
 
 
 // One card: a title, its lines, an optional list, and an optional piece of work
@@ -152,8 +155,33 @@ function PieceView({ p }: { p: Piece }) {
 
 /** The example project in the portal's frame: its top bar, a picker, a contents row, then each layer */
 export function Example() {
-  const [params] = useSearchParams();
-  const s = scenarioOf(params.get("scenario"));
+  // The site's family and mode: applied here (Neo's window reads it too) and following the switch in other tabs
+  useSiteTheme();
+  const [params, setParams] = useSearchParams();
+  // The engagement on screen. A pick swaps it in place (a cross-fade in Matrix, at once in Sentinel), with no page load
+  const [id, setId] = useState<ScenarioId>(() => scenarioOf(params.get("scenario")).id);
+  const fromAddress = scenarioOf(params.get("scenario")).id;
+  // Back and forward change the address; the page follows it
+  useEffect(() => { setId(fromAddress); }, [fromAddress]);
+  const picker = useRef<HTMLElement>(null);
+  // Where the picker sat before a pick; once the new engagement is drawn, the page scrolls by any difference
+  const pickerTop = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    const before = pickerTop.current;
+    pickerTop.current = null;
+    const after = picker.current?.getBoundingClientRect().top;
+    if (before !== null && after !== undefined && Math.abs(after - before) > 0.5) scrollBy({ top: after - before, behavior: "instant" });
+  }, [id]);
+  const pickScenario = (e: MouseEvent<HTMLAnchorElement>, next: ScenarioId) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return; // a new tab or window loads it as usual
+    e.preventDefault();
+    if (next === id) return;
+    // The picker stays where it was under the pointer, even if the title above it takes another line
+    pickerTop.current = picker.current?.getBoundingClientRect().top ?? null;
+    // The address changes inside the same change, so the old engagement is what the fade starts from
+    fade(() => { setId(next); setParams({ scenario: next }, { preventScrollReset: true }); });
+  };
+  const s = SCENARIOS[id];
   const STORY = storyOf(s);
   const q = (id: string) => `?scenario=${id}`;
   return (
@@ -173,11 +201,11 @@ export function Example() {
         <h1 className="page-title">{s.org.name}: {s.project.name}</h1>
         <p className="lead">{s.blurb} Follow it through the four layers, including what went wrong along the way.</p>
         {/* Which engagement: three, from three kinds of work */}
-        <nav className="example-picker" aria-label="Sample projects">
-          {SCENARIO_IDS.map((id) => (
-            <a key={id} href={q(id)} aria-current={id === s.id ? "page" : undefined}>
-              <b>{SCENARIOS[id].org.name}</b>
-              <span>{SCENARIOS[id].family}</span>
+        <nav className="example-picker" aria-label="Sample projects" ref={picker}>
+          {SCENARIO_IDS.map((k) => (
+            <a key={k} href={q(k)} aria-current={k === s.id ? "page" : undefined} onClick={(e) => pickScenario(e, k)}>
+              <b>{SCENARIOS[k].org.name}</b>
+              <span>{SCENARIOS[k].family}</span>
             </a>
           ))}
         </nav>
