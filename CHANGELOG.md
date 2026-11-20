@@ -5,6 +5,7 @@
 ## Unreleased
 
 ### Changed
+- The profile saves by itself. Name, title, time zone, menu and notices save a second after a toggle or list changes, and a text field saves when you leave it or after a minute without a change. Anything waiting also saves when you leave the profile or hide the page, a failure says so and offers Retry, and the Save button remains only for the phone and text consent, since saving a new number texts it.
 - Home's Next step is two cards: Next step (how far each project is outlined, and Outline another project) and Request assessment (a muted intro, "I see you've outlined...", the note's prompt, the note, the projects, the button). The line under the note is fixed text; a problem with the note shows below it once the field is left, instead of replacing it, and a too-short note no longer repeats "A sentence or two". A free account no longer repeats its projects in Projects at a glance.
 - Settings groups Organization, Your data, Something not working?, and Board stages under titled sections, with the organization's facts as labelled rows.
 - neon1.tech's shared design now owns one type scale and one spacing scale (--fs-xs to --fs-3xl, --sp-0 to --sp-7, in rem). 1NEON inherits them and adds only portal-level steps. Every line names a step, the `--type` multiplier is gone, and a test fails when a size is written as a number. The app is about 10% smaller on a desktop, which is what 90% browser zoom used to show. Helper text is never larger than a card title.

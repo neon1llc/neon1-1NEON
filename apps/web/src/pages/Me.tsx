@@ -1,12 +1,12 @@
-// apps/web/src/pages/Me.tsx - Your profile: name, title, phone, menu, and notices (saved together),
-// motion (this browser's, at once),
+// apps/web/src/pages/Me.tsx - Your profile: name, title, time zone, menu, and notices (saved by themselves as they change),
+// phone and text consent (saved with their own button, since saving can text the number), motion (this browser's, at once),
 // then two-step verification, the tutorial, and signing out (each takes effect right away).
 
 
 import type { User } from "@1neon/domain";
 import type { SmsState } from "../lib/types.ts";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useSession, useTopBar } from "../components/Shell.tsx";
 import { Avatar, useAsk, useToast } from "../components/ui.tsx";
@@ -54,15 +54,80 @@ export function MePage() {
   const help = useHelp();
   const [totpOpen, setTotpOpen] = useState(false);
   useTopBar(<span>Your profile</span>, []);
-  // Edits stay local until Save
+  // Edits show at once and save by themselves (below); only the phone and text consent wait for their own Save
   const [draft, setDraft] = useState({ name: me.user.name, title: me.user.title, phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) });
   const [busy, setBusy] = useState(false);
   // Motion is this browser's choice, not the account's, so it changes at once and isn't part of Save
   const deviceLess = deviceLessMotion();
   const [less, setLess] = useState(() => deviceLess || chosenLessMotion());
-  // Anything that differs from what's saved; Save waits for a change
+  // What differs from what's saved
   const saved = { name: me.user.name, title: me.user.title, phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) };
-  const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
+  // The fields that save by themselves; the phone and text consent do not, since saving a new number sends it a text
+  const autoPatch = (d: typeof draft) => ({ name: d.name, title: d.title, timeZone: d.timeZone, menu: d.menu, notify: d.notify });
+  type Auto = ReturnType<typeof autoPatch>;
+  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "failed">("idle");
+  // The newest draft, saved fields, and version, for saves that fire later from a timer or as the page is left
+  const latest = useRef({ draft, me });
+  latest.current = { draft, me };
+  const savedAuto = useRef<Auto>(autoPatch(saved));
+  const version = useRef(me.user.version);
+  const inflight = useRef(false);
+  const again = useRef(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // A change to a toggle, list or time zone is saved a second after the last change; typing in a text field waits for the
+  // field to be left, or a minute without a change, so a half-typed name is never sent
+  const pendingQuick = useRef(false);
+  const prevDraft = useRef(autoPatch(draft));
+  // The account's own copy moved (another tab, or a save that just landed): adopt it unless a save is under way
+  useEffect(() => {
+    if (!inflight.current && me.user.version !== version.current) { version.current = me.user.version; savedAuto.current = autoPatch(saved); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [me.user.version]);
+  const flush = async (): Promise<void> => {
+    clearTimeout(timer.current);
+    if (inflight.current) { again.current = true; return; }
+    const d = autoPatch(latest.current.draft);
+    if (same(d, savedAuto.current)) return;
+    inflight.current = true;
+    pendingQuick.current = false;
+    setStatus("saving");
+    try {
+      const user = await api<User>("/me", { method: "PATCH", body: { version: version.current, ...d } });
+      version.current = user.version;
+      savedAuto.current = d;
+      qc.setQueryData(["me"], { ...latest.current.me, user });
+      setStatus("saved");
+    } catch (e) {
+      setStatus("failed");
+      toast(problem(e));
+      qc.invalidateQueries({ queryKey: ["me"] });
+    } finally {
+      inflight.current = false;
+      if (again.current) { again.current = false; setTimeout(() => void flush(), 60); }
+    }
+  };
+  useEffect(() => {
+    const now = autoPatch(draft);
+    const before = prevDraft.current;
+    if (same(now, before)) return;
+    prevDraft.current = now;
+    if (!same(now.timeZone, before.timeZone) || !same(now.menu, before.menu) || !same(now.notify, before.notify)) pendingQuick.current = true;
+    clearTimeout(timer.current);
+    setStatus((st) => (st === "saved" || st === "failed" ? "idle" : st));
+    timer.current = setTimeout(() => void flush(), pendingQuick.current ? 1000 : 60000);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft]);
+  // Anything waiting is saved as the profile is left, or the page is hidden or closed
+  useEffect(() => {
+    const out = () => void flush();
+    const hidden = () => { if (document.visibilityState === "hidden") out(); };
+    addEventListener("pagehide", out);
+    document.addEventListener("visibilitychange", hidden);
+    return () => { removeEventListener("pagehide", out); document.removeEventListener("visibilitychange", hidden); out(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const waiting = !same(autoPatch(draft), savedAuto.current);
   // Leaving the profile unsaved puts the menu preview back to its saved style
   useEffect(() => () => { previewMenu(undefined); }, []);
   // The phone check: a code is texted, then typed here
@@ -108,7 +173,10 @@ export function MePage() {
     try {
       const changingPhone = draft.phone !== me.user.phone;
       const startingTexts = draft.smsConsent && !me.user.smsConsentAt && draft.phone === me.user.phone;
-      const user = await api<User>("/me", { method: "PATCH", body: { version: me.user.version, ...draft } });
+      const user = await api<User>("/me", { method: "PATCH", body: { version: version.current, ...draft } });
+      // This save carried the other fields too, so they are saved as well
+      version.current = user.version;
+      savedAuto.current = autoPatch(draft);
       qc.setQueryData(["me"], { ...me, user });
       setDraft((current) => ({ ...current, phone: user.phone, smsConsent: Boolean(user.smsConsentAt) }));
       // The text state depends on what was saved; read it back fresh
@@ -182,11 +250,11 @@ export function MePage() {
       {/* Name, title, and mobile number */}
       {/* Two columns on a wide screen: profile and preferences beside notifications; one column when narrow */}
       <div className="cols2">
-      <form id="profile" className="form profile-form" onSubmit={(e) => { e.preventDefault(); void save(); }}>
+      <form id="profile" className="form profile-form" onSubmit={(e) => { e.preventDefault(); if (smsDirty) void save(); else void flush(); }}>
         <section className="card profile-section">
           <h2 className="card-h">Your details</h2>
-        <div><label htmlFor="nm">Name</label><input id="nm" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} maxLength={80} autoComplete="name" /></div>
-        <div><label htmlFor="tt">Title</label><input id="tt" value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} maxLength={80} autoComplete="organization-title" /></div>
+        <div><label htmlFor="nm">Name</label><input id="nm" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} onBlur={() => void flush()} maxLength={80} autoComplete="name" /></div>
+        <div><label htmlFor="tt">Title</label><input id="tt" value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} onBlur={() => void flush()} maxLength={80} autoComplete="organization-title" /></div>
         {!noTexts && <div><label htmlFor="ph">Phone (only you see it)</label><input id="ph" type="tel" value={draft.phone} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} maxLength={32} autoComplete="tel" /></div>}
         {/* The zone email shows times in; the browser's until changed */}
         <div>
@@ -225,7 +293,6 @@ export function MePage() {
             ))}
           </div>
           <p className="muted small" style={{ margin: "6px 0 0" }}>{draft.menu === "mini" ? "A slim menu of icons stays on the left. The menu button opens the full menu over it." : "The menu button opens the full menu. A tap outside it, or the button again, closes it."}</p>
-          {draft.menu !== menuOf(me.user.menu) && <p className="unsaved small" role="status">Showing this now. Press Save to keep it.</p>}
         </fieldset>
         </section>
       </form>
@@ -284,10 +351,13 @@ export function MePage() {
         </div>
       </div>
       </div>
-        {/* Save covers the profile and the notifications; it opens only when something changed */}
+        {/* Everything here saves by itself; the phone and text consent keep their own button, since saving a new number texts it */}
         <div className="actions" style={{ marginTop: 20 }}>
-          <button className="btn btn-primary" form="profile" disabled={busy || !dirty}>{busy ? "Saving…" : "Save"}</button>
-          {dirty && <span className="unsaved small" role="status">Unsaved changes. Press Save to keep them.</span>}
+          {smsDirty && <button className="btn btn-primary" form="profile" disabled={busy}>{busy ? "Saving…" : "Save phone and text settings"}</button>}
+          <span className="muted small" role="status" aria-live="polite">
+            {status === "saving" ? "Saving…" : status === "failed" ? "Couldn't save your changes." : waiting ? (pendingQuick.current ? "Saving in a moment…" : "Saves when you leave the field.") : status === "saved" ? "All changes saved." : ""}
+          </span>
+          {status === "failed" && <button className="linkish small" type="button" onClick={() => void flush()}>Retry</button>}
         </div>
       {/* Everything below takes effect right away, so it sits outside the profile form */}
       <div className="cols2" style={{ marginTop: 28 }}>
