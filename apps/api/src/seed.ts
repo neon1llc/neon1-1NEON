@@ -59,11 +59,11 @@ export async function seed(repo: Repo, operatorEmail = "pradeep@neon1.tech") {
 
   let rank = "";
   // Project and item helpers with ranks appended in creation order
-  const project = async (t: Tenant, key: string, name: string, stageId: string, health: Project["health"], summary: string, people: Project["people"], daysInStage: number, assessedDaysAgo = daysInStage) => {
+  const project = async (t: Tenant, key: string, name: string, stageId: string, health: Project["health"], summary: string, people: Project["people"], daysInStage: number, assessedDaysAgo = daysInStage, outcome = "") => {
     rank = rankBetween(rank, "");
     // Made about four days before each stage it has passed, so the activity record reads in order
     const made = day(-Math.min(30, daysInStage + 4 * Math.max(0, DEFAULT_STAGES.findIndex((g) => g.id === stageId))));
-    const p: Project = { tenantId: t.id, id: newId("p"), key, name, summary, outcome: "", template: "blank", stageId, stageEnteredAt: day(-daysInStage), health, rank, people, flags: [], archived: false, version: 1, createdAt: made, updatedAt: day(-daysInStage), updatedBy: pradeep.id, targetDate: day(30).slice(0, 10), ...assessed(health, pradeep.id, day(-assessedDaysAgo)) };
+    const p: Project = { tenantId: t.id, id: newId("p"), key, name, summary, outcome, template: "blank", stageId, stageEnteredAt: day(-daysInStage), health, rank, people, flags: [], archived: false, version: 1, createdAt: made, updatedAt: day(-daysInStage), updatedBy: pradeep.id, targetDate: day(30).slice(0, 10), ...assessed(health, pradeep.id, day(-assessedDaysAgo)) };
     await repo.saveProject(p, { create: true });
     await repo.table.write([repo.auditOp({ tenantId: t.id, actorId: pradeep.id, action: "project.created", target: p.id, summary: `Created ${key} ${name}` }, made)]);
     return p;
@@ -79,9 +79,16 @@ export async function seed(repo: Repo, operatorEmail = "pradeep@neon1.tech") {
     return i;
   };
 
+  // A project already approved: one option and the decision that signed it, so it reads as past Ready for Execute
+  const approve = async (p: Project, title: string, body: string, by: User, ago: number) => {
+    const o = await item(p, "option", title, { status: "approved", body, fields: { pricing: "fixed", cost: "Agreed", timeline: "4 weeks" }, createdAt: day(-ago - 2), updatedAt: day(-ago) });
+    await item(p, "decision", `Approved: ${o.title}`, { status: "approved", fields: { optionId: o.id, optionVersion: o.version, approvedBy: by.id, approvedAt: day(-ago), conditions: "", terms: { title: o.title, body: o.body }, approverName: by.name, approverEmail: by.email }, createdAt: day(-ago), updatedAt: day(-ago) });
+  };
+
   // Acme: a project at Decide with three options to approve, and measures with baselines
-  const intake = await project(acme, "FLOW-1", "Patient intake out of the shared inbox", "decide", "on_track", "Intake runs through one email inbox; staff chase missing documents and retype them into the patient record.", [{ userId: pradeep.id, role: "lead_engineer" }, { userId: raj.id, role: "decision_maker" }, { userId: dana.id, role: "tech_contact" }], 4);
+  const intake = await project(acme, "FLOW-1", "Patient intake out of the shared inbox", "decide", "on_track", "Intake runs through one email inbox; staff chase missing documents and retype them into the patient record.", [{ userId: pradeep.id, role: "lead_engineer" }, { userId: raj.id, role: "decision_maker" }, { userId: dana.id, role: "tech_contact" }], 4, 4, "A new patient uploads their documents once, the front desk sees at a glance what's missing, and nothing is retyped.");
   await item(intake, "discovery", "One real example of how it works today", { status: "done", body: "A new patient emails a photo of their insurance card. Dana saves it, types the details into the record, and replies asking for the missing ID." });
+  await item(intake, "discovery", "Who does this work, and which tools does it touch?", { status: "done", body: "Dana handles every intake. It touches the shared front-desk inbox and the patient record system, which Raj's practice has used for years." });
   await item(intake, "requirement", "Patients upload once; nothing is retyped", { fields: { priority: "must" } });
   await item(intake, "requirement", "Staff see at a glance what's complete", { fields: { priority: "should" } });
   // Illustrative figures. A is an hourly estimate and B a fixed price, so the demo shows both kinds,
@@ -98,7 +105,9 @@ export async function seed(repo: Repo, operatorEmail = "pradeep@neon1.tech") {
   await issueProposal(repo, acme, intake, { id: pradeep.id, name: pradeep.name }, "", new Date(intake.stageEnteredAt));
 
   // Acme: work in progress, at risk
-  const backup = await project(acme, "SEC-1", "Backups that restore", "build", "at_risk", "Nightly backups exist but have never been restored.", [{ userId: pradeep.id, role: "lead_engineer" }, { userId: dana.id, role: "tech_contact" }], 9, 0);
+  const backup = await project(acme, "SEC-1", "Backups that restore", "build", "at_risk", "Nightly backups exist but have never been restored.", [{ userId: pradeep.id, role: "lead_engineer" }, { userId: dana.id, role: "tech_contact" }], 9, 0, "Last night's backup restores to a test machine every week, without anyone starting it, and Dana hears when one fails.");
+  await item(backup, "discovery", "One real example of how it works today", { status: "done", body: "Last spring a drive failed. The nightly backup had been running for years, but nobody could say whether it would restore, so the office rebuilt from paper and email for two days." });
+  await item(backup, "discovery", "Who does this work, and which tools does it touch?", { status: "done", body: "Dana checks the backup report each Monday. It touches the office file server, the database export, and the vendor's backup service." });
   await item(backup, "task", "Inventory what's backed up today", { status: "done" });
   await item(backup, "task", "Restore last night's backup to a test machine", { status: "doing", assigneeId: pradeep.id, dueDate: day(3).slice(0, 10) });
   await item(backup, "milestone", "Weekly restore test running on its own", { dueDate: day(12).slice(0, 10) });
@@ -124,13 +133,22 @@ export async function seed(repo: Repo, operatorEmail = "pradeep@neon1.tech") {
   for (const w of worked) await item(backup, "time", w.what, { status: "done", fields: { date: day(-w.ago).slice(0, 10), hours: w.hours, invoiceId: progress.id }, createdAt: day(-w.ago), updatedAt: day(-1) });
   await item(backup, "time", "Call with the vendor's support about the database login", { status: "done", fields: { date: day(0).slice(0, 10), hours: 1 }, createdAt: day(0), updatedAt: day(0) });
 
-  await project(acme, "AI-1", "Answers from our own policies", "listen", "not_started", "Staff interrupt Raj for policy questions.", [{ userId: pradeep.id, role: "lead_engineer" }], 2);
+  const ask = await project(acme, "AI-1", "Answers from our own policies", "listen", "not_started", "Staff interrupt Raj for policy questions: time off, insurance billing rules, and what to tell patients about cancellations.", [{ userId: pradeep.id, role: "lead_engineer" }], 2, 2, "Staff find an answer in our own policies without interrupting Raj, and can see which policy it came from.");
+  // Outlined, not complete: what it is, how it works today, and what done looks like are written; who it touches, a measure, and the limits are still open
+  await item(ask, "discovery", "One real example of how it works today", { status: "done", body: "A new hygienist asked whether she could swap a shift. Raj was with a patient, so she waited an hour and then asked Dana, who wasn't sure either." });
   // Harbor: a migration in Verify with real readings, plus a new intake
-  const mig = await project(harbor, "MIG-1", "Two offices off local servers", "verify", "on_track", "The application, database, and files lived on two local servers.", [{ userId: pradeep.id, role: "lead_engineer" }, { userId: lee.id, role: "tech_contact" }], 6);
+  const mig = await project(harbor, "MIG-1", "Two offices off local servers", "verify", "on_track", "The application, database, and files lived on two local servers.", [{ userId: pradeep.id, role: "lead_engineer" }, { userId: lee.id, role: "tech_contact" }], 6, 6, "Both offices run from AWS, the local servers are retired, and the monthly infrastructure cost is under $600.");
+  await item(mig, "discovery", "One real example of how it works today", { status: "done", body: "In March the Long Beach server's disk filled overnight. The service desk couldn't open the shared drive until Lee drove in at 7 am and cleared it by hand." });
+  await item(mig, "discovery", "Who does this work, and which tools does it touch?", { status: "done", body: "Lee runs both offices' servers. They hold the dealer management database, the shared drives, and the nightly tape backup." });
+  await approve(mig, "Move both offices to AWS", "The application, database, and shared files move to AWS, with the local servers retired after a month of overlap.", lee, 12);
   await item(mig, "metric", "Monthly infrastructure cost", { fields: { category: "cost", unit: "$", direction: "down", baseline: 1450, target: 600, readings: [{ at: day(-20).slice(0, 10), value: 1450, note: "" }, { at: day(-5).slice(0, 10), value: 690, note: "first full month on AWS" }] } });
   await item(mig, "check", "Backups restored once as a test", { status: "done" });
   await project(harbor, "NET-1", "Guest Wi-Fi separated from the shop network", "intake", "not_started", "", [], 1);
-  await project(neon1, "PRJ-1", "Build 1NEON", "build", "on_track", "The neon1 client portal, built in the open with ourselves as the first client.", [{ userId: pradeep.id, role: "lead_engineer" }], 1);
+  const portal = await project(neon1, "PRJ-1", "Build 1NEON", "build", "on_track", "The neon1 client portal, built in the open with ourselves as the first client.", [{ userId: pradeep.id, role: "lead_engineer" }], 1, 1, "Clients write what they need, approve a priced option, and follow the work in one place.");
+  await item(portal, "discovery", "One real example of how it works today", { status: "done", body: "A client's request arrives as an email thread, the estimate as a PDF, and the approval as a reply, so nobody can say later what was agreed." });
+  await item(portal, "discovery", "Who does this work, and which tools does it touch?", { status: "done", body: "Pradeep does it today, across email, a spreadsheet, and the invoicing tool. Clients are small teams with no portal of their own." });
+  await item(portal, "metric", "Requests with an unclear scope at estimate time", { fields: { category: "performance", unit: "%", direction: "down", baseline: 40, target: 10, readings: [] } });
+  await approve(portal, "Build the portal in the open", "One portal for needs, execution, measures, and handover, built with neon1 as its first client.", pradeep, 20);
 
   // Acme's own calendar: Dana's days off, an office closure, and the care plan's monthly check-in
   const cal = async (t: Tenant, e: Partial<CalEvent> & Pick<CalEvent, "title" | "kind" | "date">) => {
@@ -149,7 +167,9 @@ export async function seed(repo: Repo, operatorEmail = "pradeep@neon1.tech") {
   await repo.createTenant(calder);
   await member(calder, noor, "admin");
   await member(calder, pradeep, "admin");
-  const form = await project(calder, "NEED-1", "Answer the insurer's security questions", "intake", "not_started", "Our insurer sent a cyber-coverage form, and our files sit on one office PC and a USB drive.", [], 1);
+  const form = await project(calder, "NEED-1", "Answer the insurer's security questions", "intake", "not_started", "Our insurer sent a cyber-coverage form, and our files sit on one office PC and a USB drive.", [], 1, 1, "We can answer each question on the form truthfully, and we know which gaps to close first.");
+  // A free account's first outline: three parts written, so Next step says what would help and the rest stays open
+  await item(form, "discovery", "One real example of how it works today", { status: "done", body: "The form asks if our backups are tested. Noor didn't know, so she checked: there's a USB drive in a drawer, last copied in the spring." });
   await item(form, "request", "Honest answers to the insurer's form, with the gaps listed");
 
   return { pradeep, dana, raj, lee, neon1, acme, harbor, calder, noor };
