@@ -21,7 +21,7 @@ const PORTAL = "1NEON client portal by neon1.";
 // Signed-in pages, named by the part of the address after the organization
 const SECTIONS: Record<string, string> = {
   workspace: "Home", workflow: "Board", projects: "Projects", documents: "Files", insights: "Insights",
-  people: "People", settings: "Settings", layer: "Layer", me: "Profile", contact: "Contact", all: "All clients",
+  people: "People", settings: "Settings", layer: "Layer", me: "Profile", contact: "Contact", chat: "Chat", all: "All clients",
 };
 
 

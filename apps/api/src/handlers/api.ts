@@ -8,7 +8,7 @@ import type { Deps } from "../lib/kit.ts";
 import { CognitoAuth } from "../auth.ts";
 import { loadConfig, type Config } from "../config.ts";
 import { GetParametersCommand, SSMClient } from "@aws-sdk/client-ssm";
-import { AwsTexter, CognitoDirectory, S3Records, S3Storage, SesMailer, TurnstileCheck } from "../services.ts";
+import { AwsTexter, CognitoDirectory, PushoverPusher, S3Records, S3Storage, SesMailer, TurnstileCheck } from "../services.ts";
 import { sweepSignups } from "../routes/signup.ts";
 import { finishPurges, sweepQuietProspects } from "../routes/prospects.ts";
 import { sweepOutlineNudges } from "../routes/nudges.ts";
@@ -97,6 +97,20 @@ async function turnstile() {
 }
 const humanCheck = await turnstile();
 
+// Pushover's app token and user key for neon1's chat alerts, read once at cold start from SSM. Without them
+// (or when unreadable) chat alerts go by email only, and nothing else changes
+async function pushover() {
+  if (!cfg.pushoverTokenParam || !cfg.pushoverUserParam) return undefined;
+  const r = await new SSMClient({}).send(new GetParametersCommand({ Names: [cfg.pushoverTokenParam, cfg.pushoverUserParam], WithDecryption: true })).catch((e: unknown) => {
+    console.error(JSON.stringify({ level: "error", message: "pushover keys unreadable; chat alerts by email only", error: (e as Error).name || "Error" }));
+    return undefined;
+  });
+  const value = (name: string) => r?.Parameters?.find((x) => x.Name === name)?.Value;
+  const token = value(cfg.pushoverTokenParam), user = value(cfg.pushoverUserParam);
+  return token && user ? new PushoverPusher(token, user) : undefined;
+}
+const pusher = await pushover();
+
 // Production wiring, shared by the API and the scheduled pass
 const deps: Deps = {
   cfg,
@@ -105,6 +119,7 @@ const deps: Deps = {
   mailer,
   storage,
   texter,
+  pusher,
   auth: new CognitoAuth({ userPoolId: cfg.userPoolId, clientId: cfg.clientId, authDomain: cfg.authDomain, publicUrl: cfg.publicUrl }),
   // Messages wait in the outbox for the scheduled worker below, never inside a request
   outbox: "worker",
@@ -149,7 +164,7 @@ export const handler = async (event: Parameters<typeof http>[0] | { source?: str
     // return). The outbox gets up to seven seconds of it and the file sweep the rest
     const left = typeof context?.getRemainingTimeInMillis === "function" ? context.getRemainingTimeInMillis() : 15_000;
     const end = Date.now() + Math.max(0, left - 2_000);
-    const result = await drainOutbox({ repo, mailer, texter, cfg }, { deadline: Math.min(end - 2_000, Date.now() + 7_000) });
+    const result = await drainOutbox({ repo, mailer, texter, pusher, cfg }, { deadline: Math.min(end - 2_000, Date.now() + 7_000) });
     // Then files whose scan finished since the last pass become ready (or rejected) without a re-upload
     const files = await beforeDeadline(sweepFiles({ repo, storage }, { deadline: end - 500 }), end).catch((e) => ({ watched: 0, settled: 0, error: (e as Error).name }));
     // Bug reports waiting for their screenshots to scan go out, with the clean ones attached

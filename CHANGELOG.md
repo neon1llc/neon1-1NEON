@@ -5,6 +5,7 @@
 ## Unreleased
 
 ### Added
+- Chat with Pradeep: a signed-in person (free account or client) writes to neon1 from Chat in the menu, one thread each, any time. neon1 is alerted by email (the message included) and, when its Pushover keys are configured, by a push that never carries the message. Replies come in the reply hours and reach the person by email unless they are reading. neon1 reads and answers from an inbox under Chat. Free accounts send up to 6 messages an hour and 20 a day, clients 20 and 100. See docs/chat.md.
 - Matrix text fields have the site's green caret (shared/caret.js and shared/neon1.css from neon1.tech), dark green in light mode and Matrix green in dark. Sentinel is unchanged.
 
 ### Changed

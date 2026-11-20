@@ -34,6 +34,7 @@ export function ContactPage() {
         <section className="card contact-ways">
           <h2 className="card-h">Ways to reach me</h2>
           <dl className="facts">
+            <div><dt>Message me here</dt><dd><Link to="/chat">Chat in 1NEON</Link></dd></div>
             <div><dt>Email</dt><dd><OutLink href={`mailto:${CONTACT.email}`}>{CONTACT.email}</OutLink></dd></div>
             <div><dt>Call or text</dt><dd><OutLink href={`tel:${CONTACT.phone}`} title={CONTACT.phoneDigits}>{CONTACT.phoneLabel}</OutLink> <span className="muted small">{CONTACT.phoneDigits}</span></dd></div>
             <div><dt>Write it out</dt><dd><OutLink href={SITE_CONTACT}>Send a message</OutLink></dd></div>
