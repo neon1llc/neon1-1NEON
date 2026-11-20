@@ -9,6 +9,7 @@
 - Closing the phone menu starts in the frame of the tap and the rest of the page waits until the slide is over.
 
 ### Changed
+- The help question "What can I upload?" gives the sizes and links to the terms of use for what not to upload, instead of repeating that list. Neo's portal guide is refreshed from neon1-corpus v0.51.4.
 - "No account needed" is gone from the guided walkthrough's bar and page description. The call button reads "Book a 30-minute call" and the assessment is no longer called free in every line; "free" stays where it names the free account and its assessment. Neo's guide is refreshed from the corpus wording.
 
 ## v0.23.0 - 2026-11-20
