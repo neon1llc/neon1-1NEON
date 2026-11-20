@@ -953,6 +953,11 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 .example .top-acts { display: flex; gap: 8px; align-items: center; }
 /* Each button keeps one line; on a phone the crumb wraps instead */
 .example .top-acts .btn { white-space: nowrap; }
+.example .top-acts .theme-sw { margin-left: 4px; }
+/* A phone has room for the buttons and the switch only: the crumb keeps "1NEON" and the demo button says "Demo" */
+.example .top-acts .narrow-only { display: none; }
+@media (max-width: 640px) { .example .crumb-tail { display: none; } }
+@media (max-width: 480px) { .example .top-acts .wide-only { display: none; } .example .top-acts .narrow-only { display: inline; } .example .top-acts { gap: 6px; } }
 .example-body { max-width: 920px; margin: 0 auto; padding-top: 40px; }
 .example-layer { margin-top: 48px; scroll-margin-top: 80px; }
 .example-h { display: flex; align-items: center; gap: 10px; font-size: calc(26px * var(--type)); margin: 0 0 4px; }

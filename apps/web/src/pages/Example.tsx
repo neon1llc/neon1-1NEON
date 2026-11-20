@@ -8,6 +8,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from "r
 import { useSearchParams } from "react-router";
 import type { Layer } from "@1neon/domain";
 import { OutLink } from "../components/OutLink.tsx";
+import { ThemeSwitch } from "../components/PublicBar.tsx";
 import { LayerBadge, LAYERS, layerHint, layerName } from "../components/ui.tsx";
 import { VLANS, type Table } from "../lib/artifacts.ts";
 import { fade } from "../lib/motion.ts";
@@ -38,7 +39,7 @@ function storyOf(s: Scenario): Record<Layer, { lead: string; cards: Card[] }> {
       lead: "What the client wants, what neon1 learned by listening, the ways to get there, and the choice.",
       cards: [
         { title: "Request", lines: [["Currently", s.project.today], ["Goal", s.project.outcome], ["Example", s.project.example]] },
-        { title: "What neon1 learned", lines: ["After a twenty-minute call and a look at real records, written into the project where the client can correct it."], list: [
+        { title: "What neon1 learned", lines: ["After a thirty-minute call and a look at real records, written into the project where the client can correct it."], list: [
           ...s.learned.map(([q, a]) => ({ text: `${q} ${a}` })),
           ...s.constraints.slice(0, 2).map(([title, body]) => ({ text: `A limit, said before any option was written: ${lower(title)}. ${body}` })),
         ] },
@@ -156,7 +157,7 @@ function PieceView({ p }: { p: Piece }) {
 /** The example project in the portal's frame: its top bar, a picker, a contents row, then each layer */
 export function Example() {
   // The site's family and mode: applied here (Neo's window reads it too) and following the switch in other tabs
-  useSiteTheme();
+  const [look, setLook] = useSiteTheme();
   const [params, setParams] = useSearchParams();
   // The engagement on screen. A pick swaps it in place (a cross-fade in Matrix, at once in Sentinel), with no page load
   const [id, setId] = useState<ScenarioId>(() => scenarioOf(params.get("scenario")).id);
@@ -188,12 +189,14 @@ export function Example() {
     <div className="shell example">
       {/* The signed-in portal's top bar, with the way into the demo where search would be */}
       <header className="top">
-        <div className="crumb"><a href="/1NEON/">1NEON</a> / Sample project</div>
+        <div className="crumb"><a href="/1NEON/">1NEON</a><span className="crumb-tail"> / Sample project</span></div>
         <span className="top-acts">
           <a className="btn btn-ghost btn-sm" href="/">neon1.tech</a>
           {/* Short in the bar so it holds one line on a phone; the end card says the length */}
           <a className="btn btn-primary btn-sm" href={`/1NEON/live${q(s.id)}`}>Watch it</a>
-          <a className="btn btn-ghost btn-sm" href="/1NEON/demo/">Interactive demo</a>
+          <a className="btn btn-ghost btn-sm" href="/1NEON/demo/"><span className="wide-only">Interactive demo</span><span className="narrow-only">Demo</span></a>
+          {/* The site's light or dark switch, as on the other public pages */}
+          <ThemeSwitch theme={look} onChange={setLook} />
         </span>
       </header>
       <main className="content example-body" id="main">
