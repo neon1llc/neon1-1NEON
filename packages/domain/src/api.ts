@@ -237,6 +237,7 @@ export const UpdateMeInput = z.object({
   timeZone: z.string().max(64).refine(isTimeZone, "Pick a time zone from the list.").optional(),
   menu: z.enum(["default", "mini"]).optional(),
   tour: Tour.optional(),
+  guide: z.enum(["shown", "hidden"]).optional(),
   notify: NotifyPrefs.optional(),
   // Yes or no to texts; the API records when
   smsConsent: z.boolean().optional(),

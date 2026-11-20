@@ -2177,3 +2177,34 @@ body:has(.shell.mini) .n1chat.n1chat-right { left: auto; right: max(16px, env(sa
   :root[data-theme="device"] .side :is(.bug-row, .site-end) .lbl { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: rgb(108 255 168 / .55); transition: text-decoration-color var(--t-fast) var(--ease); }
   :root[data-theme="device"] .side :is(.bug-row, .site-end):is(:hover, :focus-visible, :active) .lbl { text-decoration-color: rgb(108 255 168); }
 }
+
+
+/* Home's Next step: outline projects, then ask for an assessment (components/Prospect.tsx) */
+.next-step-ask.is-waiting > p:first-of-type { color: var(--muted); }
+.next-step-ask > p { margin: 0 0 12px; }
+.outline-list { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 4px; }
+.outline-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.outline-list li:first-child { border-top: 0; }
+.outline-list li.sent .outline-pick { color: var(--muted); }
+.outline-pick { display: flex; gap: 10px; align-items: center; cursor: pointer; min-width: 0; }
+.outline-pick input { margin: 0; flex: none; }
+.outline-tip { grid-column: 1 / -1; padding-left: 26px; }
+.outline-meter { display: inline-flex; gap: 3px; }
+.outline-meter i { width: 14px; height: 6px; border-radius: 3px; background: var(--line-strong); }
+.outline-meter i.on { background: var(--accent); }
+.next-form { display: grid; gap: 8px; }
+.next-actions { justify-content: flex-start; align-items: center; flex-wrap: wrap; gap: 10px 16px; }
+.next-call { white-space: normal; }
+.review-list { padding-left: 18px; display: grid; gap: 6px; }
+/* Get to know 1NEON */
+.guide-card .section-h { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.guide-links { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.guide-links li { display: grid; gap: 2px; }
+/* A project's outline on its Overview */
+.outline-box { display: grid; gap: 6px; }
+.outline-go { display: flex; gap: 14px; flex-wrap: wrap; }
+.notice.outline-box { border-color: var(--line-strong); background: var(--accent-soft); color: inherit; }
+@media (max-width: 520px) {
+  .outline-list li { grid-template-columns: minmax(0, 1fr); }
+  .outline-meter { padding-left: 28px; }
+}
