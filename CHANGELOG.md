@@ -5,6 +5,8 @@
 ## Unreleased
 
 ### Changed
+- Home's Next step is two cards: Next step (how far each project is outlined, and Outline another project) and Request assessment (a muted intro, "I see you've outlined...", the note's prompt, the note, the projects, the button). The line under the note is fixed text; a problem with the note shows below it once the field is left, instead of replacing it, and a too-short note no longer repeats "A sentence or two". A free account no longer repeats its projects in Projects at a glance.
+- Settings groups Organization, Your data, Something not working?, and Board stages under titled sections, with the organization's facts as labelled rows.
 - neon1.tech's shared design now owns one type scale and one spacing scale (--fs-xs to --fs-3xl, --sp-0 to --sp-7, in rem). 1NEON inherits them and adds only portal-level steps. Every line names a step, the `--type` multiplier is gone, and a test fails when a size is written as a number. The app is about 10% smaller on a desktop, which is what 90% browser zoom used to show. Helper text is never larger than a card title.
 - The open desktop menu shortens its rows with the window's height so the whole menu fits without scrolling down to about 700px high.
 

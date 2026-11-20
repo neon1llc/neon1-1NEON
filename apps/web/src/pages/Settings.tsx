@@ -68,38 +68,37 @@ export function Settings() {
   return (
     <>
       <h1 className="page-title">Settings</h1>
-      {/* Two columns on a wide screen: the organization's details beside its data and the way to report a bug;
-          the stages need the full width, so they follow below */}
+      {/* Two columns on a wide screen: who the organization is beside its data and the way to report a bug;
+          the stages need the full width, so they follow below. Every group is a titled section, in the order people look for them */}
       <div className="cols2">
         <div className="stack">
-      {/* The organization's handles and the caller's access */}
-      <div className="card" style={{ display: "grid", gap: 6, }}>
-        <div><span className="muted small">Organization</span> <b>{org.name}</b></div>
-        <div><span className="muted small">Client ID</span> <span className="mono">{org.clientId}</span></div>
-        {/* Where the business can be seen from outside; any admin may change it */}
-        <div><span className="muted small">Where</span> <FaceFacts place={org.place} link={org.link} />{admin && !editFace && <> <button className="linkish small" onClick={() => setEditFace(true)}>Change</button></>}</div>
-        {editFace && <FaceForm onDone={() => setEditFace(false)} />}
-        {/* neon1's service agreement: who signed it, or a way to read and sign it */}
-        <div hidden={prospect}><span className="muted small">Service agreement</span> {org.agreements?.length ? <>signed by {org.agreements.at(-1)!.typedName}, edition {org.agreements.at(-1)!.ref}. </> : "not signed yet. "}<Link to={`/o/${summary.slug}/agreement`}>{org.agreements?.length ? "Read it" : "Read and sign"}</Link></div>
-        <div><span className="muted small">Address</span> <span className="mono">neon1.tech/1NEON/o/{org.slug}</span></div>
-        <div><span className="muted small">Your access</span> <span className="tag">{access}</span></div>
-      </div>
+          <h2 className="section-h">Organization</h2>
+          <dl className="card facts">
+            <div><dt>Name</dt><dd>{org.name}</dd></div>
+            <div><dt>Client ID</dt><dd className="mono">{org.clientId}</dd></div>
+            <div><dt>Address</dt><dd className="mono">neon1.tech/1NEON/o/{org.slug}</dd></div>
+            {/* Where the business can be seen from outside; any admin may change it */}
+            <div><dt>Where</dt><dd><FaceFacts place={org.place} link={org.link} />{admin && !editFace && <> <button className="linkish helper" onClick={() => setEditFace(true)}>Change</button></>}{editFace && <FaceForm onDone={() => setEditFace(false)} />}</dd></div>
+            <div><dt>Your access</dt><dd><span className="tag">{access}</span></dd></div>
+            {/* neon1's service agreement: who signed it, or a way to read and sign it */}
+            <div hidden={prospect}><dt>Service agreement</dt><dd>{org.agreements?.length ? <>Signed by {org.agreements.at(-1)!.typedName}, edition {org.agreements.at(-1)!.ref}. </> : "Not signed yet. "}<Link to={`/o/${summary.slug}/agreement`}>{org.agreements?.length ? "Read it" : "Read and sign"}</Link></dd></div>
+          </dl>
         </div>
         <div className="stack">
-      {/* The organization's own copy of everything, any time, without asking neon1 */}
-      <h2 className="section-h" id="your-data" style={{ marginTop: 0 }}>Your data</h2>
-      <ExportData />
-      {/* Same entry as the menu and the profile, where people look for it */}
-      <h2 className="section-h">Something not working?</h2>
-      <div className="card small" style={{ display: "grid", gap: 8, justifyItems: "start" }}>
-        <span className="muted">Tell me what happened, or what you think, on a page that opens in a new tab.</span>
-        <ReportBug kind="buttons" />
-      </div>
+          {/* The organization's own copy of everything, any time, without asking neon1 */}
+          <h2 className="section-h" id="your-data">Your data</h2>
+          <ExportData />
+          {/* Same entry as the menu and the profile, where people look for it */}
+          <h2 className="section-h">Something not working?</h2>
+          <div className="card stack-tight">
+            <span className="helper">Tell me what happened, or what you think, on a page that opens in a new tab.</span>
+            <ReportBug kind="buttons" />
+          </div>
         </div>
       </div>
       <h2 className="section-h">Board stages</h2>
-      <p className="muted small">Each row is a board column, in order: name, layer, when it's done, and an optional project limit. A hidden stage still shows while projects are in it.</p>
-      {!canAdmin && <p className="muted small">{prospect ? "Stages open up once we're working together." : "Only admins can change stages."}</p>}
+      <p className="helper">Each row is a board column, in order: name, layer, when it's done, and an optional project limit. A hidden stage still shows while projects are in it.</p>
+      {!canAdmin && <p className="helper">{prospect ? "Stages open up once we're working together." : "Only admins can change stages."}</p>}
       {/* One row per stage: name, layer, exit rule, limit, and order controls; phones stack each stage as a card */}
       <div className="stages" data-tour="stages">
         {stages.map((s, i) => (
@@ -151,7 +150,7 @@ function ExportData() {
   const [ask, setAsk] = useState<{ warning: string; answer: (go: boolean) => void }>();
   // A zip left in the browser's storage by an earlier export (a closed tab, a crash) is removed here
   useEffect(() => void clearStaleExports(), []);
-  if (!canAdmin) return <p className="muted small">An admin of {org.name} can download a copy of everything here at any time.</p>;
+  if (!canAdmin) return <p className="helper">An admin of {org.name} can download a copy of everything here at any time.</p>;
   const confirmLarge = (warning: string) => new Promise<boolean>((answer) => setAsk({ warning, answer: (go) => { setAsk(undefined); answer(go); } }));
   const run = async () => {
     setBusy(true);

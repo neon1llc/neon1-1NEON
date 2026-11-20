@@ -190,7 +190,7 @@ export function messageProblem(text: string): string | undefined {
 export function assessmentNoteProblem(text: string): string | undefined {
   const t = text.trim().replace(/\s+/g, " ");
   if (!t) return "Add a note for me to keep in mind.";
-  if (t.length < MIN_ASSESSMENT_NOTE) return `A sentence or two, please: at least ${MIN_ASSESSMENT_NOTE} characters.`;
+  if (t.length < MIN_ASSESSMENT_NOTE) return `Too short. Add a little more: at least ${MIN_ASSESSMENT_NOTE} characters.`;
   if (looksLikeJunk(t)) return "Write it in a few real words.";
   if (offensive(text)) return "Please reword the note.";
   return undefined;
