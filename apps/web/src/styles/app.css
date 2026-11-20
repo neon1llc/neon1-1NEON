@@ -111,7 +111,7 @@ input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outlin
 .side { scrollbar-width: none; -ms-overflow-style: none; }
 .side::-webkit-scrollbar { display: none; }
 /* The menu: fixed on the left; collapsed it is the rail, open it is full width over the page */
-.side { position: fixed; inset: 0 auto 0 0; z-index: 40; width: calc(var(--rail) + env(safe-area-inset-left)); background: var(--frame); border-right: 1px solid var(--line);
+.side { position: fixed; inset: 0 auto 0 0; z-index: 40; width: calc(var(--rail) + env(safe-area-inset-left)); background: var(--frame); border-right: 1px solid var(--line-strong);
   display: flex; flex-direction: column; gap: 2px; --padl: calc(6px + env(safe-area-inset-left)); --padr: 6px; padding: 12px var(--padr) 12px var(--padl); overflow-x: hidden; overflow-y: auto; transition: width .2s, box-shadow .2s; }
 .side.open { width: calc(272px + env(safe-area-inset-left)); box-shadow: 0 0 40px rgba(0, 0, 0, .3); }
 .shell:not(.mini) .side:not(.open) { transform: translateX(-100%); }
@@ -127,6 +127,8 @@ input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outlin
   .shell:not(.mini) .side { width: calc(272px + env(safe-area-inset-left)); transition: transform .2s ease, box-shadow .2s ease; }
   .shell.mini .side { width: calc(272px + env(safe-area-inset-left)); clip-path: inset(0 0 0 0); transition: clip-path .2s ease, box-shadow .2s ease; }
   .shell.mini .side:not(.open) { clip-path: inset(0 calc(100% - var(--rail) - env(safe-area-inset-left)) 0 0); }
+  /* The clip hides the wide drawer's own right border, so the rail's edge is drawn as a line in its background, which stays put as the rows scroll */
+  .shell.mini .side:not(.open) { background: linear-gradient(to right, transparent calc(var(--rail) + env(safe-area-inset-left) - 1px), var(--line-strong) 0 calc(var(--rail) + env(safe-area-inset-left)), transparent 0), var(--frame); }
 }
 /* A phone's drawer slides away with its rows as they were: collapsing the labels and row heights in the frame it starts to move
    reflowed every row and made the close stutter (the rail's own sizes return once it has gone) */
