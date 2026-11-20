@@ -1674,7 +1674,9 @@ ul.md-says { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--
 /* Sign-up's two columns, stacked on a phone: each a column of fields with the form's own spacing.
    City and state share a row at any width, the state narrower */
 .signin .signup-form .su-col { display: grid; gap: 12px; align-content: start; min-width: 0; }
-.signin .signup-form .su-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .8fr); gap: 10px; }
+.signin .signup-form .su-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(164px, 1fr); gap: 10px; }
+/* The state list needs room for "Outside the US" and its arrow, so on a narrow card the pair stacks */
+@media (max-width: 520px) { .signin .signup-form .su-pair { grid-template-columns: minmax(0, 1fr); } }
 .signin .signup-form .su-pair .f { display: grid; gap: 8px; min-width: 0; }
 /* Sign-up on a phone: the optional group starts under the same faint line the wide layout runs between the columns,
    turned across, so what's needed and what's optional read as two groups */
@@ -1749,7 +1751,8 @@ a.out:hover .out-arrow, a.out:focus-visible .out-arrow { transform: translate(1p
 .face-form { display: grid; gap: var(--sp-2); max-width: 520px; }
 .face-form > * { margin: 0; }
 .face-form .field-label { display: block; font: var(--fs-xs) var(--mono); color: var(--muted); }
-.face-form .face-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .8fr); gap: var(--sp-2); }
+.face-form .face-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(164px, 1fr); gap: var(--sp-2); }
+@media (max-width: 520px) { .face-form .face-pair { grid-template-columns: minmax(0, 1fr); } }
 .face-form .face-pair > div { display: grid; gap: var(--sp-2); min-width: 0; }
 .face-form .face-pair select { width: 100%; }
 .face-form .actions { margin-top: var(--sp-1); }

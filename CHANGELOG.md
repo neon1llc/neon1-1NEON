@@ -11,6 +11,7 @@
 - The open desktop menu shortens its rows with the window's height so the whole menu fits without scrolling down to about 700px high.
 
 ### Fixed
+- "Outside the US" shows in full in the State list in sign-up and Settings: the list is wide enough for it, and the city and state fields stack on a narrow card.
 - Choosing Outside the US in sign-up, or in Settings, marks State and City and country with the required asterisk, since both are needed once it is chosen. State is also marked once a city is typed.
 - Every link in Get to know 1NEON leaves the page with the outbound arrow, the sample project and FAQs included, and Contact's website link reads "Send a message" and opens the form on neon1.tech (/#contact?message=1).
 - Outbound links are bold, never underlined, and in the page's own light or dark green in every look, as on neon1.tech; the arrow marks them and follows the same color.
