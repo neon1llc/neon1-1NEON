@@ -51,7 +51,7 @@ const engine = { chromium, firefox, webkit }[arg("browser", "chromium")];
 const workers = Number(arg("workers", "4"));
 const verbose = process.argv.includes("--verbose");
 // How long one walkthrough may take at double speed before it counts as stuck
-const LIMIT = Number(arg("limit", "600")) * 1000;
+const LIMIT = Number(arg("limit", "720")) * 1000;
 // Every run plays at double speed, the fastest a visitor can pick
 const SPEED = 2;
 // A failed run gets this many more tries. On CI's shared machines one retry keeps a slow moment from

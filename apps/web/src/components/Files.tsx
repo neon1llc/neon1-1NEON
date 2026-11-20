@@ -2,6 +2,7 @@
 // camera or files, a browser's file picker, or a drop onto the page.
 
 
+import { fileLimitsLine } from "../lib/prospect.ts";
 import { fileState, PROSPECT_ACCEPT, proposalRef, revisions, VIEWABLE, type DocumentRecord, type FileState, type Item, type Layer } from "@1neon/domain";
 import { proposalRefOf } from "../lib/docx.ts";
 import { useRef, useState, type ReactNode } from "react";
@@ -203,6 +204,8 @@ export function DropZone({ target, children }: { target: FileTarget; children?: 
     >
       <b>{busy ? "Uploading…" : matchMedia("(pointer: fine)").matches ? "Drop files here, or click to choose" : "Tap to choose files"}</b>
       {children}
+      {/* A free account's room, where the files go in: the numbers the API refuses at */}
+      {prospect && <span className="muted small">{fileLimitsLine()}</span>}
       <input ref={input} type="file" multiple hidden accept={prospect ? PROSPECT_ACCEPT : undefined} onChange={(e) => { void run([...(e.target.files ?? [])]); e.target.value = ""; }} />
     </div>
     {/* Outside the drop area, so its Cancel and Retry aren't buttons inside a button */}

@@ -11,7 +11,7 @@ import { Link, useLocation, useNavigate } from "react-router";
 import { useSession, useTopBar } from "../components/Shell.tsx";
 import { Avatar, useAsk, useToast } from "../components/ui.tsx";
 import { api, BASE_PATH, devUser, LIVE, pickPerson } from "../lib/api.ts";
-import { menuOf, NOTIFY_GROUPS } from "@1neon/domain";
+import { emailDefault, menuOf, NOTIFY_GROUPS } from "@1neon/domain";
 import { problem } from "../lib/hooks.ts";
 import { passkeyCreation } from "../lib/passkey.ts";
 import { useProspectEverywhere } from "../components/Prospect.tsx";
@@ -93,6 +93,16 @@ export function MePage() {
     }
   };
   // Save the profile; shared theme controls live in the menu, so this form leaves the account theme untouched
+  // Bring Home's "Get to know 1NEON" card back after it was hidden there
+  const showGuide = async () => {
+    try {
+      await api("/me", { method: "PATCH", body: { version: me.user.version, guide: "shown" } });
+      await qc.invalidateQueries({ queryKey: ["me"] });
+      toast("It's back on Home.");
+    } catch (e) {
+      toast(problem(e));
+    }
+  };
   const save = async () => {
     setBusy(true);
     try {
@@ -230,13 +240,13 @@ export function MePage() {
               <tbody>
                 {NOTIFY_GROUPS.map((g) => {
                   // The saved choice, or the group's default
-                  const cur = draft.notify[g.id] ?? { email: g.email, sms: false };
+                  const cur = draft.notify[g.id] ?? { email: emailDefault(g, noTexts), sms: false };
                   const set = (patch: Partial<typeof cur>) => setDraft({ ...draft, notify: { ...draft.notify, [g.id]: { ...cur, ...patch } } });
                   return (
                     <tr key={g.id}>
                       <th scope="row"><span>{g.label}{g.level === "critical" && <span className="tag rec">important</span>}</span><span className="muted">{g.hint}</span></th>
                       <td><label className="notify-hit"><input type="checkbox" aria-label={`Email me: ${g.label}`} checked={cur.email} onChange={(e) => set({ email: e.target.checked })} /></label></td>
-                      <td><label className="notify-hit"><input type="checkbox" aria-label={`Text me: ${g.label}`} checked={textsAvailable && cur.sms} disabled={!textsAvailable} onChange={(e) => set({ sms: e.target.checked })} /></label></td>
+                      <td><label className="notify-hit"><input type="checkbox" aria-label={`Text me: ${g.label}`} checked={textsAvailable && !g.emailOnly && cur.sms} disabled={!textsAvailable || g.emailOnly} onChange={(e) => set({ sms: e.target.checked })} /></label></td>
                     </tr>
                   );
                 })}
@@ -326,6 +336,7 @@ export function MePage() {
           <span className="muted">Each page also has its own guide under ?.</span>
           <div className="actions">
             <button className="btn btn-ghost" type="button" onClick={help.welcomeTour}>Replay the tour</button>
+            {me.user.guide === "hidden" && <button className="btn btn-ghost" type="button" onClick={() => void showGuide()}>Show Get to know 1NEON on Home</button>}
             <Link className="btn btn-ghost" to="/faqs">FAQs</Link>
           </div>
         </div>

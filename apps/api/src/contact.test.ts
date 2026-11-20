@@ -28,13 +28,13 @@ describe("contact form", () => {
     expect(mailer.sent[0]).toMatchObject({ to: CONTACT_TO, replyTo: "dana@example.com" });
     expect(mailer.sent[0]!.text).toContain("Orders land in the sheet");
     // From "neon1" the website, with one short tag and no sender name repeated in the subject
-    expect(mailer.sent[0]).toMatchObject({ as: "requests", subject: "[request] Business workflows and technology · Dana Kim" });
+    expect(mailer.sent[0]).toMatchObject({ as: "requests", subject: expect.stringMatching(/^Contact message — Dana Kim/) });
   });
   it("shows the sender's local time when their browser gave a real zone, and ignores junk", async () => {
     await send({ ...good, timeZone: "America/Chicago" });
-    expect(mailer.sent[0]!.text).toMatch(/Their local time: .+ C[SD]T \(\d\d:\d\d UTC.*\), America\/Chicago/);
+    expect(mailer.sent[0]!.text).toMatch(/Their local time\s+.+ C[SD]T \(\d\d:\d\d UTC.*\), America\/Chicago/);
     // The sign-off to neon1 reads in New York time
-    expect(mailer.sent[0]!.html).toMatch(/Sent .+ E[SD]T \(/);
+    expect(mailer.sent[0]!.html).toMatch(/>Sent<\/td><td[^>]*>.+ E[SD]T \(/);
     await send({ ...good, timeZone: "Mars/Olympus" });
     expect(mailer.sent[1]!.text).not.toContain("Their local time");
     await send({ ...good, timeZone: "" });
@@ -42,9 +42,9 @@ describe("contact form", () => {
   });
   it("names every topic picked and the visitor's own, or says none was picked", async () => {
     await send({ ...good, topic: undefined, topics: ["cloud", "security"], other: "Printer setup" });
-    expect(mailer.sent[0]!.text).toContain("About: Cloud, Security awareness and readiness, Printer setup");
+    expect(mailer.sent[0]!.text).toMatch(/About\s+Cloud, Security awareness and readiness, Printer setup/);
     await send({ ...good, topic: undefined });
-    expect(mailer.sent[1]!.text).toContain("About: Not said");
+    expect(mailer.sent[1]!.text).toMatch(/About\s+Not said/);
     expect((await send({ ...good, topics: ["nope"] })).status).toBe(400);
     // The site's current topics, all at once, and an older key a cached page still sends
     await send({ ...good, topic: undefined, topics: ["workflows", "cloud", "ai", "networks", "devices", "software", "security"], other: "" });
@@ -54,7 +54,7 @@ describe("contact form", () => {
   });
   it("says how they found neon1 when picked, and refuses an answer not on the list", async () => {
     await send({ ...good, found: "linkedin" });
-    expect(mailer.sent[0]!.text).toContain("Found neon1 through: LinkedIn");
+    expect(mailer.sent[0]!.text).toMatch(/Found neon1 through\s+LinkedIn/);
     await send(good);
     expect(mailer.sent[1]!.text).not.toContain("Found neon1");
     expect((await send({ ...good, found: "billboard" })).status).toBe(400);
@@ -65,7 +65,7 @@ describe("contact form", () => {
     const b = (await r.json()) as { current: { fields: Record<string, string> } };
     expect(Object.keys(b.current.fields).sort()).toEqual(["email", "foundOther", "name"]);
     expect((await send({ ...good, name: "Madonna", found: "other", foundOther: "A podcast" })).status).toBe(200);
-    expect(mailer.sent[0]!.text).toContain("Found neon1 through: A podcast");
+    expect(mailer.sent[0]!.text).toMatch(/Found neon1 through\s+A podcast/);
   });
   it("refuses an empty or too-short message, name, or answer, each by its field", async () => {
     const r = await send({ ...good, today: "hi", name: "L", company: "x", found: "other", foundOther: "ab" });

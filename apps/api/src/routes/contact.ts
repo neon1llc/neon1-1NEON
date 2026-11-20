@@ -8,7 +8,7 @@ import { z } from "zod";
 import { body, fail } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
 import { viewerIp } from "../lib/edge.ts";
-import { esc, branded } from "../mail.ts";
+import { contactMail, contactSubject } from "../lib/contactmail.ts";
 
 
 export const CONTACT_TO = "hello@neon1.tech";
@@ -96,26 +96,17 @@ export function contactRoutes(app: App, k: Kit) {
     // Every picked topic by name, then their own words; "Not said" when they picked nothing
     const keys = [...new Set([...m.topics, ...(m.topic ? [m.topic] : [])])].filter((t) => t !== "other");
     const topic = [...keys.map((t) => TOPICS[t]), ...(m.other ? [m.other] : [])].join(", ") || "Not said";
-    const rows: [string, string][] = [
-      ["From", `${m.name} <${m.email}>`], ...(m.company ? [["Organization", m.company] as [string, string]] : []),
-      ["About", topic], ["What happens today", m.today],
-      ...(m.better ? [["What would be better", m.better] as [string, string]] : []),
-      ...(m.timing ? [["Timing", m.timing] as [string, string]] : []),
-      ...(m.found ? [["Found neon1 through", foundLabel(m)] as [string, string]] : []),
+    const now = new Date();
+    const { text, html } = contactMail({
+      name: m.name, email: m.email, company: m.company, about: topic, today: m.today, better: m.better, timing: m.timing,
+      found: m.found ? foundLabel(m) : "",
       // Their clock when they sent it, from their browser's zone, so a reply can pick a sensible hour
-      ...(isTimeZone(m.timeZone) ? [["Their local time", `${formatWhen(new Date(), m.timeZone)}, ${m.timeZone}`] as [string, string]] : []),
-    ];
-    const text = rows.map(([k2, v]) => `${k2}: ${v}`).join("\n\n");
-    const html = branded({
-      label: "website message",
-      preheader: `${m.name}: ${topic}`,
-      heading: `Message from ${m.name}`,
-      body: rows.map(([k2, v]) => `<p style="margin:0 0 14px"><b>${esc(k2)}</b><br>${esc(v).replace(/\n/g, "<br>")}</p>`).join(""),
-      note: "Reply to this email to answer them directly.",
-      zone: DEFAULT_TIME_ZONE, // goes to neon1, so the sign-off reads in neon1's zone
+      localTime: isTimeZone(m.timeZone) ? `${formatWhen(now, m.timeZone)}, ${m.timeZone}` : "",
+      at: now,
+      zone: DEFAULT_TIME_ZONE, // goes to neon1, so the sent time reads in neon1's zone
     });
-    // From "neon1" (the website); dev's mailer marks sender and subject itself
-    await d.mailer.send(CONTACT_TO, `[request] ${topic} · ${m.name}`, text, html, m.email, undefined, undefined, "requests");
+    // From "neon1 Reach" (the website's contact form); dev's mailer marks the sender name itself
+    await d.mailer.send(CONTACT_TO, contactSubject({ name: m.name, company: m.company }), text, html, m.email, undefined, undefined, "requests");
     return c.json({ ok: true });
   });
 }

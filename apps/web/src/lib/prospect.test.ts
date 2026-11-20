@@ -3,7 +3,7 @@
 
 
 import { describe, expect, it } from "vitest";
-import { limitedProspect, prospectEverywhere, prospectState, stateLabel } from "./prospect.ts";
+import { askBlocker, fileLimitsLine, limitedProspect, prospectEverywhere, prospectState, stateLabel } from "./prospect.ts";
 import { elapsedSince, signUpBody, signUpProblems, signUpReady } from "./signup.ts";
 import { widgetOptions } from "./turnstile.ts";
 
@@ -85,5 +85,22 @@ describe("sign-up form", () => {
   it("asks Turnstile for the invisible widget for sign-up", () => {
     const o = widgetOptions("key", { callback: () => undefined, expired: () => undefined, error: () => undefined });
     expect(o).toMatchObject({ sitekey: "key", action: "signup", appearance: "interaction-only", size: "flexible" });
+  });
+});
+
+
+describe("why Request assessment is off", () => {
+  it("names what's missing, and nothing once it's ready", () => {
+    expect(askBlocker({ chosen: 1, several: false, note: "", noteProblem: undefined })).toBe("Add a note to enable this.");
+    expect(askBlocker({ chosen: 0, several: true, note: "  ", noteProblem: undefined })).toBe("Add a note and choose a project to enable this.");
+    expect(askBlocker({ chosen: 0, several: true, note: "We use Google Workspace.", noteProblem: undefined })).toBe("Choose a project to enable this.");
+    expect(askBlocker({ chosen: 1, several: false, note: "x@y", noteProblem: "Take out the link." })).toBe("Fix the note to enable this.");
+    expect(askBlocker({ chosen: 2, several: true, note: "We use Google Workspace.", noteProblem: undefined })).toBeUndefined();
+  });
+});
+
+describe("a free account's file limits", () => {
+  it("states the numbers the API refuses at", () => {
+    expect(fileLimitsLine()).toBe("Up to 10 files, 10 MB each and 50 MB in all.");
   });
 });

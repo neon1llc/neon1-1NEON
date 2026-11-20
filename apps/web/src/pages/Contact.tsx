@@ -1,5 +1,5 @@
 // apps/web/src/pages/Contact.tsx - Every way to reach neon1 from inside 1NEON, for any account (a new
-// account included): email, call or text, and a booked call. Plain links, so each opens the person's own
+// account included): email, call or text, and a booked call, and the website's form. Plain links, so each opens the person's own
 // mail, phone, or calendar app. Writing in a project stays the best place for anything about that project.
 
 
@@ -7,6 +7,10 @@ import { Link } from "react-router";
 import { OutLink } from "../components/OutLink.tsx";
 import { useTopBar } from "../components/Shell.tsx";
 import { BOOK_A_CALL } from "../lib/prospect.ts";
+
+
+// The contact form on the website, where a need can be written out without an account
+const SITE_CONTACT = "/#contact";
 
 
 // The same numbers and address the neon1.tech site shows
@@ -33,12 +37,13 @@ export function ContactPage() {
           <dl className="facts">
             <div><dt>Email</dt><dd><OutLink href={`mailto:${CONTACT.email}`}>{CONTACT.email}</OutLink></dd></div>
             <div><dt>Call or text</dt><dd><OutLink href={`tel:${CONTACT.phone}`} title={CONTACT.phoneDigits}>{CONTACT.phoneLabel}</OutLink> <span className="muted small">{CONTACT.phoneDigits}</span></dd></div>
+            <div><dt>Write it out</dt><dd><OutLink href={SITE_CONTACT}>Send me your case through the site</OutLink></dd></div>
             <div><dt>Talk it through</dt><dd><OutLink href={BOOK_A_CALL}>Book a free 30-minute call</OutLink></dd></div>
           </dl>
         </section>
         <section className="card contact-ways">
           <h2 className="card-h">When I answer</h2>
-          <p style={{ margin: 0 }}>Weekends 8am to 8pm and weekday evenings 6pm to 9pm, Eastern time, usually within a day.</p>
+          <p style={{ margin: 0 }}>Monday to Thursday 6pm to 9pm, Friday 6pm to 8pm, and weekends 8am to 8pm, Eastern time, usually within a day.</p>
           <p className="muted small">About a project? Write in the project itself, so everything stays together. More answers in the <Link to="/faqs">FAQs</Link>.</p>
         </section>
       </div>

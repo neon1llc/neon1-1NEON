@@ -53,11 +53,25 @@ export function readLook(): Look {
   return lookFor(style, mode === "dark");
 }
 
+// Storage events reach only other tabs, so a pick in this tab is announced with this event too: every switch on the page
+// then redraws from the same saved choice instead of a copy it held from before (two menu switches used to disagree)
+export const LOOK_EVENT = "neon1:look";
+const LOOK_KEYS = [KEY_STYLE, KEY_MODE, KEY_SHARED];
+
 /** A named selection explicitly sets both axes, including when saved from the profile */
 export function saveLook(look: Look) {
   write(KEY_MODE, isDarkLook(look) ? "dark" : "light");
   setStyleChoice(isSentinel(look) ? "sentinel" : "matrix");
   write(KEY_SHARED, "1");
+  if (typeof dispatchEvent === "function") dispatchEvent(new Event(LOOK_EVENT));
+}
+
+/** Call `cb` whenever the family or mode changes, in this tab or another; returns the unsubscribe */
+export function onLookChange(cb: () => void): () => void {
+  const storage = (e: StorageEvent) => { if (e.key === null || LOOK_KEYS.includes(e.key)) cb(); };
+  addEventListener("storage", storage);
+  addEventListener(LOOK_EVENT, cb);
+  return () => { removeEventListener("storage", storage); removeEventListener(LOOK_EVENT, cb); };
 }
 
 /** The landing's family overrides the account's family, preserving the account's light/dark mode */

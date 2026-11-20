@@ -9,9 +9,10 @@
 // "Accepted" means the provider took the message; it is not proof that it was delivered.
 
 
-import { actorHears, groupOf, isOwnOrg, isQuickFix, neon1Only, noticeSummary, wants, type AuditEvent, type Member, type User } from "@1neon/domain";
+import { actorHears, groupOf, isOwnOrg, isProspect, isQuickFix, neon1Only, noticeSummary, wants, type AuditEvent, type Member, type User } from "@1neon/domain";
 import type { Config } from "./config.ts";
-import { inviteEmail, noticeEmail } from "./emails.ts";
+import { inviteEmail, noticeEmail, prospectFacts } from "./emails.ts";
+import { eventLinks, linkUrl } from "./lib/links.ts";
 import type { Mailer, Texter } from "./services.ts";
 import { smsReady, smsSendAllowed, textNotice, welcomeText, confirmedText, isOptOut } from "./sms.ts";
 import type { Repo } from "./store/repo.ts";
@@ -265,6 +266,8 @@ async function eventTargets(d: OutboxDeps, e: AuditEvent, clock: Clock): Promise
   const home = `${cfg.publicUrl}/1NEON/o/${tenant?.slug ?? ""}`;
   const key = /^([A-Z][A-Z0-9]*-\d+): /.exec(e.summary)?.[1];
   const invoiceUrl = key && (e.action.startsWith("invoice.") || e.action.startsWith("payment.")) ? `${home}/projects/${key}/invoices/${e.target}` : undefined;
+  // Any other notice opens the thing it is about (the item on its layer's tab, the project, or the page), as the bell does
+  const opens = invoiceUrl ?? linkUrl(home, (await io(eventLinks(repo, e.tenantId, [e])))[0]) ?? `${home}/workspace`;
   // A quick fix's notices about its proposal revisions say "Quote"; the stored summary is unchanged
   const quick = key && e.action.startsWith("proposal.") ? (await io(repo.listProjects(e.tenantId))).some((p) => p.key === key && isQuickFix(p)) : false;
   const summary = noticeSummary(e.summary, quick);
@@ -279,17 +282,28 @@ async function eventTargets(d: OutboxDeps, e: AuditEvent, clock: Clock): Promise
     // neon1's working drafts reach neon1 only
     if (neon1Only(e.action) && !cfg.operatorEmails.includes(u.email)) continue;
     if (wants(u.notify, e.action, "email")) {
-      const mail = noticeEmail({ orgName: tenant?.name ?? "1NEON", by: m.userId === e.actorId ? "You" : by, summary, url: invoiceUrl ?? `${home}/workspace`, button: invoiceUrl ? "See the invoice" : undefined, zone: u.timeZone, important: groupOf(e.action).level === "critical" });
-      targets.push({ key: u.id, channel: "email", send: (signal) => d.mailer.send(u.email, mail.subject, mail.text, mail.html, undefined, signal) });
+      const operator = cfg.operatorEmails.includes(u.email.toLowerCase());
+      // neon1 already got the request itself, with the person as Reply-To (routes/requests.ts)
+      if (operator && e.action.startsWith("request.")) continue;
+      const mail = noticeEmail({
+        orgName: tenant?.name ?? "1NEON", trial: Boolean(tenant && isProspect(tenant)), ref: tenant?.clientId,
+        by: m.userId === e.actorId ? "You" : by, byEmail: e.actorId === "stripe" ? undefined : actor?.email,
+        action: e.action, summary, projectKey: key, projectUrl: key ? `${home}/projects/${key}` : undefined,
+        url: opens, button: invoiceUrl ? "See the invoice" : undefined,
+        zone: u.timeZone, important: groupOf(e.action).level === "critical", operator, quick,
+        // What neon1 knows of a free account goes into its alerts as facts, not into the sentence
+        details: operator && tenant && isProspect(tenant) ? prospectFacts(tenant) : undefined, settingsUrl: `${cfg.publicUrl}/1NEON/me`, at: Number.isNaN(Date.parse(e.at)) ? undefined : new Date(e.at), changes: e.details,
+      });
+      targets.push({ key: u.id, channel: "email", send: (signal) => d.mailer.send(u.email, mail.subject, mail.text, mail.html, mail.replyTo, signal, undefined, mail.as) });
     }
     // Texts only to a verified number the person still has, within the budgets, with no project detail
-    if (d.texter && smsReady(u) && wants(u.notify, e.action, "sms")) {
+    if (d.texter && smsReady(u, cfg.smsAllowedDestinations) && wants(u.notify, e.action, "sms")) {
       const texter = d.texter;
       targets.push({
         key: u.id,
         channel: "sms",
         send: async (signal) => {
-          if (!(await smsSendAllowed(repo, u.id, u.smsPhone!))) throw Object.assign(new Error("text budget reached"), { name: "TextBudget" });
+          if (!(await smsSendAllowed(repo, u.id, u.smsPhone!, cfg.smsAllowedDestinations))) throw Object.assign(new Error("text budget reached"), { name: "TextBudget" });
           await texter.send(u.smsPhone!, textNotice(cfg.publicUrl), signal);
         },
         optedOut: () => markOptedOut(repo, u),
@@ -308,13 +322,13 @@ async function smsSetupTarget(d: OutboxDeps, payload: Extract<OutboxPayload, { k
   const confirmation = payload.kind === "sms-confirmation";
   const stillCurrent = confirmation
     ? user.smsConsentAt === payload.consentAt && user.smsPendingPhone === payload.to && !user.smsVerifiedAt
-    : user.smsVerifiedAt === payload.verifiedAt && user.smsPhone === payload.to && smsReady(user);
+    : user.smsVerifiedAt === payload.verifiedAt && user.smsPhone === payload.to && smsReady(user, d.cfg.smsAllowedDestinations);
   if (!stillCurrent) return [];
   return [{
     key: user.id,
     channel: "sms",
     send: async (signal) => {
-      if (!(await smsSendAllowed(d.repo, user.id, payload.to))) throw Object.assign(new Error("text budget reached"), { name: "TextBudget" });
+      if (!(await smsSendAllowed(d.repo, user.id, payload.to, d.cfg.smsAllowedDestinations))) throw Object.assign(new Error("text budget reached"), { name: "TextBudget" });
       await d.texter!.send(payload.to, confirmation ? welcomeText() : confirmedText(), signal);
     },
     optedOut: () => markOptedOut(d.repo, user),
@@ -325,7 +339,7 @@ async function smsSetupTarget(d: OutboxDeps, payload: Extract<OutboxPayload, { k
 /** Send one invitation email */
 async function sendInvite(d: OutboxDeps, p: Extract<OutboxPayload, { kind: "invite" }>, signal?: AbortSignal) {
   const mail = inviteEmail({ orgName: p.orgName, inviter: p.inviter, url: p.url });
-  await d.mailer.send(p.email, mail.subject, mail.text, mail.html, undefined, signal);
+  await d.mailer.send(p.email, mail.subject, mail.text, mail.html, mail.replyTo, signal, undefined, mail.as);
 }
 
 

@@ -11,7 +11,7 @@
   --line: rgb(24 39 29 / .14); --line-strong: rgb(24 39 29 / .6); --field-line: rgb(24 39 29 / .6);
   --accent: #246F38; --accent-ink: #F2F4F2; --accent-soft: rgb(36 111 56 / .08); --focus: #246F38; --shadow: 0 1px 2px rgb(24 39 29 / .06);
   --amber: #8A5300; --red: #B3261E; --ok: #18692C;
-  --l1: #174B27; --l2: #246F38; --l3: #2F7A42; --l4: #358048; --badge-ink: #F2F4F2;
+  --l1: #174B27; --l2: #246F38; --l3: #2F7A42; --l4: #337D46; --badge-ink: #F2F4F2;
 }
 :root[data-style="sentinel"][data-theme="matrix"] {
   color-scheme: dark;
@@ -72,3 +72,6 @@
   --you: rgb(121 207 145 / .1); --muted: #B2BDB4; --accent: #79CF91; --accent-ink: #0F0A0D; --field: #0F0A0D; --link: #79CF91; box-shadow: 0 8px 24px rgb(0 0 0 / .4); }
 :root[data-style="sentinel"] .n1chat-launch:not(.n1chat-light) { color: var(--accent); border-color: var(--accent); background: var(--bg); }
 :root[data-style="sentinel"] .n1chat-launch:not(.n1chat-light):hover { background: var(--accent-soft); }
+
+/* The sample project's title keeps the Matrix prompt mark (">") out of Sentinel, which stays plain */
+:root[data-style="sentinel"] .example .page-title::before { content: none; }

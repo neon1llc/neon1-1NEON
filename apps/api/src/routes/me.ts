@@ -8,7 +8,7 @@ import { assurance } from "../lib/assurance.ts";
 import { body, defined, fail, now, who } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
 import { outboxOp } from "../outbox.ts";
-import { codeText, e164, hashCode, smsAfterSave, smsFactorOn, smsState } from "../sms.ts";
+import { codeText, e164, hashCode, smsAfterSave, smsDestinationAllowedByConfig, smsFactorOn, smsState } from "../sms.ts";
 import { ConflictError } from "../store/types.ts";
 
 
@@ -46,9 +46,9 @@ export function meRoutes(app: App, k: Kit) {
       strongSession: actor.strongSession,
       // Which second steps the person has set up: the app's own authenticator is read live, text codes
       // from the profile, and passkeys from the profile's hint (refreshed at each sign-in)
-      factors: { totp, sms: smsFactorOn(user), passkey: Boolean(user.passkey), any: totp || smsFactorOn(user) || Boolean(user.passkey) || user.strongAuth },
+      factors: { totp, sms: smsFactorOn(user, d.cfg.smsAllowedDestinations), passkey: Boolean(user.passkey), any: totp || smsFactorOn(user, d.cfg.smsAllowedDestinations) || Boolean(user.passkey) || user.strongAuth },
       // Where texts stand: unavailable (no sending number yet), no number, not agreed, opted out, unverified, or ready
-      sms: { state: smsState(user, Boolean(d.texter)) },
+      sms: { state: smsState(user, Boolean(d.texter) && (d.cfg.env !== "dev" || Boolean(d.cfg.smsAllowedDestinations?.length)), d.cfg.smsAllowedDestinations) },
       // Whether Neo for signed-in people is wired here; without it the window stays the public one
       neo: Boolean(d.neo),
       orgs: tenants
@@ -66,11 +66,13 @@ export function meRoutes(app: App, k: Kit) {
     // With text codes on, a new number or a no to texts would switch off a second step; like any
     // factor change, that needs a confirmed session, so an email-only session can't swap in its own
     const offNumber = patch.phone !== undefined && e164(patch.phone) !== e164(user.phone);
-    if (smsFactorOn(user) && (offNumber || smsConsent === false) && !actor.strongSession) fail(403, "strong_auth_required", "Text codes are on for this number. Confirm it's you before changing it or turning texts off.");
+    if (smsFactorOn(user, d.cfg.smsAllowedDestinations) && (offNumber || smsConsent === false) && !actor.strongSession) fail(403, "strong_auth_required", "Text codes are on for this number. Confirm it's you before changing it or turning texts off.");
     if (!offNumber && smsConsent === true && !e164(patch.phone ?? user.phone)) fail(400, "invalid_phone", "Add a valid phone number before turning texts on.");
     // Agreeing to texts is recorded with its time and wording version, as carriers expect. A new
     // number always needs a separate opt-in save, so consent cannot carry over from the previous phone
     const consent = offNumber ? false : smsConsent;
+    const consentPhone = e164(patch.phone ?? user.phone);
+    if (consent === true && !smsDestinationAllowedByConfig(consentPhone, d.cfg.smsAllowedDestinations)) fail(403, "texts_dev_limited", "Texts in this environment are limited to configured test numbers.");
     const sms = smsAfterSave(user, patch.phone, consent);
     const next: User = { ...user, ...defined(patch), ...sms, version: user.version + 1, updatedAt: now(), updatedBy: user.id };
     const ops = [repo.userOp(next, version)];
@@ -106,7 +108,7 @@ export function meRoutes(app: App, k: Kit) {
   // Send a code to the profile's number
   app.post("/me/phone/verify", async (c) => {
     const { user, jti } = who(c);
-    if (!d.texter) fail(503, "texts_unavailable", "Texts aren't available yet. Email notices still work.");
+    if (!d.texter || (d.cfg.env === "dev" && !d.cfg.smsAllowedDestinations?.length)) fail(503, "texts_unavailable", "Texts aren't available yet. Email notices still work.");
     const to = e164(user.phone);
     if (!to) fail(400, "no_number", "Add a mobile number to your profile first.");
     if (!user.smsConsentAt) fail(400, "not_agreed", "Agree to texts on your profile first.");

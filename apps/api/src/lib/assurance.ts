@@ -7,6 +7,7 @@ import type { Context } from "hono";
 import { factorInventory, type FactorInventory } from "../factors.ts";
 import { checkTotp } from "../totp.ts";
 import { newId } from "@1neon/domain";
+import type { SenderKind } from "../mail.ts";
 import { keys } from "../store/repo.ts";
 import { ConflictError, type Row, type WriteOp } from "../store/types.ts";
 import { bounded } from "../outbox.ts";
@@ -38,7 +39,7 @@ export function assurance(k: Kit) {
   /** Refuse a factor change the rule above doesn't allow; returns the inventory it read */
   async function mayChangeFactors(c: Context<Env>): Promise<FactorInventory> {
     const { user, actor } = who(c);
-    const inv = await factorInventory(repo, d.directory, user, tokenOf(c));
+    const inv = await factorInventory(repo, d.directory, user, tokenOf(c), d.cfg.smsAllowedDestinations);
     if (inv.any === "unknown" && !actor.strongSession) fail(503, "factors_unknown", "We couldn't check your sign-in methods just now. Confirm it's you, or try again in a minute.");
     if (inv.any === true && !actor.strongSession) fail(403, "strong_auth_required", "Confirm it's you with a passkey, authenticator app, or text code you already have, then try again.");
     return inv;
@@ -66,8 +67,8 @@ export function assurance(k: Kit) {
   }
 
   /** Mail a security notice; a mail failure never undoes the change, but it is logged */
-  async function notice(user: User, mail: { subject: string; text: string; html: string }) {
-    await d.mailer.send(user.email, mail.subject, mail.text, mail.html).catch((e) => console.error(JSON.stringify({ level: "error", message: `security notice: ${String(e)}` })));
+  async function notice(user: User, mail: { subject: string; text: string; html: string; as?: SenderKind; replyTo?: string }) {
+    await d.mailer.send(user.email, mail.subject, mail.text, mail.html, mail.replyTo, undefined, undefined, mail.as).catch((e) => console.error(JSON.stringify({ level: "error", message: `security notice: ${String(e)}` })));
   }
 
   // --- Counted codes ------------------------------------------------------------
@@ -95,7 +96,7 @@ export function assurance(k: Kit) {
       const same = sends.filter((x) => x.to === to && x.purpose === purpose).length + legacy;
       if (same >= CODES_PER_HOUR || sends.length + legacy >= CODES_PER_HOUR_PERSON) fail(429, "too_many_codes", "Too many codes this hour. Try again later.");
       if (!counted) {
-        if (!(await smsSendAllowed(repo, user.id, to))) fail(429, "texts_busy", "This number has reached its text limit. Try again later.");
+        if (!(await smsSendAllowed(repo, user.id, to, d.cfg.smsAllowedDestinations))) fail(429, "texts_busy", "This number has reached its text limit. Try again later.");
         counted = true;
       }
       const next = await newCode(user.id);

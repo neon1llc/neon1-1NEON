@@ -4,7 +4,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
-import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate, useParams } from "react-router";
+import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate, useNavigationType, useParams } from "react-router";
 import { menuOf, PROSPECT_FINAL_DAYS, PROSPECT_GRACE_DAYS, PROSPECT_LIMITS } from "@1neon/domain";
 import { api, DEMO as IN_DEMO, LIVE as IN_LIVE, devUser, HttpError, pickPerson, resetDemo, Unconfirmed } from "../lib/api.ts";
 import { failureOf, read } from "../lib/reads.ts";
@@ -12,7 +12,7 @@ import { passkeyAssertion } from "../lib/passkey.ts";
 import { SIGN_IN_METHODS } from "../lib/methods.ts";
 import { drew, fade, lessMotion } from "../lib/motion.ts";
 import { REWIND } from "../lib/nav.ts";
-import { useSectionScroll } from "../lib/scrollmemory.ts";
+import { useEntryScroll } from "../lib/scrollmemory.ts";
 import { usePersisting } from "../lib/persist.ts";
 import { cleanCode, clearStep, loadStep, saveStep, session } from "../lib/signin.ts";
 import type { Me, OrgResponse, OrgSummary } from "../lib/types.ts";
@@ -22,8 +22,8 @@ import { Offline } from "./Glitch.tsx";
 import { Rain } from "./Rain.tsx";
 import { PublicBar } from "./PublicBar.tsx";
 import { useSiteTheme } from "../lib/sitetheme.ts";
-import { isSentinel, isDarkLook, lookFor, normalizeLook, resolveTheme, saveLook, sharedThemeChoice, styleChoice } from "../lib/style.ts";
-import { dawn } from "../lib/dawn.ts";
+import { paintTheme, setAccountTheme, watchTheme } from "../lib/themepaint.ts";
+import { isSentinel, isDarkLook, lookFor, normalizeLook, onLookChange, resolveTheme, saveLook, sharedThemeChoice, styleChoice } from "../lib/style.ts";
 import { FileText as FileIcon, Folder as FolderIcon, Home as HomeIcon, Kanban as KanbanIcon, Menu as MenuIcon, Moon, Search as SearchIcon, Sun } from "lucide-react";
 import { ConfirmDialog } from "./Confirm.tsx";
 import { HelpProvider, useHelp } from "./Help.tsx";
@@ -55,54 +55,8 @@ const MeCtx = createContext<Me | null>(null);
 export const useSession = () => useContext(MeCtx)!;
 
 
-/** Apply a theme to the page; with no attribute the styles show awake */
-export function applyTheme(theme: string) {
-  // Named looks map to the existing light/dark CSS values; data-look retains the public name
-  const look = normalizeLook(theme);
-  const biz = isSentinel(look);
-  const root = document.documentElement;
-  root.setAttribute("data-theme", theme === "device" ? "device" : isDarkLook(look) ? "matrix" : "awake");
-  root.setAttribute("data-look", theme === "device" ? "device" : look);
-  if (biz) root.setAttribute("data-style", "sentinel"); else root.removeAttribute("data-style");
-  syncDark();
-}
-// An account's saved theme as it shows here, through the landing's style choice (lib/style.ts); kept so a "device" theme in the
-// sentinel theme follows the device's light and dark setting as it changes
-let accountTheme: string | null = null;
-export function applyAccountTheme(theme: string) {
-  accountTheme = theme;
-  applyTheme(resolveTheme(theme));
-}
-
-
-// Whether the page shows a dark mode right now: chosen outright, or "device" on a device set to dark.
-// The html element carries it as the class n1-dark, so Neo's window can follow the same look as the
-// landing page (dark over the rain, light over awake pages) and repaint the moment either one changes
-const darkDevice = matchMedia("(prefers-color-scheme: dark)");
-export function isDark() {
-  const t = document.documentElement.getAttribute("data-theme");
-  return t === "matrix" || (t === "device" && darkDevice.matches);
-}
-/** A theme the person is trying in Settings (Save keeps it, and sets the style to match): leaving dark is a slow dawn (lib/dawn.ts)
- * within the matrix theme; the sentinel theme, and a move between styles, change at once. A named theme shows as named; "device"
- * follows the device inside the style the landing chose */
-export function changeTheme(theme: string) {
-  accountTheme = theme;
-  const next = theme === "device" ? resolveTheme(theme) : theme;
-  const willBeDark = isDarkLook(next) || (next === "device" && darkDevice.matches);
-  const plain = isSentinel(next) || document.documentElement.getAttribute("data-style") === "sentinel";
-  dawn(!plain && isDark() && !willBeDark, () => applyTheme(next));
-}
-function syncDark() {
-  const dark = isDark();
-  document.documentElement.classList.toggle("n1-dark", dark);
-  // The tab icon follows the app's theme, not just the device's: matrix green on dark, brand green on awake
-  const icon = document.getElementById("favicon") as HTMLLinkElement | null;
-  if (icon) icon.href = dark ? "/favicon-matrix.svg" : "/favicon-awake.svg";
-}
-darkDevice.addEventListener?.("change", () => {
-  if (accountTheme === "device" && styleChoice() === "sentinel") applyAccountTheme("device"); else syncDark();
-});
+// The theme is painted by lib/themepaint.ts from the one saved choice (lib/style.ts); this file only tells it who is signed in
+watchTheme();
 
 
 /** Top-level gate: sign-in, error, first-visit redirect, then the app */
@@ -149,14 +103,11 @@ function App() {
     return () => removeEventListener("1neon:signed-out", check);
   }, [qc]);
   useEffect(() => {
-    if (!me.data) { accountTheme = null; return; }
-    applyAccountTheme(me.data.user.theme);
-    const follow = (event: StorageEvent) => {
-      if (!["neon1.style", "neon1.mode", "neon1.theme.shared", null].includes(event.key)) return;
-      applyAccountTheme(me.data.user.theme);
-    };
-    addEventListener("storage", follow);
-    return () => removeEventListener("storage", follow);
+    if (!me.data) { setAccountTheme(null); return; }
+    // The account's theme is only the fallback until a shared choice exists, and arriving late never paints over one
+    setAccountTheme(me.data.user.theme);
+    paintTheme({ instant: true });
+    return () => setAccountTheme(null);
   }, [me.data]);
   // First sign-in from a browser with no saved time zone: keep the browser's, so email shows times in
   // the person's own zone. Once per page load; the profile changes it, and a failure is simply skipped
@@ -723,24 +674,24 @@ function currentMenuLook(theme: string) {
 
 
 function MenuThemeControls({ theme, kind }: { theme: string; kind: "mode" | "family" }) {
+  // The mode and family switches are two instances; both redraw from the saved choice on any change, here or in another tab
   const [look, setLook] = useState(() => currentMenuLook(theme));
   useEffect(() => {
-    const sync = (event: StorageEvent) => {
-      if (["neon1.style", "neon1.mode", "neon1.theme.shared", null].includes(event.key)) setLook(currentMenuLook(theme));
-    };
-    addEventListener("storage", sync);
-    return () => removeEventListener("storage", sync);
+    setLook(currentMenuLook(theme));
+    return onLookChange(() => setLook(currentMenuLook(theme)));
   }, [theme]);
   const dark = isDarkLook(look);
-  const family = sharedThemeChoice() ? styleChoice() ?? "sentinel" : isSentinel(look) ? "sentinel" : "matrix";
-  const pick = (next: typeof look) => {
+  const family = isSentinel(look) ? "sentinel" : "matrix";
+  // Each click reads the saved choice afresh, so flipping one axis never puts back an old value of the other
+  const pick = (flip: "mode" | "family") => {
+    const now = currentMenuLook(theme);
+    const nowDark = isDarkLook(now), nowFamily = isSentinel(now) ? "sentinel" : "matrix";
+    const next = flip === "mode" ? lookFor(nowFamily, !nowDark) : lookFor(nowFamily === "sentinel" ? "matrix" : "sentinel", nowDark);
+    // Saving announces the pick to this page and other tabs; the page repaints from the saved choice (lib/themepaint.ts)
     saveLook(next);
-    setLook(next);
-    changeTheme(next);
   };
   if (kind === "family") {
-    const family = sharedThemeChoice() ? styleChoice() ?? "sentinel" : isSentinel(look) ? "sentinel" : "matrix";
-    return <button className="menu-theme-switch style-switch" type="button" role="switch" aria-checked={family === "sentinel"} aria-label="Sentinel theme" title={`Switch to ${family === "sentinel" ? "Matrix" : "Sentinel"}`} onClick={() => pick(lookFor(family === "sentinel" ? "matrix" : "sentinel", dark))}>
+    return <button className="menu-theme-switch style-switch" type="button" role="switch" aria-checked={family === "sentinel"} aria-label="Sentinel theme" title={`Switch to ${family === "sentinel" ? "Matrix" : "Sentinel"}`} onClick={() => pick("family")}>
       <svg className="switch-sun" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5v6M12 3.5v9M17 3.5v5M7 14v6.5M12 16.5v4M17 12v8.5" /></svg>
       <svg className="switch-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 8h17v11.5h-17zM8.5 8V5.5h7V8M3.5 13h17" /></svg>
       <span className="switch-knob" aria-hidden="true" />
@@ -748,7 +699,7 @@ function MenuThemeControls({ theme, kind }: { theme: string; kind: "mode" | "fam
   }
   return (
     <>
-      <button className="menu-theme-switch" type="button" role="switch" aria-checked={dark} aria-label="Dark mode" title={`Switch to ${dark ? "light" : "dark"} mode`} onClick={() => pick(lookFor(family, !dark))}>
+      <button className="menu-theme-switch" type="button" role="switch" aria-checked={dark} aria-label="Dark mode" title={`Switch to ${dark ? "light" : "dark"} mode`} onClick={() => pick("mode")}>
         <Sun className="switch-sun" size={14} aria-hidden="true" /><Moon className="switch-moon" size={14} aria-hidden="true" /><span className="switch-knob" aria-hidden="true" />
       </button>
       <span className="sr" aria-live="polite">{sharedThemeChoice() ? "Shared theme preference active" : `Using your saved ${theme} theme`}</span>
@@ -774,6 +725,9 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
   const inOrg = useContext(OrgCtx);
   const [open, setOpen] = useState(false);
   const [scrimVisible, setScrimVisible] = useState(false);
+  // The page behind the open menu turns inert only once the menu has finished moving, and stays so until it has finished
+  // closing: changing inert restyles the whole page, and in the frame the menu starts to move that was a visible stutter
+  const [behind, setBehind] = useState(false);
   const [neoOpen, setNeoOpen] = useState(false);
   const [search, setSearch] = useState(false);
   const [top, setTop] = useState<ReactNode>(null);
@@ -796,8 +750,9 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
   // Each page (a project counts as one, whatever its tab) eases in when you arrive
   const parts = loc.pathname.split("/");
   const section = parts.slice(0, parts[3] === "projects" && parts[4] && parts[4] !== "new" ? 5 : 4).join("/");
-  // Each section keeps the scroll it was left at; a section not yet visited opens at its top
-  useSectionScroll(section, loc.hash);
+  // Back, Forward, and reload return to where each history entry was left; a new page opens at its top
+  const how = useNavigationType();
+  useEntryScroll(loc.key, section, loc.hash, how);
   // The full menu closes after navigating, and on Escape
   useEffect(() => setOpen(false), [loc.pathname]);
   // Arriving on another page puts keyboard focus on its title, so a screen reader hears where it is and
@@ -849,6 +804,11 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
     const timer = window.setTimeout(() => setScrimVisible(false), fallback);
     return () => window.clearTimeout(timer);
   }, [open, scrimVisible]);
+  useEffect(() => {
+    if (open === behind) return;
+    const t = window.setTimeout(() => setBehind(open), 220);
+    return () => window.clearTimeout(t);
+  }, [open, behind]);
   // Opening moves focus into the menu (to the page in view, or its first control) unless it's already
   // there; closing puts focus back on whatever opened it, if focus would otherwise be lost
   useEffect(() => {
@@ -868,12 +828,16 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
     railScroll = el.scrollTop;
     // The width is still easing in; place the rail once more after layout settles
     if (mini) requestAnimationFrame(() => { el.scrollTop = anchorScroll(el); railScroll = el.scrollTop; });
-    const back = trigger.current;
+  }, [open]);
+  // Once the menu has closed and the page is no longer inert, focus goes back to whatever opened it, if it would otherwise be lost
+  useEffect(() => {
+    if (open || behind) return;
+    const el = side.current, back = trigger.current;
     trigger.current = null;
-    const lost = !document.activeElement || document.activeElement === document.body || el.contains(document.activeElement);
+    const lost = !document.activeElement || document.activeElement === document.body || !!el?.contains(document.activeElement);
     // preventScroll: refocusing the opener must not drag the rail to it, away from the row the menu showed
     if (back?.isConnected && !back.closest("[inert]") && lost) back.focus({ preventScroll: true });
-  }, [open]);
+  }, [open, behind]);
   // The rail keeps its scroll through everything that remounts the frame (the profile and Contact neon1
   // sit outside the organization's pages, so reaching them rebuilds it) and through the open menu,
   // which always opens at its top: the position is kept here, saved while the rail is what shows
@@ -1003,7 +967,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
           {open && <MenuThemeControls theme={me.user.theme} kind="family" />}
         </div>
       </aside>
-      <div className="main" inert={open}>
+      <div className="main" inert={behind}>
         {/* Only the board is read only; Potentials has neon1's actions, and Contact is not a client workspace */}
         {all && loc.pathname === "/all/workflow" && (
           <div className="readonly-bar" role="status">
@@ -1033,7 +997,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
         </Crumbs.Provider>
       </div>
       {/* Phones: the main places as a tab bar at the bottom, within thumb reach */}
-      <nav className="tabbar" aria-label="Main" inert={open}>
+      <nav className="tabbar" aria-label="Main" inert={behind}>
         {navOrg ? (
           <>
             <NavLink to={`${base}/workspace`} data-tour="nav-home"><HomeIcon size={20} aria-hidden="true" /><span>Home</span></NavLink>

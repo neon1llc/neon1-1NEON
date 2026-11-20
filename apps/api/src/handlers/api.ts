@@ -6,11 +6,13 @@ import { handle } from "hono/aws-lambda";
 import { createApp } from "../app.ts";
 import type { Deps } from "../lib/kit.ts";
 import { CognitoAuth } from "../auth.ts";
-import { loadConfig } from "../config.ts";
+import { loadConfig, type Config } from "../config.ts";
 import { GetParametersCommand, SSMClient } from "@aws-sdk/client-ssm";
 import { AwsTexter, CognitoDirectory, S3Records, S3Storage, SesMailer, TurnstileCheck } from "../services.ts";
 import { sweepSignups } from "../routes/signup.ts";
 import { finishPurges, sweepQuietProspects } from "../routes/prospects.ts";
+import { sweepOutlineNudges } from "../routes/nudges.ts";
+import { sweepRequests } from "../routes/requests.ts";
 import { StripePayments } from "../payments.ts";
 import { beforeDeadline, drainOutbox } from "../outbox.ts";
 import { sweepFiles } from "../files.ts";
@@ -22,10 +24,11 @@ import { DEFAULT_BUDGET } from "../routes/neo.ts";
 import { RealVetting } from "../vetting/real.ts";
 import { guardDirectory, guardMailer } from "../dev-guard.ts";
 import { handleInboundSms, type InboundSms } from "../sms-inbound.ts";
+import { e164 } from "../sms.ts";
 
 
 // Built once per cold start and reused across invocations
-const cfg = loadConfig();
+const cfg = await loadSmsAllowlist(loadConfig());
 // Fail at cold start, loudly, rather than on the first request
 if (!cfg.table || !cfg.userPoolId || !cfg.clientId || !cfg.authDomain || !cfg.mailFrom || !cfg.docsBucket) {
   throw new Error("Missing configuration: TABLE_NAME, USER_POOL_ID, USER_POOL_CLIENT_ID, AUTH_DOMAIN, MAIL_FROM, DOCS_BUCKET");
@@ -39,6 +42,22 @@ const mailer = guardMailer(cfg, new SesMailer(cfg.mailFrom, cfg.sesConfigSet, cf
 // Texts only once the toll-free number is set up
 const texter = cfg.smsFrom ? new AwsTexter(cfg.smsFrom) : undefined;
 const storage = new S3Storage(cfg.docsBucket, cfg.malwareScan !== false);
+
+
+/** Read the development recipient list from SecureString; invalid or missing data disables SMS */
+async function loadSmsAllowlist(base: Config): Promise<Config> {
+  if (!base.smsAllowlistParameter) return base;
+  try {
+    const result = await new SSMClient({}).send(new GetParametersCommand({ Names: [base.smsAllowlistParameter], WithDecryption: true }));
+    const value = result.Parameters?.find((parameter) => parameter.Name === base.smsAllowlistParameter)?.Value;
+    const entries = value?.split(",").map((entry) => e164(entry.trim()));
+    if (!entries?.length || entries.some((entry) => !entry) || result.InvalidParameters?.length) throw new Error("InvalidAllowlist");
+    return { ...base, smsAllowedDestinations: [...new Set(entries as string[])] };
+  } catch (error) {
+    console.error(JSON.stringify({ level: "error", message: "SMS allowlist unreadable; SMS disabled for this deployment", error: (error as Error).name || "Error" }));
+    return { ...base, smsAllowedDestinations: [] };
+  }
+}
 
 // Stripe's keys stay in SSM (SecureString), read once at cold start; never in the environment or the repo.
 // Without both parameters, invoices are still issued and paid by check, Zelle, or wire
@@ -134,18 +153,26 @@ export const handler = async (event: Parameters<typeof http>[0] | { source?: str
     // Then files whose scan finished since the last pass become ready (or rejected) without a re-upload
     const files = await beforeDeadline(sweepFiles({ repo, storage }, { deadline: end - 500 }), end).catch((e) => ({ watched: 0, settled: 0, error: (e as Error).name }));
     // Bug reports waiting for their screenshots to scan go out, with the clean ones attached
-    const bugs = await beforeDeadline(sweepBugs({ repo, storage, mailer, cfg }, { deadline: end - 400 }), end).catch((e) => ({ held: 0, sent: 0, error: (e as Error).name }));
+    const bugs = await beforeDeadline(sweepBugs({ repo, storage, mailer, cfg }, { deadline: end - 400 }), end).catch((e) => {
+      // The reason too (no report text or addresses are in these messages), so a held report that never goes out can be traced
+      console.error(JSON.stringify({ level: "error", message: "bug report sweep failed", error: (e as Error).name, detail: String((e as Error).message ?? "").slice(0, 300) }));
+      return { held: 0, sent: 0, error: (e as Error).name };
+    });
+    // Assessment requests half an hour past their last change (and an hour past the last email) go to neon1
+    const requests = await beforeDeadline(sweepRequests({ repo, d: deps, cfg }, { deadline: end - 350 }), end).catch((e) => ({ waiting: 0, sent: 0, error: (e as Error).name }));
     // Sign-ups never confirmed lose their sign-in account after a day; quiet prospects get their emails
     // (and, at the end, deletion) once a day. Neither may hold up the next pass
     const signups = await beforeDeadline(sweepSignups({ repo, d: deps }, { deadline: end - 300 }), end).catch((e) => ({ removed: 0, error: (e as Error).name }));
     const quiet = Date.now() < end - 1_000 ? await beforeDeadline(sweepQuietProspects({ repo, d: deps, cfg }), end).catch((e) => ({ error: (e as Error).name })) : undefined;
+    // Unfinished outlines get their tips once a day, after the check-ins so the two never land together
+    const nudges = Date.now() < end - 1_000 ? await beforeDeadline(sweepOutlineNudges({ repo, d: deps, cfg }), end).catch((e) => ({ error: (e as Error).name })) : undefined;
     // Free-account deletions under way go on every minute until each is done and checked
     const purges = Date.now() < end - 1_000 ? await beforeDeadline(finishPurges({ repo, d: deps, cfg }, { deadline: end - 500 }), end).catch((e) => ({ error: (e as Error).name })) : undefined;
     // One line per pass in CloudWatch's embedded metric format: counts and queue age only, never
     // addresses or bodies. Written to stdout directly, because the JSON log wrapper would hide the
     // metric directive inside its message field
-    process.stdout.write(`${JSON.stringify({ ...outboxMetrics(result, cfg.env), files, bugs, signups, quiet, purges })}\n`);
-    return { ...result, files, bugs, signups, quiet, purges };
+    process.stdout.write(`${JSON.stringify({ ...outboxMetrics(result, cfg.env), files, bugs, requests, signups, quiet, nudges, purges })}\n`);
+    return { ...result, files, bugs, requests, signups, quiet, nudges, purges };
   }
   return http(event as Parameters<typeof http>[0], context);
 };

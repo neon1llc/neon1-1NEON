@@ -4,6 +4,69 @@
 
 ## Unreleased
 
+## v0.23.0 - 2026-11-20
+
+### Fixed (audit, November 20)
+- A bug report with screenshots reaches neon1: the API's role could send plain mail but not the raw message that carries attachments, so such reports waited in the table and never went out. The role now allows both (needs the infra apply on dev and prod). The sweep also logs why it failed.
+- On a phone, the menu's organization picker is one icon box tall again, with even space above and below, instead of filling its 44px row and touching the line above. The rest of the row still takes the tap.
+- Pages are centered with equal gutters on a wide screen (28px each at 1440), not pushed left with the spare room on the right.
+- The search window takes the cursor, so typing goes in the box. Every window now puts focus on what asked for it, so a confirmation opens on Cancel and not on the destructive button.
+- The page heading no longer shows a green box when a page loads.
+- Past days on Home's calendar are readable on the light looks, the month is one tab stop with arrow keys between days, and an empty month is shorter. Layer hints, "set aside", and "report" meet 4.5:1.
+- Touch screens get 44px buttons in the top bar, menu, and Mini rail. The two menu marks paint the same size, centered in their rows.
+- An invoice's lines and hours fit a 320px phone.
+- Notice emails open the item, project, or page they're about, not Home. The free account's final notice says "a final notice after three quiet weeks, deleted nine days later."
+- The FAQ states a free account's file limits (10 files, 10 MB each, 50 MB in all), and the Files page says so where files go in. Start for free is described as available only while sign-up is open.
+- A free account's Home has one right-column width and one gap between cards. Request assessment says why it is off, the single project is named instead of ticked, the outline tip no longer ends "and more", and counts read "1 project".
+- A project's Overview keeps Measures and project level files in the right column, and its Edit button says what it edits.
+- Small type (layer letters, notification count, chart dates, proposal codes) is on the type scale.
+
+### Added
+- Contact links to the contact form on neon1.tech, "Send me your case through the site", for writing out a need without an account.
+- Home's Next step guides a project from first words to an assessment. It lists each open project with how far it's outlined (six parts: what it is, how it works today, what done looks like, who and what it touches, a measure, and timing and limits) and one tip for what would help most. Pick any or all of the projects (up to three), write a note, and request it. A project that could say more gets one last look first, which can be skipped. Anyone who'd rather talk first can book the 30-minute call from the same card.
+- An assessment request is a saved draft. Requesting it saves the note and projects and locks the box; it goes to neon1 30 minutes after the last change, and never within an hour of the last email. Edit unlocks it and restarts the 30 minutes, and Withdraw stops it before it goes. A request edited after it went goes again as an update with everything as it stands. It can be edited and sent again as often as needed, so neon1 gets at most one email an hour per organization.
+- Outline tips by email: when a project's outline is unfinished and nothing is waiting to go to neon1, its people get that project's top tips about 3 days after the last change and once more about 7 days after it, then nothing until something changes. On by default in a free account (from "1NEON Trial") and off in a client's (from "1NEON"), under Outline tips in the profile's Notifications. A free account's check-in holds them a day so the two never arrive together.
+- Each project's Overview shows how ready it is for Execute, from 0% to 100%: the six outline parts, the assessment, options, and the decision. Each part says where to write it and where it goes once work starts (scope, the Verify checks, the Observe baseline and measure, the Normalize handover).
+- The sample project starts with how it got ready: a Ready for Execute meter from the outline through the assessment, options, and the decision (60%, 70%, 80%, 100%), the six outline parts as that engagement wrote them, and a "From the outline" card at the top of Execute, Observe, and Normalize showing what each part became.
+- "Get to know 1NEON" on Home links the sample project, the walkthrough, the demo, the FAQs, and (for free accounts) how free accounts work. Hide puts it away; the profile's Tutorial brings it back. The help sheet links the sample project and the walkthrough too.
+- The sample data and the full walkthrough follow the outline. The demo's projects now carry believable outlines (most complete, two partly written, one just started), and the full walkthrough points out Ready for Execute after the project is created, when options arrive, and once she approves.
+
+### Fixed
+- Back, Forward, and reload return to where each history entry was left, however many steps back, even when the same page is in the history twice. Each entry's scroll is kept under its own key for this tab only, replacing the record kept per section; a new page opens at its top, and another tab of the same project keeps the scroll. The cookie notice lists the new item, and the website's scroll record too.
+- The phone menu opens and closes without stutter: the page behind turns inert only once the menu has finished moving, instead of restyling the whole page in the frame it starts to move.
+- Text fields are 16px on touch screens, so focusing one on an iPhone no longer zooms the page in.
+- Contact gives the same working hours as the rest of neon1: Monday to Thursday 6pm to 9pm, Friday 6pm to 8pm, and weekends 8am to 8pm, Eastern time.
+- Asking for an assessment can no longer flood neon1's inbox: requests are saved and emailed at most once an hour (see above). A call can be asked once a week; presses at the same moment or from a second tab send one call request, a retry after a lost reply gets the first answer back, and a call request whose email fails doesn't use up the week. The old cap of four a day reset at midnight UTC, which is the evening in the US.
+- The walkthrough's mail viewer leaves out an email's dark-mode style block, which the page's policy refused.
+
+### Changed
+- Next step reads in the order of the ask: a short note on outlining, what the free assessment is, one line per project with Continue and a tip, then the note (required), the projects to include (chosen for you when there's one), and Request assessment. The request opens a last look listing what could still be added, with Submit request anyway; once submitted the request is locked with Edit and Withdraw, and the card says when it reaches neon1. A free account can also ask me to reach out for a call from the same card. A client's Next step stays simpler: the note, the projects, and the button.
+- Help: Home's welcome tour and ? guide cover Next step and Get to know 1NEON, and a project's cover Ready for Execute. The FAQs answer what to do first in a free account, what an outline is, what Ready for Execute is, how to ask for the assessment, and whether a call comes first (it doesn't). Neo's guide is refreshed from the corpus branch docs/outline-readiness; regenerate it against the corpus release tag at release.
+- An assessment request names its projects and needs a note, and neon1's email lists each project with what its outline still lacks.
+- Needs you carries its count in its heading ("Needs you · 3 items"), and the separate line above it is gone.
+
+### Fixed
+- The menu's light/dark and Matrix/Sentinel switches no longer undo each other. Each switch kept its own copy of the look, so flipping the mode and then the family put the old mode back. Both now read the saved choice at every click and redraw together, and a slow change to light can't paint over a quicker pick made during it.
+- The sample project switches between its three engagements in place: no page load, the scroll position kept, and Matrix's cross-fade (Sentinel changes at once). Back and forward still move between them.
+- The sample project now applies the site's theme itself, so Neo's window has the right colors in Matrix dark, and a theme or mode change in another tab carries over at once.
+- The sample project's top bar has the site's light/dark switch, like the other public pages, and its buttons keep to one line on a phone (there the bar shows "1NEON", Watch it, Demo, and the switch).
+- Every theme change is painted from the one saved choice (family, mode, shared flag), read when the paint runs. The menu, the public bar, the sample project, the signed-in profile arriving, another tab, a page restored by Back, and a tab brought forward all ask for a repaint and can no longer paint an older pick over a newer one, however fast the switches are pressed.
+- The sample project's title drops the Matrix prompt mark in Sentinel, which stays plain.
+- The sample project and the walkthrough call the first call 30 minutes, the length of the free booking link, instead of twenty.
+
+### Changed
+- Desktop is 10% larger: at 100% zoom 1NEON now reads as it did at 110%, with type, buttons, fields, content widths, and dialogs scaled together (the 64px top bar matches neon1.tech). Phones keep their 15px base.
+- A free account's Home arranges its cards in a grid: Next step beside Your free account on desktop, one column on a phone, 16px between every card.
+
+### Changed
+- Every email neon1 and 1NEON send uses one layout: a headline, a table of key facts, one action, and small print that says why it arrived and where to change that. The plain-text version has the same parts in the same order. It follows dark mode, stacks the table on a narrow phone, and carries a page language and title.
+- Sender names say what the mail is: "neon1 Reach" (contact form), "neon1 Bugs", "neon1 Feedback", "1NEON Reach" (an important action in a free account, to neon1), "1NEON Trial" (other changes in a free account, and its check-in and closing notice), "1NEON" (a client's changes and invitations), "1NEON Billing" (invoices and payments), "1NEON Security" (sign-in codes and sign-in method notices), and "neon1 Alerts" (neon1's own copy of a client's changes). Dev puts "[DEV]" before the sender name and nowhere else. Cognito's codes come from "1NEON Security" through Terraform (`from_security`).
+- Subjects say what happened, then who or where, and never carry the details: "Assessment requested — Kim Dental (NP-0002)", "Task added — FLOW-1 · Harborline", "Bug report BUG-2KNJ49 — Neo chat", "Contact message — Dana Kim (Kim Dental)".
+- A free account's signup alert lists what they told neon1 (what they do, where, link, how they found neon1) as rows, and a change notice lists each recorded change under "What changed", instead of one long sentence.
+- Asking for an assessment or a call sends one email to neon1 with a button to open the account; the contact, bug, and feedback emails have a button that opens a reply.
+- Invitations, security notices, check-ins, and the closing notice reply to hello@neon1.tech, not the no-reply sender address.
+
+
 ## v0.22.1 - 2026-11-19
 
 ### Changed

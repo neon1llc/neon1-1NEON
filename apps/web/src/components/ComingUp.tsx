@@ -10,10 +10,11 @@
 import { KIND_LAYER, type CalEvent, type ItemKind } from "@1neon/domain";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { Link } from "react-router";
 import { api } from "../lib/api.ts";
 import { problem, useMembers, useProjects, useRefresh, useSubmit } from "../lib/hooks.ts";
+import { moveDay, tabDay } from "../lib/calendar-keys.ts";
 import { read } from "../lib/reads.ts";
 import type { CalEntry, CalendarMonth } from "../lib/types.ts";
 import { gate } from "./Reads.tsx";
@@ -50,6 +51,8 @@ export function ComingUp({ tid, base }: { tid: string; base: string }) {
   // The month in view; the first answer tells us today's month in the organization's time zone
   const [month, setMonth] = useState<string>();
   const [picked, setPicked] = useState<string>();
+  // The day last focused: the only one in the tab order, so the month is one stop and the arrow keys move between days
+  const [focusDay, setFocusDay] = useState<string>();
   const cal = useQuery({ queryKey: ["calendar", tid, month ?? "now"], queryFn: () => read<CalendarMonth>(`/t/${tid}/calendar${month ? `?month=${month}` : ""}`, { today: "string", entries: "array" }), refetchInterval: 60_000, placeholderData: (prev) => prev });
   const data = cal.data;
   const today = data?.today;
@@ -75,6 +78,18 @@ export function ComingUp({ tid, base }: { tid: string; base: string }) {
   // Jump: a year back to two years ahead, plus the viewed month if arrows took us outside that range
   const jumps = [...new Set([...Array.from({ length: 37 }, (_, i) => shiftMonth(currentMonth, i - 12)), shown])].sort();
   const go = (m: string) => setMonth(m === currentMonth ? undefined : m);
+  // Nothing dated at all: the month stays, shorter
+  const sparse = data.entries.length === 0 && overdue.length === 0 && data.repeating.length === 0;
+  const stop = tabDay(shown, days, focusDay, picked, today);
+  // Arrow keys move focus to the day they point at; Enter and Space still pick it
+  const arrow = (e: ReactKeyboardEvent<HTMLButtonElement>, i: number) => {
+    const to = moveDay(e.key, i, days.length, lead);
+    if (to === undefined) return;
+    e.preventDefault();
+    const next = days[to]!;
+    setFocusDay(next);
+    e.currentTarget.parentElement?.querySelector<HTMLButtonElement>(`[data-day="${next}"]`)?.focus();
+  };
 
   return (
     <section className="card coming cal" data-tour="coming-up" aria-busy={cal.isFetching}>
@@ -94,13 +109,14 @@ export function ComingUp({ tid, base }: { tid: string; base: string }) {
       {overdue.length > 0 && <p className="cal-late"><span className="tag warn">{overdue.length} overdue</span></p>}
 
       {/* The whole month: a button per day, today outlined, a mark per dated thing */}
-      <div className="strip month" role="grid" aria-label={`${monthName(shown)}: ${data.entries.length} dated things. Choose a day to see it${canWrite ? " or add to it" : ""}.`}>
+      <div className={`strip month${sparse ? " sparse" : ""}`} role="group" aria-label={`${monthName(shown)}: ${data.entries.length} dated things. Choose a day to see it${canWrite ? " or add to it" : ""}.`}>
         {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => <span key={i} className="dow" aria-hidden="true">{d}</span>)}
         {Array.from({ length: lead }, (_, i) => <span key={`b${i}`} className="day blank" aria-hidden="true" />)}
-        {days.map((d) => {
+        {days.map((d, i) => {
           const list = on(d);
           return (
             <button type="button" key={d} className={`day${d === today ? " today" : ""}${d < today ? " past" : ""}${d === picked ? " picked" : ""}${list.some((e) => e.kind === "leave") ? " away" : ""}`}
+              data-day={d} tabIndex={d === stop ? 0 : -1} onFocus={() => setFocusDay(d)} onKeyDown={(e) => arrow(e, i)}
               onClick={() => setPicked(d === picked ? undefined : d)} aria-pressed={d === picked}
               aria-label={`${dayName(d)}${list.length ? `, ${list.length} ${list.length === 1 ? "thing" : "things"}` : ""}`} title={list.map((e) => `${KIND_WORD[e.kind] ?? "Item"}: ${e.title}`).join("\n") || undefined}>
               <span className="num">{Number(d.slice(8))}</span>
@@ -115,7 +131,7 @@ export function ComingUp({ tid, base }: { tid: string; base: string }) {
 
       {/* The same things, readable, in folds */}
       {data.entries.length === 0 && overdue.length === 0 && data.repeating.length === 0 ? (
-        <p className="muted small">Nothing dated in {monthName(shown)}.{canWrite ? " Choose a day to add leave, an office event, a meeting, or a care plan date." : ""}</p>
+        <p className="muted small">Nothing dated in {monthName(shown)}.{canWrite ? " Choose a day to add leave, an office event, or a meeting." : ""}</p>
       ) : (
         <div className="agenda">
           {past.length > 0 && <Fold name="Past" count={past.length}><Entries base={base} list={past} /></Fold>}

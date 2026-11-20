@@ -19,6 +19,7 @@ import { keepEdgeStill } from "./lib/edge.ts";
 import { keepTypingInView } from "./lib/keyboard.ts";
 import { aimDropdowns, applyMotion, keepPageWithAddress, quietSkippedTransitions } from "./lib/motion.ts";
 import { setCache, setNavigate } from "./lib/nav.ts";
+import { keyFirstEntry } from "./lib/scrollmemory.ts";
 import { offline } from "./lib/reads.ts";
 import { Example } from "./pages/Example.tsx";
 import "./styles/app.css";
@@ -35,6 +36,10 @@ quietSkippedTransitions();
 applyMotion();
 // A dropdown's list opens above when there's no room below, with its arrow turned up
 aimDropdowns();
+
+
+// The entry the app opened on gets a key of its own before the router reads it, so its scroll is never shared (lib/scrollmemory.ts)
+keyFirstEntry();
 
 
 // A walkthrough moves through many pages on its own. Each move replaces the address instead of adding

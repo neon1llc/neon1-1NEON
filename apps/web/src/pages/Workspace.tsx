@@ -3,7 +3,7 @@
 // project updates, and recent activity with what each edit changed.
 
 
-import { KeepCard, NextStep, ProspectNote } from "../components/Prospect.tsx";
+import { GuideCard, KeepCard, NextStep, ProspectNote } from "../components/Prospect.tsx";
 import { KIND_LAYER, type ItemKind } from "@1neon/domain";
 import { useQuery } from "@tanstack/react-query";
 import { Check, CircleCheck, FileUp, ListTodo, PenLine, Receipt } from "lucide-react";
@@ -16,6 +16,7 @@ import { ago, Changes, dateLabel, Health, LayerBadge, layerSlug } from "../compo
 import type { Project } from "@1neon/domain";
 type HealthT = Project["health"];
 import { qk } from "../lib/hooks.ts";
+import { noun } from "../lib/plural.ts";
 import { failureOf, hidesData, read } from "../lib/reads.ts";
 import type { Workspace } from "../lib/types.ts";
 import { FaceForm, faceAskDismissed } from "../components/OrgFace.tsx";
@@ -71,20 +72,17 @@ export function WorkspacePage() {
     <>
       <h1 className="page-title">{first ? `Hi, ${first}` : "Home"}</h1>
       {prospect && <ProspectNote />}
-      {/* A free account's expiry: the date, one extension, and a copy to download first */}
-      {prospect && !me.operator && <KeepCard orgId={org.id} slug={summary.slug} canKeep={canWrite} />}
-      {/* Asking neon1 for an assessment or a call: every account that can write, never neon1 itself */}
-      {canWrite && !me.operator && <NextStep orgId={org.id} />}
       {/* An organization with neither a place nor a link: its own admins (not neon1) are asked here until one is added or they say "Not now" */}
       {admin && !me.operator && !org.place && !org.link && !faceSkipped && <FaceForm ask onDone={() => setFaceSkipped(true)} />}
-      <p className="lead">{ws.data && !blocked ? (n ? `${n} ${n === 1 ? "thing needs" : "things need"} you.` : "Nothing needs you right now.") : " "}</p>
       <Stale reads={[ws]} />
 
       {blocked ? <Problem error={ws.error} reads={[ws]} /> : <div className="home">
         <div className="home-main">
-        {/* Needs you: the main event, each with the one action it asks for */}
+        {/* Outline projects, then ask neon1 to assess them: every account that can write, never neon1 itself */}
+        {canWrite && !me.operator && <NextStep orgId={org.id} slug={summary.slug} prospect={prospect} />}
+        {/* Needs you: the main event, each with the one action it asks for. The count sits in the heading */}
         <section className="card needs" data-tour="needs-you" aria-busy={ws.isPending}>
-          <h2 className="section-h">Needs you{shown < n && <small>Showing {shown} of {n}</small>}</h2>
+          <h2 className="section-h">Needs you{ws.data && n > 0 && <small>· {n} {n === 1 ? "item" : "items"}{shown < n ? `, showing ${shown}` : ""}</small>}</h2>
           {ws.data && n === 0 && <p className="empty-line"><Check size={18} aria-hidden="true" /> You're all caught up.</p>}
           <ul className="todo">
             {ws.data?.waiting.map((w) => {
@@ -138,6 +136,10 @@ export function WorkspacePage() {
         )}
         </div>
         <div className="home-side">
+          {/* A free account's expiry: the date, one extension, and a copy to download first */}
+          {prospect && !me.operator && <KeepCard orgId={org.id} slug={summary.slug} canKeep={canWrite} />}
+          {/* The sample project, walkthrough, demo, and FAQs, until put away (the profile brings it back) */}
+          {!me.operator && <GuideCard me={me} prospect={prospect} />}
           {/* Setup, until every step is done */}
           {setupLeft > 0 && (
             <section className="card" data-tour="get-started">
@@ -155,12 +157,12 @@ export function WorkspacePage() {
           )}
           {/* The headline numbers, each a way in */}
           <nav className="stats" aria-label="At a glance">
-            <Link to={`${base}/projects`}><b>{c?.projects ?? "–"}</b> projects</Link>
+            <Link to={`${base}/projects`}><b>{c?.projects ?? "–"}</b> {noun(c?.projects ?? 0, "project")}</Link>
             {/* Deciding opens Needs at its Decide stage; building opens the Execute layer, each listing just those projects */}
             <Link to={`${base}/layer/needs#stage-decide`} title="Projects waiting on a decision"><b>{c?.deciding ?? "–"}</b> deciding</Link>
             <Link to={`${base}/layer/execute`} title="Projects in the Execute layer"><b>{c?.building ?? "–"}</b> building</Link>
             <Link to={`${base}/people`}><b>{c?.people ?? "–"}</b> people{c?.invited ? <small>{c.invited} invited</small> : null}</Link>
-            <Link to={`${base}/documents`}><b>{c?.documents ?? "–"}</b> files</Link>
+            <Link to={`${base}/documents`}><b>{c?.documents ?? "–"}</b> {noun(c?.documents ?? 0, "file")}</Link>
           </nav>
           {/* Who's away in the next seven days, from leave on the calendar */}
           {(ws.data?.away?.length ?? 0) > 0 && (

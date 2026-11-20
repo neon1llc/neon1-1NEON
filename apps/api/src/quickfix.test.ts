@@ -377,7 +377,7 @@ describe("notices on a quick fix say Quote, and the record keeps Proposal", () =
     expect(stored.find((e) => e.summary.startsWith("FIX-1"))!.summary.replace("Proposal", "Quote")).toBe(qn.summary);
     // The email: subject and body say Quote for the quick fix, Proposal for the other
     const mails = mailer.sent.filter((m) => m.to === s.raj.email);
-    expect(mails.some((m) => /issued Quote \d{4}-r1/.test(m.subject) && !/Proposal/.test(m.subject + m.text))).toBe(true);
-    expect(mails.some((m) => /issued Proposal \d{4}-r1/.test(m.subject))).toBe(true);
+    expect(mails.some((m) => /^Quote issued — FIX-1/.test(m.subject) && /issued Quote \d{4}-r1/.test(m.text) && !/Proposal/.test(m.subject + m.text))).toBe(true);
+    expect(mails.some((m) => /^Proposal issued — /.test(m.subject) && /issued Proposal \d{4}-r1/.test(m.text))).toBe(true);
   });
 });

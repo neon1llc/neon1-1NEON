@@ -36,18 +36,24 @@ export function e164(phone: string | undefined) {
 
 
 /** Ready for notices: agreed, not opted out, and the verified number is still the profile's number */
-export function smsReady(u: User) {
-  return Boolean(u.smsConsentAt && u.smsVerifiedAt && u.smsPhone && !u.smsOptedOutAt && u.smsPhone === e164(u.phone));
+export function smsReady(u: User, allowed?: string[]) {
+  return Boolean(u.smsConsentAt && u.smsVerifiedAt && u.smsPhone && !u.smsOptedOutAt && u.smsPhone === e164(u.phone) && smsDestinationAllowedByConfig(u.smsPhone, allowed));
 }
 
 
 /** Where texts stand for this person, for the profile to explain */
-export function smsState(u: User, available: boolean): "unavailable" | "no_number" | "not_agreed" | "opted_out" | "unverified" | "ready" {
+export function smsState(u: User, available: boolean, allowed?: string[]): "unavailable" | "no_number" | "not_agreed" | "opted_out" | "unverified" | "ready" {
   if (!available) return "unavailable";
   if (!e164(u.phone)) return "no_number";
   if (u.smsOptedOutAt && !u.smsConsentAt) return "opted_out";
   if (!u.smsConsentAt) return "not_agreed";
-  return smsReady(u) ? "ready" : "unverified";
+  return smsReady(u, allowed) ? "ready" : "unverified";
+}
+
+
+/** Keep development messages limited to configured test destinations */
+export function smsDestinationAllowedByConfig(to: string | undefined, allowed?: string[]) {
+  return allowed === undefined || Boolean(to && allowed.includes(to));
 }
 
 
@@ -69,8 +75,8 @@ export function smsAfterSave(u: User, phone: string | undefined, consent: boolea
 
 
 /** Text codes count as a second step only while turned on and the verified number can get texts */
-export function smsFactorOn(u: User) {
-  return Boolean(u.smsFactorAt) && smsReady(u);
+export function smsFactorOn(u: User, allowed?: string[]) {
+  return Boolean(u.smsFactorAt) && smsReady(u, allowed);
 }
 
 
@@ -125,7 +131,8 @@ export async function hashCode(uid: string, code: string) {
 
 
 /** Count one text against the person's and the account's budgets for today; false means over */
-export async function smsSendAllowed(repo: Repo, uid: string, to: string) {
+export async function smsSendAllowed(repo: Repo, uid: string, to: string, allowed?: string[]) {
+  if (!smsDestinationAllowedByConfig(to, allowed)) return false;
   const day = new Date().toISOString().slice(0, 10);
   const expiresAt = Math.floor(Date.now() / 1000) + 8 * 86400;
   const person = await repo.table.increment(`USER#${uid}`, `SMSCOUNT#${day}`, 1, expiresAt);
@@ -136,7 +143,8 @@ export async function smsSendAllowed(repo: Repo, uid: string, to: string) {
 
 
 /** Limit all sends to one phone across accounts, including setup and code requests */
-export async function smsDestinationAllowed(repo: Repo, to: string) {
+export async function smsDestinationAllowed(repo: Repo, to: string, allowed?: string[]) {
+  if (!smsDestinationAllowedByConfig(to, allowed)) return false;
   const hour = Math.floor(Date.now() / 3_600_000);
   const day = new Date().toISOString().slice(0, 10);
   const ttl = Math.floor(Date.now() / 1000) + 2 * 86400;

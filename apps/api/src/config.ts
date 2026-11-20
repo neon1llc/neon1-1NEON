@@ -26,6 +26,10 @@ export interface Config {
   smsFrom?: string;
   /** The E.164 number that owns inbound confirmation replies */
   smsNumber?: string;
+  /** SecureString parameter holding the development-only SMS destination allowlist */
+  smsAllowlistParameter?: string;
+  /** Destinations that may receive texts; undefined means no application allowlist */
+  smsAllowedDestinations?: string[];
   /** Emails that get the operator role (Pradeep). Never stored in the database */
   operatorEmails: string[];
   /** Local development only: trust an `x-dev-user` header instead of Cognito */
@@ -46,6 +50,9 @@ export interface Config {
   recordsBucket?: string;
   /** Whether people may sign themselves up as prospects. Only SIGNUP=on opens it; anything else keeps it shut */
   signup?: boolean;
+  /** How long an assessment request waits after its last change before it's emailed (routes/requests.ts).
+   * Missing means an hour; the in-browser demo sets 0 so it goes at once */
+  requestDelayMs?: number;
   /** Cloudflare Turnstile: the public site key the sign-up form shows, and the SSM SecureString holding the secret */
   turnstileSiteKey?: string;
   turnstileSecretParam?: string;
@@ -84,6 +91,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     sesConfigSet: env.SES_CONFIGURATION_SET || undefined,
     smsFrom: env.SMS_FROM || undefined,
     smsNumber: env.SMS_NUMBER || undefined,
+    smsAllowlistParameter: env.SMS_ALLOWLIST_PARAM || undefined,
+    // Development texting must fail closed even if its SSM parameter is accidentally omitted.
+    smsAllowedDestinations: env.APP_ENV === "dev" ? [] : undefined,
     operatorEmails: (env.OPERATOR_EMAILS ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean),
     devAuth,
     neoModel: env.NEO_MODEL || undefined,

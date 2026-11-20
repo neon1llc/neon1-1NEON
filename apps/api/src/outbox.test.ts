@@ -171,18 +171,42 @@ describe("event notices", () => {
     expect(new Set(mailer.sent.slice(before).map((m) => m.to)).size).toBe(sent);
   });
 
-  it("opens the invoice itself from a billing notice, and the workspace from any other", async () => {
+  it("opens the invoice itself from a billing notice, and the item itself from any other", async () => {
     const app = appWith("worker");
     const { p } = await flow();
     const made = await call(app, "POST", `/t/${p.tenantId}/projects/${p.id}/invoices`, { type: "progress", lines: [{ text: "Week one", unitCents: 50_000 }] }, OP);
     await call(app, "POST", `/t/${p.tenantId}/projects/${p.id}/invoices/${made.json.id}/issue`, { version: made.json.version }, OP);
-    await call(app, "POST", `/t/${p.tenantId}/projects/${p.id}/items`, { kind: "task", title: "Something else" }, OP);
+    const task = await call(app, "POST", `/t/${p.tenantId}/projects/${p.id}/items`, { kind: "task", title: "Something else" }, OP);
     const before = mailer.sent.length;
     await pass();
     const texts = mailer.sent.slice(before).filter((m) => m.to === s.raj.email).map((m) => m.text);
+    const home = `https://example.invalid/1NEON/o/${s.acme.slug}`;
     const billing = texts.find((t) => t.includes("issued INV-"))!;
-    expect(billing).toContain(`See the invoice: https://example.invalid/1NEON/o/${s.acme.slug}/projects/FLOW-1/invoices/${made.json.id}`);
-    for (const t of texts.filter((x) => x !== billing)) expect(t).toContain(`Open 1NEON: https://example.invalid/1NEON/o/${s.acme.slug}/workspace`);
+    expect(billing).toContain(`See the invoice: ${home}/projects/FLOW-1/invoices/${made.json.id}`);
+    // A task is on the Execute tab; the email lands on it, not on Home
+    for (const t of texts.filter((x) => x !== billing)) expect(t).toContain(`Open in 1NEON: ${home}/projects/FLOW-1/execute#item-${task.json.id}`);
+  });
+
+  it("opens a comment on its item's layer, a project change on the project, and a calendar change on Home", async () => {
+    const { p } = await flow();
+    // Comments, updates, and calendar changes email only by choice
+    const raj = (await repo.getUser(s.raj.id))!;
+    await repo.saveUser({ ...raj, notify: { comments: { email: true, sms: false }, updates: { email: true, sms: false } }, version: raj.version + 1 }, raj.version);
+    const item = (await repo.listItems(p.tenantId, p.id)).find((i) => i.kind === "discovery")!;
+    const at = new Date().toISOString();
+    const event = (id: string, action: string, target: string, summary: string) => ({ tenantId: s.acme.id, id, at, actorId: s.pradeep.id, action, target, summary });
+    await repo.table.write([
+      outboxOp("E#cm1", { kind: "event", event: event("cm1", "comment.created", item.id, "FLOW-1: commented on a question") }),
+      outboxOp("E#pr1", { kind: "event", event: event("pr1", "project.updated", p.id, "FLOW-1: updated the summary") }),
+      outboxOp("E#ca1", { kind: "event", event: event("ca1", "calendar.created", "ev1", "Added an event: Office closed") }),
+    ]);
+    const before = mailer.sent.length;
+    await pass();
+    const toRaj = mailer.sent.slice(before).filter((m) => m.to === s.raj.email).map((m) => m.text);
+    const home = `https://example.invalid/1NEON/o/${s.acme.slug}`;
+    expect(toRaj.some((t) => t.includes(`Open in 1NEON: ${home}/projects/FLOW-1/needs#item-${item.id}`))).toBe(true);
+    expect(toRaj.some((t) => /Open in 1NEON: \S+\/projects\/FLOW-1$/m.test(t))).toBe(true);
+    expect(toRaj.some((t) => t.includes(`Open in 1NEON: ${home}/workspace`))).toBe(true);
   });
 
   it("sends the signer a copy of what they signed, but no notice of their other actions", async () => {
@@ -191,8 +215,8 @@ describe("event notices", () => {
     const before = mailer.sent.length;
     await pass();
     const toRaj = mailer.sent.slice(before).filter((m) => m.to === s.raj.email);
-    expect(toRaj.map((m) => m.subject)).toEqual([expect.stringContaining("decision.approved")]);
-    expect(toRaj[0]!.text).toMatch(/^You in /);
+    expect(toRaj.map((m) => m.subject)).toEqual([expect.stringMatching(/^Decision approved — FLOW-1 · /)]);
+    expect(toRaj[0]!.text).toMatch(/Who\s+You\n/);
   });
 });
 

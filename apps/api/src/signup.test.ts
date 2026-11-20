@@ -7,6 +7,8 @@ import { PROSPECT_LIMITS, type User } from "@1neon/domain";
 import { createApp } from "./app.ts";
 import { claimSignup, SIGNUP_LIMITS, SIGNUP_PK, sweepSignups } from "./routes/signup.ts";
 import { WRITE_LIMITS } from "./lib/guards.ts";
+import { sweepRequests } from "./routes/requests.ts";
+import { sweepOutlineNudges } from "./routes/nudges.ts";
 import { PURGE_DRAIN_MS, PURGE_PK, PurgeIncomplete, finishPurge, finishPurges, purgeProspect, startPurge, sweepQuietProspects } from "./routes/prospects.ts";
 import { MemoryDirectory, MemoryMailer, MemoryStorage } from "./services.ts";
 import { MemoryTable } from "./store/memory.ts";
@@ -735,24 +737,131 @@ describe("tidying up", () => {
 
 
 describe("asking neon1 for an assessment or a call", () => {
-  it("emails neon1 with the person as Reply-To, records it, and remembers when", async () => {
+  const NOTE = "The intake form matters most; we're on QuickBooks.";
+  const HOUR = 60 * 60 * 1000;
+  const project = async (email: string, tid: string, name: string, extra: Record<string, unknown> = {}) =>
+    (await (await as(email, `/t/${tid}/projects`, "POST", { name, ...extra })).json()) as { key: string };
+  const save = (email: string, tid: string, projects: string[], note = NOTE) => as(email, `/t/${tid}/requests/assessment`, "PUT", { note, projects });
+  const sweep = (ms: number) => sweepRequests({ repo, d: { mailer } as never, cfg }, { at: new Date(Date.now() + ms) });
+  const toNeon1 = () => mailer.sent.filter((m) => m.to === "hello@neon1.tech");
+  type Seen = { assessment?: { state: string; note: string; projects: string[]; dueAt?: string; sentAt?: string }; call?: unknown; projects: { key: string; sentAt?: string; outline: { missing: string[] } }[] };
+  const seen = async (email: string, tid: string) => (await (await as(email, `/t/${tid}/requests`)).json()) as Seen;
+
+  it("saves and locks the request, then emails neon1 30 minutes after the last change, with the person as Reply-To", async () => {
     const { tid } = await prospect("r@example.com");
-    const r = await as("r@example.com", `/t/${tid}/requests`, "POST", { kind: "assessment", note: "The intake form first" });
-    expect(r.status).toBe(200);
-    const mail = mailer.sent.find((m) => m.to === "hello@neon1.tech")!;
-    expect(mail.subject).toContain("asked for an assessment");
+    const a = await project("r@example.com", tid, "Intake forms", { summary: "Patients email forms to one inbox and staff retype them.", outcome: "Patients upload once and the desk sees what's missing." });
+    const b = await project("r@example.com", tid, "Backups");
+    expect((await save("r@example.com", tid, [a.key])).status).toBe(200);
+    expect((await seen("r@example.com", tid)).assessment).toMatchObject({ state: "waiting", note: NOTE, projects: [a.key] });
+    // Nothing goes before the quiet half hour
+    expect(await sweep(29 * 60 * 1000)).toMatchObject({ sent: 0 });
+    expect(toNeon1()).toHaveLength(0);
+    expect(await sweep(HOUR / 2 + 1000)).toMatchObject({ sent: 1 });
+    const mail = toNeon1()[0]!;
+    expect(mail.subject).toMatch(/^Assessment requested — Kim Dental \(NP-\d{4}\)$/);
+    expect(mail.as).toBe("reach");
     expect(mail.replyTo).toBe("r@example.com");
-    expect(mail.text).toContain("The intake form first");
-    const seen = await (await as("r@example.com", `/t/${tid}/requests`)).json() as Record<string, { at: string }>;
-    expect(seen.assessment?.at).toBeTruthy();
-    expect(seen.call).toBeUndefined();
-    expect((await as("r@example.com", `/t/${tid}/requests`, "POST", { kind: "nonsense" })).status).toBe(400);
+    expect(mail.text).toContain(NOTE);
+    expect(mail.text).toContain(`${a.key} Intake forms`);
+    expect(mail.text).not.toContain(b.key);
+    const after = await seen("r@example.com", tid);
+    expect(after.assessment).toMatchObject({ state: "sent" });
+    expect(after.projects.find((p) => p.key === a.key)?.sentAt).toBeTruthy();
+    expect(after.projects.find((p) => p.key === a.key)?.outline.missing).not.toContain("what");
+    expect(after.projects.find((p) => p.key === b.key)?.sentAt).toBeUndefined();
+    // The pass doesn't send it twice
+    expect(await sweep(3 * HOUR)).toMatchObject({ sent: 0 });
   });
 
-  it("caps requests per organization each day", async () => {
+  it("restarts the hour on every edit, and sends what was written last, once", async () => {
+    const { tid } = await prospect("e@example.com");
+    const a = await project("e@example.com", tid, "Intake forms");
+    const b = await project("e@example.com", tid, "Backups");
+    await save("e@example.com", tid, [a.key]);
+    await save("e@example.com", tid, [a.key, b.key], "Changed my mind: both projects, the intake one first.");
+    expect(await sweep(HOUR + 1000)).toMatchObject({ sent: 1 });
+    expect(toNeon1()).toHaveLength(1);
+    expect(toNeon1()[0]!.text).toContain("Changed my mind");
+    expect(toNeon1()[0]!.text).toContain(b.key);
+  });
+
+  it("sends an edit after sending as an update, never within an hour of the last email", async () => {
+    const { tid } = await prospect("u@example.com");
+    const a = await project("u@example.com", tid, "Intake forms");
+    await save("u@example.com", tid, [a.key]);
+    await sweep(HOUR + 1000);
+    await save("u@example.com", tid, [a.key], "One more thing: the front desk uses iPads, not PCs.");
+    expect((await seen("u@example.com", tid)).assessment?.state).toBe("waiting");
+    // The first email went at +1h by the pass's clock, so the edit waits until an hour after that
+    expect(await sweep(HOUR + 2000)).toMatchObject({ sent: 0 });
+    expect(await sweep(2 * HOUR + 5000)).toMatchObject({ sent: 1 });
+    expect(toNeon1()[1]!.subject).toMatch(/^Assessment request updated/);
+  });
+
+  it("withdraws a request that hasn't gone yet", async () => {
+    const { uid, tid } = await prospect("w@example.com");
+    const a = await project("w@example.com", tid, "Intake forms");
+    await save("w@example.com", tid, [a.key]);
+    expect((await as("w@example.com", `/t/${tid}/requests/assessment`, "DELETE")).status).toBe(200);
+    expect((await seen("w@example.com", tid)).assessment).toBeUndefined();
+    expect(await sweep(2 * HOUR)).toMatchObject({ sent: 0 });
+    expect((await as("w@example.com", `/t/${tid}/requests/assessment`, "DELETE")).status).toBe(409);
+  });
+
+  it("needs a real note and a project of this organization", async () => {
+    const { tid } = await prospect("n@example.com");
+    const a = await project("n@example.com", tid, "Intake forms");
+    expect((await save("n@example.com", tid, [a.key], "")).status).toBe(400);
+    expect((await save("n@example.com", tid, [a.key], "thanks!")).status).toBe(400);
+    expect((await save("n@example.com", tid, [])).status).toBe(400);
+    expect((await save("n@example.com", tid, ["NOPE-9"])).status).toBe(400);
+    expect((await as("n@example.com", `/t/${tid}/requests`, "POST", { kind: "nonsense" })).status).toBe(400);
+  });
+
+  it("asks for a call once a week, at once", async () => {
     const { tid } = await prospect("cap@example.com");
     const ask = () => as("cap@example.com", `/t/${tid}/requests`, "POST", { kind: "call" });
-    for (let i = 0; i < 4; i++) expect((await ask()).status).toBe(200);
-    expect((await ask()).status).toBe(429);
+    expect((await ask()).status).toBe(200);
+    expect(toNeon1()).toHaveLength(1);
+    expect((await ask()).status).toBe(409);
+  });
+});
+
+
+describe("outline tips by email", () => {
+  const DAY = 24 * 60 * 60 * 1000;
+  const project = async (email: string, tid: string, name: string) =>
+    (await (await as(email, `/t/${tid}/projects`, "POST", { name })).json()) as { key: string };
+  // Each pass is on its own UTC day, as the real once-a-day claim needs
+  const pass = (days: number) => sweepOutlineNudges({ repo, d: { mailer } as never, cfg }, new Date(Date.now() + days * DAY));
+  const tips = (email: string) => mailer.sent.filter((m) => m.to === email && /^Outline tips/.test(m.subject));
+
+  it("emails a free account's tips about 3 and 7 days after the last change, then stops", async () => {
+    const { tid } = await prospect("n@example.com");
+    const a = await project("n@example.com", tid, "Intake forms");
+    expect(await pass(2)).toMatchObject({ sent: 0 });
+    expect(await pass(3.1)).toMatchObject({ sent: 1 });
+    const mail = tips("n@example.com")[0]!;
+    expect(mail.as).toBe("trial");
+    expect(mail.replyTo).toBe("hello@neon1.tech");
+    expect(mail.subject).toContain(a.key);
+    expect(mail.text).toMatch(/add /i);
+    expect(mail.text).toContain(`/1NEON/o/`);
+    expect(await pass(5)).toMatchObject({ sent: 0 });
+    expect(await pass(7.1)).toMatchObject({ sent: 1 });
+    expect(tips("n@example.com")[1]!.text).toContain("last reminder");
+    expect(await pass(14)).toMatchObject({ sent: 0 });
+    expect(tips("n@example.com")).toHaveLength(2);
+  });
+
+  it("sends nothing while a request waits, or once the person turns tips off", async () => {
+    const { uid, tid } = await prospect("w@example.com");
+    const a = await project("w@example.com", tid, "Intake forms");
+    expect((await as("w@example.com", `/t/${tid}/requests/assessment`, "PUT", { note: "The intake form matters most; we're on QuickBooks.", projects: [a.key] })).status).toBe(200);
+    expect(await pass(3.1)).toMatchObject({ sent: 0 });
+    expect((await as("w@example.com", `/t/${tid}/requests/assessment`, "DELETE")).status).toBe(200);
+    expect((await as("w@example.com", "/me", "PATCH", { version: (await repo.getUser(uid))!.version, notify: { outline: { email: false, sms: false } } })).status).toBe(200);
+    expect(await pass(4.1)).toMatchObject({ sent: 0 });
+    expect(tips("w@example.com")).toHaveLength(0);
   });
 });

@@ -151,7 +151,7 @@ async function save() {
 let session: LiveSession | undefined;
 // Sign-up is open in every walkthrough, as it is on the real sign-in, so "Start for free" works wherever a
 // visitor pauses and tries it; the demo's picker has no sign-up
-const cfg: Config = { env: "local", publicUrl: location.origin, operatorEmails: ["pradeep@neon1.tech"], devAuth: true, signup: live };
+const cfg: Config = { env: "local", publicUrl: location.origin, operatorEmails: ["pradeep@neon1.tech"], devAuth: true, signup: live, requestDelayMs: 0 };
 const ready = (async () => {
   const saved = live ? undefined : await load();
   if (live) {

@@ -29,6 +29,10 @@ variable "client_id" { type = string }
 variable "sms_number_arn" { type = string }
 variable "sms_number" { type = string }
 variable "sms_inbound_topic_arn" { type = string }
+variable "sms_allowlist_parameter" {
+  type    = string
+  default = ""
+}
 # Whether the API offers texts. Off until the number's toll-free registration is approved, so the
 # profile says texts aren't available instead of sending codes carriers will drop
 variable "texts_live" {
@@ -162,6 +166,15 @@ data "aws_iam_policy_document" "api" {
     actions   = ["ssm:GetParameters"]
     resources = [aws_ssm_parameter.stripe_key.arn, aws_ssm_parameter.stripe_webhook.arn, aws_ssm_parameter.turnstile_secret.arn]
   }
+  # The dev API reads its allowed SMS destinations from a separately managed SecureString
+  dynamic "statement" {
+    for_each = var.sms_allowlist_parameter == "" ? [] : [var.sms_allowlist_parameter]
+    content {
+      sid       = "SmsAllowlist"
+      actions   = ["ssm:GetParameters"]
+      resources = ["arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${statement.value}"]
+    }
+  }
   # SecureString decryption, only through SSM
   statement {
     sid       = "StripeKeysDecrypt"
@@ -178,7 +191,7 @@ data "aws_iam_policy_document" "api" {
     actions   = ["cognito-idp:AdminGetUser", "cognito-idp:AdminCreateUser", "cognito-idp:AdminDisableUser", "cognito-idp:AdminEnableUser", "cognito-idp:AdminUserGlobalSignOut"]
     resources = [var.user_pool_arn]
   }
-  # Texts only where there's a number (dev has none)
+  # Texts only where this environment's sender is explicitly enabled
   dynamic "statement" {
     for_each = var.sms_number_arn == "" ? [] : [var.sms_number_arn]
     content {
@@ -187,11 +200,12 @@ data "aws_iam_policy_document" "api" {
       resources = [statement.value]
     }
   }
-  # Mail from notify.neon1.tech. SES also checks the recipient's identity when it's verified in this
+  # Mail from notify.neon1.tech. A message with attachments (a bug report with screenshots) goes out as a raw message, which SES
+  # authorizes as ses:SendRawEmail, so both actions are allowed. SES also checks the recipient's identity when it's verified in this
   # account, so sends to @neon1.tech (the operators) need neon1.tech and its address identities too
   statement {
     sid       = "Mail"
-    actions   = ["ses:SendEmail"]
+    actions   = ["ses:SendEmail", "ses:SendRawEmail"]
     resources = [var.ses_identity_arn, "arn:aws:ses:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:identity/neon1.tech", "arn:aws:ses:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:identity/*@neon1.tech", "arn:aws:ses:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:configuration-set/${var.ses_configuration_set}"]
   }
   # Neo: one model through one cross-region inference profile, which routes to the model in any US region
@@ -319,7 +333,7 @@ resource "aws_lambda_function" "api" {
 
   # Everything config.ts reads; connection reuse keeps SDK calls fast between invocations
   environment {
-    variables = {
+    variables = merge({
       APP_ENV             = var.env
       TABLE_NAME          = var.table_name
       DOCS_BUCKET         = var.docs_bucket
@@ -335,7 +349,6 @@ resource "aws_lambda_function" "api" {
       FEEDBACK_TO                         = "feedback@neon1.tech"
       SES_CONFIGURATION_SET               = var.ses_configuration_set
       SMS_FROM                            = var.texts_live ? var.sms_number_arn : ""
-      SMS_NUMBER                          = var.texts_live ? var.sms_number : ""
       OPERATOR_EMAILS                     = var.operator_emails
       NEO_MODEL                           = var.neo_model
       NEO_MONTHLY_USD                     = tostring(var.neo_monthly_usd)
@@ -349,7 +362,10 @@ resource "aws_lambda_function" "api" {
       ORIGIN_LOCK                         = var.origin_lock ? "on" : "off"
       NODE_OPTIONS                        = "--enable-source-maps"
       AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
-    }
+      }, var.texts_live ? {
+      SMS_NUMBER          = var.sms_number
+      SMS_ALLOWLIST_PARAM = var.sms_allowlist_parameter
+    } : {})
   }
 
   # JSON logs into the declared group, so retention applies
