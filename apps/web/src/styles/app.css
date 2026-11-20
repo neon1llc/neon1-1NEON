@@ -403,8 +403,7 @@ body:has(.live-bar) .signin .n1-bar { display: none; }
 .signin .remember input:checked::after { content: ""; width: 4px; height: 8px; border: solid var(--void); border-width: 0 2px 2px 0; transform: translateY(-1px) rotate(45deg); }
 .signin .remember input:focus-visible { outline: 2px solid var(--neon); outline-offset: 2px; }
 .signin .fine a { color: var(--m-muted, #CBD1CC); }
-.signin:not(.awake) .fine a.out { color: var(--neon); font-weight: 600; text-decoration-color: color-mix(in srgb, currentColor 55%, transparent); }
-.signin:not(.awake) .fine a.out:hover { color: var(--neon); text-decoration-color: currentColor; }
+.signin:not(.awake) .fine a.out, .signin:not(.awake) .fine a.out:hover { color: var(--neon); font-weight: 600; text-decoration: none; }
 .signin.awake .fine a.out, .signin.awake .fine a.out:hover { color: var(--accent); font-weight: 600; text-decoration: none; }
 .signin .legal-links { margin-top: 8px; white-space: nowrap; }
 /* Who the portal is for, the visible email label, what Continue leads to, and the ways in without an
@@ -1728,14 +1727,12 @@ ul.md-says { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--
 /* A link that leaves neon1: the northeast arrow, nudged further northeast on hover */
 /* Drawn exactly as the site's (css/frame.css a.ext): .7em square, 2.2/16 stroke, .18em from the words, .02em above the baseline */
 a.out .out-arrow { display: inline-block; width: .7em; height: .7em; margin-left: .18em; vertical-align: .02em; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.8 12.2 12 4M5.2 4H12v6.8'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.8 12.2 12 4M5.2 4H12v6.8'/%3E%3C/svg%3E") center / contain no-repeat; transition: transform .15s ease; }
-/* Outbound words are bold and, in light, never underlined; in dark the words (not the arrow) are underlined at .55 green until hovered. The color is the
-   page's accent, so it follows light and dark with the rest of the page, as the site's a.ext does */
+/* Outbound words are bold and never underlined, in light or dark; the arrow marks them. The color is the page's accent, so it follows light and
+   dark with the rest of the page, as the site's a.ext does */
 a.out { font-weight: 600; text-decoration: none; }
 a.out:hover { color: var(--accent); }
-html.n1-dark a.out { text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 55%, transparent); }
-html.n1-dark a.out:is(:hover, :focus-visible) { text-decoration-color: currentColor; }
 /* The side menu's rows are navigation, with their own look */
-.side a.out, html.n1-dark .side a.out { font-weight: inherit; text-decoration: none; }
+.side a.out { font-weight: inherit; text-decoration: none; }
 a.out:hover .out-arrow, a.out:focus-visible .out-arrow { transform: translate(1px, -1px); }
 @media (prefers-reduced-motion: reduce) { a.out .out-arrow { transition: none; } }
 /* The place-and-link form, in Settings and on Home */
