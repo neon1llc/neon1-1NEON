@@ -1032,9 +1032,9 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 .toc-body li ol a, .toc-side li ol a { padding: var(--sp-1) 0; font-size: var(--fs-sm); }
 /* Wide screens: the contents stay open at the right of the page and the bar steps aside; a bar is for the width where there is no room at the side */
 .toc-side { display: none; }
-@media (min-width: 1360px) {
+@media (min-width: 1420px) {
   .example .toc-bar { display: none; }
-  .toc-side { display: block; position: fixed; top: calc(var(--top-h) + var(--demo-h, 0px) + var(--sp-6)); right: max(var(--sp-5), calc((100vw - 920px) / 2 - 232px)); width: 208px; max-height: calc(100vh - var(--top-h) - var(--demo-h, 0px) - var(--sp-7)); overflow-y: auto; padding-left: var(--sp-3); border-left: 1px solid var(--line); }
+  .toc-side { display: block; position: fixed; top: calc(var(--top-h) + var(--demo-h, 0px) + var(--sp-6)); right: var(--sp-5); width: 208px; max-height: calc(100vh - var(--top-h) - var(--demo-h, 0px) - var(--sp-7)); overflow-y: auto; padding-left: var(--sp-3); border-left: 1px solid var(--line); }
   .toc-side-title { margin: 0 0 var(--sp-2); font: 600 var(--fs-xs) var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
   .toc-side ul { list-style: none; margin: 0; padding: 0; }
   .toc-side li a { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-1) 0; color: var(--muted); text-decoration: none; font: var(--fs-sm)/1.4 var(--sans); }
