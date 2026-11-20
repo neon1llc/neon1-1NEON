@@ -4,7 +4,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
-import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate, useParams } from "react-router";
+import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate, useNavigationType, useParams } from "react-router";
 import { menuOf, PROSPECT_FINAL_DAYS, PROSPECT_GRACE_DAYS, PROSPECT_LIMITS } from "@1neon/domain";
 import { api, DEMO as IN_DEMO, LIVE as IN_LIVE, devUser, HttpError, pickPerson, resetDemo, Unconfirmed } from "../lib/api.ts";
 import { failureOf, read } from "../lib/reads.ts";
@@ -12,7 +12,7 @@ import { passkeyAssertion } from "../lib/passkey.ts";
 import { SIGN_IN_METHODS } from "../lib/methods.ts";
 import { drew, fade, lessMotion } from "../lib/motion.ts";
 import { REWIND } from "../lib/nav.ts";
-import { useSectionScroll } from "../lib/scrollmemory.ts";
+import { useEntryScroll } from "../lib/scrollmemory.ts";
 import { usePersisting } from "../lib/persist.ts";
 import { cleanCode, clearStep, loadStep, saveStep, session } from "../lib/signin.ts";
 import type { Me, OrgResponse, OrgSummary } from "../lib/types.ts";
@@ -725,6 +725,9 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
   const inOrg = useContext(OrgCtx);
   const [open, setOpen] = useState(false);
   const [scrimVisible, setScrimVisible] = useState(false);
+  // The page behind the open menu turns inert only once the menu has finished moving, and stays so until it has finished
+  // closing: changing inert restyles the whole page, and in the frame the menu starts to move that was a visible stutter
+  const [behind, setBehind] = useState(false);
   const [neoOpen, setNeoOpen] = useState(false);
   const [search, setSearch] = useState(false);
   const [top, setTop] = useState<ReactNode>(null);
@@ -747,8 +750,9 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
   // Each page (a project counts as one, whatever its tab) eases in when you arrive
   const parts = loc.pathname.split("/");
   const section = parts.slice(0, parts[3] === "projects" && parts[4] && parts[4] !== "new" ? 5 : 4).join("/");
-  // Each section keeps the scroll it was left at; a section not yet visited opens at its top
-  useSectionScroll(section, loc.hash);
+  // Back, Forward, and reload return to where each history entry was left; a new page opens at its top
+  const how = useNavigationType();
+  useEntryScroll(loc.key, section, loc.hash, how);
   // The full menu closes after navigating, and on Escape
   useEffect(() => setOpen(false), [loc.pathname]);
   // Arriving on another page puts keyboard focus on its title, so a screen reader hears where it is and
@@ -800,6 +804,11 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
     const timer = window.setTimeout(() => setScrimVisible(false), fallback);
     return () => window.clearTimeout(timer);
   }, [open, scrimVisible]);
+  useEffect(() => {
+    if (open === behind) return;
+    const t = window.setTimeout(() => setBehind(open), 220);
+    return () => window.clearTimeout(t);
+  }, [open, behind]);
   // Opening moves focus into the menu (to the page in view, or its first control) unless it's already
   // there; closing puts focus back on whatever opened it, if focus would otherwise be lost
   useEffect(() => {
@@ -819,12 +828,16 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
     railScroll = el.scrollTop;
     // The width is still easing in; place the rail once more after layout settles
     if (mini) requestAnimationFrame(() => { el.scrollTop = anchorScroll(el); railScroll = el.scrollTop; });
-    const back = trigger.current;
+  }, [open]);
+  // Once the menu has closed and the page is no longer inert, focus goes back to whatever opened it, if it would otherwise be lost
+  useEffect(() => {
+    if (open || behind) return;
+    const el = side.current, back = trigger.current;
     trigger.current = null;
-    const lost = !document.activeElement || document.activeElement === document.body || el.contains(document.activeElement);
+    const lost = !document.activeElement || document.activeElement === document.body || !!el?.contains(document.activeElement);
     // preventScroll: refocusing the opener must not drag the rail to it, away from the row the menu showed
     if (back?.isConnected && !back.closest("[inert]") && lost) back.focus({ preventScroll: true });
-  }, [open]);
+  }, [open, behind]);
   // The rail keeps its scroll through everything that remounts the frame (the profile and Contact neon1
   // sit outside the organization's pages, so reaching them rebuilds it) and through the open menu,
   // which always opens at its top: the position is kept here, saved while the rail is what shows
@@ -954,7 +967,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
           {open && <MenuThemeControls theme={me.user.theme} kind="family" />}
         </div>
       </aside>
-      <div className="main" inert={open}>
+      <div className="main" inert={behind}>
         {/* Only the board is read only; Potentials has neon1's actions, and Contact is not a client workspace */}
         {all && loc.pathname === "/all/workflow" && (
           <div className="readonly-bar" role="status">
@@ -984,7 +997,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
         </Crumbs.Provider>
       </div>
       {/* Phones: the main places as a tab bar at the bottom, within thumb reach */}
-      <nav className="tabbar" aria-label="Main" inert={open}>
+      <nav className="tabbar" aria-label="Main" inert={behind}>
         {navOrg ? (
           <>
             <NavLink to={`${base}/workspace`} data-tour="nav-home"><HomeIcon size={20} aria-hidden="true" /><span>Home</span></NavLink>

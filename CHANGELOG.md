@@ -27,6 +27,9 @@
 - The sample data and the full walkthrough follow the outline. The demo's projects now carry believable outlines (most complete, two partly written, one just started), and the full walkthrough points out Ready for Execute after the project is created, when options arrive, and once she approves.
 
 ### Fixed
+- Back, Forward, and reload return to where each history entry was left, however many steps back, even when the same page is in the history twice. Each entry's scroll is kept under its own key for this tab only, replacing the record kept per section; a new page opens at its top, and another tab of the same project keeps the scroll. The cookie notice lists the new item, and the website's scroll record too.
+- The phone menu opens and closes without stutter: the page behind turns inert only once the menu has finished moving, instead of restyling the whole page in the frame it starts to move.
+- Text fields are 16px on touch screens, so focusing one on an iPhone no longer zooms the page in.
 - Contact gives the same working hours as the rest of neon1: Monday to Thursday 6pm to 9pm, Friday 6pm to 8pm, and weekends 8am to 8pm, Eastern time.
 - Asking for an assessment can no longer flood neon1's inbox: requests are saved and emailed at most once an hour (see above). A call can be asked once a week; presses at the same moment or from a second tab send one call request, a retry after a lost reply gets the first answer back, and a call request whose email fails doesn't use up the week. The old cap of four a day reset at midnight UTC, which is the evening in the US.
 - The walkthrough's mail viewer leaves out an email's dark-mode style block, which the page's policy refused.
