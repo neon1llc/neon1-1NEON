@@ -304,7 +304,7 @@ export function HelpProvider({ me, children }: { me: Me; children: ReactNode }) 
         <h2>{g.purpose}</h2>
         <ul className="howto">{g.howto.map((h) => <li key={h}>{h}</li>)}</ul>
         <div className="actions">
-          {g.tour.length > 0 && <button className="btn btn-primary" onClick={() => { setSheet(false); setTimeout(() => runTour(g.tour), 250); }}>Show me on this page</button>}
+          {g.tour.length > 0 && <button className="btn btn-primary" onClick={() => { setSheet(false); setTimeout(() => runTour(g.tour), 250); }}>Tour this page</button>}
           <button className="btn btn-ghost" onClick={welcomeTour}>Full tour</button>
         </div>
         <p className="small muted">More answers in the <Link to="/faqs" onClick={() => setSheet(false)}>FAQs</Link>, or <Link to={loc.pathname.startsWith("/all/") ? "/all/contact" : "/contact"} onClick={() => setSheet(false)}>contact neon1</Link>. To see a whole project first, open <Link to="/example" onClick={() => setSheet(false)}>a sample project</Link> or <a href="/1NEON/live">the guided walkthrough</a>.</p>
@@ -315,7 +315,7 @@ export function HelpProvider({ me, children }: { me: Me; children: ReactNode }) 
         <h2>New here? Take the 1-minute tour.</h2>
         {!me.user.name && (
           <div style={{ margin: "12px 0" }}>
-            <label htmlFor="welcome-name">Your name, so others know who you are</label>
+            <label htmlFor="welcome-name">Your name</label>
             <input id="welcome-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} autoComplete="name" placeholder="First and last name" />
           </div>
         )}

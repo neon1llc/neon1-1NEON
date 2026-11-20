@@ -295,8 +295,7 @@ export const STORY: Section[] = [
       await s.think("Pradeep said our project lives here. Let me sign in.");
       await s.wait(600);
       await signInWithCode(s);
-      await s.say("Home shows what needs her, what's coming up, and what's new");
-      await s.think("Okay, home. What's waiting on me?");
+      await s.say("Home shows what needs her and what's new");
       await s.hover({ sel: "h2.section-h", text: "Needs you" }, 900);
       await s.think("Nothing yet. And nothing on the calendar either.");
       await s.hover("[data-tour=coming-up] h2", 900);
@@ -310,10 +309,8 @@ export const STORY: Section[] = [
     why: "I keep getting more email than I want. Let me sign in and choose what reaches me.",
     run: async (s) => {
       await s.say(`${owner} opens a profile to choose what reaches ${owner} by email`);
-      await s.think("Before anything, I want to choose what emails me.");
       await s.go("/me");
       await s.waitFor("#notifications");
-      await s.think("Everything shows under the bell. Which of these also email me?");
       await s.hover({ sel: "#notifications .notify-table tbody th", text: "Files" }, 700);
       await s.say(`Important changes already email ${owner}. Comments are added`);
       await s.think("The important ones are on already. I want comments too.");
@@ -327,14 +324,11 @@ export const STORY: Section[] = [
       await s.click({ sel: "button", text: /^Save$/ }, 1200);
       if (small) {
         await s.say("The mini menu keeps every page one tap away");
-        await s.think("Hey, that's neat. The icons stay put on the left.");
         await s.click(".top .menu-btn", 900);
-        await s.think("And the menu button opens the full menu with names.");
         await s.click(".scrim", 500);
         // Upright phones also have Menu at the end of the tab bar, in reach of a thumb
         if (await s.has(".tabbar .menu-btn")) {
           await s.click(".tabbar .menu-btn", 900);
-          await s.think("Same menu from the bottom, right by my thumb. Useful.");
           await s.click(".scrim", 500);
         }
       }
@@ -353,7 +347,6 @@ export const STORY: Section[] = [
       await s.think("Editor, so they can add things but not manage people.");
       await s.choose("#acc", "editor");
       await s.click({ sel: "button", text: "Send invitation" }, 1400);
-      await s.think("Invited. An email goes out.");
       await s.hover({ sel: ".card, li, tr", text: COLLEAGUE }, 900);
     },
   },
@@ -363,7 +356,6 @@ export const STORY: Section[] = [
     why: "Time to start the project. Let me sign in and set it up.",
     run: async (s) => {
       await s.say(S.voice.startSay);
-      await s.think(S.voice.startThink);
       await s.go(`${base}/projects`, "Projects");
       await s.click({ sel: "a, button", text: "New project" }, 700);
       await s.think(S.voice.wrongTemplate);
@@ -372,27 +364,22 @@ export const STORY: Section[] = [
       await s.click({ sel: "label.option", text: S.template.label }, 500);
       await s.click({ sel: "button", text: /^Next$/ }, 700);
       await s.say("A few short answers, each with an example of what to write");
-      await s.think("Short answers. I can do that.");
       await s.type("#n", S.project.name);
       await s.think(S.voice.nowThink);
       await s.type("#s", S.project.today);
-      await s.think(S.voice.wantThink);
       await s.type("#o", S.project.outcome);
       await s.think(S.voice.exampleThink);
       await s.type("#x", S.project.example);
-      await s.think(S.voice.dueThink);
       await s.choose("#d", inDays(S.project.dueDays));
       await s.click({ sel: "button", text: /^Next$/ }, 700);
       await s.say("How they'll know it worked: where things are now, and where they should be");
       const m = S.measures[0]!;
-      await s.think(S.voice.measureThink);
       await s.type("#mt0", m.title);
       await s.type("#mu0", m.unit);
       await s.think(S.voice.baselineThink);
       await s.type("#mb0", String(m.baseline));
       await s.type("#mg0", String(m.target));
       await s.click({ sel: "button", text: /^Next$/ }, 900);
-      await s.think("Looks right. Create it.");
       await s.click({ sel: "button", text: "Create project" }, 1600);
       await s.say("Its Overview says how ready it is for Execute, and what would help next");
       await s.think("Five of six parts are written. It says who and what it touches is still open, and where to write it.");
@@ -406,22 +393,17 @@ export const STORY: Section[] = [
     run: async (s) => {
       const n = S.needs;
       await s.say("In Needs, she builds her request from a few taps");
-      await s.think("Needs is where I tell Pradeep what I want.");
       await s.click({ sel: "nav.tabs a", text: "Needs" }, 900);
       await s.click({ sel: "button", text: "+ Add request" }, 600);
       const one = "form.sentence fieldset:nth-of-type(1)";
-      await s.think(S.voice.needsFirst);
       for (const g of n.goals) await s.click({ sel: `${one} button`, text: g }, 280);
       await s.type(`${one} input[aria-label="Who or what it's for"]`, n.who);
       await s.type(`${one} textarea[aria-label="What happens now"]`, n.now);
-      await s.think("It happens regularly.");
       await s.click({ sel: `${one} .pick label`, text: n.often }, 300);
-      await s.think("And I'd like it by a date.");
       await s.click({ sel: `${one} .pick label`, text: "on a date" }, 400);
       await s.choose(`${one} input[aria-label="Due date, or start of a range"]`, inDays(S.project.dueDays - 15));
       await s.choose(`${one} input[aria-label="End of the range (optional)"]`, inDays(S.project.dueDays - 5));
       await s.say("A second need, with an action of its own");
-      await s.think(S.voice.needsSecondThink);
       await s.click({ sel: "button", text: "+ Define another need" }, 600);
       const two = "form.sentence fieldset:nth-of-type(2)";
       await s.click({ sel: `${two} button`, text: n.second.goal }, 300);
@@ -433,19 +415,14 @@ export const STORY: Section[] = [
       await s.click({ sel: `${two} input[aria-label="Who or what it's for"]` }, 200);
       await s.type(`${two} input[aria-label="Who or what it's for"]`, n.second.who);
       await s.click({ sel: `${two} .pick label`, text: n.second.due }, 400);
-      await s.think("Both read well. Send.");
       await s.click({ sel: "button", text: "Send 2 requests" }, 1200);
-      await s.say("Discovery questions take a short answer right where they're asked");
-      await s.think(S.voice.answerThink);
       await s.type('textarea[aria-label^="Answer:"]', n.answer);
       await s.click({ sel: "button", text: "Save answer" }, 900);
-      await s.say("Requirements: a suggestion, and how much it matters");
       await s.think(S.voice.requirementThink);
       await s.click({ sel: "button", text: "+ Add requirement" }, 500);
       await s.click({ sel: ".starters .chip", text: n.requirement }, 300);
       await s.click({ sel: ".pick label", text: "must have" }, 300);
       await s.click({ sel: "form.add-form button", text: /^Add$/ }, 900);
-      await s.think("That's everything for now.");
     },
   },
   {
@@ -461,16 +438,12 @@ export const STORY: Section[] = [
         await add("file_request", S.fileAsk.title, { body: S.fileAsk.body });
       }, 1200, "Pradeep asked for a file");
       await s.say("The bell breathes: something's new");
-      await s.think("Something new came in.");
       await s.click(".bell-btn", 1400);
       await s.think(S.voice.listenThink);
       // Each notification opens what it's about: this one lands on the file request in Needs
       await s.click({ sel: ".bell-list a.note", text: S.fileAsk.bell }, 1000);
-      await s.think("It took me straight to his request.");
       await s.say("She drags the file in from her desktop");
-      await s.think("I have it ready. Let me drag the zip in.");
       await dropFile(s, { sel: ".file-ask .chip, .file-ask button", text: "Upload" }, S.fileAsk.name, S.fileAsk.text, { layer: "needs", itemId: (items) => items.find((i) => i.kind === "file_request")?.id });
-      await s.think("Done. That was quick.");
       await s.say("What he learned goes into the project, where she can correct it");
       await s.think(S.voice.listenWrote);
       await s.hover({ sel: ".item", text: S.learned[1]![0] }, 1100);
@@ -488,13 +461,9 @@ export const STORY: Section[] = [
       await s.others(async () => {
         await proposeOptions();
       }, 1200, `Pradeep proposed ${optionsWord}`);
-      await s.think("Another one. Looks like Pradeep sent options.");
       await s.click(".bell-btn", 1400);
-      await s.think("Let me look at what he proposed.");
       await s.click(".bell-btn", 300);
       await s.top();
-      await s.say("Next step says what's waiting on her");
-      await s.think("The next step is mine: choose an option.");
       await s.hover(".next-step, .card", 900);
       await s.click({ sel: "nav.tabs a", text: "Overview" }, 1000);
       await s.say("Overview shows the project's readiness for Execute: outline, assessment, and options done");
@@ -508,7 +477,6 @@ export const STORY: Section[] = [
     why: "I've thought about Pradeep's options. Let me sign in and approve one.",
     run: async (s) => {
       await s.say(`${owner} compares the options side by side`);
-      await s.think("I want to see them side by side.");
       await s.click({ sel: "a, button", text: "Compare options" }, 1200);
       for (const [n, o] of S.options.entries()) {
         if (S.declined.includes(n)) continue;
@@ -533,24 +501,20 @@ export const STORY: Section[] = [
         await s.hover(inForce, 1300);
       }
       await s.say("The full proposal: what he learned, scope, price, and who does what");
-      await s.think("Let me read the whole proposal before I say yes.");
       await s.click({ sel: "a", text: "Read the proposal" }, 1200);
       await s.scroll(700, 1400);
-      await s.think("What I do, what he does. Clear enough.");
       await s.scroll(900, 1400);
       await s.think(`It's numbered, 0039-r1, and each option has its own ID. Approving in 1NEON counts as choosing.`);
       await s.click({ sel: "a", text: "Back to options" }, 1200);
       await s.say("First, once, she signs neon1's service agreement for the organization");
       await s.think("It says to sign the service agreement first. One agreement covers every project.");
       await s.click({ sel: ".agreement-needed a", text: "Read and sign it" }, 1200);
-      await s.think("Let me actually read it before I sign anything.");
       await s.scroll(900, 1400);
       await s.think(S.voice.agreementThink);
       await s.scroll(1600, 1200);
       await s.type("#agreement-sign-name", S.owner.name);
       await s.click("#agreement-sign-name ~ .sign-consent input", 400);
       await s.click({ sel: ".sign-card button", text: /^Sign for/ }, 1400);
-      await s.think("Signed, and it kept a copy. Back to the options.");
       await s.click({ sel: "a.agreement-back", text: "Back to your options" }, 1200);
       await s.say("She approves the recommended option with a condition, and signs");
       await s.think(S.voice.approveThink);
@@ -564,7 +528,6 @@ export const STORY: Section[] = [
       await s.click("#approve-sign-name ~ .sign-consent input", 400);
       await s.click({ sel: "dialog[open] .actions button", text: /^Sign and approve/ }, 1600);
       await s.top();
-      await s.think("Good, the decision is written down, condition and all.");
       await s.hover(".decision", 1200);
       await s.say("Once she approves, Ready for Execute goes away. Her outline becomes the plan, its measure moves to Observe, and its people and tools shape the handover");
     },
@@ -578,15 +541,14 @@ export const STORY: Section[] = [
       await s.others(issueDeposit, 900, "Pradeep issued the deposit invoice");
       await walkTo(s, `${base}/projects/${KEY}/execute`);
       await s.top();
-      await s.say("Next step tells her it's ready, how much, and when it's due");
+      await s.say("Next step says it's ready, and when it's due");
       await s.think(`${MONEY.deposit}, due in 15 days. That's the deposit I read about before I approved.`);
       await s.hover(".next-step", 1100);
       await s.click({ sel: ".next-step a", text: "See and pay" }, 1000);
-      await s.say("Every invoice lives under Execute, with what's paid and what's left");
+      await s.say("Invoices live under Execute");
       await s.hover({ sel: ".invoice-row", text: "INV-" }, 900);
-      await s.think("Let me see the invoice itself first.");
       await s.click({ sel: ".invoice-row a.title", text: "INV-" }, 1200);
-      await s.say("The invoice: number, lines, due date, and how to pay");
+      await s.say("The invoice shows its lines, due date, and how to pay");
       await s.think(`Deposit on ${CODE}, ${depositWhat}. It matches what I signed.`);
       await s.scroll(500, 1400);
       await s.think("Bank transfer is preferred. I'll do that.");
@@ -596,13 +558,10 @@ export const STORY: Section[] = [
       await s.say("No money moves in a walkthrough, so a stand-in opens, laid out like Stripe's page");
       await s.think(`${MONEY.deposit} to neon1. Right amount.`);
       await s.hover(".dc-amount", 1000);
-      await s.say("She pays from the organization's bank account: pick the bank, then the account");
+      await s.say("She pays from the organization's bank account");
       await bankCheckout(s, "Bank transfer, like the invoice suggests.");
       await s.say("A bank payment is started, not finished. It clears in a few business days");
-      await s.think("Started. Back to 1NEON.");
       await s.click({ sel: "dialog[open] .dc-done button", text: "Return to 1NEON" }, 1000);
-      await s.say("Until the bank clears it, the invoice says it's on its way and Pay is gone");
-      await s.think("Started today, and nothing more to pay. Good.");
       await s.hover(".pp-state", 1400);
       await s.others(depositPaid, 1200, "Her bank payment cleared");
       await s.think("Paid in full. It says so right on the invoice.");
@@ -617,14 +576,11 @@ export const STORY: Section[] = [
     why: "The work's started. Let me sign in and see how it's going.",
     run: async (s) => {
       await s.say("On the board, she drags the project into Build");
-      await s.think(S.voice.buildThink);
       await s.go(`${base}/workflow`, "Board");
-      await s.think("It's decided, so it can move to Build.");
       await s.drag({ sel: "article.pcard", text: KEY }, '.col[aria-label^="Build"]');
       await s.wait(600);
       await s.say("Pradeep plans the work and posts an update");
       await s.others(planWork, 900, "Pradeep planned the work and posted an update");
-      await s.think("Pradeep posted the plan. Let me open the project.");
       await s.click({ sel: "article.pcard a.name", text: S.project.name }, 1200);
       await s.click({ sel: "nav.tabs a", text: "Execute" }, 1000);
       await s.say("She opens a task and leaves a comment");
@@ -639,12 +595,10 @@ export const STORY: Section[] = [
         await s.think("I picked it up yesterday. Let me mark it bought.");
         await s.hover({ sel: ".item", text: buy.name }, 900);
         await s.choose(`select[aria-label="Where ${buy.name} stands"]`, "bought", 900);
-        await s.think("It wants the receipt. It's right here.");
         await dropFile(s, { sel: ".item:has(.purchase-meta) .file-ask .chip", text: "Attach the receipt" }, buy.receipt, buy.text, { layer: "execution", itemId: (items) => items.find((i) => i.kind === "purchase")?.id });
         await s.wait(700);
       }
       await s.others(finishWork, 1200, "Pradeep finished four tasks and added files");
-      await s.think(S.voice.doneThink);
       await s.hover({ sel: ".item", text: S.tasks[3] }, 900);
       if (await s.has("#hours .hours-table")) {
         await s.say("Each logged hour is listed beside the estimate she approved");
@@ -666,7 +620,7 @@ export const STORY: Section[] = [
       await s.say("His update says what went wrong, including that it was his assumption");
       await s.think("He says the dry run flagged too much because he assumed the wrong thing.");
       await s.hover({ sel: ".card, article, section", text: S.updates.fail.title }, 1600);
-      await s.say("The fix is outside what she approved, so it comes as revised terms, not a surprise on the invoice");
+      await s.say("The fix is outside what she approved, so it comes as revised terms, not a surprise invoice");
       await s.click({ sel: "nav.tabs a", text: "Needs" }, 1000);
       await s.think(`Ten more hours, and nothing else changes. ${MONEY.firstHours} becomes ${MONEY.hours}.`);
       await s.hover(".revised-terms", 1600);
@@ -700,23 +654,17 @@ export const STORY: Section[] = [
         }
         await uploadFiles("observe");
       }, 900, "Pradeep posted the test results and recorded the numbers");
-      await s.say("His updates say what the test found, including what went wrong and what changed");
-      await s.think(S.voice.observeThink);
       await s.click({ sel: "nav.tabs a", text: "Overview" }, 1000);
       if (!S.revision && (await s.has({ sel: ".card, article, section", text: S.updates.fail.title }))) await s.hover({ sel: ".card, article, section", text: S.updates.fail.title }, 1500);
       await s.hover({ sel: ".card, article, section", text: S.updates.pass.title }, 1500);
-      await s.think("Now the numbers. Is it actually working?");
       await s.click({ sel: "nav.tabs a", text: "Observe" }, 1000);
       await s.say("Each measure shows its baseline, its target, and where it is now");
       await s.think(S.voice.numbersThink);
       await s.hover(".scores > *", 1200);
-      await s.think(S.voice.readingThink);
       await s.type('input[aria-label^="New reading"]', S.measures[0]!.newReading);
       await s.key("Enter");
       await s.wait(900);
-      await s.think("What does it look like overall?");
       await s.go(`${base}/insights`, "Insights");
-      await s.say("Insights pulls it together across projects");
       await s.wait(1400);
       await s.scroll(400, 1200);
     },
@@ -733,7 +681,6 @@ export const STORY: Section[] = [
       // The page remembers List or Timeline; the project row is in List
       await s.click({ sel: ".switch button", text: "List" }, 500);
       await s.click({ sel: ".ptr a", text: S.project.name }, 1000);
-      await s.think("Normalize is where it becomes ours for good.");
       await s.click({ sel: "nav.tabs a", text: "Normalize" }, 1000);
       await s.say("She checks off the handover as each step is done");
       const steps: [string, string][] = [
@@ -756,17 +703,14 @@ export const STORY: Section[] = [
       await s.say("With every step done, she accepts the handover with one signature");
       await s.think(S.voice.trainedThink);
       await s.click('input[aria-label="Done: The people who use it are trained on it"]', 700);
-      await s.think("Every step is done. One signature for all of it.");
       await s.click({ sel: ".handover-all button", text: "Accept the handover" }, 500);
       await s.type('.handover-all input[aria-label="What you checked (optional)"]', S.voice.acceptNote);
       await s.type("#accept-handover-name", S.owner.name);
       await s.click(".handover-all .sign-consent input", 400);
       await s.click({ sel: ".handover-all button", text: /^Sign and accept the handover$/ }, 1000);
-      await s.think("Each step now says I accepted it, and when.");
       await s.hover(".accepted-note", 900);
       await s.say("Accepting the handover drafts the final invoice for Pradeep to check and send");
       await s.say("And adds ongoing care from a suggestion");
-      await s.think("Some ongoing care makes sense for us.");
       await s.click({ sel: "button", text: "+ Add care item" }, 500);
       await s.click({ sel: ".starters .chip", text: care }, 300);
       await s.click({ sel: "form.add-form button", text: /^Add$/ }, 900);
@@ -808,18 +752,15 @@ export const STORY: Section[] = [
     run: async (s) => {
       await s.others(async () => { await moveTo("care"); }, 700, "Pradeep moved the project to Care");
       await s.say("The whole project, on a timeline");
-      await s.think("I want to see the whole thing at once.");
       await s.go(`${base}/projects`, "Projects");
       await s.click({ sel: ".switch button", text: "Timeline" }, 1600);
       await s.say("Every file in one place");
-      await s.think("And every file we traded, in one spot.");
       await s.go(`${base}/documents`, "Files");
       await s.wait(1200);
       // The history is Home's Recent activity: who did what, newest first, the same feed a
       // client reaches from the menu (each item's panel keeps its own History too)
       await s.go(`${base}/workspace`, "Home");
       await s.say("And every change, kept as history");
-      await s.think("Even a history of every change. Good for my records.");
       await s.hover('[data-tour="activity"]', 1800);
       await s.say("From a first request to a measured result, all in one place");
       await s.think(S.voice.careThink);

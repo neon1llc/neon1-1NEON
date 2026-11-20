@@ -107,7 +107,7 @@ export function ConfirmDialog({ me }: { me: Me }) {
         {f?.totp && (
           <form className="actions" onSubmit={(e) => { e.preventDefault(); void byCode(); }}>
             <input aria-label="Code from your authenticator app" inputMode="numeric" autoComplete="one-time-code" placeholder="6-digit code" value={code} onChange={(e) => setCode(cleanCode(e.target.value))} style={{ maxWidth: 160 }} />
-            <button className="btn btn-ghost" disabled={busy || code.length < 6}>Confirm</button>
+            <button className="btn btn-ghost" disabled={busy || code.length < 6}>Confirm code</button>
           </form>
         )}
         {f?.sms && (texted === undefined
@@ -115,7 +115,7 @@ export function ConfirmDialog({ me }: { me: Me }) {
           : (
             <form className="actions" onSubmit={(e) => { e.preventDefault(); void byText(); }}>
               <input aria-label="Code from the text" inputMode="numeric" autoComplete="one-time-code" placeholder="Code from the text" value={texted} onChange={(e) => setTexted(cleanCode(e.target.value))} style={{ maxWidth: 180 }} autoFocus />
-              <button className="btn btn-ghost" disabled={busy || texted.length < 6}>Confirm</button>
+              <button className="btn btn-ghost" disabled={busy || texted.length < 6}>Confirm code</button>
               <button className="linkish small" type="button" disabled={busy} onClick={() => void sendText()}>Send another</button>
             </form>
           ))}

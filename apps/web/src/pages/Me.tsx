@@ -258,7 +258,7 @@ export function MePage() {
         {!noTexts && <div><label htmlFor="ph">Phone (only you see it)</label><input id="ph" type="tel" value={draft.phone} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} maxLength={32} autoComplete="tel" /></div>}
         {/* The zone email shows times in; the browser's until changed */}
         <div>
-          <label htmlFor="tz">Time zone (email times)</label>
+          <label htmlFor="tz">Time zone</label>
           <select id="tz" value={draft.timeZone} onChange={(e) => setDraft({ ...draft, timeZone: e.target.value })}>
             {zoneChoices(draft.timeZone).map((z) => <option key={z} value={z}>{z.replace(/_/g, " ")}</option>)}
           </select>
@@ -342,7 +342,7 @@ export function MePage() {
                 <form className="sms-code" onSubmit={(e) => { e.preventDefault(); void checkCode(); }}>
                   <label id="smscode-label" htmlFor="smscode">Code from the text</label>
                   <input id="smscode" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} required />
-                  <button className="btn btn-primary btn-sm" type="submit" disabled={code.length !== 6}>Confirm</button>
+                  <button className="btn btn-primary btn-sm" type="submit" disabled={code.length !== 6}>Confirm code</button>
                   <button className="linkish small" type="button" onClick={() => void sendCode()}>Send another</button>
                 </form>
               ))}

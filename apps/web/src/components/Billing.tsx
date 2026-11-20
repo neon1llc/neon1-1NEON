@@ -547,7 +547,7 @@ function RecordPayment({ invoice, items, onClose, onSave }: { invoice?: Item; it
         <select id="pay-method" value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}>
           {(Object.keys(METHOD_WORDS) as PaymentMethod[]).map((m) => <option key={m} value={m}>{METHOD_WORDS[m].charAt(0).toUpperCase() + METHOD_WORDS[m].slice(1)}</option>)}
         </select>
-        <label htmlFor="pay-ref">Check number or confirmation (optional)</label>
+        <label htmlFor="pay-ref">Reference (optional)</label>
         <input id="pay-ref" value={ref} onChange={(e) => setRef(e.target.value)} maxLength={120} />
         <label htmlFor="pay-on">Received on</label>
         <input id="pay-on" type="date" value={on} onChange={(e) => setOn(e.target.value)} required style={{ maxWidth: 220 }} />

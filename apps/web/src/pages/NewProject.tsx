@@ -211,7 +211,7 @@ export function NewProject() {
                 {kept.map((m, i) => <li key={i}>{m.title}: now {numberWords(m.baseline)}, target {numberWords(m.target)}{m.unit ? ` (${m.unit})` : ""}</li>)}
               </ul>
             )}
-            {!measures.ok && !quick && <p className="notice" role="alert">A measure needs fixing before Create. <button type="button" className="linkish" onClick={firstProblem}>Show me</button></p>}
+            {!measures.ok && !quick && <p className="notice" role="alert">A measure needs fixing before Create. <button type="button" className="linkish" onClick={firstProblem}>Show the problem</button></p>}
             {later.length > 0 && <p className="small notice">Not written yet: {later.join(", ")}. You can add {later.length === 1 ? "it" : "them"} later from the project's Overview, which will remind you.</p>}
             {quick
               ? <p className="muted small">Gets the next {t.keyPrefix} number when created. Starts with a quote to price and issue, and one handover step, "{t.items.find((i) => i.kind === "handoff")?.title}". The client approves the quote with one signature, nothing is paid up front, and the invoice is drafted when they accept the fix.</p>

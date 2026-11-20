@@ -8,10 +8,10 @@ Signed in? Tap **?** at the top right of any page for help with that page.
 The portal where we run your projects together: what you need, the work, the results, and the handover. [Watch it](/1NEON/live).
 
 ### Can I try it first?
-Yes, without signing in. The [guided walkthrough](/1NEON/live) plays a made-up project on the real portal in about three minutes, and the full story takes about 20 minutes. The [sample project](/1NEON/example) is a made-up project to read. The [interactive demo](/1NEON/demo/) is a working copy where you pick who to be, and changes stay in your browser until **Start over**. [From free account to client](/1NEON/live?play=free) follows one account from sign-up to client. Short walkthroughs show one thing: [joining from an invitation](/1NEON/live?play=invite), [adding a passkey](/1NEON/live?play=passkey), [adding an authenticator app](/1NEON/live?play=authenticator), and [texts and text codes](/1NEON/live?play=texts).
+Yes, without signing in. The [guided walkthrough](/1NEON/live) plays a made-up project on the real portal in about three minutes, and the full story takes about 20 minutes. The [sample project](/1NEON/example) is a made-up project to read. The [interactive demo](/1NEON/demo/) is a working copy where you pick who to be, and changes stay in your browser until **Start over**. [From sign-up to client](/1NEON/live?play=free) follows one account from sign-up to client. Short walkthroughs show one thing: [joining from an invitation](/1NEON/live?play=invite), [adding a passkey](/1NEON/live?play=passkey), [adding an authenticator app](/1NEON/live?play=authenticator), and [texts and text codes](/1NEON/live?play=texts).
 
 ### How do I get in?
-When sign-up is open, choose **Start for free** on the sign-in screen to make a free account. Otherwise, open the link in an invite email. Sign in with a code sent to your email, or with a passkey. There's no password. Watch [starting a free account](/1NEON/live?play=free) or [joining from an invite](/1NEON/live?play=invite).
+When sign-up is open, choose **Create an account** on the sign-in screen. Otherwise, open the link in an invite email. Sign in with a code sent to your email, or with a passkey. There's no password. Watch [creating an account](/1NEON/live?play=free) or [joining from an invite](/1NEON/live?play=invite).
 
 ### I didn't get the sign-in code.
 Check spam or promotions, wait a minute, then choose **Send a new code**. A code works for a few minutes, in the browser that asked. [Watch it](/1NEON/live?play=invite).
@@ -19,7 +19,7 @@ Check spam or promotions, wait a minute, then choose **Send a new code**. A code
 ### Is there a tour?
 Yes, at your first sign-in. Replay it from **?** or your profile. [Watch it](/1NEON/live?play=invite).
 
-### What do I do first in a free account?
+### What do I do first in a new account?
 Outline up to three projects, then ask for an assessment under **Next step** on Home. **Get to know 1NEON** links to a sample project, a walkthrough, the demo, and these FAQs. [Watch it](/1NEON/live?play=free).
 
 ### What is an outline?
@@ -35,7 +35,7 @@ Under **Next step** on Home, write the note (required, a sentence or two), choos
 No. The assessment and the call are separate ways in. **Next step** has **Book a 30-minute call**, or **ask me to reach out** to have me write to you (once a week).
 
 ### Will I get emails about my outline?
-In a free account, yes: while an outline is unfinished and nothing is waiting for me, tips arrive about 3 and 7 days after your last change, then no more. Turn them off under **Outline tips** in your profile's **Notifications**. Clients don't get them unless they turn them on.
+In a new account, yes: while an outline is unfinished and nothing is waiting for me, tips arrive about 3 and 7 days after your last change, then no more. Turn them off under **Outline tips** in your profile's **Notifications**. Clients don't get them unless they turn them on.
 
 ### How do I hide or bring back Get to know 1NEON?
 Choose **Hide** on the card. To bring it back, open your profile and choose **Show Get to know 1NEON on Home** under Tutorial.

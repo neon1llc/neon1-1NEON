@@ -57,7 +57,7 @@ async function become(s: Stage, email: string, path: string) {
 /** The journey as a show: sign-up to client, both sides */
 export const JOURNEY: Show = {
   id: "free",
-  title: "From free account to client",
+  title: "From sign-up to client",
   blurb: "Sign up, write down a project, ask for an assessment, and become a client",
   intro: {
     heading: "Meet Noor",
@@ -67,17 +67,17 @@ export const JOURNEY: Show = {
     ],
   },
   length: "about six minutes",
-  end: "A free account, a written-down project, and a client.",
-  recap: "Noor saw what a free account holds, signed up with a code by email, wrote down one project, and asked for an assessment. Pradeep read it, asked her a question in the project, and promoted her account to a client once they'd talked. Everything she wrote stayed where it was.",
+  end: "An account, a written-down project, and a client.",
+  recap: "Noor saw what the account holds, signed up with a code by email, wrote down one project, and asked for an assessment. Pradeep read it, asked her a question in the project, and promoted her account to a client once they'd talked. Everything she wrote stayed where it was.",
   sections: [
     {
       id: "free-start",
-      title: "Start for free",
+      title: "Create an account",
       run: async (s) => {
         await s.say("Noor runs a fictional building-supply yard. She wants help with an insurance form, not a call yet");
-        await s.think("I'd rather write it down first. Start for free.");
-        await s.click({ sel: "button", text: "Start for free" }, 900);
-        await s.say("Before she types anything, the form says what a free account holds");
+        await s.think("I'd rather write it down first. Create an account.");
+        await s.click({ sel: "button", text: "Create an account" }, 900);
+        await s.say("Before she types anything, the form says what the account holds");
         await s.hover(".signin-limits", 1400);
         await s.think("Three projects, kept 30 days after my last change. Fair.");
       },
@@ -121,7 +121,7 @@ export const JOURNEY: Show = {
     },
     {
       id: "free-home",
-      title: "Her free account",
+      title: "Her account",
       run: async (s) => {
         // The first time in, 1NEON offers a one-minute tour; she skips it for now
         const offer = await s.waitFor({ sel: "dialog[open] h2", text: "New here?" }, 8000).catch(() => undefined);
@@ -189,7 +189,7 @@ export const JOURNEY: Show = {
         const mail = await inbox(s, CONTACT_TO);
         try {
           await read(s, mail, "Assessment requested");
-          await s.think("A new free account, with a written-down project. Let me look.");
+          await s.think("A new account, with a written-down project. Let me look.");
           await s.hover(() => mail.link("Open the account"), 900);
           await s.click(() => mail.link("Open the account"), 500);
         } finally {

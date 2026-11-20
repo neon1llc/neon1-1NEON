@@ -1425,7 +1425,7 @@ function Options({ items, all, docs, path, project }: { items: Item[]; all: Item
         )}
         {inForce && (
           <>
-            <label htmlFor="why">Why change? (required)</label>
+            <label htmlFor="why">Reason (required)</label>
             <textarea id="why" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={1000} placeholder="e.g. the move date came forward, so we need the smaller option first" />
           </>
         )}
@@ -1636,7 +1636,7 @@ function PurchaseRow({ item, path, project, receipts, onStatus }: { item: Item; 
           <form className="line" onSubmit={(e) => { e.preventDefault(); if (initials.trim()) void agree(); }}>
             <label className="small" htmlFor={`ini-${item.id}`}>Your initials to agree neon1 buys it, paid back at cost:</label>
             <input id={`ini-${item.id}`} value={initials} onChange={(e) => setInitials(e.target.value.toUpperCase())} maxLength={8} style={{ width: 80 }} autoComplete="off" />
-            <button className="btn btn-ghost btn-sm" disabled={!initials.trim()}>Agree</button>
+            <button className="btn btn-ghost btn-sm" disabled={!initials.trim()}>Sign with initials</button>
           </form>
         )}
         {waitsOnAgreement && !decider && <p className="small muted" style={{ margin: "4px 0 0" }}>Waiting on the decision maker's initials before neon1 buys it.</p>}

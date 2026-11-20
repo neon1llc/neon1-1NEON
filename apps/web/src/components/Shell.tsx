@@ -460,7 +460,7 @@ function SignIn() {
         {at.step !== "email" && <p className="fine"><button className="linkish" onClick={restart}>Use a different email</button></p>}
         {/* Not a client yet: start in 1NEON on your own, as a new account */}
         {SIGNUP_HERE && signupOpen && !signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
-          <p className="fine"><button className="linkish" onClick={() => fade(openSignUp)}>Start for free</button></p>
+          <p className="fine"><button className="linkish" onClick={() => fade(openSignUp)}>Create an account</button></p>
         )}
         {/* Not a client yet: one door, the guided walkthrough, with no sign-in to attempt. The sample
             project and the demo stay reachable from inside it (its end card) and from the FAQs.

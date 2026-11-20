@@ -5,6 +5,7 @@
 ## Unreleased
 
 ### Changed
+- The live walkthrough's captions and thoughts are about a third shorter, one idea each, with the story beats unchanged. Sign-in's link now reads "Create an account" in place of "Start for free", and "free" is named once per page (sign-up lead, Home note, FAQ limits). Short labels and buttons follow verb and object: "Confirm code", "Sign with initials", "Move project", "Show the problem", "Tour this page".
 - No semicolons or dashes in the copy: sample and demo data, walkthrough captions, toasts, hints, proposal wording, and email subjects ("Invitation: Acme Dental, from Raj Patel"). The three sample stories open and close shorter, with what happened and what the client got. Sign-in no longer says "Start for free" in its lead line. The package description and README lose their slogan and "please".
 - Shorter, plainer copy across the sample project, the FAQs, Contact, the help sheets and tours, sign-in and sign-up text, the assessment request, new-project hints, confirmations, the walkthrough's captions, and the invite, request, and check-in emails. The facts, limits, and retention periods are unchanged. The FAQ on changing your name now says the profile saves by itself.
 - Sign-in and sign-up end with the shared footer of public pages in place of their own policy line.

@@ -63,11 +63,11 @@ export function GuideCard({ me, prospect }: { me: Me; prospect: boolean }) {
       <ul className="guide-links">
         <li><OutLink href={`${BASE_PATH}/example`}>A sample project</OutLink><span className="muted small">Three made-up clients, start to finish</span></li>
         {prospect
-          ? <li><OutLink href="/1NEON/live?play=free">From free account to client</OutLink><span className="muted small">A six-minute walkthrough</span></li>
+          ? <li><OutLink href="/1NEON/live?play=free">From sign-up to client</OutLink><span className="muted small">A six-minute walkthrough</span></li>
           : <li><OutLink href="/1NEON/live">The guided walkthrough</OutLink><span className="muted small">Watch the portal work on its own</span></li>}
         <li><OutLink href="/1NEON/demo/">Try the demo</OutLink><span className="muted small">The same portal with made-up data</span></li>
         <li><OutLink href={`${BASE_PATH}/faqs`}>FAQs</OutLink><span className="muted small">Short answers to common questions</span></li>
-        {prospect && <li><OutLink href="/knowledge/guides/free-accounts/">How free accounts work</OutLink><span className="muted small">Limits, keeping, and deleting</span></li>}
+        {prospect && <li><OutLink href="/knowledge/guides/free-accounts/">How accounts work</OutLink><span className="muted small">Limits, keeping, and deleting</span></li>}
       </ul>
     </section>
   );
@@ -129,7 +129,7 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
   const toggle = (key: string) => setPicked(chosen.includes(key) ? chosen.filter((k) => k !== key) : [...chosen, key].slice(-limit));
   const callAsked = requestOpen(asked.data?.call?.at, "call") ? asked.data!.call! : undefined;
   const intro = prospect
-    ? "An assessment is free: my read of what's written here, plausible approaches, and the first questions to settle."
+    ? "An assessment is my read of what's written here, plausible approaches, and the first questions to settle."
     : "An assessment is my read of what's written here, plausible approaches, and the first questions to settle, before any options or prices.";
   const call = !prospect
     ? <span className="helper next-call">Rather talk it through? <Link to="/contact">Contact neon1</Link></span>
@@ -357,7 +357,7 @@ export function KeepCard({ orgId, slug, canKeep: mayKeep }: { orgId: string; slu
   };
   return (
     <section className="card keep-card" aria-labelledby="keep-h">
-      <h2 className="section-h" id="keep-h">Your free account</h2>
+      <h2 className="section-h" id="keep-h">Your account</h2>
       <p className="small">Kept until <strong>{dateLabel(k.deleteOn)}</strong>. Any change you make here keeps it longer, and I'll email you before anything is deleted.</p>
       {error && <p className="notice" role="alert">{error}</p>}
       <div className="actions">

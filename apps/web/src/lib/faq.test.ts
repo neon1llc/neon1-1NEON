@@ -57,8 +57,8 @@ describe("faq promises", () => {
     expect(fileLimitsLine().replace(/^Up to/, "up to")).toBe(`up to ${PROSPECT_LIMITS.files} files, ${mb(PROSPECT_LIMITS.fileBytes)} MB each and ${mb(PROSPECT_LIMITS.totalBytes)} MB in all.`);
     expect(raw).not.toMatch(/Any file up to 100 MB/);
   });
-  it("offers Start for free only while sign-up is open", () => {
-    expect(raw).toContain("When sign-up is open, choose **Start for free** on the sign-in screen");
+  it("offers Create an account only while sign-up is open", () => {
+    expect(raw).toContain("When sign-up is open, choose **Create an account** on the sign-in screen");
   });
 });
 
