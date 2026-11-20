@@ -7,7 +7,7 @@
 // cap per organization per week keeps either from becoming a way to flood the inbox.
 
 
-import { isClosed, isProspect, messageProblem, OUTLINE_PARTS, outlineOf, type Outline, type Project } from "@1neon/domain";
+import { isClosed, isProspect, messageProblem, OUTLINE_PARTS, outlineOf, readinessOf, type Outline, type Project } from "@1neon/domain";
 import { z } from "zod";
 import { actorId, body, fail, need, who } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
@@ -37,7 +37,7 @@ const RequestBody = z.object({
 });
 
 /** One project as Next step shows it: its outline, and when it was last sent for assessment */
-export interface RequestProject { key: string; name: string; outline: Outline; sentAt?: string }
+export interface RequestProject { key: string; name: string; outline: Outline; sentAt?: string; decided?: boolean }
 
 // When a stored request row was made, and per project when each was sent
 type Stored = { at?: string; by?: string; projects?: Record<string, string>; times?: string[] };
@@ -47,10 +47,18 @@ export function requestRoutes(app: App, k: Kit) {
   const { repo, d, cfg } = k;
 
   // Every open project with its outline, newest first, and when it was last sent for assessment
-  const projectsOf = async (tid: string, sent: Record<string, string>, stages: { id: string }[]): Promise<{ list: RequestProject[]; byKey: Map<string, Project> }> => {
+  const projectsOf = async (tid: string, sent: Record<string, string>, stages: { id: string; hidden?: boolean }[]): Promise<{ list: RequestProject[]; byKey: Map<string, Project> }> => {
+    const t = (await repo.getTenant(tid))!;
+    const first = (stages.find((x) => !x.hidden) ?? stages[0])?.id;
     const live = (await repo.listProjects(tid)).filter((p) => !p.archived && !isClosed(stages, p.stageId));
     live.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
-    const list = await Promise.all(live.slice(0, 20).map(async (p) => ({ key: p.key, name: p.name, outline: outlineOf(p, await repo.listItems(tid, p.id)), ...(sent[p.key] ? { sentAt: sent[p.key] } : {}) })));
+    const list = await Promise.all(live.slice(0, 20).map(async (p) => {
+      const items = await repo.listItems(tid, p.id);
+      // Past assessing: it has options (or an agreed one), or, for a client, neon1 has already moved it on
+      // from the first stage. Next step leaves those out
+      const decided = readinessOf(p, items).steps.options || (!isProspect(t) && p.stageId !== first);
+      return { key: p.key, name: p.name, outline: outlineOf(p, items), ...(sent[p.key] ? { sentAt: sent[p.key] } : {}), ...(decided ? { decided } : {}) };
+    }));
     return { list, byKey: new Map(live.map((p) => [p.key, p])) };
   };
   const stored = async (tid: string, kind: RequestKind) => ((await repo.table.get(`T#${tid}`, `REQUEST#${kind}`)) ?? {}) as Stored;
@@ -86,7 +94,7 @@ export function requestRoutes(app: App, k: Kit) {
       const keys = [...new Set(input.projects.map((x) => x.trim().toUpperCase()))];
       if (!keys.length) fail(400, "projects", "Choose at least one project to assess.");
       const { list } = await projectsOf(t.id, sent, t.stages);
-      chosen = keys.map((key) => list.find((p) => p.key === key) ?? fail(400, "projects", `${key} isn't an open project here.`));
+      chosen = keys.map((key) => list.find((p) => p.key === key && !p.decided) ?? fail(400, "projects", `${key} isn't a project waiting for an assessment here.`));
       const waiting = chosen.filter((p) => fresh(p.sentAt, RESEND_MS));
       if (waiting.length === chosen.length) {
         fail(409, "already_sent", `${waiting.map((p) => p.key).join(", ")} ${waiting.length === 1 ? "is" : "are"} already with neon1. You'll get a reply by email.`);
@@ -113,7 +121,7 @@ export function requestRoutes(app: App, k: Kit) {
     // The title says what was asked for, so that row is dropped; their note reads best in its own block; a link is a link
     const title = input.kind === "assessment" ? "Assessment requested" : "Call requested";
     const { text, html } = factMail({
-      kicker: "free account alert",
+      kicker: isProspect(t) ? "free account alert" : "client request",
       title,
       sub: t.name,
       preheader: `${user.name || user.email} asked for ${what}${input.note ? `: ${gist(input.note, 80)}` : ""}`,
