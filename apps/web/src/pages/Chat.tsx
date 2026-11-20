@@ -123,7 +123,9 @@ function Composer({ tid, send, operator, people }: { tid: string; send: (text: s
       try {
         await send(t, operator ? (to ? { to } : {}) : priv ? { private: true } : {});
         change("");
+        // A private choice never carries over to the next message
         setPriv(false);
+        setTo("");
       } catch (e) {
         // The draft stays, and the reason is said as written
         toast(problem(e));
