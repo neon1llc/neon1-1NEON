@@ -44,7 +44,9 @@ describe("focus and touch", () => {
     const block = /@media \(pointer: coarse\) \{\s*\.icon-btn, \.cal-nav \.icon-btn \{ width: 44px; height: 44px; flex: none; \}[\s\S]*?\n\}/.exec(css)?.[0] ?? "";
     expect(block).toMatch(/\.search-btn \{ min-height: 44px; min-width: 44px; flex: none; \}/);
     expect(block).toMatch(/--row: 44px;/);
-    expect(block).toMatch(/\.org-full \.org[^{]*\{ height: 44px; \}/);
+    // The picker stays one icon box tall; the row around it is its 44px hit area
+    expect(block).not.toMatch(/\.org-full \.org[^{]*\{ height: 44px; \}/);
+    expect(block).toMatch(/\.org-full \.org::after \{ content: ""; position: absolute; inset: -8px 0; \}/);
     expect(block).toMatch(/\.menu-theme-switch::after \{ content: ""; position: absolute; inset: -9px 0; \}/);
   });
 });
