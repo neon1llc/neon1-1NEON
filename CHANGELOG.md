@@ -4,6 +4,18 @@
 
 ## Unreleased
 
+### Added
+- Home's Next step guides a project from first words to an assessment. It lists each open project with how far it's outlined (six parts: what it is, how it works today, what done looks like, who and what it touches, a measure, and timing and limits) and one tip for what would help most. Pick any or all of the projects (up to three), write a note, and send. A project that could say more gets one last look first, which can be skipped. Anyone who'd rather talk first can book the 30-minute call from the same card.
+- Each project's Overview shows how ready it is for Execute, from 0% to 100%: the six outline parts, the assessment, options, and the decision. Each part says where to write it and where it goes once work starts (scope, the Verify checks, the Observe baseline and measure, the Normalize handover).
+- "Get to know 1NEON" on Home links the sample project, the walkthrough, the demo, the FAQs, and (for free accounts) how free accounts work. Hide puts it away; the profile's Tutorial brings it back. The help sheet links the sample project and the walkthrough too.
+
+### Fixed
+- Asking for an assessment can't be repeated for the same project: a project already sent waits two weeks, a call can be asked once a week, and both together are capped at five a week. The old cap of four a day reset at midnight UTC, which is the evening in the US.
+
+### Changed
+- An assessment request names its projects and needs a note, and neon1's email lists each project with what its outline still lacks.
+- Needs you carries its count in its heading ("Needs you · 3 items"), and the separate line above it is gone.
+
 ### Fixed
 - The menu's light/dark and Matrix/Sentinel switches no longer undo each other. Each switch kept its own copy of the look, so flipping the mode and then the family put the old mode back. Both now read the saved choice at every click and redraw together, and a slow change to light can't paint over a quicker pick made during it.
 - The sample project switches between its three engagements in place: no page load, the scroll position kept, and Matrix's cross-fade (Sentinel changes at once). Back and forward still move between them.
