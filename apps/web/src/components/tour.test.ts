@@ -30,11 +30,8 @@ describe("tour targets", () => {
     expect(names.length).toBeGreaterThan(10);
   });
 
-  // Hooks the onboarding work adds in Prospect.tsx and Readiness.tsx; delete this list once they land
-  const PENDING = new Set(["next-step-ask", "get-to-know", "readiness"]);
-
   it("finds every step's element in the source", () => {
-    const missing = names.filter((at) => !PENDING.has(at)).filter((at) => !new RegExp(`(data-)?tour="${at}"`).test(code));
+    const missing = names.filter((at) => !new RegExp(`(data-)?tour="${at}"`).test(code));
     expect(missing).toEqual([]);
   });
 });
