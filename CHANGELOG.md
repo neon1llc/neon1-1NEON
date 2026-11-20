@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+### Fixed
+- Sign-up has its own address, /1NEON/?signup=1, however it is reached. "Start for free" on the sign-in screen opens it as a new history entry, Back returns to the sign-in screen and Forward to sign-up, and the link on neon1.tech lands on the same address. Arriving by the link, the way back to sign-in replaces the address instead of leaving the page. Finishing or restarting sign-up drops the query.
+- Closing the phone menu starts in the frame of the tap and the rest of the page waits until the slide is over.
+
 ### Changed
 - "No account needed" is gone from the guided walkthrough's bar and page description. The call button reads "Book a 30-minute call" and the assessment is no longer called free in every line; "free" stays where it names the free account and its assessment. Neo's guide is refreshed from the corpus wording.
 

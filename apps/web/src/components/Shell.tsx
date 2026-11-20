@@ -256,6 +256,32 @@ function SignIn() {
   // Sign-up instead of sign-in, opened from the link below the form, or by ?signup=1 (the quiet-prospect
   // email's way back). The real portal only: the demo has no accounts to make
   const [signingUp, setSigningUp] = useState(() => !IN_DEMO && !saved && new URLSearchParams(location.search).get("signup") === "1");
+  // Sign-up has its own address (/1NEON/?signup=1), so every way to it lands on that one link and Back and Forward move between it
+  // and the sign-in screen: opening it adds a history entry, going back from it steps out of that entry (or, arriving by the link
+  // itself, replaces the address), and finishing or restarting drops the query. The demo and walkthroughs keep their own routing
+  const ownsAddress = !IN_DEMO && !IN_LIVE;
+  const signupHere = () => new URLSearchParams(location.search).get("signup") === "1";
+  const signupAddress = (on: boolean) => `${location.pathname}${on ? "?signup=1" : ""}${location.hash}`;
+  const pushedSignup = useRef(false);
+  const openSignUp = () => {
+    if (ownsAddress && !signupHere()) { history.pushState(history.state, "", signupAddress(true)); pushedSignup.current = true; }
+    setSigningUp(true);
+  };
+  const closeSignUp = () => {
+    if (ownsAddress && signupHere()) {
+      if (pushedSignup.current) { pushedSignup.current = false; history.back(); return; } // popstate below shows the sign-in screen
+      history.replaceState(history.state, "", signupAddress(false));
+    }
+    setSigningUp(false);
+  };
+  // Back and Forward between the two addresses show the matching screen
+  useEffect(() => {
+    if (!ownsAddress) return;
+    const follow = () => setSigningUp(!saved && signupHere());
+    addEventListener("popstate", follow);
+    return () => removeEventListener("popstate", follow);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // Whether sign-up is open, so the invitation note and the "New here?" link show only when it is.
   // Asked once by the real portal; while closed (production until neon1 opens it) neither shows
   // The last answer is kept in this browser and used at once, so the page doesn't draw the closed
@@ -328,7 +354,7 @@ function SignIn() {
   // A fresh code was asked for, so the line above the box says so
   const [resent, setResent] = useState(false);
   // Start over with another email, forgetting the saved step
-  const restart = () => { clearStep(session()); fade(() => { setAt({ step: "email" }); setCode(""); setResent(false); setSigningUp(false); }); };
+  const restart = () => { clearStep(session()); fade(() => { setAt({ step: "email" }); setCode(""); setResent(false); closeSignUp(); }); };
   // Sign-up answered like the first sign-in step: carry on at the emailed code, in the same state machine
   const signedUp = (r: Step, mail: string) => {
     keepEmail(mail, remember);
@@ -336,7 +362,7 @@ function SignIn() {
     setCode("");
     setResent(false);
     if (r.step === "choose" || r.step === "code" || r.step === "totp") saveStep(session(), { email: mail, step: r.step, methods: r.methods });
-    fade(() => { setAt(r); setSigningUp(false); });
+    fade(() => { setAt(r); pushedSignup.current = false; if (ownsAddress && signupHere()) history.replaceState(history.state, "", signupAddress(false)); setSigningUp(false); });
   };
   // Sign-in, the demo's person picker, and a walkthrough's sign-in all share neon1.tech's family and mode choices
   // (awake until picked) and the same bar: the logo on the left, the theme switch on the right
@@ -390,7 +416,7 @@ function SignIn() {
         {PICKER && <p className="fine"><a className="linkish" href="/1NEON/">Back to sign-in</a></p>}
         {/* Step 1: the email */}
         {!PICKER && signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
-          <SignUp info={signupInfo} email={email} remember={remember} onStep={signedUp} onBack={() => fade(() => setSigningUp(false))} local={pickPerson && !IN_LIVE} />
+          <SignUp info={signupInfo} email={email} remember={remember} onStep={signedUp} onBack={() => fade(closeSignUp)} local={pickPerson && !IN_LIVE} />
         )}
         {!PICKER && !signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
           <form className="stack" name="signin" onSubmit={(e) => { e.preventDefault(); keepEmail(email.trim(), remember); void send({ op: "start", email: email.trim(), remember }); }}>
@@ -433,7 +459,7 @@ function SignIn() {
         {at.step !== "email" && <p className="fine"><button className="linkish" onClick={restart}>Use a different email</button></p>}
         {/* Not a client yet: start in 1NEON on your own, as a new account */}
         {SIGNUP_HERE && signupOpen && !signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
-          <p className="fine"><button className="linkish" onClick={() => fade(() => setSigningUp(true))}>Start for free</button></p>
+          <p className="fine"><button className="linkish" onClick={() => fade(openSignUp)}>Start for free</button></p>
         )}
         {/* The three policies on one line of their own */}
         <p className="fine legal-links">
