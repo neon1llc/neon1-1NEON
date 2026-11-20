@@ -22,7 +22,7 @@ import { Offline } from "./Glitch.tsx";
 import { Rain } from "./Rain.tsx";
 import { PublicBar } from "./PublicBar.tsx";
 import { useSiteTheme } from "../lib/sitetheme.ts";
-import { isSentinel, isDarkLook, lookFor, normalizeLook, resolveTheme, saveLook, sharedThemeChoice, styleChoice } from "../lib/style.ts";
+import { isSentinel, isDarkLook, lookFor, normalizeLook, onLookChange, resolveTheme, saveLook, sharedThemeChoice, styleChoice } from "../lib/style.ts";
 import { dawn } from "../lib/dawn.ts";
 import { FileText as FileIcon, Folder as FolderIcon, Home as HomeIcon, Kanban as KanbanIcon, Menu as MenuIcon, Moon, Search as SearchIcon, Sun } from "lucide-react";
 import { ConfirmDialog } from "./Confirm.tsx";
@@ -86,12 +86,16 @@ export function isDark() {
 /** A theme the person is trying in Settings (Save keeps it, and sets the style to match): leaving dark is a slow dawn (lib/dawn.ts)
  * within the matrix theme; the sentinel theme, and a move between styles, change at once. A named theme shows as named; "device"
  * follows the device inside the style the landing chose */
+// The newest look asked for. A slow dawn paints its change a frame or more later, so a quick second pick (the other switch)
+// could land first and then be painted over by the older one; each change paints whatever is newest instead
+let wanted = "";
 export function changeTheme(theme: string) {
   accountTheme = theme;
   const next = theme === "device" ? resolveTheme(theme) : theme;
+  wanted = next;
   const willBeDark = isDarkLook(next) || (next === "device" && darkDevice.matches);
   const plain = isSentinel(next) || document.documentElement.getAttribute("data-style") === "sentinel";
-  dawn(!plain && isDark() && !willBeDark, () => applyTheme(next));
+  dawn(!plain && isDark() && !willBeDark, () => applyTheme(wanted));
 }
 function syncDark() {
   const dark = isDark();
@@ -723,24 +727,24 @@ function currentMenuLook(theme: string) {
 
 
 function MenuThemeControls({ theme, kind }: { theme: string; kind: "mode" | "family" }) {
+  // The mode and family switches are two instances; both redraw from the saved choice on any change, here or in another tab
   const [look, setLook] = useState(() => currentMenuLook(theme));
   useEffect(() => {
-    const sync = (event: StorageEvent) => {
-      if (["neon1.style", "neon1.mode", "neon1.theme.shared", null].includes(event.key)) setLook(currentMenuLook(theme));
-    };
-    addEventListener("storage", sync);
-    return () => removeEventListener("storage", sync);
+    setLook(currentMenuLook(theme));
+    return onLookChange(() => setLook(currentMenuLook(theme)));
   }, [theme]);
   const dark = isDarkLook(look);
-  const family = sharedThemeChoice() ? styleChoice() ?? "sentinel" : isSentinel(look) ? "sentinel" : "matrix";
-  const pick = (next: typeof look) => {
+  const family = isSentinel(look) ? "sentinel" : "matrix";
+  // Each click reads the saved choice afresh, so flipping one axis never puts back an old value of the other
+  const pick = (flip: "mode" | "family") => {
+    const now = currentMenuLook(theme);
+    const nowDark = isDarkLook(now), nowFamily = isSentinel(now) ? "sentinel" : "matrix";
+    const next = flip === "mode" ? lookFor(nowFamily, !nowDark) : lookFor(nowFamily === "sentinel" ? "matrix" : "sentinel", nowDark);
     saveLook(next);
-    setLook(next);
     changeTheme(next);
   };
   if (kind === "family") {
-    const family = sharedThemeChoice() ? styleChoice() ?? "sentinel" : isSentinel(look) ? "sentinel" : "matrix";
-    return <button className="menu-theme-switch style-switch" type="button" role="switch" aria-checked={family === "sentinel"} aria-label="Sentinel theme" title={`Switch to ${family === "sentinel" ? "Matrix" : "Sentinel"}`} onClick={() => pick(lookFor(family === "sentinel" ? "matrix" : "sentinel", dark))}>
+    return <button className="menu-theme-switch style-switch" type="button" role="switch" aria-checked={family === "sentinel"} aria-label="Sentinel theme" title={`Switch to ${family === "sentinel" ? "Matrix" : "Sentinel"}`} onClick={() => pick("family")}>
       <svg className="switch-sun" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5v6M12 3.5v9M17 3.5v5M7 14v6.5M12 16.5v4M17 12v8.5" /></svg>
       <svg className="switch-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 8h17v11.5h-17zM8.5 8V5.5h7V8M3.5 13h17" /></svg>
       <span className="switch-knob" aria-hidden="true" />
@@ -748,7 +752,7 @@ function MenuThemeControls({ theme, kind }: { theme: string; kind: "mode" | "fam
   }
   return (
     <>
-      <button className="menu-theme-switch" type="button" role="switch" aria-checked={dark} aria-label="Dark mode" title={`Switch to ${dark ? "light" : "dark"} mode`} onClick={() => pick(lookFor(family, !dark))}>
+      <button className="menu-theme-switch" type="button" role="switch" aria-checked={dark} aria-label="Dark mode" title={`Switch to ${dark ? "light" : "dark"} mode`} onClick={() => pick("mode")}>
         <Sun className="switch-sun" size={14} aria-hidden="true" /><Moon className="switch-moon" size={14} aria-hidden="true" /><span className="switch-knob" aria-hidden="true" />
       </button>
       <span className="sr" aria-live="polite">{sharedThemeChoice() ? "Shared theme preference active" : `Using your saved ${theme} theme`}</span>

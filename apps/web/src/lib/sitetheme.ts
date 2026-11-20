@@ -8,7 +8,7 @@ import { useCallback, useEffect, useState } from "react";
 import { flushSync } from "react-dom";
 import { applyTheme, isDark } from "../components/Shell.tsx";
 import { dawn } from "./dawn.ts";
-import { isSentinel, readLook, saveLook, type Look } from "./style.ts";
+import { isSentinel, LOOK_EVENT, readLook, saveLook, type Look } from "./style.ts";
 
 
 const KEYS = ["neon1.mode", "neon1.style"];
@@ -22,6 +22,8 @@ export function readSiteTheme(): SiteTheme { return readLook(); }
 
 const still = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 let timer = 0;
+// The newest pick: a slow dawn paints a frame or more late, so it paints this rather than the pick it started with
+let wanted: SiteTheme | null = null;
 
 
 /** The neon parts flicker as the theme changes, the site's way (css: .flick-on / .flick-off on the page element); the sentinel theme never does */
@@ -41,21 +43,28 @@ export function useSiteTheme(active = true): [SiteTheme, (t: SiteTheme) => void]
   const [theme, setTheme] = useState<SiteTheme>(readSiteTheme);
   useEffect(() => { if (active) applyTheme(theme); }, [active, theme]);
   useEffect(() => {
-    const onStorage = (e: StorageEvent) => {
-      if (!active || (e.key !== null && !KEYS.includes(e.key))) return;
+    const follow = () => {
+      if (!active) return;
       const t = readSiteTheme();
+      wanted = t;
       // Leaving dark is a slow dawn, but only inside the matrix theme
-      dawn(isDark() && t === "awake" && !document.documentElement.hasAttribute("data-style"), () => { flushSync(() => setTheme(t)); applyTheme(t); });
+      dawn(isDark() && t === "awake" && !document.documentElement.hasAttribute("data-style"), () => { const w = wanted ?? t; flushSync(() => setTheme(w)); applyTheme(w); });
     };
+    // Other tabs
+    const onStorage = (e: StorageEvent) => { if (e.key === null || KEYS.includes(e.key)) follow(); };
+    // Another switch on this page; this hook's own pick has already set `wanted`, so it is skipped
+    const onLook = () => { if (readSiteTheme() !== wanted) follow(); };
     addEventListener("storage", onStorage);
-    return () => removeEventListener("storage", onStorage);
+    addEventListener(LOOK_EVENT, onLook);
+    return () => { removeEventListener("storage", onStorage); removeEventListener(LOOK_EVENT, onLook); };
   }, [active]);
   const set = useCallback((t: SiteTheme) => {
+    wanted = t;
     saveLook(t);
     // Leaving dark is a slow dawn (the screen is repainted inside it); going dark is the quick flick. Business is a plain change
     const leaving = isDark() && t === "awake" && !document.documentElement.hasAttribute("data-style");
     if (!leaving) flicker(t);
-    dawn(leaving, () => { flushSync(() => setTheme(t)); applyTheme(t); });
+    dawn(leaving, () => { const w = wanted ?? t; flushSync(() => setTheme(w)); applyTheme(w); });
   }, []);
   return [theme, set];
 }
