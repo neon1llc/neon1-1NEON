@@ -174,6 +174,8 @@ export const User = z.object({
   menu: z.enum(["default", "mini", "rail", "hidden"]).default("default"),
   // The welcome tour: not yet seen, asked to see it at the next sign-in, or finished or skipped
   tour: Tour.optional(),
+  // Home's "Get to know 1NEON" card: put away from Home, and brought back from the profile
+  guide: z.enum(["shown", "hidden"]).optional(),
   // Set once a passkey is added through the profile, so the portal can offer it to confirm
   passkey: z.boolean().optional(),
   // Which notifications reach this person by email or text; missing groups use their defaults

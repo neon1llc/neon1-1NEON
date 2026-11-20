@@ -93,6 +93,16 @@ export function MePage() {
     }
   };
   // Save the profile; shared theme controls live in the menu, so this form leaves the account theme untouched
+  // Bring Home's "Get to know 1NEON" card back after it was hidden there
+  const showGuide = async () => {
+    try {
+      await api("/me", { method: "PATCH", body: { version: me.user.version, guide: "shown" } });
+      await qc.invalidateQueries({ queryKey: ["me"] });
+      toast("It's back on Home.");
+    } catch (e) {
+      toast(problem(e));
+    }
+  };
   const save = async () => {
     setBusy(true);
     try {
@@ -326,6 +336,7 @@ export function MePage() {
           <span className="muted">Each page also has its own guide under ?.</span>
           <div className="actions">
             <button className="btn btn-ghost" type="button" onClick={help.welcomeTour}>Replay the tour</button>
+            {me.user.guide === "hidden" && <button className="btn btn-ghost" type="button" onClick={() => void showGuide()}>Show Get to know 1NEON on Home</button>}
             <Link className="btn btn-ghost" to="/faqs">FAQs</Link>
           </div>
         </div>

@@ -735,25 +735,58 @@ describe("tidying up", () => {
 
 
 describe("asking neon1 for an assessment or a call", () => {
-  it("emails neon1 with the person as Reply-To, records it, and remembers when", async () => {
+  const NOTE = "The intake form matters most; we're on QuickBooks.";
+  const project = async (email: string, tid: string, name: string, extra: Record<string, unknown> = {}) =>
+    (await (await as(email, `/t/${tid}/projects`, "POST", { name, ...extra })).json()) as { key: string };
+
+  it("emails neon1 with the projects, the note, and the person as Reply-To, and remembers each project", async () => {
     const { tid } = await prospect("r@example.com");
-    const r = await as("r@example.com", `/t/${tid}/requests`, "POST", { kind: "assessment", note: "The intake form first" });
+    const a = await project("r@example.com", tid, "Intake forms", { summary: "Patients email forms to one inbox and staff retype them.", outcome: "Patients upload once and the desk sees what's missing." });
+    const b = await project("r@example.com", tid, "Backups");
+    const r = await as("r@example.com", `/t/${tid}/requests`, "POST", { kind: "assessment", note: NOTE, projects: [a.key] });
     expect(r.status).toBe(200);
     const mail = mailer.sent.find((m) => m.to === "hello@neon1.tech")!;
     expect(mail.subject).toBe("Assessment requested · Kim Dental");
     expect(mail.as).toBe("reach");
     expect(mail.replyTo).toBe("r@example.com");
-    expect(mail.text).toContain("The intake form first");
-    const seen = await (await as("r@example.com", `/t/${tid}/requests`)).json() as Record<string, { at: string }>;
+    expect(mail.text).toContain(NOTE);
+    expect(mail.text).toContain(`${a.key} Intake forms`);
+    expect(mail.text).not.toContain(b.key);
+    const seen = await (await as("r@example.com", `/t/${tid}/requests`)).json() as { assessment?: { at: string }; call?: unknown; projects: { key: string; sentAt?: string; outline: { missing: string[] } }[] };
     expect(seen.assessment?.at).toBeTruthy();
     expect(seen.call).toBeUndefined();
+    expect(seen.projects.find((p) => p.key === a.key)?.sentAt).toBeTruthy();
+    expect(seen.projects.find((p) => p.key === a.key)?.outline.missing).not.toContain("what");
+    expect(seen.projects.find((p) => p.key === b.key)?.sentAt).toBeUndefined();
     expect((await as("r@example.com", `/t/${tid}/requests`, "POST", { kind: "nonsense" })).status).toBe(400);
   });
 
-  it("caps requests per organization each day", async () => {
+  it("needs a note and a project of this organization", async () => {
+    const { tid } = await prospect("n@example.com");
+    const a = await project("n@example.com", tid, "Intake forms");
+    expect((await as("n@example.com", `/t/${tid}/requests`, "POST", { kind: "assessment", note: "", projects: [a.key] })).status).toBe(400);
+    expect((await as("n@example.com", `/t/${tid}/requests`, "POST", { kind: "assessment", note: NOTE, projects: [] })).status).toBe(400);
+    expect((await as("n@example.com", `/t/${tid}/requests`, "POST", { kind: "assessment", note: NOTE, projects: ["NOPE-9"] })).status).toBe(400);
+  });
+
+  it("won't send the same project twice, but sends the ones not sent yet", async () => {
+    const { tid } = await prospect("twice@example.com");
+    const a = await project("twice@example.com", tid, "Intake forms");
+    const b = await project("twice@example.com", tid, "Backups");
+    const ask = (projects: string[]) => as("twice@example.com", `/t/${tid}/requests`, "POST", { kind: "assessment", note: NOTE, projects });
+    expect((await ask([a.key])).status).toBe(200);
+    // The same project again, hours later or at once, is refused: it doesn't reset at midnight
+    expect((await ask([a.key])).status).toBe(409);
+    const both = await ask([a.key, b.key]);
+    expect(both.status).toBe(200);
+    expect(((await both.json()) as { projects: string[] }).projects).toEqual([b.key]);
+    expect((await ask([a.key, b.key])).status).toBe(409);
+  });
+
+  it("asks for a call once a week", async () => {
     const { tid } = await prospect("cap@example.com");
     const ask = () => as("cap@example.com", `/t/${tid}/requests`, "POST", { kind: "call" });
-    for (let i = 0; i < 4; i++) expect((await ask()).status).toBe(200);
-    expect((await ask()).status).toBe(429);
+    expect((await ask()).status).toBe(200);
+    expect((await ask()).status).toBe(409);
   });
 });

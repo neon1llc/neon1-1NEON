@@ -13,6 +13,7 @@ import { downloadDocx, FICTIONAL } from "../lib/docx.ts";
 import { MarkupList } from "../components/Markup.tsx";
 import { gate, Stale } from "../components/Reads.tsx";
 import { Link, NavLink, useLocation, useNavigate, useParams } from "react-router";
+import { Readiness } from "../components/Readiness.tsx";
 import { useOrg, useSession, useTopBar } from "../components/Shell.tsx";
 import { Avatar, ConflictDialog, Dialog, Empty, Health, HEALTH_LABEL, Standing, LayerBadge, LAYERS, layerHint, layerName, layerProgress, OnionProgress, Trend, ago, dateLabel, daysSince, inStageFor, layerFromSlug, layerSlug, useAsk, useToast } from "../components/ui.tsx";
 import { api, BASE_PATH, DEMO, HttpError, NEW_TAB } from "../lib/api.ts";
@@ -363,7 +364,7 @@ function Presence({ edits }: { edits: EditMarker[] }) {
 
 /** Overview: decision, summary and outcome, measures, status, and people */
 function Overview({ project: p, items, docs }: { project: Project; items: Item[]; docs: DocumentRecord[] }) {
-  const { org, canWrite, access } = useOrg();
+  const { org, canWrite, access, prospect } = useOrg();
   const me = useSession();
   const members = useMembers(org.id);
   const toast = useToast();
@@ -424,8 +425,6 @@ function Overview({ project: p, items, docs }: { project: Project; items: Item[]
   };
   // The summary edit started from an older version than the one now on screen
   const newerWhileEditing = editing && p.version > editBase && JSON.stringify(draft) !== JSON.stringify(basics());
-  // What the basics still lack, for the reminder to finish them
-  const missing = [!p.summary && "what it is", !p.outcome && "what done looks like", metrics.length === 0 && "a measure"].filter(Boolean) as string[];
   // The rows the conflict dialog compares: only the fields this save was changing
   const people = (list: Project["people"]) => list.map((x) => `${names.get(x.userId) ?? "Former member"} (${x.role.replace("_", " ")})`).join(", ");
   const conflictFields = conflict ? [
@@ -448,13 +447,8 @@ function Overview({ project: p, items, docs }: { project: Project; items: Item[]
       <section>
         {decision && <DecisionCard d={decision} names={names} />}
         {/* Editors can change the summary and outcome in place */}
-        {/* A project made with only its name gets a standing reminder to finish the basics */}
-        {canWrite && !editing && missing.length > 0 && (
-          <div className="notice small finish" role="status">
-            <span>Still to describe: {missing.join(", ")}. It helps everyone see why this project exists and when it's done.</span>
-            <button className="linkish small" onClick={() => { setDraft(basics()); setEditBase(p.version); setEditing(true); }}>Finish now</button>
-          </div>
-        )}
+        {/* Until a decision: how ready it is for Execute, with the outline's parts and where each goes next */}
+        {!editing && <Readiness project={p} items={items} orgId={org.id} slug={org.slug} canWrite={canWrite} prospect={prospect} onEditBasics={() => { setDraft(basics()); setEditBase(p.version); setEditing(true); }} />}
         {/* Editors change the basics in place, under the same questions the new-project form asked */}
         {editing ? (
           <form className="form" onSubmit={(e) => { e.preventDefault(); if (draft.name.trim()) void save(editBase, { name: draft.name.trim(), summary: draft.summary, outcome: draft.outcome, targetDate: draft.targetDate || null }); }}>
