@@ -269,22 +269,36 @@ export function Example() {
     document.addEventListener("pointerdown", away);
     return () => { document.removeEventListener("keydown", key); document.removeEventListener("pointerdown", away); };
   }, [tocOpen]);
-  // The layer on screen, marked in the contents row, which stays under the bar and keeps that button in view (as the Knowledge Center's does)
+  // The layer and the card on screen. Each card's heading is a subtopic of its layer, found on the page itself (so the list always
+  // matches what is drawn) and given an address so the contents can jump to it
   const [here, setHere] = useState("ready");
+  const [sub, setSub] = useState("");
+  const [subs, setSubs] = useState<Record<string, { id: string; text: string }[]>>({});
+  useEffect(() => {
+    const found: Record<string, { id: string; text: string }[]> = {};
+    for (const x of ["ready", ...LAYERS]) {
+      const heads = [...document.querySelectorAll<HTMLElement>(`#${x} article.card > h3`)];
+      found[x] = heads.map((h, i) => { if (!h.id) h.id = `${x}-card-${i}`; h.style.scrollMarginTop = "calc(var(--top-h) + var(--demo-h, 0px) + 60px)"; return { id: h.id, text: h.textContent ?? "" }; });
+    }
+    setSubs(found);
+  }, [id]);
   useEffect(() => {
     const ids = ["ready", ...LAYERS];
     const look = () => {
-      const line = (tocBar.current ? tocBar.current.getBoundingClientRect().bottom : 0) + 32;
+      const line = (tocBar.current && tocBar.current.getClientRects().length ? tocBar.current.getBoundingClientRect().bottom : 64) + 32;
       let current = ids[0]!;
       for (const x of ids) { const el = document.getElementById(x); if (el && el.getBoundingClientRect().top <= line) current = x; }
       setHere(current);
+      let now = "";
+      for (const h of document.querySelectorAll<HTMLElement>(`#${current} article.card > h3`)) { if (h.getBoundingClientRect().top <= line) now = h.id; }
+      setSub(now);
     };
     look();
-    // The page scrolls inside the body, not the window, so scrolls are heard in the capture phase
+    // The page scrolls inside the body on some phones, not the window, so scrolls are heard in the capture phase
     addEventListener("scroll", look, { passive: true, capture: true });
     addEventListener("resize", look);
     return () => { removeEventListener("scroll", look, { capture: true }); removeEventListener("resize", look); };
-  }, []);
+  }, [id]);
   // Where the picker sat before a pick; once the new engagement is drawn, the page scrolls by any difference
   const pickerTop = useRef<number | null>(null);
   useLayoutEffect(() => {
@@ -303,9 +317,29 @@ export function Example() {
     fade(() => { setId(next); setParams({ scenario: next }, { preventScrollReset: true }); });
   };
   const s = SCENARIOS[id];
+  const subName = (subs[here] ?? []).find((x) => x.id === sub)?.text;
   const TOC: { id: string; name: string; hint: string; layer?: Layer }[] = [{ id: "ready", name: "Ready", hint: "outline to decision" }, ...LAYERS.map((l) => ({ id: l, name: layerName(l), hint: layerHint(l), layer: l }))];
   const STORY = storyOf(s);
   const q = (id: string) => `?scenario=${id}`;
+  // The layers, each with its cards beneath it: in the bar's list on a narrow screen and open in the side on a wide one
+  const tocList = (open: boolean) => (
+    <ul>
+      {TOC.map((t) => (
+        <li key={t.id}>
+          <a href={`#${t.id}`} aria-current={here === t.id ? "location" : undefined} tabIndex={open ? undefined : -1} onClick={() => setTocOpen(false)}>
+            {t.layer ? <LayerBadge layer={t.layer} /> : null}<span>{t.name}</span><small>{t.hint}</small>
+          </a>
+          {(subs[t.id] ?? []).length > 0 && (
+            <ol>
+              {(subs[t.id] ?? []).map((c) => (
+                <li key={c.id}><a href={`#${c.id}`} aria-current={sub === c.id ? "location" : undefined} tabIndex={open ? undefined : -1} onClick={() => setTocOpen(false)}>{c.text}</a></li>
+              ))}
+            </ol>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
   return (
     <div className="shell example">
       {/* The signed-in portal's top bar, with the way into the demo where search would be */}
@@ -341,22 +375,19 @@ export function Example() {
           <nav className="toc-in" aria-label="Layers">
             <button type="button" className="toc-head" aria-expanded={tocOpen} aria-controls="toc-list" onClick={() => setTocOpen((o) => !o)}>
               <b>On this page</b>
-              <span>{TOC.findIndex((t) => t.id === here) + 1} of {TOC.length} · <b>{TOC.find((t) => t.id === here)?.name}</b></span>
+              <span>{TOC.findIndex((t) => t.id === here) + 1} of {TOC.length} · <b>{TOC.find((t) => t.id === here)?.name}</b>{subName ? <> / {subName}</> : null}</span>
               <i className="arr" aria-hidden="true" />
             </button>
             <div className="toc-body" id="toc-list">
-              <ul>
-                {TOC.map((t) => (
-                  <li key={t.id}>
-                    <a href={`#${t.id}`} aria-current={here === t.id ? "location" : undefined} tabIndex={tocOpen ? undefined : -1} onClick={() => setTocOpen(false)}>
-                      {t.layer ? <LayerBadge layer={t.layer} /> : null}<span>{t.name}</span><small>{t.hint}</small>
-                    </a>
-                  </li>
-                ))}
-              </ul>
+              {tocList(tocOpen)}
             </div>
           </nav>
         </div>
+        {/* On a wide screen the contents stay open at the side, as a Knowledge Center document's do */}
+        <nav className="toc-side" aria-label="Layers and cards">
+          <p className="toc-side-title">On this page</p>
+          {tocList(true)}
+        </nav>
         <ReadySection s={s} />
         {LAYERS.map((l, i) => (
           <section key={l} id={l} className="example-layer" aria-labelledby={`${l}-h`}>
