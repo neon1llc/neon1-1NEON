@@ -43,11 +43,13 @@ export const GUIDES: Record<PageKey, Guide> = {
   home: {
     title: "Home",
     purpose: "Your starting point: what needs you, and what changed lately.",
-    howto: ["Work through Needs you, top to bottom.", "A whole month. Use the arrows to move, and choose a day to see it or add leave, an office event, a meeting, or a care plan date.", "Insights in the menu has charts of how work is going."],
+    howto: ["Under Next step, outline a project, then ask for a free assessment.", "Work through Needs you, top to bottom.", "A whole month. Use the arrows to move, and choose a day to see it or add leave, an office event, a meeting, or a care plan date.", "Insights in the menu has charts of how work is going."],
     tour: [
+      { at: "next-step-ask", title: "Next step", text: "Outline a project, then ask for an assessment of up to three. The note is required, and a call is another way in." },
       { at: "needs-you", title: "Needs you", text: "Things waiting on you: approvals, tasks, and files to send. Open one to act on it." },
       { at: "coming-up", title: "Calendar", text: "The month at a glance: work due, milestones, targets, and your events. Choose a day to see or add. Past, Overdue, Upcoming, and Repeated fold open below." },
       { at: "glance", title: "Projects at a glance", text: "Each project's stage, health, how much work is done, what's late, and what's next." },
+      { at: "get-to-know", title: "Get to know 1NEON", text: "A sample project, a walkthrough, the demo, and the FAQs. Hide it when you're done." },
       { at: "get-started", title: "Get started", text: "A short setup checklist. It disappears once everything is done." },
       { at: "activity", title: "Recent activity", text: "What people did lately, newest first, with exactly what each edit changed." },
     ],
@@ -73,9 +75,10 @@ export const GUIDES: Record<PageKey, Guide> = {
   project: {
     title: "Project",
     purpose: "One project: what's next, and its work in four layers.",
-    howto: ["Start with Next step: it says what to do now.", "Tap any item to open it: change its status, owner, or due date, and comment.", "The onion beside the name fills as each layer's work gets done.", "Post an update to say how it's going."],
+    howto: ["Start with Next step: it says what to do now.", "Tap any item to open it: change its status, owner, or due date, and comment.", "Ready for Execute on the Overview shows how far the outline has come. Write a part and the percent moves.", "The onion beside the name fills as each layer's work gets done.", "Post an update to say how it's going."],
     tour: [
       { at: "next-step", title: "Next step", text: "What has to happen now, and who it's waiting on." },
+      { at: "readiness", title: "Ready for Execute", text: "0 to 100% before the work starts: six outline parts, the assessment, options, and a decision. Each part says where to write it and where it goes." },
       { at: "stage", title: "Stage", text: "Where the project is. It moves on when this stage's work is done." },
       { at: "layers", title: "The four layers", text: "Needs: what's wanted. Execute: the work. Observe: the results. Normalize: making it last." },
     ],
@@ -126,7 +129,7 @@ export const GUIDES: Record<PageKey, Guide> = {
   me: {
     title: "Your profile",
     purpose: "Your name, look, notifications, two-step verification, and the tutorial.",
-    howto: ["Choose what reaches you by email or text under Notifications.", "Add a passkey, authenticator app, or text codes to confirm admin actions.", "Replay the tutorial whenever you like."],
+    howto: ["Choose what reaches you by email or text under Notifications.", "Add a passkey, authenticator app, or text codes to confirm admin actions.", "Replay the tutorial whenever you like, or bring back Get to know 1NEON on Home."],
     tour: [{ at: "passkey", title: "Two-step verification", text: "Add a passkey, authenticator app, or text codes. Admins need one to manage people and settings." }],
   },
   contact: {

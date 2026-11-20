@@ -14,6 +14,7 @@
 - Asking for an assessment can't be repeated for the same project: a project already sent waits two weeks, a call can be asked once a week, and both together are capped at five a week. The old cap of four a day reset at midnight UTC, which is the evening in the US.
 
 ### Changed
+- Help: Home's welcome tour and ? guide cover Next step and Get to know 1NEON, and a project's cover Ready for Execute. The FAQs answer what to do first in a free account, what an outline is, what Ready for Execute is, how to ask for the assessment, and whether a call comes first (it doesn't). Neo's guide is refreshed from the corpus branch docs/outline-readiness; regenerate it against the corpus release tag at release.
 - An assessment request names its projects and needs a note, and neon1's email lists each project with what its outline still lacks.
 - Needs you carries its count in its heading ("Needs you · 3 items"), and the separate line above it is gone.
 
