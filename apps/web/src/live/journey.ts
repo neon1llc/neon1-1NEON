@@ -171,12 +171,12 @@ export const JOURNEY: Show = {
         await s.say("Home's Next step shows how far her project is outlined, with a tip for what would help");
         await s.go(`${await shop()}/workspace`, "Home");
         await s.hover(".outline-list li", 1200);
-        await s.think("It's ticked already. One note for him, and it goes.");
+        await s.think("One project, so it's already chosen. A note for him, and she asks.");
         await s.type("#ask-note", "The insurer's deadline is the end of the month. Weekday mornings are best if a call helps.", 300);
         await s.click({ sel: ".next-step-ask button", text: "Request assessment" }, 1000);
-        // A project that could say more gets one last look, which she can skip
-        const review = await s.waitFor({ sel: "dialog[open] h2", text: "Before it goes" }, 2500).catch(() => undefined);
-        if (review) await s.click({ sel: "dialog[open] button", text: "Send it anyway" }, 1200);
+        // The last look lists what could still be added, and she can send it anyway
+        await s.hover("dialog[open] .ns-quote", 900);
+        await s.click({ sel: "dialog[open] button", text: /^Submit request( anyway)?$/ }, 1400);
         await s.think("Sent. The reply comes by email.");
         await s.hover(".outline-list li.sent", 900);
       },

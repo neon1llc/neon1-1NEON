@@ -29,10 +29,10 @@ What you write down about a project before I assess it, in six parts: what it is
 The percent on a project's **Overview**, before the work starts. Each outline part is 10, the assessment 10, options 10, and an approved option 20, so 100% needs a decision. Then the outline carries into the work: its measure is tracked in **Observe**, its people and tools shape the handover in **Normalize**, and what done looks like becomes the checks in Verify. [Watch it](/1NEON/live?play=free).
 
 ### How do I ask for a free assessment?
-Under **Next step** on Home, choose one to three projects, write the note (required), and choose **Request assessment**. If a project could say more, you get one last look first and can send it anyway. I reply by email. A project already sent waits 14 days before it can be sent again.
+Under **Next step** on Home, write the note (required), choose one to three projects, and choose **Request assessment**. You get one last look first, listing anything you could still add, and can submit anyway. I reply by email. A project already sent shows when it can be sent again, 14 days later.
 
 ### Do I need a call first?
-No. The assessment and the free 30-minute call are two ways in, and neither needs the other first. **Book the free 30-minute call** is on **Next step** too.
+No. The assessment and the free 30-minute call are two ways in, and neither needs the other first. **Book the free 30-minute call** is on **Next step** too, or ask me to reach out from there. A call can be asked for once a week.
 
 ### How do I hide or bring back Get to know 1NEON?
 Choose **Hide** on the card. To bring it back, open your profile and choose **Show Get to know 1NEON on Home** under Tutorial.

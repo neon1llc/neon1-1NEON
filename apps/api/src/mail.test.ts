@@ -20,7 +20,8 @@ describe("mail sender", () => {
     const prod = readFileSync(new URL("../../../infra/envs/prod/main.tf", import.meta.url), "utf8");
     const dev = readFileSync(new URL("../../../infra/envs/dev/main.tf", import.meta.url), "utf8");
     expect(tf).toContain(`output "from_security" { value = "${SENDERS.security.name} <${SENDERS.security.local}@\${var.domain}>" }`);
-    expect(prod).toContain("mail_from                      = module.mail.from_security");
+    // Production keeps its sign-in codes on the main sender until moving them to "1NEON Security" is decided
+    expect(prod).toContain("mail_from                      = module.mail.from\n");
     // Dev marks the name and nothing else
     expect(dev).toContain(`security_from = "\\"[DEV] ${SENDERS.security.name}\\" <${SENDERS.security.local}@notify.\${var.domain}>"`);
   });
