@@ -11,7 +11,7 @@ The portal where we run your projects together: what you need, the work, the res
 Yes, with no account. The [guided walkthrough](/1NEON/live) takes about three minutes and plays a made-up project on the real portal, and the full story takes about 17 minutes. The [sample project](/1NEON/example) is one made-up project to read. The [interactive demo](/1NEON/demo/) is a working copy where you pick who to be, and changes stay in your browser until **Start over**. [From free account to client](/1NEON/live?play=free) follows one free account from sign-up to client. Short walkthroughs show one thing: [joining from an invitation](/1NEON/live?play=invite), [adding a passkey](/1NEON/live?play=passkey), [adding an authenticator app](/1NEON/live?play=authenticator), and [texts and text codes](/1NEON/live?play=texts).
 
 ### How do I get in?
-Start a free account from **Start for free** on the sign-in screen, or open the link in an invite email from neon1 or your organization. Sign in with a code sent to your email, or with a passkey. No password needed. Watch [starting a free account](/1NEON/live?play=free) or [joining from an invite](/1NEON/live?play=invite).
+When sign-up is open, choose **Start for free** on the sign-in screen to make a free account. Otherwise, open the link in an invite email from neon1 or your organization. Sign in with a code sent to your email, or with a passkey. No password needed. Watch [starting a free account](/1NEON/live?play=free) or [joining from an invite](/1NEON/live?play=invite).
 
 ### I didn't get the sign-in code.
 Check spam or promotions, wait a minute, and choose **Send a new code**. Codes work for a few minutes, in the browser that asked. [Watch it](/1NEON/live?play=invite).
@@ -140,7 +140,7 @@ Yes. Choose **Move** on a file, and pick Organization level, a project, or a lay
 Every file is virus-checked before anyone can download it and stays private to your organization.
 
 ### What can I upload?
-Any file up to 100 MB. Don't upload passwords, keys, or other secrets, malware, or regulated data such as health or payment card details unless we have a written agreement that covers it.
+A free account holds up to 10 files, 10 MB each and 50 MB in all. A client account takes any file up to 100 MB. Don't upload passwords, keys, or other secrets, malware, or regulated data such as health or payment card details unless we have a written agreement that covers it.
 
 ## People and access
 

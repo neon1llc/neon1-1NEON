@@ -12,7 +12,7 @@ import { problem } from "../lib/hooks.ts";
 import { read } from "../lib/reads.ts";
 import { dateLabel, Dialog, useToast } from "./ui.tsx";
 import { assessmentNoteProblem, listWords, outlineTip, requestAgainAt, requestOpen, type Outline } from "@1neon/domain";
-import { BOOK_A_CALL, prospectEverywhere } from "../lib/prospect.ts";
+import { askBlocker, BOOK_A_CALL, prospectEverywhere } from "../lib/prospect.ts";
 import type { Me, OrgResponse } from "../lib/types.ts";
 
 
@@ -122,6 +122,8 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
   const shownNote = locked ? saved?.note ?? "" : note;
   const noteProblem = note.trim() ? assessmentNoteProblem(note) : undefined;
   const ready = chosen.length > 0 && Boolean(note.trim()) && !noteProblem;
+  // Why the button is off, shown beside it and tied to it for a screen reader
+  const blocker = askBlocker({ chosen: chosen.length, several: list.length > 1, note, noteProblem });
   const toggle = (key: string) => setPicked(chosen.includes(key) ? chosen.filter((k) => k !== key) : [...chosen, key].slice(-limit));
   const callAsked = requestOpen(asked.data?.call?.at, "call") ? asked.data!.call! : undefined;
   const intro = prospect
@@ -262,7 +264,10 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
         {noteProblem ? <small id="ask-note-e" className="warn" role="alert">{noteProblem}</small> : !locked && <small id="ask-note-h" className="muted">At least {minNote} characters. It reaches me {wait} minutes after you request it, so you can still change it.</small>}
         <fieldset className="ns-projects" disabled={locked || busy}>
           <legend>{list.length === 1 ? "Project to include" : `Projects to include (up to ${limit})`}</legend>
-          {list.map((p) => (
+          {/* One project is the only choice, so it is named, not ticked: a ticked box reads as done */}
+          {list.length === 1 ? (
+            <p className="ns-one"><span className="mono">{list[0]!.key}</span> {list[0]!.name}</p>
+          ) : list.map((p) => (
             <label key={p.key} className="field-label ns-pick">
               <input type="checkbox" checked={chosen.includes(p.key)} onChange={() => toggle(p.key)} />
               <span><span className="mono">{p.key}</span> {p.name}</span>
@@ -278,7 +283,8 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
                 {saved?.state === "waiting" && <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => void withdraw()}>Withdraw</button>}
               </>
             : <>
-                <button type="submit" className="btn btn-primary btn-sm" disabled={!ready || busy}>{busy ? "Saving…" : saved ? "Save changes" : "Request assessment"}</button>
+                <button type="submit" className="btn btn-primary btn-sm" disabled={!ready || busy} aria-describedby={blocker && !busy ? "ask-why" : undefined}>{busy ? "Saving…" : saved ? "Save changes" : "Request assessment"}</button>
+                {blocker && !busy && <span id="ask-why" className="ns-why">{blocker}</span>}
                 {editing && <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => { setEditing(false); setPicked(undefined); setError(""); }}>Cancel</button>}
               </>}
           {prospect && list.length < limit && <Link className="btn btn-sm" to={`${base}/projects/new`}>Outline another project</Link>}

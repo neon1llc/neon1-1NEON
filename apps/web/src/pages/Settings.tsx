@@ -1,6 +1,7 @@
 // apps/web/src/pages/Settings.tsx - Settings: the organization's details and its workflow stages.
 
 
+import { plural } from "../lib/plural.ts";
 import type { Layer, Stage, Tenant } from "@1neon/domain";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
@@ -191,7 +192,7 @@ function ExportData() {
       {result && m && (
         <div className="small" role="status" style={{ display: "grid", gap: 6 }}>
           <span>Saved <b>{result.name}</b>. {verdict(m)}</span>
-          {m.complete && <span className="muted">{m.counts.projects} projects{m.counts.trashedProjects ? ` and ${m.counts.trashedProjects} in Trash` : ""}, {m.counts.members} people, {m.counts.comments ?? 0} comments, {m.counts.activity ?? 0} activity records, and {m.counts.files.included} files ({size(m.counts.bytes.included)}).</span>}
+          {m.complete && <span className="muted">{plural(m.counts.projects, "project")}{m.counts.trashedProjects ? ` and ${m.counts.trashedProjects} in Trash` : ""}, {m.counts.members} people, {plural(m.counts.comments ?? 0, "comment")}, {plural(m.counts.activity ?? 0, "activity record")}, and {plural(m.counts.files.included, "file")} ({size(m.counts.bytes.included)}).</span>}
           {missed.length > 0 && (
             <>
               <span>Not included:</span>

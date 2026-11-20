@@ -318,7 +318,7 @@ export function quietEmail(t: Tenant, portal: string, step: "nudge" | "final", w
     intro: [`Nothing has changed in ${t.name} on 1NEON for three weeks. To keep it, add or change anything there before ${when}.`, `Otherwise ${t.name}, its projects, and its files will be deleted on ${when}. You can sign up again any time and start fresh, or reply to this email to talk.`],
     facts: [{ k: "Organization", v: t.name }, { k: "Closes", v: when }, sent],
     action: { label: "Open 1NEON to keep it", url: portal },
-    why: `You have a free 1NEON account for ${t.name}. Free accounts close after three quiet weeks, with this notice first.`,
+    why: `You have a free 1NEON account for ${t.name}. A final notice comes after three quiet weeks, and the account is deleted nine days later.`,
     settings: { text: "After it closes, you can start fresh.", url: signup, label: "Sign up again" },
     reply: "Reply to this email to reach me.",
   });
