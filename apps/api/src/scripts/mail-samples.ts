@@ -86,3 +86,16 @@ if (process.argv[1]?.endsWith("mail-samples.ts")) {
     for (const s of all) { await mailer.send(to, s.subject, s.text, s.html, s.replyTo, undefined, s.attachments, s.as); console.log("sent", s.name); }
   }
 }
+
+// --json <file>: every sample as the dev message SES would send, for a sender that has the credentials but not this repo
+if (process.argv[1]?.endsWith("mail-samples.ts") && process.argv.includes("--json")) {
+  const { fromHeader } = await import("../mail.ts");
+  const { rawMessage } = await import("../lib/mime.ts");
+  const file = process.argv[process.argv.indexOf("--json") + 1]!;
+  const to = process.argv[process.argv.indexOf("--to") + 1] ?? "pradeep@neon1.tech";
+  const rows = samples().map((s) => {
+    const from = fromHeader(s.as, "notify.neon1.tech", true);
+    return { name: s.name, from, subject: s.subject, replyTo: s.replyTo, text: s.text, html: s.html, raw: s.attachments?.length ? Buffer.from(new TextEncoder().encode(rawMessage({ from, to, subject: s.subject, replyTo: s.replyTo, text: s.text, html: s.html, attachments: s.attachments }))).toString("base64") : undefined };
+  });
+  writeFileSync(file, JSON.stringify(rows));
+}
