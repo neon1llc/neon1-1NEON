@@ -179,7 +179,7 @@ a.org { text-decoration: none; }
 
 /* Main area: a sticky, translucent top bar with breadcrumbs */
 .main { min-width: 0; display: flex; flex-direction: column; }
-.top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-5); background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-5); background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 0; box-shadow: inset 0 -1px 0 var(--line); }
 .crumb { font: var(--fs-sm) var(--mono); color: var(--muted); display: flex; gap: var(--sp-2); align-items: center; flex-wrap: wrap; }
 .crumb a { color: var(--muted); text-decoration: none; }
 .crumb a:hover { color: var(--accent); }
@@ -1190,6 +1190,8 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 :root { --top-h: 60px; }
 /* Desktop: the same 64px top bar as neon1.tech */
 @media (min-width: 901px) { :root { --top-h: 64px; } }
+/* The bar's bottom line is drawn inside its box, not as a border, so the bar's content is the full even height (64px, 60 on a phone):
+   a border left 63px, and a 36px button or 28px mark then centered on a half pixel, rounding differently from each other by up to 1px */
 .top { height: var(--top-h); padding-top: 0; padding-bottom: 0; }
 .top-brand { flex: none; display: flex; align-items: center; gap: var(--sp-3); height: 40px; padding: 0 var(--sp-1); margin-left: calc(6px - var(--gut)); margin-right: calc(-1 * var(--sp-1)); border-radius: var(--r-sm);
   color: var(--accent); font: 700 var(--fs-ui) var(--mono); letter-spacing: .08em; text-decoration: none; }
@@ -2300,7 +2302,8 @@ dialog:has(.ns-quote), dialog:has(#call-note) { max-width: min(560px, calc(100vw
    equal in its row: the top bar and the menu's top row are 63px of room above a 1px rule, the footer 63px below one. An odd size
    in an odd room leaves whole pixels either side (17 and 17 on desktop, 15 and 15 on a phone). The rings' outer stroke ends 2 units
    inside a 64-unit box, so the svg is drawn 64/60 larger than the ink it paints */
-:root { --mark-ink: 29px; }
+/* 30px: the mark's drawn ink is 60 of its 64 viewBox units, so a 30px ink makes the svg exactly 32px and the bar (64px) centers it on a whole pixel; 29px left every edge on a half pixel */
+:root { --mark-ink: 30px; }
 .side .ico.mark, .top-brand .mark-box, .side .ico.site-mark { width: var(--mark-ink); height: var(--mark-ink); }
 .side .ico.mark svg, .top-brand svg { width: calc(var(--mark-ink) * 64 / 60); height: calc(var(--mark-ink) * 64 / 60); margin: calc((var(--mark-ink) - var(--mark-ink) * 64 / 60) / 2); }
 /* The menu's top row stops where the rule starts, so the mark is centered in the room above it, as the top bar's is */

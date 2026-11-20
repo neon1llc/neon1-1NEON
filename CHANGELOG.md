@@ -11,6 +11,7 @@
 ### Fixed
 - Every link in Get to know 1NEON leaves the page with the outbound arrow, the sample project and FAQs included, and Contact's website link reads "Send a message" and opens the form on neon1.tech (/#contact?message=1).
 - Outbound links are bold, never underlined, and in the page's own light or dark green in every look, as on neon1.tech; the arrow marks them and follows the same color.
+- The top bar's mark, menu button, and wordmark share one center on whole pixels at every zoom level. The bar's bottom line is drawn inside its box so its content is an even 64px, and the mark's ink is 30px (the rings 32px) instead of 29px; before, the mark and the menu button sat up to 0.8px apart at some zooms.
 - The 1NEON wordmark's capitals are centered on the top bar at every zoom level; they sat 0.5 to 1px high at 90% to 100%.
 
 ### Fixed
