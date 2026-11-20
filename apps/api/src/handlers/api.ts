@@ -153,7 +153,11 @@ export const handler = async (event: Parameters<typeof http>[0] | { source?: str
     // Then files whose scan finished since the last pass become ready (or rejected) without a re-upload
     const files = await beforeDeadline(sweepFiles({ repo, storage }, { deadline: end - 500 }), end).catch((e) => ({ watched: 0, settled: 0, error: (e as Error).name }));
     // Bug reports waiting for their screenshots to scan go out, with the clean ones attached
-    const bugs = await beforeDeadline(sweepBugs({ repo, storage, mailer, cfg }, { deadline: end - 400 }), end).catch((e) => ({ held: 0, sent: 0, error: (e as Error).name }));
+    const bugs = await beforeDeadline(sweepBugs({ repo, storage, mailer, cfg }, { deadline: end - 400 }), end).catch((e) => {
+      // The reason too (no report text or addresses are in these messages), so a held report that never goes out can be traced
+      console.error(JSON.stringify({ level: "error", message: "bug report sweep failed", error: (e as Error).name, detail: String((e as Error).message ?? "").slice(0, 300) }));
+      return { held: 0, sent: 0, error: (e as Error).name };
+    });
     // Assessment requests half an hour past their last change (and an hour past the last email) go to neon1
     const requests = await beforeDeadline(sweepRequests({ repo, d: deps, cfg }, { deadline: end - 350 }), end).catch((e) => ({ waiting: 0, sent: 0, error: (e as Error).name }));
     // Sign-ups never confirmed lose their sign-in account after a day; quiet prospects get their emails
