@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+### Fixed
+- Contact gives the same working hours as the rest of neon1: Monday to Thursday 6pm to 9pm, Friday 6pm to 8pm, and weekends 8am to 8pm, Eastern time.
+
 ## v0.22.1 - 2026-11-19
 
 ### Changed
