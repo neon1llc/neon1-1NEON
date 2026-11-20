@@ -38,7 +38,7 @@ export function ContactPage() {
         </section>
         <section className="card contact-ways">
           <h2 className="card-h">When I answer</h2>
-          <p style={{ margin: 0 }}>Weekends 8am to 8pm and weekday evenings 6pm to 9pm, Eastern time, usually within a day.</p>
+          <p style={{ margin: 0 }}>Monday to Thursday 6pm to 9pm, Friday 6pm to 8pm, and weekends 8am to 8pm, Eastern time, usually within a day.</p>
           <p className="muted small">About a project? Write in the project itself, so everything stays together. More answers in the <Link to="/faqs">FAQs</Link>.</p>
         </section>
       </div>

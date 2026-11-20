@@ -11,6 +11,7 @@
 - "Get to know 1NEON" on Home links the sample project, the walkthrough, the demo, the FAQs, and (for free accounts) how free accounts work. Hide puts it away; the profile's Tutorial brings it back. The help sheet links the sample project and the walkthrough too.
 
 ### Fixed
+- Contact gives the same working hours as the rest of neon1: Monday to Thursday 6pm to 9pm, Friday 6pm to 8pm, and weekends 8am to 8pm, Eastern time.
 - Asking for an assessment can't be repeated for the same project: a project already sent waits two weeks, a call can be asked once a week, and both together are capped at five a week. The old cap of four a day reset at midnight UTC, which is the evening in the US.
 
 ### Changed
