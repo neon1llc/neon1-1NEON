@@ -1006,17 +1006,29 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 /* The foot of the public pages: one quiet row of pages, then the way back to neon1.tech */
 .pub-foot { max-width: 920px; margin: var(--sp-7) auto 0; padding: var(--sp-5) var(--sp-5) calc(var(--sp-6) + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); display: grid; gap: var(--sp-2); }
 .pub-foot p { margin: 0; }
-/* The contents row stays under the bar while its layers scroll by, on a phone and a wide screen alike */
-.example .tabs { position: sticky; top: calc(var(--top-h) + var(--demo-h, 0px)); z-index: 5; margin-top: var(--sp-3); background: var(--bg); border-bottom: 1px solid var(--line); }
 .example .example-layer { scroll-margin-top: calc(var(--top-h) + var(--demo-h, 0px) + 60px); }
-/* The contents row: each layer is a visible button, and the row fades at its edge to show it scrolls sideways */
-.example .tabs { gap: var(--sp-2); border-bottom: 0; padding: var(--sp-1) var(--sp-1) var(--sp-2); margin: var(--sp-4) 0 var(--sp-4); scroll-snap-type: x proximity; }
-.example .tabs { box-shadow: 0 1px 0 var(--line); }
-.example .tabs a { border: 1px solid var(--line-strong); border-radius: 999px; padding: var(--sp-2) var(--sp-3); background: var(--panel); scroll-snap-align: start; flex: none; transition: background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease); }
-.example .tabs a:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-.example .tabs a.active { background: var(--accent-soft); border-color: var(--accent); }
-.example .tabs a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-/* Following a contents button glides to its layer; less motion jumps */
+/* "On this page", as the Knowledge Center has it: a bar that stays under the top bar, names the layer in view, and opens the list of layers */
+.example .toc-bar { position: sticky; top: calc(var(--top-h) + var(--demo-h, 0px)); z-index: 5; margin: var(--sp-4) calc(50% - 50vw) var(--sp-4); background: color-mix(in srgb, var(--panel) 94%, transparent); -webkit-backdrop-filter: saturate(1.8) blur(16px); backdrop-filter: saturate(1.8) blur(16px); border-bottom: 1px solid var(--line); box-shadow: 0 8px 20px rgba(0, 0, 0, .06); }
+.example { overflow-x: clip; }
+.toc-in { max-width: 920px; margin: 0 auto; padding: 0 var(--gut, var(--sp-5)); }
+.toc-head { display: flex; align-items: center; gap: var(--sp-3); width: 100%; min-height: 44px; padding: 0; background: none; border: 0; cursor: pointer; font: 600 var(--fs-ui) var(--sans); color: var(--accent); text-align: left; }
+.toc-head > b { flex: none; font-weight: 600; }
+.toc-head > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; font: var(--fs-xs) var(--mono); color: var(--muted); }
+.toc-head > span b { font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--accent); }
+.toc-head:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+/* The arrow turns down as the list opens, on the list's own timing */
+.toc-head .arr { flex: none; transition: transform var(--t-open) var(--ease-open); }
+.toc-bar[data-open] .toc-head .arr { transform: rotate(-90deg); }
+.toc-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--t-open) var(--ease-open); }
+.toc-bar[data-open] .toc-body { grid-template-rows: 1fr; }
+.toc-body > ul { min-height: 0; overflow: hidden; list-style: none; margin: 0; padding: 0; }
+.toc-bar[data-open] .toc-body > ul { padding-bottom: var(--sp-2); border-top: 1.5px solid var(--accent); }
+.toc-body li a { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) 0; color: var(--muted); text-decoration: none; font: var(--fs-ui)/1.4 var(--sans); }
+.toc-body li a small { font: var(--fs-xs) var(--sans); color: var(--muted); }
+.toc-body li a:hover, .toc-body li a[aria-current="location"] { color: var(--accent); }
+.toc-body li a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) { .toc-head .arr, .toc-body { transition: none; } }
+/* Following a contents link glides to its layer; less motion jumps */
 body:has(.shell.example) { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { body:has(.shell.example) { scroll-behavior: auto; } }
 :root[data-motion="off"] body:has(.shell.example) { scroll-behavior: auto; }

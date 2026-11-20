@@ -14,6 +14,9 @@
 // page through it too). Elsewhere the page scrolls as usual.
 
 
+import { useLayoutEffect } from "react";
+
+
 // Any browser on an iPhone or iPod, and an iPad, which says it's a Mac but has a touch screen
 const IPHONE = /iPhone|iPod|iPad/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 
@@ -21,6 +24,16 @@ const IPHONE = /iPhone|iPod|iPad/.test(navigator.userAgent) || (/Macintosh/.test
  * (styles/app.css, "Under the browser's own controls") */
 export function keepEdgeStill() {
   if (IPHONE) document.documentElement.classList.add("body-scrolls");
+}
+
+/** Public pages have no tab bar under the browser's toolbar, so there the page scrolls as the document: the status-bar tap that returns to the top works, and the bar's sticky parts keep to the document. The body scrolls again once the page is left. */
+export function useDocumentScroll() {
+  useLayoutEffect(() => {
+    const classes = document.documentElement.classList;
+    const had = classes.contains("body-scrolls");
+    classes.remove("body-scrolls");
+    return () => { if (had) classes.add("body-scrolls"); };
+  }, []);
 }
 
 /** What scrolls the page: the body where it scrolls on its own, the window everywhere else */

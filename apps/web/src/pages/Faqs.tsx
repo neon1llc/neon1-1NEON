@@ -9,6 +9,7 @@ import { Markdown } from "../components/Markdown.tsx";
 import { OutLink } from "../components/OutLink.tsx";
 import { PublicBar } from "../components/PublicBar.tsx";
 import { PublicFooter } from "../components/PublicFooter.tsx";
+import { useDocumentScroll } from "../lib/edge.ts";
 import { useSiteTheme } from "../lib/sitetheme.ts";
 import source from "../help/faqs.md?raw";
 import { matches, parse, type Question } from "../lib/faq.ts";
@@ -42,6 +43,8 @@ function CopyLink({ item }: { item: Question }) {
 
 /** The FAQs page, readable without signing in */
 export function Faqs() {
+  // The page scrolls as the document here, so the status-bar tap returns to the top
+  useDocumentScroll();
   const [look, setLook] = useSiteTheme();
   const [q, setQ] = useState("");
   // The question a link points at (#id) opens on arrival and scrolls into view

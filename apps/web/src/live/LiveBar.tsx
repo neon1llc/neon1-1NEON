@@ -233,6 +233,10 @@ export function LiveBar({ player }: { player: Player }) {
           <p className="live-card-foot">
             Questions this didn't answer? <a href="/1NEON/faqs">Read the FAQs</a>, or <a href="/#contact">ask Pradeep</a>. <a href={exit.href}>{exit.label}</a>
           </p>
+          {/* The public pages' policies, as the sign-in and every public page carry them */}
+          <p className="live-card-foot">
+            <a href="/1NEON/cookies">Cookies</a> · <a href="/1NEON/privacy">Privacy</a> · <a href="/1NEON/terms">Terms</a>
+          </p>
         </Card>
       )}
 

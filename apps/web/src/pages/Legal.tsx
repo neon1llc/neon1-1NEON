@@ -7,6 +7,7 @@ import { AGREEMENT_TEXT } from "@1neon/domain";
 import { Markdown } from "../components/Markdown.tsx";
 import { PublicBar } from "../components/PublicBar.tsx";
 import { PublicFooter } from "../components/PublicFooter.tsx";
+import { useDocumentScroll } from "../lib/edge.ts";
 import { useSiteTheme } from "../lib/sitetheme.ts";
 import cookies from "../legal/cookie-notice.md?raw";
 import privacy from "../legal/privacy-policy.md?raw";
@@ -21,6 +22,8 @@ const DOCS = { privacy, terms, cookies, agreement: AGREEMENT_TEXT } as const;
 
 /** One legal document, with links to the others */
 export function Legal({ doc }: { doc: keyof typeof DOCS }) {
+  // The page scrolls as the document here, so the status-bar tap returns to the top
+  useDocumentScroll();
   const [look, setLook] = useSiteTheme();
   return (
     <>

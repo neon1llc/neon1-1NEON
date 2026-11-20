@@ -12,6 +12,7 @@ import { PublicFooter } from "../components/PublicFooter.tsx";
 import { ThemeSwitch } from "../components/PublicBar.tsx";
 import { LayerBadge, LAYERS, layerHint, layerName, Rings } from "../components/ui.tsx";
 import { VLANS, type Table } from "../lib/artifacts.ts";
+import { useDocumentScroll } from "../lib/edge.ts";
 import { fade } from "../lib/motion.ts";
 import { CARE, moneyOf, SCENARIO_IDS, SCENARIOS, scenarioOf, summaryOf, type Piece, type Scenario, type ScenarioId } from "../lib/scenarios.ts";
 import { useSiteTheme } from "../lib/sitetheme.ts";
@@ -245,6 +246,8 @@ function ReadySection({ s }: { s: Scenario }) {
 
 /** The example project in the portal's frame: its top bar, a picker, a contents row, then each layer */
 export function Example() {
+  // The page scrolls as the document here, so the status-bar tap returns to the top
+  useDocumentScroll();
   // The site's family and mode: applied here (Neo's window reads it too) and following the switch in other tabs
   const [look, setLook] = useSiteTheme();
   const [params, setParams] = useSearchParams();
@@ -254,14 +257,24 @@ export function Example() {
   // Back and forward change the address; the page follows it
   useEffect(() => { setId(fromAddress); }, [fromAddress]);
   const picker = useRef<HTMLElement>(null);
+  // The contents bar is the Knowledge Center's "On this page" bar: it names the layer in view and opens the list of layers
+  const [tocOpen, setTocOpen] = useState(false);
+  const tocBar = useRef<HTMLDivElement>(null);
+  // Escape or a press outside closes the list
+  useEffect(() => {
+    if (!tocOpen) return;
+    const key = (e: KeyboardEvent) => { if (e.key === "Escape") setTocOpen(false); };
+    const away = (e: Event) => { if (tocBar.current && !tocBar.current.contains(e.target as Node)) setTocOpen(false); };
+    document.addEventListener("keydown", key);
+    document.addEventListener("pointerdown", away);
+    return () => { document.removeEventListener("keydown", key); document.removeEventListener("pointerdown", away); };
+  }, [tocOpen]);
   // The layer on screen, marked in the contents row, which stays under the bar and keeps that button in view (as the Knowledge Center's does)
   const [here, setHere] = useState("ready");
-  const tabsRow = useRef<HTMLElement>(null);
   useEffect(() => {
     const ids = ["ready", ...LAYERS];
     const look = () => {
-      const row = tabsRow.current;
-      const line = (row ? row.getBoundingClientRect().bottom : 0) + 32;
+      const line = (tocBar.current ? tocBar.current.getBoundingClientRect().bottom : 0) + 32;
       let current = ids[0]!;
       for (const x of ids) { const el = document.getElementById(x); if (el && el.getBoundingClientRect().top <= line) current = x; }
       setHere(current);
@@ -272,13 +285,6 @@ export function Example() {
     addEventListener("resize", look);
     return () => { removeEventListener("scroll", look, { capture: true }); removeEventListener("resize", look); };
   }, []);
-  useEffect(() => {
-    const row = tabsRow.current;
-    const a = row?.querySelector<HTMLElement>('[aria-current="location"]');
-    if (!row || !a) return;
-    const left = a.offsetLeft - (row.clientWidth - a.offsetWidth) / 2;
-    row.scrollTo({ left: Math.max(0, left), behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
-  }, [here]);
   // Where the picker sat before a pick; once the new engagement is drawn, the page scrolls by any difference
   const pickerTop = useRef<number | null>(null);
   useLayoutEffect(() => {
@@ -297,6 +303,7 @@ export function Example() {
     fade(() => { setId(next); setParams({ scenario: next }, { preventScrollReset: true }); });
   };
   const s = SCENARIOS[id];
+  const TOC: { id: string; name: string; hint: string; layer?: Layer }[] = [{ id: "ready", name: "Ready", hint: "outline to decision" }, ...LAYERS.map((l) => ({ id: l, name: layerName(l), hint: layerHint(l), layer: l }))];
   const STORY = storyOf(s);
   const q = (id: string) => `?scenario=${id}`;
   return (
@@ -329,10 +336,27 @@ export function Example() {
           ))}
         </nav>
         {/* Contents: jump to a layer */}
-        <nav className="tabs" aria-label="Layers" ref={tabsRow}>
-          <a href="#ready" className={here === "ready" ? "active" : undefined} aria-current={here === "ready" ? "location" : undefined}><span className="tab-name">Ready<small className="sub"><span className="sr">, </span>outline to decision</small></span></a>
-          {LAYERS.map((l) => <a key={l} href={`#${l}`} className={here === l ? "active" : undefined} aria-current={here === l ? "location" : undefined}><LayerBadge layer={l} /><span className="tab-name">{layerName(l)}<small className="sub"><span className="sr">, </span>{layerHint(l)}</small></span></a>)}
-        </nav>
+        {/* Contents: stays under the top bar, names the layer in view, and opens the list of layers */}
+        <div className="toc-bar" ref={tocBar} data-open={tocOpen || undefined}>
+          <nav className="toc-in" aria-label="Layers">
+            <button type="button" className="toc-head" aria-expanded={tocOpen} aria-controls="toc-list" onClick={() => setTocOpen((o) => !o)}>
+              <b>On this page</b>
+              <span>{TOC.findIndex((t) => t.id === here) + 1} of {TOC.length} · <b>{TOC.find((t) => t.id === here)?.name}</b></span>
+              <i className="arr" aria-hidden="true" />
+            </button>
+            <div className="toc-body" id="toc-list">
+              <ul>
+                {TOC.map((t) => (
+                  <li key={t.id}>
+                    <a href={`#${t.id}`} aria-current={here === t.id ? "location" : undefined} tabIndex={tocOpen ? undefined : -1} onClick={() => setTocOpen(false)}>
+                      {t.layer ? <LayerBadge layer={t.layer} /> : null}<span>{t.name}</span><small>{t.hint}</small>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </nav>
+        </div>
         <ReadySection s={s} />
         {LAYERS.map((l, i) => (
           <section key={l} id={l} className="example-layer" aria-labelledby={`${l}-h`}>
