@@ -9,7 +9,7 @@ import { useSearchParams } from "react-router";
 import { EXAMPLE_TITLE, OUTLINE_CARRIES, OUTLINE_PARTS, readinessOf, type Layer, type OutlinePart } from "@1neon/domain";
 import { OutLink } from "../components/OutLink.tsx";
 import { ThemeSwitch } from "../components/PublicBar.tsx";
-import { LayerBadge, LAYERS, layerHint, layerName } from "../components/ui.tsx";
+import { LayerBadge, LAYERS, layerHint, layerName, Rings } from "../components/ui.tsx";
 import { VLANS, type Table } from "../lib/artifacts.ts";
 import { fade } from "../lib/motion.ts";
 import { CARE, moneyOf, SCENARIO_IDS, SCENARIOS, scenarioOf, summaryOf, type Piece, type Scenario, type ScenarioId } from "../lib/scenarios.ts";
@@ -277,7 +277,9 @@ export function Example() {
     <div className="shell example">
       {/* The signed-in portal's top bar, with the way into the demo where search would be */}
       <header className="top">
-        <div className="crumb"><a href="/1NEON/">1NEON</a><span className="crumb-tail"> / Sample project</span></div>
+        {/* The portal's own mark and name, as Home shows them, leading to the 1NEON entry page */}
+        <a className="top-brand" href="/1NEON/" title="1NEON" aria-label="1NEON, entry page"><span className="mark-box" aria-hidden="true"><Rings /></span><span className="lbl">1NEON</span></a>
+        <div className="crumb"><span className="crumb-tail">Sample project</span></div>
         <span className="top-acts">
           <a className="btn btn-ghost btn-sm" href="/">neon1.tech</a>
           {/* Short in the bar so it holds one line on a phone; the end card says the length */}

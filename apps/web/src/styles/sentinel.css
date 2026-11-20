@@ -34,6 +34,8 @@
 /* ---- No rain, glass, or page transitions ---- */
 :root[data-style="sentinel"] :is(#rain, #lens, .veil, .rainctl) { display: none !important; }
 :root[data-style="sentinel"]::view-transition-group(*), :root[data-style="sentinel"]::view-transition-old(*), :root[data-style="sentinel"]::view-transition-new(*) { animation-duration: 0s !important; }
+/* The sample project's picker is the one place Sentinel fades between states: choosing another example cross-fades like a switch of looks should */
+:root[data-style="sentinel"][data-fade]:has(.shell.example)::view-transition-old(root), :root[data-style="sentinel"][data-fade]:has(.shell.example)::view-transition-new(root) { animation-duration: var(--t-base) !important; }
 
 /* ---- Public screens: sign-in, FAQs, legal pages ---- */
 :root[data-style="sentinel"] .pub-bar .n1-logo, :root[data-style="sentinel"][data-theme] .pub-bar .n1-logo { color: var(--accent); }

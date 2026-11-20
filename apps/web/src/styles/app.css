@@ -1001,6 +1001,20 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 .example-picker a { display: grid; gap: var(--sp-0); padding: var(--sp-2) var(--sp-3); border: 1px solid var(--line-strong); border-radius: 10px; color: inherit; text-decoration: none; }
 .example-picker a span { font-size: var(--fs-sm); color: var(--muted); }
 .example-picker a[aria-current="page"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+/* The sample's bar keeps the name beside the mark on a phone, as the user asked; the other bar buttons give way */
+@media (max-width: 480px) { .example .top-brand .lbl { display: inline; } .example .top-brand { margin-right: 0; } }
+/* The contents row: each layer is a visible button, and the row fades at its edge to show it scrolls sideways */
+.example .tabs { gap: var(--sp-2); border-bottom: 0; padding: var(--sp-1) var(--sp-1) var(--sp-2); margin: var(--sp-4) 0 var(--sp-4); scroll-snap-type: x proximity; }
+.example .tabs a { border: 1px solid var(--line-strong); border-radius: 999px; padding: var(--sp-2) var(--sp-3); background: var(--panel); scroll-snap-align: start; flex: none; transition: background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease); }
+.example .tabs a:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.example .tabs a.active { background: var(--accent-soft); border-color: var(--accent); }
+.example .tabs a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+/* Following a contents button glides to its layer; less motion jumps */
+html:has(.shell.example):not([data-motion="off"]) { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html:has(.shell.example) { scroll-behavior: auto; } }
+/* Choosing another example changes the card's border with the same ease as the rest */
+.example-picker a { transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease); }
+.example-picker a:hover { border-color: var(--accent); }
 /* A piece of the work itself: its kind, a note, and the table, scrolling inside the card on a phone */
 .piece-kind { margin: var(--sp-1) 0 var(--sp-1); }
 .piece-scroll { overflow-x: auto; margin-top: var(--sp-2); }

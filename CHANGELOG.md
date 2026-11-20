@@ -11,6 +11,7 @@
 - The open desktop menu shortens its rows with the window's height so the whole menu fits without scrolling down to about 700px high.
 
 ### Fixed
+- On the sample project page: choosing another example cross-fades in Sentinel too (it was instant), the contents row shows each layer as a visible button and glides to its layer, and the top-left name is the portal's own mark and 1NEON, linking to the 1NEON entry page, on a phone as well.
 - Text no longer stays enlarged after an iPhone is turned to landscape and back to portrait.
 - One link rule in every look and mode, as on neon1.tech: a link that stays in 1NEON is underlined thinly at 55% and takes the full color on hover and focus, and a link that leaves is never underlined and nudges its arrow. The dark-only dimmed underlines and the sign-in and menu one-offs are gone; list-item titles and "Hide"-style text buttons follow the same rule.
 - The Mini menu has a visible edge line on a phone and a stronger one on a wide screen, in light and dark; the phone's clipped drawer had hidden its own border.
