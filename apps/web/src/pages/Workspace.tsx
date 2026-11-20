@@ -3,7 +3,9 @@
 // project updates, and recent activity with what each edit changed.
 
 
-import { KeepCard, NextStep, ProspectNote } from "../components/Prospect.tsx";
+import { HomeGuide, guidesHidden } from "../components/HomeGuide.tsx";
+import { NextStep } from "../components/NextStep.tsx";
+import { KeepCard } from "../components/Prospect.tsx";
 import { KIND_LAYER, type ItemKind } from "@1neon/domain";
 import { useQuery } from "@tanstack/react-query";
 import { Check, CircleCheck, FileUp, ListTodo, PenLine, Receipt } from "lucide-react";
@@ -51,6 +53,8 @@ export function WorkspacePage() {
   const first = (me.user.name || "").split(" ")[0];
   // Home's "Where can I see your business?" ask, until it's answered or put away with "Not now"
   const [faceSkipped, setFaceSkipped] = useState(() => faceAskDismissed(org.id));
+  // The guide card, until it's put away with Hide (Your profile brings it back)
+  const [guideHidden, setGuideHidden] = useState(() => guidesHidden(me.user.id));
 
   // Setup steps, each ticked off by the real state; the card goes once all are done
   const steps = [
@@ -70,22 +74,23 @@ export function WorkspacePage() {
   return (
     <>
       <h1 className="page-title">{first ? `Hi, ${first}` : "Home"}</h1>
-      {prospect && <ProspectNote />}
+      {/* New to 1NEON: the example, the walkthrough, and the FAQs; a free account's version says what it's for. Never neon1 itself */}
+      {!guideHidden && !me.operator && <HomeGuide userId={me.user.id} free={prospect} onHide={() => setGuideHidden(true)} />}
       {/* A free account's expiry: the date, one extension, and a copy to download first */}
       {prospect && !me.operator && <KeepCard orgId={org.id} slug={summary.slug} canKeep={canWrite} />}
       {/* Asking neon1 for an assessment or a call: every account that can write, never neon1 itself */}
-      {canWrite && !me.operator && <NextStep orgId={org.id} />}
+      {canWrite && !me.operator && <NextStep orgId={org.id} slug={summary.slug} free={prospect} />}
       {/* An organization with neither a place nor a link: its own admins (not neon1) are asked here until one is added or they say "Not now" */}
       {admin && !me.operator && !org.place && !org.link && !faceSkipped && <FaceForm ask onDone={() => setFaceSkipped(true)} />}
-      <p className="lead">{ws.data && !blocked ? (n ? `${n} ${n === 1 ? "thing needs" : "things need"} you.` : "Nothing needs you right now.") : " "}</p>
       <Stale reads={[ws]} />
 
       {blocked ? <Problem error={ws.error} reads={[ws]} /> : <div className="home">
         <div className="home-main">
         {/* Needs you: the main event, each with the one action it asks for */}
         <section className="card needs" data-tour="needs-you" aria-busy={ws.isPending}>
-          <h2 className="section-h">Needs you{shown < n && <small>Showing {shown} of {n}</small>}</h2>
-          {ws.data && n === 0 && <p className="empty-line"><Check size={18} aria-hidden="true" /> You're all caught up.</p>}
+          {/* The count belongs to the header; with nothing waiting, the card says so itself */}
+          <h2 className="section-h">Needs you{ws.data && n > 0 && <small><span aria-hidden="true">· </span>{n} {n === 1 ? "item" : "items"}{shown < n ? `, showing ${shown}` : ""}</small>}</h2>
+          {ws.data && n === 0 && <p className="empty-line"><Check size={18} aria-hidden="true" /> Nothing needs you right now.</p>}
           <ul className="todo">
             {ws.data?.waiting.map((w) => {
               const a = ACTION[w.action] ?? ACTION.do;

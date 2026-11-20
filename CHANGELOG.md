@@ -21,6 +21,17 @@
 - Asking for an assessment or a call sends one email to neon1, as a table of who, organization, place, link, and their note, with a button to open the account; neon1 no longer gets a second copy as a notification.
 - The contact form's email to neon1 is laid out like the bug report and feedback emails: a left-aligned table (from, organization, about, timing, how they found neon1, their local time, when it was sent), then what happens today and what would be better in their own blocks. The plain-text version uses aligned columns.
 
+### Added
+- A free account's Next step says how far along each project is and what to add next. Three things make a project ready to assess: what it is, what done looks like, and one real example. Who does the work, the systems involved, a measure, and a target date are optional, and starter items a template adds don't count until they're written in. An assessment names the projects it's for, needs a note, and opens a check that shows what will be sent, what's still thin, and the date it can be asked again, with "Submit request anyway". The email to neon1 says which projects and how far along each is.
+- Home has a short guide card, for free and client accounts, linking the example project, the guided walkthrough, and the FAQs. Hide puts it away, and Show guide cards on Home in Your profile brings it back.
+- "Ask for a call" opens a short form for good times, and "Book a call" sits beside it for people who would rather start with a call.
+
+### Changed
+- Needs you carries its count in its header ("Needs you · 3 items") and says "Nothing needs you right now" inside the card, instead of a separate line above the page.
+
+### Fixed
+- An assessment or a call could be asked for again and again. The limit counted by UTC day, so it reset in the evening in the US, and its message said "today". Each account now has one open request of each kind, and the same kind can go out again 7 days after the last, from the moment it was sent. Pressing twice, using a second tab, or retrying after a lost reply sends one email, and the page says when it was asked and when it can be asked again. A request that can't be emailed gives the window back.
+
 ## v0.22.1 - 2026-11-19
 
 ### Changed

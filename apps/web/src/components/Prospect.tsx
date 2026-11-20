@@ -1,16 +1,15 @@
-// apps/web/src/components/Prospect.tsx - What a new (prospect) account sees: a calm note on its
-// workspace, and the account-level check for things that never open for it (Neo, texts).
+// apps/web/src/components/Prospect.tsx - What a new (prospect) account sees: its expiry card, and the
+// account-level check for things that never open for it (Neo, texts). Next step is NextStep.tsx.
 
 
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router";
-import { OutLink } from "./OutLink.tsx";
 import { api } from "../lib/api.ts";
 import { problem } from "../lib/hooks.ts";
 import { read } from "../lib/reads.ts";
 import { dateLabel, useToast } from "./ui.tsx";
-import { BOOK_A_CALL, prospectEverywhere } from "../lib/prospect.ts";
+import { prospectEverywhere } from "../lib/prospect.ts";
 import type { Me, OrgResponse } from "../lib/types.ts";
 
 
@@ -24,64 +23,6 @@ export function useProspectEverywhere(me: Me): boolean | undefined {
   if (me.operator) return false;
   if (reads.some((r) => r.isPending)) return undefined;
   return prospectEverywhere(reads.map((r) => r.data?.org), false);
-}
-
-
-/** The note on a new account's workspace: what this account is for */
-export function ProspectNote() {
-  return (
-    <p className="notice prospect-note" role="note">
-      <span>You're set up as a free account. Write down what your projects need, then ask for an assessment under Next step and book the 30-minute call. Other ways to reach neon1 are on <Link to="/contact">Contact</Link>.</span>
-    </p>
-  );
-}
-
-
-// When each kind was last asked for, by kind
-type Asked = Partial<Record<"assessment" | "call", { at: string }>>;
-
-
-/** Next step, on Home: ask neon1 for an assessment of what's written down, or for a call. Each sends neon1
- * an email (routes/requests.ts) and then says when it was asked */
-export function NextStep({ orgId }: { orgId: string }) {
-  const qc = useQueryClient();
-  const toast = useToast();
-  const asked = useQuery({ queryKey: ["requests", orgId], queryFn: () => read<Asked>(`/t/${orgId}/requests`, {}) });
-  const [note, setNote] = useState("");
-  const [busy, setBusy] = useState<"" | "assessment" | "call">("");
-  const [error, setError] = useState("");
-  const ask = async (kind: "assessment" | "call") => {
-    setBusy(kind);
-    setError("");
-    try {
-      await api(`/t/${orgId}/requests`, { method: "POST", body: { kind, note } });
-      setNote("");
-      await qc.invalidateQueries({ queryKey: ["requests", orgId] });
-      toast("Assessment requested. You'll get a reply by email.");
-    } catch (e) {
-      setError(problem(e));
-    }
-    setBusy("");
-  };
-  const when = (kind: "assessment" | "call") => asked.data?.[kind]?.at;
-  return (
-    <section className="card next-step-ask" aria-labelledby="next-step-h">
-      <h2 className="section-h" id="next-step-h">Next step</h2>
-      <p className="muted small">The assessment is free: my read of what's written here, with a likely approach and the first questions to settle. Ask for it, then book the free 30-minute call, which is about your needs. I read the assessment request before we talk.</p>
-      {error && <p className="notice" role="alert">{error}</p>}
-      <label className="field-label" htmlFor="ask-note">Anything to look at first, or good times to talk <span className="muted">(optional)</span></label>
-      <textarea id="ask-note" rows={2} maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)} />
-      <div className="actions">
-        <button type="button" className="btn btn-primary btn-sm" disabled={Boolean(busy)} onClick={() => void ask("assessment")}>{busy === "assessment" ? "Sending…" : "Ask for an assessment"}</button>
-        <OutLink className="btn btn-sm" href={BOOK_A_CALL}>Book the 30-minute call</OutLink>
-      </div>
-      {when("assessment") && (
-        <p className="muted small" role="status">
-          {`Assessment asked for ${dateLabel(when("assessment"))}`}. The reply comes by email.
-        </p>
-      )}
-    </section>
-  );
 }
 
 

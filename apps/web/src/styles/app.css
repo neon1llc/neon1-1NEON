@@ -2189,3 +2189,39 @@ body:has(.shell.mini) .n1chat.n1chat-right { left: auto; right: max(16px, env(sa
   :root[data-theme="device"] .side :is(.bug-row, .site-end) .lbl { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: rgb(108 255 168 / .55); transition: text-decoration-color var(--t-fast) var(--ease); }
   :root[data-theme="device"] .side :is(.bug-row, .site-end):is(:hover, :focus-visible, :active) .lbl { text-decoration-color: rgb(108 255 168); }
 }
+
+/* Home guide and Next step (components/HomeGuide.tsx, NextStep.tsx): built from the shared card, notice, tag, and button looks */
+.guide { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; align-items: start; }
+.guide + .card { margin-top: 16px; }
+.guide-text { margin: 0; grid-column: 1; }
+.guide-links { grid-column: 1; list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: calc(14px * var(--type)); }
+.guide-hide { grid-column: 2; grid-row: 1; justify-self: end; color: var(--muted); }
+@media (max-width: 520px) { .guide { grid-template-columns: minmax(0, 1fr); } .guide-hide { grid-column: 1; grid-row: auto; justify-self: start; } }
+.ns-what { margin: 0 0 12px; }
+.ns-lines, .ns-asked { margin: 0 0 14px; }
+.ns-lines { list-style: none; padding: 0; display: grid; gap: 10px; }
+.ns-lines li { display: flex; flex-wrap: wrap; gap: 2px 12px; align-items: baseline; }
+.ns-lines li small { flex-basis: 100%; }
+.ns-lines-empty { margin: 0 0 14px; }
+.ns-asked { padding: 10px 14px; border: 1px solid var(--line-strong); border-radius: var(--r-sm); background: var(--accent-soft); }
+.ns-asked p { margin: 0 0 4px; }
+.ns-asked p:last-child { margin-bottom: 0; }
+.ns-form { display: grid; gap: 10px; }
+.ns-closing { margin: 0; }
+.ns-label { font: calc(14px * var(--type)) var(--sans, inherit); color: var(--text); margin: 0; }
+.ns-projects { border: 0; padding: 0; margin: 0; display: grid; gap: 2px; }
+.ns-projects legend { font: calc(12px * var(--type)) var(--mono); color: var(--muted); padding: 0; margin-bottom: 4px; }
+.ns-pick { display: flex; gap: 10px; align-items: center; min-height: 36px; margin: 0; cursor: pointer; font: calc(14px * var(--type)) var(--sans, inherit); color: var(--text); }
+.ns-pick .tag { margin-left: 8px; }
+.ns-call { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+.ns-sub { font-size: calc(14px * var(--type)); margin: 0 0 4px; }
+.ns-call p { margin: 0 0 10px; }
+.ns-call [role="status"] { margin: 10px 0 0; }
+.ns-quote { margin: 0 0 12px; padding: 8px 12px; border-left: 3px solid var(--line-strong); background: var(--accent-soft); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 30vh; overflow: auto; }
+.ns-short { margin-bottom: 12px; }
+.ns-short ul { margin: 6px 0 0; padding-left: 18px; }
+dialog:has(.ns-quote), dialog:has(#call-note) { max-width: min(560px, calc(100vw - 32px)); }
+/* With the lead line gone, the last top card sits the same 16px above the Home grid as the cards do from each other */
+.card:is(.guide, .keep-card, .next-step-ask) + :is(.home, .notice) { margin-top: 16px; }
+/* Errors under Next step's fields use the theme's own amber, which holds contrast in light and dark */
+.ns-form .field-error { color: var(--amber); }

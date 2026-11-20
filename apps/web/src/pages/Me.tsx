@@ -16,6 +16,7 @@ import { problem } from "../lib/hooks.ts";
 import { passkeyCreation } from "../lib/passkey.ts";
 import { useProspectEverywhere } from "../components/Prospect.tsx";
 import { useHelp } from "../components/Help.tsx";
+import { guidesHidden, hideGuides } from "../components/HomeGuide.tsx";
 import { previewMenu } from "../lib/preview.ts";
 import { ReportBug } from "../components/BugReport.tsx";
 import { askToConfirm, TotpSetup } from "../components/Confirm.tsx";
@@ -323,10 +324,11 @@ export function MePage() {
         {/* The tutorial: replay the welcome tour, or read the FAQs */}
         <div className="card small" style={{ display: "grid", gap: 8, justifyItems: "start" }}>
           <b>Tutorial</b>
-          <span className="muted">Each page also has its own guide under ?.</span>
+          <span className="muted">Each page also has its own guide under ?. Home's guide card links the example, the walkthrough, and the FAQs.</span>
           <div className="actions">
             <button className="btn btn-ghost" type="button" onClick={help.welcomeTour}>Replay the tour</button>
             <Link className="btn btn-ghost" to="/faqs">FAQs</Link>
+            <button className="btn btn-ghost" type="button" onClick={() => { const was = guidesHidden(me.user.id); hideGuides(me.user.id, false); toast(was ? "Guide cards are back on Home." : "Guide cards are already showing on Home."); }}>Show guide cards on Home</button>
           </div>
         </div>
         {/* Something broken or confusing: straight to neon1, with the page and theme */}

@@ -168,11 +168,14 @@ export const JOURNEY: Show = {
       id: "free-ask",
       title: "Ask for an assessment",
       run: async (s) => {
-        await s.say("From Home she asks for an assessment, then books the free 30-minute call");
+        await s.say("From Home she asks for an assessment of her project, or could book a call instead");
         await s.go(`${await shop()}/workspace`, "Home");
         await s.hover(".next-step-ask", 900);
         await s.type("#ask-note", "Weekday mornings are best if a call helps.", 300);
-        await s.click({ sel: ".next-step-ask button", text: "Ask for an assessment" }, 1400);
+        await s.say("She checks the request before it goes");
+        await s.click({ sel: ".next-step-ask button", text: "Request assessment" }, 1000);
+        await s.hover("dialog[open] .ns-quote", 900);
+        await s.click({ sel: "dialog[open] button", text: /^(Send request|Submit request anyway)$/ }, 1400);
         await s.think("Sent. The reply comes by email.");
         await s.hover(".next-step-ask [role=status]", 900);
       },
@@ -184,10 +187,10 @@ export const JOURNEY: Show = {
         await s.say("Now Pradeep's side: the request reaches neon1's inbox");
         const mail = await inbox(s, CONTACT_TO);
         try {
-          await read(s, mail, "asked for an assessment");
+          await read(s, mail, "Assessment requested");
           await s.think("A new free account, with a written-down project. Let me look.");
-          await s.hover(() => mail.link("Open in 1NEON"), 900);
-          await s.click(() => mail.link("Open in 1NEON"), 500);
+          await s.hover(() => mail.link("Open the account"), 900);
+          await s.click(() => mail.link("Open the account"), 500);
         } finally {
           await mail.close();
         }
