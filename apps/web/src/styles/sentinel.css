@@ -72,3 +72,6 @@
   --you: rgb(121 207 145 / .1); --muted: #B2BDB4; --accent: #79CF91; --accent-ink: #0F0A0D; --field: #0F0A0D; --link: #79CF91; box-shadow: 0 8px 24px rgb(0 0 0 / .4); }
 :root[data-style="sentinel"] .n1chat-launch:not(.n1chat-light) { color: var(--accent); border-color: var(--accent); background: var(--bg); }
 :root[data-style="sentinel"] .n1chat-launch:not(.n1chat-light):hover { background: var(--accent-soft); }
+
+/* The sample project's title keeps the Matrix prompt mark (">") out of Sentinel, which stays plain */
+:root[data-style="sentinel"] .example .page-title::before { content: none; }

@@ -38,7 +38,7 @@ function storyOf(s: Scenario): Record<Layer, { lead: string; cards: Card[] }> {
       lead: "What the client wants, what neon1 learned by listening, the ways to get there, and the choice.",
       cards: [
         { title: "Request", lines: [["Currently", s.project.today], ["Goal", s.project.outcome], ["Example", s.project.example]] },
-        { title: "What neon1 learned", lines: ["After a twenty-minute call and a look at real records, written into the project where the client can correct it."], list: [
+        { title: "What neon1 learned", lines: ["After the free 30-minute call and a look at real records, written into the project where the client can correct it."], list: [
           ...s.learned.map(([q, a]) => ({ text: `${q} ${a}` })),
           ...s.constraints.slice(0, 2).map(([title, body]) => ({ text: `A limit, said before any option was written: ${lower(title)}. ${body}` })),
         ] },
