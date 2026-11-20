@@ -413,7 +413,6 @@ body:has(.live-bar) .signin .n1-bar { display: none; }
 .signin .fine a { color: var(--m-muted, #CBD1CC); }
 .signin:not(.awake) .fine a.out, .signin:not(.awake) .fine a.out:hover { color: var(--neon); font-weight: 600; text-decoration: none; }
 .signin.awake .fine a.out, .signin.awake .fine a.out:hover { color: var(--accent); font-weight: 600; text-decoration: none; }
-.signin .legal-links { margin-top: 8px; white-space: nowrap; }
 /* Who the portal is for, the visible email label, what Continue leads to, and the ways in without an
    account. Text colors are the shared matrix tokens (--m-muted 12:1, --m-ink 17:1 on the void), and stay above 5.5:1
    with green rain lit behind the glass */

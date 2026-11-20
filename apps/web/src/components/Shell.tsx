@@ -21,6 +21,7 @@ import { Bell } from "./Bell.tsx";
 import { Offline } from "./Glitch.tsx";
 import { Rain } from "./Rain.tsx";
 import { PublicBar } from "./PublicBar.tsx";
+import { PublicFooter } from "./PublicFooter.tsx";
 import { useSiteTheme } from "../lib/sitetheme.ts";
 import { paintTheme, setAccountTheme, watchTheme } from "../lib/themepaint.ts";
 import { isSentinel, isDarkLook, lookFor, normalizeLook, onLookChange, resolveTheme, saveLook, sharedThemeChoice, styleChoice } from "../lib/style.ts";
@@ -461,10 +462,6 @@ function SignIn() {
         {SIGNUP_HERE && signupOpen && !signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
           <p className="fine"><button className="linkish" onClick={() => fade(openSignUp)}>Start for free</button></p>
         )}
-        {/* The three policies on one line of their own */}
-        <p className="fine legal-links">
-          <Link to="/faqs" viewTransition>FAQs</Link> · <Link to="/cookies" viewTransition>Cookies</Link> · <Link to="/privacy" viewTransition>Privacy</Link> · <Link to="/terms" viewTransition>Terms</Link>
-        </p>
         {/* Not a client yet: one door, the guided walkthrough, with no sign-in to attempt. The sample
             project and the demo stay reachable from inside it (its end card) and from the FAQs.
             The demo, already one of them, offers the guided walkthrough in the same place instead */}
@@ -492,6 +489,8 @@ function SignIn() {
           </div>
         )}
       </div>
+      {/* The public pages and policies, and the way back to neon1.tech, below the card as on every public page */}
+      <PublicFooter />
       {/* "report a bug" in the page's bottom right corner, centered on Neo's button, as the site's footer has it */}
       <ReportBug kind="corner" />
     </main>
