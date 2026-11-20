@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+## v0.23.0 - 2026-11-20
+
 ### Fixed (audit, November 20)
 - A bug report with screenshots reaches neon1: the API's role could send plain mail but not the raw message that carries attachments, so such reports waited in the table and never went out. The role now allows both (needs the infra apply on dev and prod). The sweep also logs why it failed.
 - On a phone, the menu's organization picker is one icon box tall again, with even space above and below, instead of filling its 44px row and touching the line above. The rest of the row still takes the tap.
