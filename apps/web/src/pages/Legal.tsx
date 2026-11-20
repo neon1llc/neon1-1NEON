@@ -4,9 +4,9 @@
 
 
 import { AGREEMENT_TEXT } from "@1neon/domain";
-import { Link } from "react-router";
 import { Markdown } from "../components/Markdown.tsx";
 import { PublicBar } from "../components/PublicBar.tsx";
+import { PublicFooter } from "../components/PublicFooter.tsx";
 import { useSiteTheme } from "../lib/sitetheme.ts";
 import cookies from "../legal/cookie-notice.md?raw";
 import privacy from "../legal/privacy-policy.md?raw";
@@ -28,10 +28,8 @@ export function Legal({ doc }: { doc: keyof typeof DOCS }) {
     <main className="content legal pub-page" style={{ maxWidth: 760, margin: "0 auto" }}>
       {/* Rendered from Markdown, then links to the other two documents */}
       <Markdown source={DOCS[doc]} />
-      <p className="small muted" style={{ marginTop: 40 }}>
-        <Link to="/privacy" viewTransition>Privacy</Link> · <Link to="/terms" viewTransition>Terms</Link> · <Link to="/cookies" viewTransition>Cookies</Link> · <Link to="/agreement" viewTransition>Service agreement</Link> · <Link to="/faqs" viewTransition>FAQs</Link>
-      </p>
     </main>
+    <PublicFooter />
     </>
   );
 }

@@ -1003,15 +1003,23 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 .example-picker a[aria-current="page"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 /* The sample's bar keeps the name beside the mark on a phone, as the user asked; the other bar buttons give way */
 @media (max-width: 480px) { .example .top-brand .lbl { display: inline; } .example .top-brand { margin-right: 0; } }
+/* The foot of the public pages: one quiet row of pages, then the way back to neon1.tech */
+.pub-foot { max-width: 920px; margin: var(--sp-7) auto 0; padding: var(--sp-5) var(--sp-5) calc(var(--sp-6) + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); display: grid; gap: var(--sp-2); }
+.pub-foot p { margin: 0; }
+/* The contents row stays under the bar while its layers scroll by, on a phone and a wide screen alike */
+.example .tabs { position: sticky; top: calc(var(--top-h) + var(--demo-h, 0px)); z-index: 5; margin-top: var(--sp-3); background: var(--bg); border-bottom: 1px solid var(--line); }
+.example .example-layer { scroll-margin-top: calc(var(--top-h) + var(--demo-h, 0px) + 60px); }
 /* The contents row: each layer is a visible button, and the row fades at its edge to show it scrolls sideways */
 .example .tabs { gap: var(--sp-2); border-bottom: 0; padding: var(--sp-1) var(--sp-1) var(--sp-2); margin: var(--sp-4) 0 var(--sp-4); scroll-snap-type: x proximity; }
+.example .tabs { box-shadow: 0 1px 0 var(--line); }
 .example .tabs a { border: 1px solid var(--line-strong); border-radius: 999px; padding: var(--sp-2) var(--sp-3); background: var(--panel); scroll-snap-align: start; flex: none; transition: background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease); }
 .example .tabs a:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 .example .tabs a.active { background: var(--accent-soft); border-color: var(--accent); }
 .example .tabs a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 /* Following a contents button glides to its layer; less motion jumps */
-html:has(.shell.example):not([data-motion="off"]) { scroll-behavior: smooth; }
-@media (prefers-reduced-motion: reduce) { html:has(.shell.example) { scroll-behavior: auto; } }
+body:has(.shell.example) { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { body:has(.shell.example) { scroll-behavior: auto; } }
+:root[data-motion="off"] body:has(.shell.example) { scroll-behavior: auto; }
 /* Choosing another example changes the card's border with the same ease as the rest */
 .example-picker a { transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease); }
 .example-picker a:hover { border-color: var(--accent); }

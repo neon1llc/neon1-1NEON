@@ -8,6 +8,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from "r
 import { useSearchParams } from "react-router";
 import { EXAMPLE_TITLE, OUTLINE_CARRIES, OUTLINE_PARTS, readinessOf, type Layer, type OutlinePart } from "@1neon/domain";
 import { OutLink } from "../components/OutLink.tsx";
+import { PublicFooter } from "../components/PublicFooter.tsx";
 import { ThemeSwitch } from "../components/PublicBar.tsx";
 import { LayerBadge, LAYERS, layerHint, layerName, Rings } from "../components/ui.tsx";
 import { VLANS, type Table } from "../lib/artifacts.ts";
@@ -253,6 +254,31 @@ export function Example() {
   // Back and forward change the address; the page follows it
   useEffect(() => { setId(fromAddress); }, [fromAddress]);
   const picker = useRef<HTMLElement>(null);
+  // The layer on screen, marked in the contents row, which stays under the bar and keeps that button in view (as the Knowledge Center's does)
+  const [here, setHere] = useState("ready");
+  const tabsRow = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const ids = ["ready", ...LAYERS];
+    const look = () => {
+      const row = tabsRow.current;
+      const line = (row ? row.getBoundingClientRect().bottom : 0) + 32;
+      let current = ids[0]!;
+      for (const x of ids) { const el = document.getElementById(x); if (el && el.getBoundingClientRect().top <= line) current = x; }
+      setHere(current);
+    };
+    look();
+    // The page scrolls inside the body, not the window, so scrolls are heard in the capture phase
+    addEventListener("scroll", look, { passive: true, capture: true });
+    addEventListener("resize", look);
+    return () => { removeEventListener("scroll", look, { capture: true }); removeEventListener("resize", look); };
+  }, []);
+  useEffect(() => {
+    const row = tabsRow.current;
+    const a = row?.querySelector<HTMLElement>('[aria-current="location"]');
+    if (!row || !a) return;
+    const left = a.offsetLeft - (row.clientWidth - a.offsetWidth) / 2;
+    row.scrollTo({ left: Math.max(0, left), behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  }, [here]);
   // Where the picker sat before a pick; once the new engagement is drawn, the page scrolls by any difference
   const pickerTop = useRef<number | null>(null);
   useLayoutEffect(() => {
@@ -303,9 +329,9 @@ export function Example() {
           ))}
         </nav>
         {/* Contents: jump to a layer */}
-        <nav className="tabs" aria-label="Layers">
-          <a href="#ready"><span className="tab-name">Ready<small className="sub"><span className="sr">, </span>outline to decision</small></span></a>
-          {LAYERS.map((l) => <a key={l} href={`#${l}`}><LayerBadge layer={l} /><span className="tab-name">{layerName(l)}<small className="sub"><span className="sr">, </span>{layerHint(l)}</small></span></a>)}
+        <nav className="tabs" aria-label="Layers" ref={tabsRow}>
+          <a href="#ready" className={here === "ready" ? "active" : undefined} aria-current={here === "ready" ? "location" : undefined}><span className="tab-name">Ready<small className="sub"><span className="sr">, </span>outline to decision</small></span></a>
+          {LAYERS.map((l) => <a key={l} href={`#${l}`} className={here === l ? "active" : undefined} aria-current={here === l ? "location" : undefined}><LayerBadge layer={l} /><span className="tab-name">{layerName(l)}<small className="sub"><span className="sr">, </span>{layerHint(l)}</small></span></a>)}
         </nav>
         <ReadySection s={s} />
         {LAYERS.map((l, i) => (
@@ -339,6 +365,7 @@ export function Example() {
           <p className="small muted">Would rather click around yourself? <a href="/1NEON/demo/">Try the interactive demo</a>.</p>
         </section>
       </main>
+      <PublicFooter />
     </div>
   );
 }

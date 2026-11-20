@@ -4,10 +4,11 @@
 
 
 import { useEffect, useMemo, useState } from "react";
-import { Link, useLocation } from "react-router";
+import { useLocation } from "react-router";
 import { Markdown } from "../components/Markdown.tsx";
 import { OutLink } from "../components/OutLink.tsx";
 import { PublicBar } from "../components/PublicBar.tsx";
+import { PublicFooter } from "../components/PublicFooter.tsx";
 import { useSiteTheme } from "../lib/sitetheme.ts";
 import source from "../help/faqs.md?raw";
 import { matches, parse, type Question } from "../lib/faq.ts";
@@ -83,10 +84,8 @@ export function Faqs() {
           ))}
         </section>
       ))}
-      <p className="small muted" style={{ marginTop: 40 }}>
-        <Link to="/privacy" viewTransition>Privacy</Link> · <Link to="/terms" viewTransition>Terms</Link> · <Link to="/cookies" viewTransition>Cookies</Link> · <Link to="/faqs" viewTransition>FAQs</Link>
-      </p>
     </main>
+    <PublicFooter />
     </>
   );
 }
