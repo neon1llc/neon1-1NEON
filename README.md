@@ -21,6 +21,10 @@ npm run check   # types, tests, and build
 
 Locally there's no sign-in. Pick a demo account on the sign-in screen.
 
+## Design
+
+1NEON inherits its type and spacing scales from neon1.tech and adds only portal-level steps. See [docs/DESIGN.md](docs/DESIGN.md).
+
 ## Dev
 
 [dev.neon1.tech/1NEON](https://dev.neon1.tech/1NEON/) is a private copy behind dev.neon1.tech's sign-in. It runs `infra/envs/dev` with its own API, table, documents bucket, and sign-in pool on auth-dev.neon1.tech. Dev SMS stays off until its dedicated sender is approved and the sandbox destination is verified; when enabled, a SecureString allowlist restricts delivery to configured test numbers. Dev runs no malware scan and keeps locked records one day.
