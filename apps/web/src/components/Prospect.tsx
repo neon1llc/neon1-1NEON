@@ -7,7 +7,7 @@ import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { Link } from "react-router";
 import { OutLink } from "./OutLink.tsx";
-import { api, HttpError } from "../lib/api.ts";
+import { api, BASE_PATH, HttpError } from "../lib/api.ts";
 import { problem } from "../lib/hooks.ts";
 import { read } from "../lib/reads.ts";
 import { dateLabel, Dialog, useToast } from "./ui.tsx";
@@ -61,12 +61,12 @@ export function GuideCard({ me, prospect }: { me: Me; prospect: boolean }) {
     <section className="card guide-card" aria-labelledby="guide-h" data-tour="get-to-know">
       <h2 className="section-h" id="guide-h">Get to know 1NEON <button type="button" className="linkish small" disabled={busy} onClick={() => void hide()}>Hide</button></h2>
       <ul className="guide-links">
-        <li><Link to="/example">A sample project</Link><span className="muted small">Three made-up clients, start to finish</span></li>
+        <li><OutLink href={`${BASE_PATH}/example`}>A sample project</OutLink><span className="muted small">Three made-up clients, start to finish</span></li>
         {prospect
-          ? <li><a href="/1NEON/live?play=free">From free account to client</a><span className="muted small">A six-minute walkthrough</span></li>
-          : <li><a href="/1NEON/live">The guided walkthrough</a><span className="muted small">Watch the portal work on its own</span></li>}
-        <li><a href="/1NEON/demo/">Try the demo</a><span className="muted small">The same portal with made-up data</span></li>
-        <li><Link to="/faqs">FAQs</Link><span className="muted small">Short answers to common questions</span></li>
+          ? <li><OutLink href="/1NEON/live?play=free">From free account to client</OutLink><span className="muted small">A six-minute walkthrough</span></li>
+          : <li><OutLink href="/1NEON/live">The guided walkthrough</OutLink><span className="muted small">Watch the portal work on its own</span></li>}
+        <li><OutLink href="/1NEON/demo/">Try the demo</OutLink><span className="muted small">The same portal with made-up data</span></li>
+        <li><OutLink href={`${BASE_PATH}/faqs`}>FAQs</OutLink><span className="muted small">Short answers to common questions</span></li>
         {prospect && <li><OutLink href="/knowledge/guides/free-accounts/">How free accounts work</OutLink><span className="muted small">Limits, keeping, and deleting</span></li>}
       </ul>
     </section>

@@ -37,7 +37,7 @@ export function ContactPage() {
           <dl className="facts">
             <div><dt>Email</dt><dd><OutLink href={`mailto:${CONTACT.email}`}>{CONTACT.email}</OutLink></dd></div>
             <div><dt>Call or text</dt><dd><OutLink href={`tel:${CONTACT.phone}`} title={CONTACT.phoneDigits}>{CONTACT.phoneLabel}</OutLink> <span className="muted small">{CONTACT.phoneDigits}</span></dd></div>
-            <div><dt>Write it out</dt><dd><OutLink href={SITE_CONTACT}>Send me your case through the site</OutLink></dd></div>
+            <div><dt>Write it out</dt><dd><OutLink href={SITE_CONTACT}>Send a message</OutLink></dd></div>
             <div><dt>Talk it through</dt><dd><OutLink href={BOOK_A_CALL}>Book a 30-minute call</OutLink></dd></div>
           </dl>
         </section>
