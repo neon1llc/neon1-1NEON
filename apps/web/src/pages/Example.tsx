@@ -6,13 +6,14 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from "react";
 import { useSearchParams } from "react-router";
-import type { Layer } from "@1neon/domain";
+import { EXAMPLE_TITLE, OUTLINE_CARRIES, OUTLINE_PARTS, readinessOf, type Layer, type OutlinePart } from "@1neon/domain";
 import { OutLink } from "../components/OutLink.tsx";
 import { LayerBadge, LAYERS, layerHint, layerName } from "../components/ui.tsx";
 import { VLANS, type Table } from "../lib/artifacts.ts";
 import { fade } from "../lib/motion.ts";
 import { CARE, moneyOf, SCENARIO_IDS, SCENARIOS, scenarioOf, summaryOf, type Piece, type Scenario, type ScenarioId } from "../lib/scenarios.ts";
 import { useSiteTheme } from "../lib/sitetheme.ts";
+import { Check } from "lucide-react";
 
 
 // One card: a title, its lines, an optional list, and an optional piece of work
@@ -153,6 +154,93 @@ function PieceView({ p }: { p: Piece }) {
 }
 
 
+/** The six outline parts as this engagement wrote them, and where each one went once the work was agreed. The words are the
+ * scenario's own; what each part is called and where it goes are the portal's (packages/domain/src/outline.ts) */
+function outlineOfScenario(s: Scenario): { id: OutlinePart; wrote: string; went: string; layer: Layer }[] {
+  const chosen = s.options[s.chosen]!;
+  const m = s.measures[0]!;
+  const title = chosen.title.replace(/^[A-C]\. /, "");
+  return [
+    { id: "what", wrote: s.blurb, went: `The scope of the approved option, ${lower(title)}.`, layer: "needs" },
+    { id: "today", wrote: s.project.example, went: `The starting point Observe measures against: ${lower(m.title)} began at ${m.baseline}.`, layer: "observation" },
+    { id: "done", wrote: s.project.outcome, went: `The check in Verify: ${lower(String(chosen.fields.result ?? ""))}`, layer: "execution" },
+    { id: "who", wrote: s.needs.answer, went: `The handover in Normalize: ${lower(s.training)}`, layer: "next" },
+    { id: "measure", wrote: `${m.title}: ${m.baseline} now, target ${m.direction === "down" ? "under" : "over"} ${m.target}.`, went: `Read again in Observe: it reached ${m.readings[2]}.`, layer: "observation" },
+    { id: "limits", wrote: `${s.constraints[0]![0]}. Due in about ${Math.round(s.project.dueDays / 7)} weeks.`, went: `The proposal's timeline, ${String(chosen.fields.timeline ?? "").replace(/\.$/, "")}, and what it leaves out.`, layer: "execution" },
+  ];
+}
+
+/** The outline parts that went into one layer, as a card at its top. Needs has none: the outline is what its Ready section shows */
+function carriedCards(s: Scenario, layer: Layer): Card[] {
+  const here = outlineOfScenario(s).filter((x) => x.layer === layer);
+  if (layer === "needs" || !here.length) return [];
+  const label = (id: OutlinePart) => OUTLINE_PARTS.find((x) => x.id === id)!.label;
+  return [{ title: "From the outline", lines: [`What ${s.owner.first} wrote before the work started is used here, not asked for again.`], list: here.map((x) => ({ text: `${label(x.id)}: ${x.went}`, state: "done" as const })) }];
+}
+
+/** This engagement's readiness at each step, from the same function the portal uses, so the percents are the portal's own */
+function readyPath(s: Scenario) {
+  const m = s.measures[0]!;
+  const project = { summary: s.blurb, outcome: s.project.outcome, targetDate: "2027-01-15" };
+  const written = [
+    { kind: "discovery", title: EXAMPLE_TITLE, body: s.project.example },
+    { kind: "discovery", title: "Who does this work today?", body: s.needs.answer },
+    { kind: "metric", title: m.title, fields: { baseline: m.baseline } },
+    { kind: "constraint", title: s.constraints[0]![0], body: s.constraints[0]![1] },
+  ];
+  const option = (status: string) => ({ kind: "option", title: s.options[s.chosen]!.title, status });
+  const asked = "2026-11-01";
+  return [
+    { step: "Outline", note: "All six parts written", r: readinessOf(project, written) },
+    { step: "Assessment", note: "Sent, and answered by email, with a call after", r: readinessOf(project, written, asked) },
+    { step: "Options", note: `${s.options.length === 1 ? "One option" : `${["", "", "Two options", "Three options"][s.options.length]}`} written up under Needs`, r: readinessOf(project, [...written, option("proposed")], asked) },
+    { step: "Decision", note: `${s.owner.first} approved one with a signature`, r: readinessOf(project, [...written, option("approved")], asked) },
+  ];
+}
+
+/** Where the work stood before it started: the readiness meter, then each outline part and where it went */
+function ReadySection({ s }: { s: Scenario }) {
+  const parts = outlineOfScenario(s);
+  const path = readyPath(s);
+  const label = (id: OutlinePart) => OUTLINE_PARTS.find((x) => x.id === id)!.label;
+  return (
+    <section id="ready" className="example-layer" aria-labelledby="ready-h">
+      <p className="eyebrow">Before step 1</p>
+      <h2 id="ready-h" className="example-h">Ready for Execute <small className="ready-pct">{path[3]!.r.percent}%</small></h2>
+      <p className="muted">Every project gets ready first: an outline, a free assessment, options, and one signed decision. In a real project this meter sits on the Overview and starts wherever the outline does. The outline is what gets carried into the work.</p>
+      <div className="card ready-example">
+        <ol className="ready-path">
+          {path.map((x) => (
+            <li key={x.step}>
+              <span className="tick on" aria-hidden="true"><Check size={12} /></span>
+              <span><b>{x.step}</b> <span className="muted small">{x.note}</span></span>
+              <span className="ready-pct">{x.r.percent}%</span>
+            </li>
+          ))}
+        </ol>
+        <span className="ready-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={100} aria-label="Ready for Execute"><i style={{ width: "100%" }} /></span>
+        <p className="small muted">Ten points for each outline part, ten for the assessment, ten for options, and twenty for the decision. Only a decision reaches 100%.</p>
+      </div>
+      <div className="example-cards">
+        <article className="card">
+          <h3>The outline, as {s.owner.first} wrote it</h3>
+          <p className="small muted">Six parts, each in plain words. None had to be perfect, and each says where it goes.</p>
+          <ul className="outline-example">
+            {parts.map((x) => (
+              <li key={x.id}>
+                <b>{label(x.id)}</b>
+                <span>{x.wrote}</span>
+                <span className="small muted">{OUTLINE_CARRIES[x.id]} <a href={`#${x.layer}`}>See it in {layerName(x.layer)}</a>.</span>
+              </li>
+            ))}
+          </ul>
+        </article>
+      </div>
+    </section>
+  );
+}
+
+
 /** The example project in the portal's frame: its top bar, a picker, a contents row, then each layer */
 export function Example() {
   // The site's family and mode: applied here (Neo's window reads it too) and following the switch in other tabs
@@ -199,7 +287,7 @@ export function Example() {
       <main className="content example-body" id="main">
         <p className="eyebrow">Sample project · {s.family} · every name, number, and file is made up</p>
         <h1 className="page-title">{s.org.name}: {s.project.name}</h1>
-        <p className="lead">{s.blurb} Follow it through the four layers, including what went wrong along the way.</p>
+        <p className="lead">{s.blurb} See how it got ready, then follow it through the four layers, including what went wrong along the way.</p>
         {/* Which engagement: three, from three kinds of work */}
         <nav className="example-picker" aria-label="Sample projects" ref={picker}>
           {SCENARIO_IDS.map((k) => (
@@ -211,15 +299,17 @@ export function Example() {
         </nav>
         {/* Contents: jump to a layer */}
         <nav className="tabs" aria-label="Layers">
+          <a href="#ready"><span className="tab-name">Ready<small className="sub"><span className="sr">, </span>outline to decision</small></span></a>
           {LAYERS.map((l) => <a key={l} href={`#${l}`}><LayerBadge layer={l} /><span className="tab-name">{layerName(l)}<small className="sub"><span className="sr">, </span>{layerHint(l)}</small></span></a>)}
         </nav>
+        <ReadySection s={s} />
         {LAYERS.map((l, i) => (
           <section key={l} id={l} className="example-layer" aria-labelledby={`${l}-h`}>
             <p className="eyebrow">Step {i + 1}</p>
             <h2 id={`${l}-h`} className="example-h"><LayerBadge layer={l} />{layerName(l)}</h2>
             <p className="muted">{STORY[l].lead}</p>
             <div className="example-cards">
-              {STORY[l].cards.map((c) => (
+              {[...carriedCards(s, l), ...STORY[l].cards].map((c) => (
                 <article key={c.title} className="card">
                   <h3>{c.title}</h3>
                   {c.lines.map((x, j) => (typeof x === "string" ? <p key={j} className="small muted">{x}</p> : <p key={j}><b>{x[0]}:</b> {x[1]}</p>))}

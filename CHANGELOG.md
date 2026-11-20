@@ -7,6 +7,7 @@
 ### Added
 - Home's Next step guides a project from first words to an assessment. It lists each open project with how far it's outlined (six parts: what it is, how it works today, what done looks like, who and what it touches, a measure, and timing and limits) and one tip for what would help most. Pick any or all of the projects (up to three), write a note, and send. A project that could say more gets one last look first, which can be skipped. Anyone who'd rather talk first can book the 30-minute call from the same card.
 - Each project's Overview shows how ready it is for Execute, from 0% to 100%: the six outline parts, the assessment, options, and the decision. Each part says where to write it and where it goes once work starts (scope, the Verify checks, the Observe baseline and measure, the Normalize handover).
+- The sample project starts with how it got ready: a Ready for Execute meter from the outline through the assessment, options, and the decision (60%, 70%, 80%, 100%), the six outline parts as that engagement wrote them, and a "From the outline" card at the top of Execute, Observe, and Normalize showing what each part became.
 - "Get to know 1NEON" on Home links the sample project, the walkthrough, the demo, the FAQs, and (for free accounts) how free accounts work. Hide puts it away; the profile's Tutorial brings it back. The help sheet links the sample project and the walkthrough too.
 
 ### Fixed

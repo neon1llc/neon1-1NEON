@@ -2238,3 +2238,15 @@ body:has(.shell.mini) .n1chat.n1chat-right { left: auto; right: max(16px, env(sa
 .ready-part { font-weight: 600; }
 .ready-parts li.done .ready-part { color: var(--muted); font-weight: 400; }
 .ready-carries { display: block; }
+
+/* /1NEON/example: how the sample project got ready (pages/Example.tsx) */
+.ready-pct { font: 600 calc(14px * var(--type)) var(--mono); color: var(--accent); margin-left: 6px; }
+.ready-example { display: grid; gap: 12px; margin-top: 14px; }
+.ready-example > p { margin: 0; }
+.ready-path { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.ready-path li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: start; }
+.ready-example .tick { width: 20px; height: 20px; border-radius: 99px; border: 1.5px solid var(--line-strong); display: grid; place-items: center; color: var(--accent-ink); margin-top: 1px; }
+.ready-example .tick.on { background: var(--accent); border-color: var(--accent); }
+.ready-path .ready-pct { margin: 0; }
+.outline-example { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 14px; }
+.outline-example li { display: grid; gap: 2px; }
