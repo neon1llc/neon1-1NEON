@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+### Fixed
+- Back, Forward, and reload return to where each history entry was left, however many steps back, even when the same page is in the history twice. Each entry's scroll is kept under its own key for this tab only, replacing the record kept per section; a new page opens at its top, and another tab of the same project keeps the scroll. The cookie notice lists the new item, and the website's scroll record too.
+- The phone menu opens and closes without stutter: the page behind turns inert only once the menu has finished moving, instead of restyling the whole page in the frame it starts to move.
+- Text fields are 16px on touch screens, so focusing one on an iPhone no longer zooms the page in.
+
 ## v0.22.1 - 2026-11-19
 
 ### Changed

@@ -2177,3 +2177,6 @@ body:has(.shell.mini) .n1chat.n1chat-right { left: auto; right: max(16px, env(sa
   :root[data-theme="device"] .side :is(.bug-row, .site-end) .lbl { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: rgb(108 255 168 / .55); transition: text-decoration-color var(--t-fast) var(--ease); }
   :root[data-theme="device"] .side :is(.bug-row, .site-end):is(:hover, :focus-visible, :active) .lbl { text-decoration-color: rgb(108 255 168); }
 }
+
+/* Text fields at 16px on touch screens: iPhone browsers zoom the page in when a field under 16px takes focus */
+@media (pointer: coarse) { :root:root :is(input:not([type=checkbox], [type=radio], [type=file], [type=range], [type=color]), textarea, select) { font-size: 16px; } }

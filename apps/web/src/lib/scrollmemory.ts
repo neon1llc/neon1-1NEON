@@ -1,14 +1,17 @@
-// apps/web/src/lib/scrollmemory.ts - Each section of the app (Settings, Contact, one project, ...) keeps
-// the scroll position you left it at, so moving between sections and back lands where you were. A section
-// you haven't visited starts at its top. Kept in sessionStorage: it survives a reload, ends with the tab,
-// and is cleared on sign-out.
+// apps/web/src/lib/scrollmemory.ts - Back, Forward, and reload put the page back at the spot where that history entry was
+// left, however many steps back, even when the same page is in the history twice. Each entry has its own key (the router's
+// location.key, kept in history.state), and its scroll is kept under that key in sessionStorage: it survives a reload, ends
+// with the tab, and is cleared on sign-out. A new link opens at its top or at its #spot; another tab of the same project keeps
+// the scroll, since the page around it stays.
 
 
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
+import type { NavigationType } from "react-router";
 import { pageScroller, pageTop } from "./edge.ts";
 
 
-const KEY = "1neon.scroll";
+const KEY = "1neon.entries";
+const KEEP = 100;
 let spots: Record<string, number> | undefined;
 
 const store = (): Storage | undefined => {
@@ -18,47 +21,86 @@ const store = (): Storage | undefined => {
 function load(): Record<string, number> {
   if (spots) return spots;
   try { spots = JSON.parse(store()?.getItem(KEY) ?? "{}") as Record<string, number>; } catch { spots = {}; }
+  // The record this replaced kept one spot per section, so a page visited twice came back at its latest spot
+  try { store()?.removeItem("1neon.scroll"); } catch { /* storage blocked */ }
   return spots;
 }
 
+function note(key: string, top: number) {
+  const mem = load();
+  // Newest last, so the oldest entries are the ones let go
+  delete mem[key];
+  mem[key] = top;
+}
+
 function persist() {
-  try { store()?.setItem(KEY, JSON.stringify(load())); } catch { /* storage blocked: memory lasts until reload */ }
+  const mem = load();
+  const keys = Object.keys(mem);
+  for (const k of keys.slice(0, Math.max(0, keys.length - KEEP))) delete mem[k];
+  try { store()?.setItem(KEY, JSON.stringify(mem)); } catch { /* storage blocked: memory lasts until reload */ }
 }
 
 /** Forget every remembered position (sign-out) */
 export function forgetScroll() {
   spots = {};
-  try { store()?.removeItem(KEY); } catch { /* storage blocked */ }
+  try { store()?.removeItem(KEY); store()?.removeItem("1neon.scroll"); } catch { /* storage blocked */ }
+}
+
+/**
+ * Give the entry the app was opened on a key of its own, before the router reads it. Without one the router calls every
+ * entry opened from outside the app "default", so two of them in one tab would share a spot
+ */
+export function keyFirstEntry() {
+  try {
+    const state: unknown = history.state;
+    if (state && typeof state === "object" && typeof (state as { key?: unknown }).key === "string") return;
+    history.replaceState({ ...(state && typeof state === "object" ? state : {}), key: Math.random().toString(36).slice(2, 10) }, "");
+  } catch { /* the router keeps "default" */ }
 }
 
 
 /**
- * Follow the page's scroll under `section`, and on arriving in another section put it back where that
- * one was left. A link to a spot on the page (a #hash) keeps its own destination.
+ * Follow the page's scroll under the entry `key`, and on arriving put it where it belongs: Back, Forward, and reload (POP)
+ * go to the entry's own spot; a new entry (PUSH, REPLACE) opens at its top, or stays put when only the project tab
+ * changed (`section` is the same). A link to a spot on the page (a #hash) keeps its own destination unless the entry
+ * already has a spot.
  */
-export function useSectionScroll(section: string, hash: string) {
-  // Reload and Back/Forward are ours too: the browser's own restoring would fight the section's memory
+export function useEntryScroll(key: string, section: string, hash: string, how: NavigationType) {
+  // Reload and Back/Forward are ours: the browser's own restoring would fight the entry's memory
   useEffect(() => {
     const prev = history.scrollRestoration;
     try { history.scrollRestoration = "manual"; } catch { /* unsupported */ }
-    return () => { try { history.scrollRestoration = prev; } catch { /* unsupported */ } };
+    // Leaving or hiding the page (an iPhone may never send pagehide) writes the last spot seen
+    const out = () => persist();
+    const hidden = () => { if (document.visibilityState === "hidden") persist(); };
+    window.addEventListener("pagehide", out);
+    document.addEventListener("visibilitychange", hidden);
+    return () => {
+      try { history.scrollRestoration = prev; } catch { /* unsupported */ }
+      window.removeEventListener("pagehide", out);
+      document.removeEventListener("visibilitychange", hidden);
+    };
   }, []);
 
+  const lastSection = useRef<string | null>(null);
   useLayoutEffect(() => {
+    const sameSection = lastSection.current === section;
+    lastSection.current = section;
+    const mem = load();
+    const target = how === "POP" && mem[key] !== undefined ? mem[key] : hash || sameSection ? undefined : 0;
+
     let restoring = false;
     let frame = 0;
     const settle = () => { restoring = false; cancelAnimationFrame(frame); };
-    const mem = load();
-    const target = hash ? undefined : mem[section] ?? 0;
 
-    // Record the position as the reader scrolls. Never while we're putting one back: the page may still
-    // be loading and shorter than the spot, and a clamped value must not replace the real one
+    // Record the position as the reader scrolls. Never while one is being put back: the page may still be loading and
+    // shorter than the spot, and a clamped value must not replace the real one
     let timer = 0;
     const onScroll = (e?: Event) => {
       // Scrolling inside a board or a tab strip is not the page's
       if (e && e.target !== document && e.target !== document.body) return;
       if (restoring) return;
-      mem[section] = Math.round(pageTop());
+      note(key, Math.round(pageTop()));
       clearTimeout(timer);
       timer = window.setTimeout(persist, 200);
     };
@@ -66,8 +108,8 @@ export function useSectionScroll(section: string, hash: string) {
     if (target !== undefined) {
       restoring = true;
       const t0 = performance.now();
-      // Until the page is tall enough (data still arriving) keep asking; give up after 1.5 s, or the
-      // moment the reader scrolls or taps themselves
+      // Until the page is tall enough (data still arriving) keep asking; give up after 1.5 s, or the moment the reader
+      // scrolls or taps themselves
       const step = () => {
         if (!restoring) return;
         pageScroller().scrollTo({ top: target, left: 0, behavior: "instant" });
@@ -77,7 +119,7 @@ export function useSectionScroll(section: string, hash: string) {
         frame = requestAnimationFrame(step);
       };
       step();
-    }
+    } else if (!hash) onScroll(); // a tab change keeps the scroll: it is this entry's spot until the reader moves
     const own = () => { if (restoring) settle(); };
     // Captured: the body's scroll (iPhone) doesn't bubble up to the window
     document.addEventListener("scroll", onScroll, { passive: true, capture: true });
@@ -93,7 +135,7 @@ export function useSectionScroll(section: string, hash: string) {
       clearTimeout(timer);
       persist();
     };
-    // Only moving to another section matters; a hash change inside one is the page's own business
+    // Each entry is its own; section, hash, and how come with the entry's key
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [section]);
+  }, [key]);
 }

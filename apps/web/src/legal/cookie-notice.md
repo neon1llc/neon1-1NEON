@@ -1,6 +1,6 @@
 # Cookies and browser storage
 
-*Last updated November 17, 2026.* Matrix or Sentinel and light or dark mode are saved separately, shared with neon1.tech. Older theme preferences remain readable during migration. There is no new tracking.
+*Last updated November 20, 2026.* Scroll positions are kept per page in a tab's history, on neon1.tech and in the portal, and the older per-section record is removed. Matrix or Sentinel and light or dark mode are saved separately, shared with neon1.tech. There is no new tracking.
 
 This notice is part of the [privacy and data policy](https://neon1.tech/1NEON/privacy) and lists, in detail, every cookie and item neon1 saves in your browser. Neither neon1.tech nor the 1NEON portal uses analytics, advertising, or tracking of any kind.
 
@@ -11,6 +11,7 @@ The website sets no cookies. Your browser keeps preferences on your device only.
 | Saved item | What it's for | How long it lasts |
 |---|---|---|
 | `neon1.rain` (local storage) | The rain settings you pick: grid or free, the characters, and pause | Until you clear it |
+| `n1.entries` (session storage) | How far down you had scrolled on each page in this tab's history, so Back, Forward, and reload land where you were | Until the tab closes |
 
 ## The 1NEON portal
 
@@ -44,7 +45,8 @@ The portal also saves, on your device only:
 | `neon1.rain` (local storage) | The same rain settings as the website, on the sign-in screen | Until you clear it |
 | `1neon.projects.view`, `1neon.projects.view.sort` (local storage) | Whether you last looked at projects as a list or a timeline, and how you sorted them | Until you clear it |
 | `1neon.tour-offered` (session storage) | That the welcome tour was already offered, so it isn't offered again in this tab | Until the tab closes |
-| `1neon.scroll` (session storage) | How far down you had scrolled in each section of the app, so moving between sections and back lands where you were | Until the tab closes, or you sign out |
+| `1neon.entries` (session storage) | How far down you had scrolled on each page in this tab's history, so Back, Forward, and reload land where you were | Until the tab closes, or you sign out |
+| `1neon.scroll` (session storage) | The older scroll record, kept per section; removed the next time the portal opens | Until then |
 | `1neon-export` (the browser's private file storage) | Admins only: the zip from **Download everything** while it's built, so a large export doesn't fill memory. Never sent anywhere; your browser copies it to your downloads | 30 minutes after it's saved; if you close the tab sooner, the next time you open Settings or start an export |
 
 Your other preferences, such as your theme, are saved with your account.
