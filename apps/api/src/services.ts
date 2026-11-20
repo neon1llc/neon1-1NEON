@@ -262,14 +262,13 @@ export class SesMailer implements Mailer {
   // Region and credentials come from the Lambda environment
   private ses = new SESv2Client({});
   // `configSet` names the SES configuration set; without it SES uses the identity's default
-  // `from` is the portal's From (its address gives the sending domain); `dev` marks every sender and subject "[DEV]"
+  // `from` is the portal's From (its address gives the sending domain); `dev` marks every sender name "[DEV]" (the subject stays as written)
   constructor(private from: string, private configSet?: string, private dev = false) {}
 
   // One recipient per message, so addresses never leak between invitees
   // The AWS SDK takes an abort signal per call, so a timed-out send is cancelled rather than left running
   async send(to: string, subject: string, text: string, html: string, replyTo?: string, signal?: AbortSignal, attachments: Attachment[] = [], as: SenderKind = "portal") {
     const from = fromHeader(as, this.from.slice(this.from.lastIndexOf("@") + 1).replace(/>$/, ""), this.dev);
-    if (this.dev) subject = `[DEV] ${subject}`;
     if (attachments.length) {
       const data = new TextEncoder().encode(rawMessage({ from, to, subject, replyTo, text, html, attachments }));
       await this.ses.send(

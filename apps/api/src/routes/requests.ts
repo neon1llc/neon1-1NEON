@@ -11,7 +11,8 @@ import { isClosed, isProspect, messageProblem, OUTLINE_PARTS, outlineOf, type Ou
 import { z } from "zod";
 import { actorId, body, fail, need, who } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
-import { branded, esc, link } from "../mail.ts";
+import { gist, factMail, type Fact } from "../lib/factmail.ts";
+import { sentAt } from "../mail.ts";
 import { CONTACT_TO } from "./contact.ts";
 
 
@@ -109,17 +110,23 @@ export function requestRoutes(app: App, k: Kit) {
       ...(chosen.length ? [["Projects", chosen.map((p) => `${p.key} ${p.name} (${p.outline.level === "complete" ? "fully outlined" : p.outline.level === "outlined" ? "outlined" : "started"}${p.outline.missing.length ? `; not yet: ${p.outline.missing.map((m) => OUTLINE_PARTS.find((x) => x.id === m)!.label.toLowerCase()).join(", ")}` : ""})`).join("\n")] as [string, string]] : []),
       ...(input.note ? [["Note", input.note] as [string, string]] : []),
     ];
-    const text = `${rows.map(([a, b]) => `${a}: ${b}`).join("\n\n")}\n\nOpen in 1NEON: ${portal}`;
-    const html = branded({
-      label: `request for ${what}`,
-      preheader: `${t.name} asked for ${what}`,
-      heading: `${t.name} asked for ${what}`,
-      body: rows.map(([a, b]) => `<p style="margin:0 0 14px"><b>${esc(a)}</b><br>${esc(b).replace(/\n/g, "<br>")}</p>`).join("") + `<p style="margin:0">${link("Open in 1NEON", portal)}</p>`,
-      note: "Reply to this email to answer them directly.",
-      at,
+    // The title says what was asked for, so that row is dropped; their note reads best in its own block; a link is a link
+    const title = input.kind === "assessment" ? "Assessment requested" : "Call requested";
+    const { text, html } = factMail({
+      kicker: "free account alert",
+      title,
+      sub: t.name,
+      preheader: `${user.name || user.email} asked for ${what}${input.note ? `: ${gist(input.note, 80)}` : ""}`,
+      facts: [
+        ...rows.filter(([k]) => k !== "Asked for" && k !== "Note").map(([k, v]): Fact => (k === "From" ? { k: "Who", v: `${who2} (reply to this email)` } : k === "Link" ? { k, v, href: /^https?:\/\//i.test(v) ? v : undefined } : { k, v })),
+        { k: "Sent", v: sentAt(at).replace(/^Sent /, "") },
+      ],
+      blocks: rows.filter(([k]) => k === "Note").map(([, v]): [string, string] => ["Their note", v]),
+      action: { label: "Open the account", url: portal },
+      footer: ["Reply to this email to answer them directly."],
     });
-    // From 1NEON, since it is the portal telling neon1 about a client's request
-    await d.mailer.send(CONTACT_TO, `${t.name} asked for ${what}`, text, html, user.email);
+    // From "1NEON Reach": the portal telling neon1 about a free account's request
+    await d.mailer.send(CONTACT_TO, `${title} · ${t.name}`, text, html, user.email, undefined, undefined, "reach");
     const iso = at.toISOString();
     for (const p of chosen) sent[p.key] = iso;
     const times = [...recent, iso];

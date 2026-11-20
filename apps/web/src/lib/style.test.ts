@@ -1,7 +1,7 @@
 // apps/web/src/lib/style.test.ts - Browser and account preference compatibility across both theme families.
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { normalizeLook, readLook, resolveTheme, saveLook, setStyleChoice } from "./style.ts";
+import { LOOK_EVENT, normalizeLook, readLook, resolveTheme, saveLook, setStyleChoice } from "./style.ts";
 
 // Fresh browser storage for each scenario; the device is deliberately dark
 const values = new Map<string, string>();
@@ -49,4 +49,15 @@ it("retains a choice when storage is readable but writes fail", () => {
   // Clear the failed-write fallback through a successful subsequent choice.
   vi.stubGlobal("localStorage", { getItem: (k: string) => values.get(k) ?? null, setItem: (k: string, v: string) => values.set(k, v) });
   saveLook("awake");
+});
+
+// Two switches on one page (the menu's mode and family) both redraw from a pick made with either one
+it("announces a pick to the page it was made on", () => {
+  const events: string[] = [];
+  vi.stubGlobal("dispatchEvent", (e: Event) => { events.push(e.type); return true; });
+  saveLook("plugged");
+  saveLook("providence");
+  expect(events).toEqual([LOOK_EVENT, LOOK_EVENT]);
+  // The other axis is never put back: the newest pick is what's read
+  expect(readLook()).toBe("providence");
 });

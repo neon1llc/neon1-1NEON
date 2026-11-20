@@ -28,7 +28,7 @@ describe("contact form", () => {
     expect(mailer.sent[0]).toMatchObject({ to: CONTACT_TO, replyTo: "dana@example.com" });
     expect(mailer.sent[0]!.text).toContain("Orders land in the sheet");
     // From "neon1" the website, with one short tag and no sender name repeated in the subject
-    expect(mailer.sent[0]).toMatchObject({ as: "requests", subject: "[request] Business workflows and technology · Dana Kim" });
+    expect(mailer.sent[0]).toMatchObject({ as: "requests", subject: "Dana Kim · Business workflows and technology" });
   });
   it("shows the sender's local time when their browser gave a real zone, and ignores junk", async () => {
     await send({ ...good, timeZone: "America/Chicago" });

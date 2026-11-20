@@ -9,7 +9,7 @@
 // "Accepted" means the provider took the message; it is not proof that it was delivered.
 
 
-import { actorHears, groupOf, isOwnOrg, isQuickFix, neon1Only, noticeSummary, wants, type AuditEvent, type Member, type User } from "@1neon/domain";
+import { actorHears, groupOf, isOwnOrg, isProspect, isQuickFix, neon1Only, noticeSummary, wants, type AuditEvent, type Member, type User } from "@1neon/domain";
 import type { Config } from "./config.ts";
 import { inviteEmail, noticeEmail } from "./emails.ts";
 import type { Mailer, Texter } from "./services.ts";
@@ -279,8 +279,17 @@ async function eventTargets(d: OutboxDeps, e: AuditEvent, clock: Clock): Promise
     // neon1's working drafts reach neon1 only
     if (neon1Only(e.action) && !cfg.operatorEmails.includes(u.email)) continue;
     if (wants(u.notify, e.action, "email")) {
-      const mail = noticeEmail({ orgName: tenant?.name ?? "1NEON", by: m.userId === e.actorId ? "You" : by, summary, url: invoiceUrl ?? `${home}/workspace`, button: invoiceUrl ? "See the invoice" : undefined, zone: u.timeZone, important: groupOf(e.action).level === "critical" });
-      targets.push({ key: u.id, channel: "email", send: (signal) => d.mailer.send(u.email, mail.subject, mail.text, mail.html, undefined, signal) });
+      const operator = cfg.operatorEmails.includes(u.email.toLowerCase());
+      // neon1 already got the request itself, with the person as Reply-To (routes/requests.ts)
+      if (operator && e.action.startsWith("request.")) continue;
+      const mail = noticeEmail({
+        orgName: tenant?.name ?? "1NEON", trial: Boolean(tenant && isProspect(tenant)), ref: tenant?.clientId,
+        by: m.userId === e.actorId ? "You" : by, byEmail: e.actorId === "stripe" ? undefined : actor?.email,
+        action: e.action, summary, projectKey: key, projectUrl: key ? `${home}/projects/${key}` : undefined,
+        url: invoiceUrl ?? `${home}/workspace`, button: invoiceUrl ? "See the invoice" : undefined,
+        zone: u.timeZone, important: groupOf(e.action).level === "critical", operator, quick,
+      });
+      targets.push({ key: u.id, channel: "email", send: (signal) => d.mailer.send(u.email, mail.subject, mail.text, mail.html, mail.replyTo, signal, undefined, mail.as) });
     }
     // Texts only to a verified number the person still has, within the budgets, with no project detail
     if (d.texter && smsReady(u) && wants(u.notify, e.action, "sms")) {

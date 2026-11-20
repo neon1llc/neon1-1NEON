@@ -188,7 +188,7 @@ export const JOURNEY: Show = {
         await s.say("Now Pradeep's side: the request reaches neon1's inbox");
         const mail = await inbox(s, CONTACT_TO);
         try {
-          await read(s, mail, "asked for an assessment");
+          await read(s, mail, "Assessment requested");
           await s.think("A new free account, with a written-down project. Let me look.");
           await s.hover(() => mail.link("Open in 1NEON"), 900);
           await s.click(() => mail.link("Open in 1NEON"), 500);
