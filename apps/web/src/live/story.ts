@@ -394,6 +394,9 @@ export const STORY: Section[] = [
       await s.click({ sel: "button", text: /^Next$/ }, 900);
       await s.think("Looks right. Create it.");
       await s.click({ sel: "button", text: "Create project" }, 1600);
+      await s.say("Its Overview says how ready it is for Execute, and what would help next");
+      await s.think("Five of the six parts are written already. It says who and what it touches is still open, and where to write it.");
+      await s.hover(".readiness", 1500);
     },
   },
   {
@@ -493,6 +496,10 @@ export const STORY: Section[] = [
       await s.say("Next step says what's waiting on her");
       await s.think("The next step is mine: choose an option.");
       await s.hover(".next-step, .card", 900);
+      await s.click({ sel: "nav.tabs a", text: "Overview" }, 1000);
+      await s.say("Overview shows how ready the project is for Execute: the outline, the assessment, and the options are done");
+      await s.think("Eighty percent. The only step left is mine: approve one option.");
+      await s.hover(".readiness", 1400);
     },
   },
   {
@@ -559,6 +566,7 @@ export const STORY: Section[] = [
       await s.top();
       await s.think("Good, the decision is written down, condition and all.");
       await s.hover(".decision", 1200);
+      await s.say("Once she approves, Ready for Execute is done and goes away: her outline becomes the plan, its measure is tracked in Observe, and its people and tools shape the handover");
     },
   },
   {
