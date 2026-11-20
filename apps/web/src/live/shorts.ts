@@ -110,7 +110,6 @@ const invite: Show = {
         await s.say(`${owner} gets an email: Pradeep invited ${S.org.name} to 1NEON`);
         const mail = await openMail(s);
         try {
-          await s.think("An email from neon1. That must be the invite Pradeep mentioned.");
           await read(s, mail, /invitation/i);
           await s.think(`Pradeep invited me to ${S.org.name}. No password to make. Good.`);
           await s.hover(() => mail.link("Join"), 900);
@@ -128,9 +127,7 @@ const invite: Show = {
       title: "Sign in with a code",
       run: async (s) => {
         await s.say("Her email is filled in from the link, and 1NEON emails her a code");
-        await s.think("My email's already there. Continue.");
         await s.click({ sel: "form button", text: "Continue" }, 1000);
-        await s.think("It sent me a code. Let me check my email.");
         const mail = await openMail(s);
         let code = "";
         try {
@@ -142,7 +139,6 @@ const invite: Show = {
           await mail.close();
         }
         await s.say("She types the code. No password, ever");
-        await s.think("Back to 1NEON. I'll type it in.");
         await s.type("#code", code, 400);
         await s.click({ sel: "form button", text: "Sign in" }, 1600);
       },
@@ -155,9 +151,7 @@ const invite: Show = {
         try { sessionStorage.removeItem("1neon.tour-offered"); } catch { /* storage blocked */ }
         await s.say("The first time in, 1NEON asks her name and offers a one-minute tour");
         await s.waitFor({ sel: "dialog[open] h2", text: "New here?" }, 8000);
-        await s.think("It wants my name, so the team knows who I am.");
         await s.type("#welcome-name", S.owner.name, 400);
-        await s.think("A one-minute tour? Sure.");
         await s.click({ sel: "dialog[open] button", text: "Start the tour" }, 1200);
         // Step through the whole tour, with a thought at the stops that matter most to her
         const lines: Record<string, string> = {
@@ -199,14 +193,10 @@ const passkey: Show = {
       run: async (s) => {
         pretendPasskeys();
         await s.say(`${owner} adds a passkey from her profile`);
-        await s.think("Passkeys are on my profile, in the menu.");
         await profile(s, "#security");
-        await s.think("A passkey uses my fingerprint. Add.");
         await s.click({ sel: "#security li button", text: "Add" }, 900);
         await s.say("Her computer asks for her fingerprint, and the passkey stays on the device");
-        await s.think("My laptop wants my fingerprint. Continue.");
         await s.click(".live-sheet .sh-yes", 1400);
-        await s.think("Added. It's on now.");
         await s.hover({ sel: "#security li", text: "Passkey" }, 900);
         await s.say("A security email tells her, in case it wasn't her");
         const mail = await openMail(s);
@@ -230,7 +220,6 @@ const passkey: Show = {
         await s.waitFor(CONFIRM);
         await s.think("It wants me to confirm it's me. That's what the passkey is for.");
         await s.click({ sel: "dialog[open] button", text: "Use my passkey" }, 900);
-        await s.think("Fingerprint again. Continue.");
         await s.click(".live-sheet .sh-yes", 1200);
         await s.think("Confirmed. Now send it again.");
         await sendAgain(s);
@@ -242,12 +231,10 @@ const passkey: Show = {
       run: async (s) => {
         pretendPasskeys();
         await s.say("Next time she signs in, the passkey replaces the emailed code");
-        await s.think("Let me see how signing in works now.");
         await profile(s);
         await s.click({ sel: "button", text: "Sign out" }, 1400);
         await s.type("#email", OWNER, 300);
         await s.click({ sel: "form button", text: "Continue" }, 900);
-        await s.think("It offers my passkey first.");
         await s.click({ sel: "button", text: "Use my passkey" }, 900);
         await s.click(".live-sheet .sh-yes", 1600);
         await s.think("In. No code to wait for. Nice.");
@@ -273,7 +260,6 @@ const authenticator: Show = {
       title: "Scan the code",
       run: async (s) => {
         await s.say(`${owner} sets up an authenticator app from her profile`);
-        await s.think("Two-step verification is on my profile.");
         await profile(s, "#security");
         await s.click({ sel: "#security li button", text: "Set up" }, 1000);
         await s.waitFor({ sel: "dialog[open] img" }, 6000);
@@ -281,13 +267,11 @@ const authenticator: Show = {
         const ph = new Phone();
         try {
           ph.scanner();
-          await s.think("A QR code. Let me scan it with my phone.");
           await s.click(".live-phone .ph-btn", 700);
           ph.camera();
           await s.hover({ sel: "dialog[open] img" }, 1200);
           const key = (document.querySelector("dialog[open] code.key")?.textContent ?? "").replace(/\s/g, "");
           ph.authenticator(key, OWNER);
-          await s.think("Scanned. neon1 is in the app now.");
           await s.hover(".live-phone .ph-code", 1200);
           await s.say("She types the code the app shows");
           const code = ph.code();
@@ -309,14 +293,12 @@ const authenticator: Show = {
         // Setting the app up confirmed her for the day; this is the next day, when it has run out
         await (await engine()).nextDay();
         await s.say("The next day, inviting someone is an admin action, so 1NEON asks her to confirm it's her");
-        await s.think(`Now let me invite ${mate}.`);
         await inviteColleague(s);
         await s.waitFor(CONFIRM);
         const ph = new Phone();
         try {
           const key = await totpKey();
           ph.authenticator(key, OWNER);
-          await s.think("It wants a code from my authenticator app.");
           await s.hover(".live-phone .ph-code", 1000);
           const code = ph.code();
           await putDown(ph);
@@ -325,7 +307,6 @@ const authenticator: Show = {
         } finally {
           await ph.close();
         }
-        await s.think("Confirmed. Now send it again.");
         await sendAgain(s);
       },
     },
@@ -355,7 +336,6 @@ const texts: Show = {
       title: "Add your number",
       run: async (s) => {
         await s.say(`${owner} adds her mobile number and agrees to texts`);
-        await s.think("My number goes on my profile.");
         await profile(s);
         await s.type("#ph", MOBILE, 300);
         // A new number is saved first; agreeing to texts is its own save, so consent is always for the number on file
@@ -366,12 +346,10 @@ const texts: Show = {
         await s.click("#notifications .sms-consent input", 500);
         await s.click({ sel: "button", text: /^Save$/ }, 1200);
         await s.say("A texted code proves the number is hers");
-        await s.think("It wants to make sure the number's mine.");
         await s.click({ sel: "button", text: "Text me a code" }, 900);
         const ph = new Phone();
         try {
           ph.messages(TEXTS_FROM, [await lastText()]);
-          await s.think("There's the text.");
           await s.hover(".live-phone .ph-msg", 1200);
           const code = /(\d{6})/.exec(await lastText())?.[1] ?? "";
           await putDown(ph);
@@ -380,7 +358,6 @@ const texts: Show = {
         } finally {
           await ph.close();
         }
-        await s.think("Confirmed. Texts are on for this number.");
         await s.hover("#notifications [role=status]", 900);
       },
     },
@@ -406,10 +383,8 @@ const texts: Show = {
         await profile(s, "#security");
         await s.think("I can use texted codes for the extra check, too. Turn on.");
         await s.click({ sel: "#security li button", text: "Turn on" }, 1200);
-        await s.think(`Now let me invite ${mate}.`);
         await inviteColleague(s);
         await s.waitFor(CONFIRM);
-        await s.think("It wants me to confirm. I'll get a text.");
         await s.click({ sel: "dialog[open] button", text: "Text me a code" }, 900);
         const ph = new Phone();
         try {
@@ -423,7 +398,6 @@ const texts: Show = {
         } finally {
           await ph.close();
         }
-        await s.think("Confirmed. Now send it again.");
         await sendAgain(s);
       },
     },
@@ -466,7 +440,6 @@ const calendar: Show = {
         await s.click(dayButton(off), 700);
         await s.say("A day opens with a short form. Leave can name who's away");
         await s.choose("#ce-kind", "leave", 400);
-        await s.think("Leave, for me.");
         await s.choose("#ce-who", [...document.querySelectorAll<HTMLOptionElement>("#ce-who option")].find((o) => o.text.startsWith(owner))?.value ?? "", 400);
         await s.type("#ce-title", `${owner} away`, 300);
         await s.choose("#ce-end", back, 500);

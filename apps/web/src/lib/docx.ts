@@ -93,11 +93,11 @@ export function proposalBlocks(p: Pick<ProposalFields, "number" | "rev" | "issue
 
   bar("Costs");
   table([["Option", "neon1's time", "Timeline", "Price", "Paid directly by you"], ...s.options.map((o) => [`${o.code} ${o.title}`, o.fields.hours || "—", o.fields.timeline || "—", o.fields.cost || "—", o.fields.outsideCosts || "None"])]);
-  para("Prices are for the work described. A fixed price is the whole price for that work. An estimate is billed for the hours worked, at the rate shown, and never above its high end unless you approve a change first. Every hour is listed in 1NEON as it's logged. Accounts and subscriptions are in your name and billed to you directly. Items to buy are bought by you unless you agree, with your initials, that neon1 buys them. Those are paid back at cost, with the receipt.", { size: 18 });
+  para("Prices are for the work described. A fixed price is the whole price for that work. An estimate is billed for the hours worked, at the rate shown, and never above its high end unless you approve a change first. Accounts and subscriptions are in your name and billed to you directly. Items to buy are bought by you unless you agree, with your initials, that neon1 buys them. Those are paid back at cost, with the receipt.", { size: 18 });
 
   bar("Comments and agreement");
   bullet(`Prices were checked on ${longDate(p.issuedAt)}. After ${longDate(p.checkBy)}, ask neon1 to refresh them before choosing. Refreshing issues the next revision.`);
-  bullet("Choosing an option accepts its scope and price. Work begins under our service agreement, signed once before any paid work, which covers payment, ownership, confidentiality, and how either of us can end the work.");
+  bullet("Choosing an option accepts its scope and price. Work begins under our service agreement, signed once before any paid work.");
   bullet("Neither of us adds work or cost without a written change, which becomes the next revision.");
   bullet("To suggest changes, edit this document (in Word, Google Docs, or Pages) and upload it to the project's Files. neon1 sees what you changed and answers with the next revision.");
   if (opts.accepted) {

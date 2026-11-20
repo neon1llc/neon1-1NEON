@@ -77,7 +77,6 @@ export const JOURNEY: Show = {
         await s.say("Noor runs a fictional building-supply yard. She wants help with an insurance form, not a call yet");
         await s.think("I'd rather write it down first. Create an account.");
         await s.click({ sel: "button", text: "Create an account" }, 900);
-        await s.say("Before she types anything, the form says what the account holds");
         await s.hover(".signin-limits", 1400);
         await s.think("Three projects, kept 30 days after my last change. Fair.");
       },
@@ -91,7 +90,6 @@ export const JOURNEY: Show = {
         await s.type("#su-name", "Noor Haddad", 200);
         await s.choose("#su-kind", "small", 300);
         await s.type("#su-org", SHOP, 300);
-        await s.think("The rest is optional, but where we are helps. I'll add it.");
         await s.type("#su-city", "Hudson", 200);
         await s.choose("#su-state", "NY", 300);
         await s.choose("#su-found", "maps", 300);
@@ -110,7 +108,6 @@ export const JOURNEY: Show = {
         try {
           await read(s, mail, "sign-in code");
           code = mail.code()?.value ?? "";
-          await s.think(`${code}. Back to 1NEON.`);
           await s.hover(() => mail.code()?.el, 700);
         } finally {
           await mail.close();
@@ -126,7 +123,6 @@ export const JOURNEY: Show = {
         // The first time in, 1NEON offers a one-minute tour; she skips it for now
         const offer = await s.waitFor({ sel: "dialog[open] h2", text: "New here?" }, 8000).catch(() => undefined);
         if (offer) {
-          await s.think("A tour? Maybe later.");
           await s.click({ sel: "dialog[open] button", text: "Skip" }, 900);
         }
         await s.say("Home says what the account is for, with the sample project, walkthrough, and FAQs beside it");
@@ -146,7 +142,6 @@ export const JOURNEY: Show = {
         await s.say("She writes down one project: what happens now, what she wants, and a real example");
         await s.go(`${await shop()}/projects`, "Projects");
         await s.click({ sel: "a, button", text: "New project" }, 700);
-        await s.think("Security readiness. That's the closest.");
         await s.click({ sel: "label.option", text: "Security readiness" }, 500);
         await s.click({ sel: "button", text: /^Next$/ }, 700);
         await s.type("#n", PROJECT.name);
@@ -155,7 +150,6 @@ export const JOURNEY: Show = {
         await s.think("The backup question is the best example.");
         await s.type("#x", PROJECT.example);
         await s.click({ sel: "button", text: /^Next$/ }, 700);
-        await s.think("How I'd know it worked: fewer questions I can't answer.");
         await s.type("#mt0", "Form questions we can't answer");
         await s.type("#mu0", "questions");
         await s.type("#mb0", "16");
@@ -177,7 +171,6 @@ export const JOURNEY: Show = {
         // The last look lists what could still be added, and she can send it anyway
         await s.hover("dialog[open] .ns-quote", 900);
         await s.click({ sel: "dialog[open] button", text: /^Submit request( anyway)?$/ }, 1400);
-        await s.think("Saved and locked. She can edit it, and what's there is what reaches him.");
         await s.hover(".next-status", 900);
       },
     },
@@ -189,7 +182,6 @@ export const JOURNEY: Show = {
         const mail = await inbox(s, CONTACT_TO);
         try {
           await read(s, mail, "Assessment requested");
-          await s.think("A new account, with a written-down project. Let me look.");
           await s.hover(() => mail.link("Open the account"), 900);
           await s.click(() => mail.link("Open the account"), 500);
         } finally {
@@ -200,7 +192,6 @@ export const JOURNEY: Show = {
         await s.say("He opens her project, as neon1 can in every account");
         await s.go(`${base}/projects`, "Projects");
         await s.click({ sel: ".ptr a, .tl-row a", text: PROJECT.name }, 1000);
-        await s.think("Clear enough to assess. One question first.");
         await s.click({ sel: "nav.tabs a", text: "Needs" }, 900);
         await s.click({ sel: ".item-open", text: "One real example" }, 900);
         await s.say("He asks his question in a comment, which she sees in 1NEON and by email");
@@ -216,9 +207,7 @@ export const JOURNEY: Show = {
         await become(s, NOOR, `${await shop()}/workspace`);
         await s.say("Back on Noor's screen, the bell has something new");
         await s.click(".bell-btn", 1400);
-        await s.think("Pradeep has a question.");
         await s.click({ sel: ".bell-list a.note", text: /comment/i }, 1000);
-        await s.think("It took me to the item he asked about.");
         await s.click({ sel: ".item-open", text: "One real example" }, 900);
         await s.type('textarea[aria-label="Write a comment"]', "Five people use it, and yes, the register is on the same network. The insurer wants the form back by the end of next month.");
         await s.click({ sel: ".comment-box button", text: "Send" }, 1000);
@@ -251,7 +240,6 @@ export const JOURNEY: Show = {
         await s.think("No more expiry date. I'm a client now.");
         await s.say("Her project is right where she left it, and the work goes on from there");
         await s.go(`${await shop()}/projects`, "Projects");
-        await s.think("Same project, same notes. Now the real work starts.");
         await s.hover({ sel: ".ptr, .tl-row", text: PROJECT.name }, 1400);
       },
     },

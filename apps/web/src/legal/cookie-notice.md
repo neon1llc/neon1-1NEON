@@ -1,6 +1,6 @@
 # Cookies and browser storage
 
-*Last updated November 20, 2026.* Scroll positions are kept per page in a tab's history, on neon1.tech and in the portal, and the older per-section record is removed. Matrix or Sentinel and light or dark mode are saved separately, shared with neon1.tech. There is no new tracking.
+*Last updated November 20, 2026.* Scroll positions are now kept per page in a tab's history, and the older per-section record is removed. Matrix or Sentinel and light or dark mode are saved separately and shared with neon1.tech. There is no new tracking.
 
 This notice is part of the [privacy and data policy](https://neon1.tech/1NEON/privacy) and lists, in detail, every cookie and item neon1 saves in your browser. Neither neon1.tech nor the 1NEON portal uses analytics, advertising, or tracking of any kind.
 

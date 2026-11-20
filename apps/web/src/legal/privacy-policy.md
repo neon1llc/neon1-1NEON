@@ -1,6 +1,6 @@
 # Privacy and data policy
 
-*Last updated November 16, 2026.* This edition adds free accounts: what I collect when you make your own 1NEON account (including where your business is based, a link to it, and how you found neon1, all optional), the bot check on the sign-up form (Cloudflare Turnstile), the check-in emails, and that a free account is deleted 30 days after its last change, unless it's suspended, when it waits for my review. Nothing changes for clients.
+*Last updated November 16, 2026.* This edition adds free accounts: what I collect at sign-up (the business location, link, and how you found neon1 are optional), the Cloudflare Turnstile bot check, the check-in emails, and deletion after a quiet period, which a suspension pauses for my review. Nothing changes for clients.
 
 neon1 LLC ("neon1", "I", "me") runs the website neon1.tech, Neo (the assistant on the website), and the 1NEON client portal at neon1.tech/1NEON, and does technology work for clients. This policy covers all of them. The [cookie and browser storage notice](https://neon1.tech/1NEON/cookies) is part of it and lists every cookie and saved item in detail. How the systems themselves are built is described in [How neon1 is built](https://neon1.tech/knowledge/company/architecture/).
 
@@ -8,7 +8,7 @@ neon1 LLC ("neon1", "I", "me") runs the website neon1.tech, Neo (the assistant o
 
 - The website has no analytics, ads, or trackers, and sets no cookies.
 - I collect only what's needed to answer you, run your projects, and get paid, and I never sell, rent, or advertise with it.
-- Clients' projects and files are never deleted on a schedule. They're deleted when your organization asks. A free account you make yourself is deleted 30 days after its last change, unless we're working together.
+- Clients' projects and files are deleted when your organization asks, never on a schedule. The table under "How long I keep it" lists everything else.
 - Tests and development never use your information. They run on made-up data.
 - Payment card and bank details go to Stripe, not to me.
 - You can download your organization's data at any time, and ask me to correct or delete it.
@@ -21,9 +21,9 @@ There are no accounts, analytics, or tracking on neon1.tech. Like any website, t
 
 ### The contact form and email
 
-When you send the contact form, your name, email address, organization, message, and, if you pick one, how you found neon1 (in your own words if you choose "Somewhere else") are emailed to my inbox (hello@neon1.tech) through Amazon's email service, with your address set as the one I reply to. The form doesn't save your message anywhere else. To stop floods of messages, it counts how many arrive from each sender using a one-way code made from the IP address, not the address itself. The counter holds only that code and a count, and is deleted a day after its first count. Before sending, the form checks your email address the same way sign-up does (below).
+When you send the contact form, your name, email address, organization, message, and, if you pick one, how you found neon1 (in your own words if you choose "Somewhere else") are emailed to my inbox (hello@neon1.tech) through Amazon's email service, with your address set as the one I reply to. The form doesn't save your message anywhere else. To stop floods of messages, it counts how many arrive from each sender using a one-way code made from the IP address, not the address itself. The counter holds only that code and a count. Before sending, the form checks your email address the same way sign-up does (below).
 
-Emails you send me, through the form or directly, are kept in my business email (Google Workspace) as correspondence, for as long as they're useful for our work together or the law requires. You can ask me to delete them.
+Emails you send me, through the form or directly, are kept in my business email (Google Workspace) as correspondence.
 
 ### Booking a call
 
@@ -33,12 +33,12 @@ If you book a call through Calendly, Calendly collects your name, email address,
 
 Neo answers from neon1's public pages, using a model (Qwen3 Next 80B) that Amazon runs in its Bedrock service in AWS's US East (N. Virginia) region.
 
-- Neo's service doesn't store the text of your questions or its answers. Its logs hold only details such as timing, length, and errors, and are deleted after 14 days.
+- Neo's service doesn't store the text of your questions or its answers. Its logs hold only details such as timing, length, and errors.
 - Bedrock's own logging of questions and answers is turned off in my AWS account.
-- To notice the same question sent over and over, Neo keeps a one-way fingerprint of it for ten minutes. Its question limits count visitors by a one-way code, not by IP address.
+- To notice the same question sent over and over, Neo keeps a one-way fingerprint of it. Its question limits count visitors by a one-way code, not by IP address.
 - Amazon says Bedrock doesn't use prompts or answers to train models, and that depending on the model and account settings it may keep them for abuse detection. [Amazon's Bedrock documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/data-retention.html) has the details.
 
-Please don't type anything sensitive into Neo.
+Don't type anything sensitive into Neo.
 
 ### The 1NEON portal
 
@@ -57,8 +57,6 @@ The portal is available to people invited by me or by an administrator of their 
 
 **Neo inside the portal.** A signed-in version of Neo can help inside 1NEON, but it's turned off today. If I turn it on, I'll update this policy first. When it's on and you ask it a question, it sends your question and what it reads in 1NEON as you, such as the projects, items, options, file names, and comments you can already see, to an Anthropic model that Amazon runs in Bedrock in the United States, so it can answer. It sends nothing about organizations you can't see, nothing when you aren't asking, and it can't change anything until you approve it.
 
-Please don't put passwords, keys, or other secrets in the portal.
-
 ### Free accounts
 
 You can make your own 1NEON account from neon1.tech to describe your projects' needs before we work together. When you sign up, I collect:
@@ -69,7 +67,7 @@ You can make your own 1NEON account from neon1.tech to describe your projects' n
 - **A one-way fingerprint of your IP address,** used to limit how many sign-ups come from one place, and kept with your account's sign-up record. The address itself isn't stored.
 - **What you add:** the projects, needs, comments, and files you put in the account, as in any portal account, and any assessment or call you ask for from it, which reaches me by email.
 
-Only you and I see a free account. I use it to understand your needs, advise you, suggest options, and offer to talk. I don't add you to a mailing list. The portal emails you your sign-in codes, and, if nothing in the account changes, a short check-in after 7 and 14 days and a final notice after 21. If you don't confirm your email within a day of signing up, the unfinished sign-up is removed.
+Only you and I see a free account. I use it to understand your needs, advise you, suggest options, and offer to talk. I don't add you to a mailing list. The portal emails you your sign-in codes, and, if nothing in the account changes, the check-ins listed under "How long I keep it".
 
 
 ### Work on your own systems
@@ -77,7 +75,7 @@ Only you and I see a free account. I use it to understand your needs, advise you
 Much of my work happens in your accounts and systems rather than in 1NEON. There:
 
 - I use named accounts with the least access the job needs, and I remove my access at handover and check that it's gone.
-- I look at your information only as far as the work needs, and I don't copy it to my own systems unless the work requires it and you agree. Anything I do copy is deleted when the project ends, unless you ask me to keep it.
+- I look at your information only as far as the work needs, and I don't copy it to my own systems unless the work requires it and you agree. What I copy follows the retention table below.
 - Your confidential information doesn't go into an AI service unless you've approved that service in writing, as [How I use AI](https://neon1.tech/knowledge/policies/ai-use/) explains.
 - Real client information never appears in a demo, a public post, or a code issue.
 
@@ -134,7 +132,7 @@ Clients' projects and files are never deleted on a schedule. The table lists eve
 | Portal server logs (request time, route, IP address, status, and errors, never what you sent) | 90 days |
 | Neo's logs (timing, length, and errors, never the text) | 14 days |
 | Contact form counters | A day after their first count |
-| Free accounts (everything in them, including files, trashed projects too) | Deleted 30 days after the last change anyone in the account made, unless we're working together or I've told you I'm keeping it. Home shows the date, and **Keep it** adds 30 days to it, once. A suspended account isn't deleted on this schedule; it waits until I've reviewed it. You can ask me to delete one sooner |
+| Free accounts (everything in them, including files, trashed projects too) | Deleted 30 days after the last change anyone in the account made, unless we're working together or I've told you I'm keeping it. I email a check-in after 7 and 14 quiet days and a final notice after 21. Home shows the date, and **Keep it** adds 30 days to it, once. A suspended account isn't deleted on this schedule. It waits until I've reviewed it. You can ask me to delete one sooner |
 | An unconfirmed sign-up (what you typed, and the sign-in account it started) | One day |
 | Sign-up counters (one-way fingerprints of addresses and emails) | Two days |
 | Neo's question fingerprints | Ten minutes |
@@ -147,7 +145,7 @@ An administrator of your organization can download all of its data at any time f
 
 ## Deleting your data
 
-Your organization can ask me to delete its data, or you can ask me to delete your account, at any time. I'll delete it from the portal, and backups and earlier file copies age out within 35 and 90 days. Signatures, issued invoices, and payments stay write-protected until their seven years end, and so does anything else the law requires me to keep. I'll tell you in writing what was deleted, what remains, and when each remaining record expires.
+Your organization can ask me to delete its data, or you can ask me to delete your account, at any time. I'll delete it from the portal, and backups and earlier file copies age out on the schedule above. Signatures, issued invoices, and payments stay write-protected for their retention period, as does anything else the law requires me to keep. I'll tell you in writing what was deleted, what remains, and when each remaining record expires.
 
 ## If something goes wrong
 
@@ -165,7 +163,7 @@ Your organization's administrator controls who can access its workspace. If a re
 
 ## Cookies and browser storage
 
-The website sets no cookies. The portal uses only the cookies it needs to sign you in and keep you signed in, so it shows no consent banner. A few settings are saved in your browser, on your device only. The [cookie and browser storage notice](https://neon1.tech/1NEON/cookies) lists each one and how long it lasts. If I ever add optional cookies or storage, such as analytics, I'll ask for your consent first.
+The website sets no cookies. The portal uses only the cookies it needs to sign you in and keep you signed in, so it shows no consent banner. A few settings are saved in your browser, on your device only. The [cookie and browser storage notice](https://neon1.tech/1NEON/cookies) lists each one and how long it lasts.
 
 ## Children
 

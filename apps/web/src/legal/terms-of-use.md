@@ -1,16 +1,14 @@
 # Terms of use
 
-*Last updated November 16, 2026.* This update lets you make your own free 1NEON account, and adds the limits and conduct rules that come with it (section 3). A suspended free account waits for my review instead of being deleted on schedule. It adds no new obligations for invited clients.
+*Last updated November 16, 2026.* This update adds free 1NEON accounts, with their limits and conduct rules (section 3). A suspended free account waits for my review instead of being deleted on schedule. Invited clients take on no new obligations.
 
 These terms cover your use of neon1.tech and the 1NEON client portal, which are run by neon1 LLC ("neon1", "I", "me"). Paid work is governed by a separate agreement or signed proposal. If that agreement conflicts with these terms, the agreement wins.
 
 ## The short version
 
-- A signed agreement or proposal governs paid work, and it wins if it differs from these terms.
-- You can join 1NEON by invitation, or make your own free, limited account. Keep your sign-in methods to yourself, and keep passwords and other secrets out of the portal.
-- A free account is limited and not an agreement to any work. It closes after 30 days without changes unless we're working together.
+- You can join 1NEON by invitation, or make your own free, limited account. A free account isn't an agreement to any work, and it's deleted after a quiet period unless we're working together.
 - You own what you put in the portal. I use it only to run the portal and the work we agreed on.
-- Approvals in the portal are recorded with a name and the time, and both of us may rely on them.
+- Approvals are recorded with a name and the time, and both of us may rely on them.
 
 ## 1. The website
 
@@ -20,24 +18,24 @@ neon1.tech describes neon1's services. The information is general and isn't prof
 
 1NEON is where neon1 and its clients plan, run, measure, and hand over projects. You can join by invitation, or make your own free account (section 3).
 
-- **Your account.** Sign in with a code sent to your email, or with a passkey. Admin actions (inviting people, changing access or settings, and deleting a project or someone else's comment or file) also need a recent confirmation with a passkey, an authenticator app, or a text-message code. Keep your sign-in methods secure and don't share your account. Tell me right away at the address below if you think someone else has used it.
+- **Your account.** Sign in with a code sent to your email, or with a passkey. Admin actions (inviting people, changing access or settings, and deleting a project or someone else's comment or file) also need a recent confirmation with a passkey, an authenticator app, or a text-message code. Don't share your account. Tell me right away at the address below if you think someone else has used it.
 - **Your organization.** Your organization's administrators decide who can access its workspace and at what level, and they're responsible for the people they invite.
 - **Your content.** You and your organization own what you put in the portal. You give neon1 permission to store, process, and display it only to provide the portal and the work we've agreed on. You confirm that you have the right to share it.
 - **Acceptable use.** Don't put passwords, keys, or other secrets in the portal. Don't upload malware, unlawful material, or regulated data (such as health or payment card data) unless we have a written agreement that covers it. Don't upload material you don't have the right to share, or content that is abusive, deceptive, or meant to harass anyone. Don't try to access another organization's data, test the portal's security without written permission, get around the portal's limits, use automated tools to create accounts or send requests, or disrupt the service.
-- **Text messages.** Texts are optional and only sent after you agree to them in your profile. 1NEON texts you about the changes you choose; frequency varies. Message and data rates may apply. Reply STOP to opt out or HELP for help. Carriers aren't liable for delayed or undelivered messages.
+- **Text messages.** Texts are optional and only sent after you agree to them in your profile. 1NEON texts you about the changes you choose, at a frequency that varies. Message and data rates may apply. Reply STOP to opt out or HELP for help. Carriers aren't liable for delayed or undelivered messages.
 - **Approvals.** When someone approves an option, decision, change request, or handoff in the portal, the approval is recorded with their name and the time. Both sides may rely on those records as confirmation of what was agreed.
 
 ## 3. Free accounts
 
 Anyone can make a free account from neon1.tech to describe their projects' needs before we work together.
 
-- **Who can sign up.** You must be at least 18 and sign up for yourself or an organization you're allowed to act for. Use your own email address; the code sent to it confirms it's yours. One account per person.
+- **Who can sign up.** You must be at least 18 and sign up for yourself or an organization you're allowed to act for. Use your own email address. The code sent to it confirms it's yours. One account per person.
 - **What it's for.** Describing your needs and sharing files that help me understand them, so I can advise you, suggest options, and propose a conversation. Nothing in it is an offer, a quote, or an agreement to any work until we sign an agreement or proposal.
 - **Limits.** A free account holds a few projects and items, and a small number of documents and pictures (sizes and kinds are shown when you upload). Some features, such as inviting people, approvals, proposals, billing, and the assistant, open once we agree to work together. I may change these limits.
 - **Who sees it.** Only you and I see what you put in a free account.
-- **Quiet accounts.** If nothing in the account changes for a week, I may email you to check in. After 21 days without changes I'll send a final notice, and after 30 days the account, its projects, and its files are deleted, unless we're working together or I've told you I'm keeping it. **Keep it** on Home adds 30 days to the date shown, once. You can sign up again any time.
+- **Quiet accounts.** I check in with, warn, and then delete a quiet free account on the schedule in the [privacy policy](https://neon1.tech/1NEON/privacy), unless we're working together or I've told you I'm keeping it. **Keep it** on Home adds 30 days to the date shown, once. You can sign up again any time.
 - **Becoming a client.** If we agree to work together, I convert your account into a client account. Your content stays, and these terms' client sections apply.
-- **Suspension.** I may pause or delete a free account that breaks these terms, looks automated, or puts the portal or others at risk, without notice where security requires it. A suspended account isn't deleted on the 30-day schedule; it waits until I've reviewed it.
+- **Suspension.** I may pause or delete a free account that breaks these terms, looks automated, or puts the portal or others at risk, without notice where security requires it. A suspended account isn't deleted on that schedule. It waits until I've reviewed it.
 
 ## 4. Availability and changes
 
@@ -45,7 +43,7 @@ I work to keep the portal available and secure, but it's provided "as is" and ma
 
 ## 5. Ending access
 
-Your organization can stop using 1NEON at any time, and anyone with a free account can ask me to delete it whenever they like. An admin can download all of its data from Settings (Download everything) whenever they like, and can also ask me for it. I may suspend an account that breaks these terms or puts others at risk, and I'll tell you why unless the law or a security reason prevents it. Data is retained and deleted as described in the [privacy policy](https://neon1.tech/1NEON/privacy).
+Your organization can stop using 1NEON at any time, and anyone with a free account can ask me to delete it whenever they like. An admin can download all of its data from Settings (Download everything) at any time, and can also ask me for it. I may suspend an account that breaks these terms or puts others at risk, and I'll tell you why unless the law or a security reason prevents it. Data is retained and deleted as described in the [privacy policy](https://neon1.tech/1NEON/privacy).
 
 ## 6. Liability
 

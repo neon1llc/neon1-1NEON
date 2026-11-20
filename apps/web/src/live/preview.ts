@@ -57,13 +57,11 @@ export const PREVIEW: Show = {
       title: "Ask for something",
       run: async (s) => {
         await s.say("She asks neon1 for help in one sentence");
-        await s.think("I'll say what I need in one sentence.");
         await s.click({ sel: "button", text: "+ Add request" }, 500);
         const one = "form.sentence fieldset:nth-of-type(1)";
         await s.click({ sel: `${one} button`, text: S.needs.goals[0]! }, 250);
         await s.type(`${one} input[aria-label="Who or what it's for"]`, S.needs.who);
         await s.click({ sel: "button", text: /^Send request$/ }, 900);
-        await s.think("Sent. Pradeep sees it right away.");
         await s.wait(700);
       },
     },
@@ -106,7 +104,6 @@ export const PREVIEW: Show = {
         await s.click("#approve-sign-name ~ .sign-consent input", 400);
         await s.click({ sel: "dialog[open] .actions button", text: /^Sign and approve/ }, 1200);
         await s.top();
-        await s.think("Written down, condition and all.");
         await s.hover(".decision", 1200);
       },
     },
@@ -122,9 +119,7 @@ export const PREVIEW: Show = {
           if (S.revision) await failedDryRun();
         }, 700, "Pradeep finished four tasks");
         await s.click({ sel: "nav.tabs a", text: "Execute" }, 900);
-        await s.think("Pradeep posted the plan, and four of the five tasks are done.");
         await s.hover({ sel: ".item", text: S.tasks[3] }, 900);
-        await s.think(`${MONEY.loggedAfterBuild} logged so far, each with what it was for.`);
         await s.hover("#hours .hours-table", 1300);
       },
     },
@@ -139,7 +134,6 @@ export const PREVIEW: Show = {
         await s.click('input[aria-label="Done: Accounts are in the client\'s name"]', 500);
         await s.think(S.voice.stepDocs);
         await s.click('input[aria-label="Done: Docs delivered and walked through"]', 900);
-        await s.say("From a request to a handover, in one place");
         await s.think(S.voice.finalThink);
         await s.wait(1200);
       },
