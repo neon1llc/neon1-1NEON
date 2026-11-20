@@ -1,0 +1,55 @@
+// apps/api/src/lib/links.ts - Where an event leads. The bell lists events with a link each, and a notice email opens the same
+// place, so both read it from here: the item on its layer's tab, the project, or the page it belongs to.
+
+
+import { KIND_LAYER, type AuditEvent, type ItemKind, type Layer, type Project } from "@1neon/domain";
+import type { Repo } from "../store/repo.ts";
+
+
+// Each layer's word in the web app's addresses (the same four as apps/web/src/components/ui.tsx); the stored keys resolve there too
+const SLUG: Record<Layer, string> = { needs: "needs", execution: "execute", observation: "observe", next: "normalize" };
+
+
+/** Where a notification leads, in the organization's own terms; the web turns it into a path */
+export interface NoteLink { page?: "people" | "settings" | "documents" | "workspace"; project?: string; layer?: Layer; item?: string }
+
+
+/** Work out where each event leads. Projects come from the project list; items say their project in the summary's leading key
+ * ("FLOW-1: ..."), and comments read their item once to find its layer. Anything removed or trashed leads to what's left (the
+ * project), or nowhere */
+export async function eventLinks(repo: Pick<Repo, "listProjects" | "getItem">, tid: string, events: AuditEvent[]): Promise<(NoteLink | undefined)[]> {
+  const projects = (await repo.listProjects(tid)).filter((p: Project) => !p.deletedAt);
+  const byId = new Map(projects.map((p) => [p.id, p]));
+  const byKey = new Map(projects.map((p) => [p.key, p]));
+  return Promise.all(events.map(async (e): Promise<NoteLink | undefined> => {
+    const [kind, verb] = e.action.split(".") as [string, string];
+    if (kind === "member") return { page: "people" };
+    if (kind === "org") return e.action === "org.stages" ? { page: "settings" } : undefined;
+    if (kind === "doc") return { page: "documents" };
+    // Calendar events live on Home's calendar
+    if (kind === "calendar") return { page: "workspace" };
+    if (kind === "project") {
+      const p = byId.get(e.target);
+      return p ? { project: p.key } : undefined;
+    }
+    const p = byKey.get(/^([A-Z][A-Z0-9]*-\d+):/.exec(e.summary)?.[1] ?? "");
+    if (!p) return undefined;
+    if (verb === "deleted") return { project: p.key };
+    if (kind === "comment") {
+      const item = await repo.getItem(tid, p.id, e.target).catch(() => undefined);
+      return item ? { project: p.key, layer: KIND_LAYER[item.kind as ItemKind], item: item.id } : { project: p.key };
+    }
+    const layer = KIND_LAYER[kind as ItemKind];
+    return layer ? { project: p.key, layer, item: e.target } : { project: p.key };
+  }));
+}
+
+
+/** The address a link opens, under the organization's home ("https://host/1NEON/o/acme"): the web app's route for it, so a notice
+ * email lands on the item and not on Home. */
+export function linkUrl(home: string, link: NoteLink | undefined): string | undefined {
+  if (!link) return undefined;
+  if (link.page) return `${home}/${link.page}`;
+  if (!link.project) return undefined;
+  return `${home}/projects/${link.project}${link.layer ? `/${SLUG[link.layer]}` : ""}${link.item ? `#item-${link.item}` : ""}`;
+}

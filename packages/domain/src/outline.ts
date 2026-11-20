@@ -9,7 +9,7 @@ import { TEMPLATES } from "./defaults.ts";
 
 /** The parts of an outline, in the order they're asked. `tip` finishes "add ..." in a sentence */
 export const OUTLINE_PARTS = [
-  { id: "what", label: "What it is", tip: "what this is, in a sentence or two" },
+  { id: "what", label: "What it is", tip: "a sentence on what this is" },
   { id: "today", label: "How it works today", tip: "one real example of how it works today" },
   { id: "done", label: "What done looks like", tip: "what will be true when it's done" },
   { id: "who", label: "Who and what it touches", tip: "who does this work and the tools it touches" },
@@ -72,11 +72,12 @@ export function listWords(words: readonly string[]): string {
   return `${words.slice(0, -1).join(", ")}, and ${words[words.length - 1]}`;
 }
 
-/** The tip for what's missing, as one line: "add what done looks like and a measure with where it is now" */
+/** The tip for what's missing, as one line: "add what done looks like and a measure with where it is now". It names the first `max`
+ * parts and stops: a list that trails off ("..., and more") says nothing the next tip won't */
 export function outlineTip(missing: readonly OutlinePart[], max = 3): string {
   if (!missing.length) return "";
   const tips = missing.slice(0, max).map((id) => OUTLINE_PARTS.find((x) => x.id === id)!.tip);
-  return `add ${listWords(tips)}${missing.length > max ? ", and more" : ""}`;
+  return `add ${listWords(tips)}`;
 }
 
 

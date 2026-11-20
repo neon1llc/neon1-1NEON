@@ -3,7 +3,8 @@
 
 
 import { LAYER_LETTER, LAYER_NAMES, RECORD_KINDS, type Health as HealthT, type Layer } from "@1neon/domain";
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { firstControl, needsInitialFocus } from "../lib/dialogfocus.ts";
 
 
 // Avatar colors: brand greens and calm accents, all readable with white initials
@@ -308,20 +309,30 @@ export function AskProvider({ children }: { children: ReactNode }) {
 // --- Dialog ------------------------------------------------------------------
 
 
-/** A native modal dialog: focus trapping, Escape, and the backdrop come from the browser */
+/** A native modal dialog: focus trapping, Escape, and the backdrop come from the browser. Its content mounts once the dialog is
+ * showing, so a box with `autoFocus` takes focus (a closed dialog can't hold it); content that asks for nothing gets its first control */
 export function Dialog({ open, onClose, children, label, className }: { open: boolean; onClose: () => void; children: ReactNode; label: string; className?: string }) {
   const ref = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
+  const [shown, setShown] = useState(false);
+  // Before paint, so the empty dialog is never seen
+  useLayoutEffect(() => {
     const d = ref.current;
     if (!d) return;
     if (open && !d.open) d.showModal();
     if (!open && d.open) d.close();
+    setShown(open);
   }, [open]);
+  // The content is in: if focus isn't inside it, it goes to the first control
+  useLayoutEffect(() => {
+    const d = ref.current;
+    if (!d || !open || !shown) return;
+    if (needsInitialFocus(d, document.activeElement)) firstControl<HTMLElement>(d)?.focus();
+  }, [open, shown]);
   return (
     // A tap on the backdrop (the dialog element itself, outside its content) closes it. React passes a
     // nested dialog's close and cancel up to this one, so only this dialog's own events count
     <dialog ref={ref} aria-label={label} className={className} onClose={(e) => e.target === e.currentTarget && onClose()} onCancel={(e) => e.target === e.currentTarget && onClose()} onClick={(e) => e.target === e.currentTarget && onClose()}>
-      {open && <div className="dlg">{children}</div>}
+      {open && shown && <div className="dlg">{children}</div>}
     </dialog>
   );
 }

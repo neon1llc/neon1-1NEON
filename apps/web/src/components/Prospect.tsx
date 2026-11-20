@@ -12,7 +12,7 @@ import { problem } from "../lib/hooks.ts";
 import { read } from "../lib/reads.ts";
 import { dateLabel, Dialog, useToast } from "./ui.tsx";
 import { listWords, messageProblem, outlineTip, requestAgainAt, requestOpen, type Outline } from "@1neon/domain";
-import { BOOK_A_CALL, prospectEverywhere } from "../lib/prospect.ts";
+import { askBlocker, BOOK_A_CALL, prospectEverywhere } from "../lib/prospect.ts";
 import type { Me, OrgResponse } from "../lib/types.ts";
 
 
@@ -116,6 +116,8 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
   const short = prospect ? list.filter((p) => chosen.includes(p.key) && p.outline.missing.length > 0) : [];
   const noteProblem = note.trim() ? messageProblem(note) : undefined;
   const ready = chosen.length > 0 && Boolean(note.trim()) && !noteProblem;
+  // Why the button is off, shown beside it and tied to it for a screen reader
+  const blocker = askBlocker({ chosen: chosen.length, several: open.length > 1, note, noteProblem });
   const toggle = (key: string) => setPicked(chosen.includes(key) ? chosen.filter((k) => k !== key) : [...chosen, key].slice(-limit));
   const callAsked = requestOpen(asked.data?.call?.at, "call") ? asked.data!.call! : undefined;
   const intro = prospect
@@ -218,7 +220,10 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
           {noteProblem && <small id="ask-note-e" className="warn" role="alert">{noteProblem}</small>}
           <fieldset className="ns-projects">
             <legend>{open.length === 1 ? "Project to include" : `Projects to include (up to ${limit})`}</legend>
-            {open.map((p) => (
+            {/* One project is the only choice, so it is named, not ticked: a ticked box reads as done */}
+            {open.length === 1 ? (
+              <p className="ns-one"><span className="mono">{open[0]!.key}</span> {open[0]!.name}</p>
+            ) : open.map((p) => (
               <label key={p.key} className="field-label ns-pick">
                 <input type="checkbox" disabled={busy} checked={chosen.includes(p.key)} onChange={() => toggle(p.key)} />
                 <span><span className="mono">{p.key}</span> {p.name}</span>
@@ -227,7 +232,8 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
             {open.length > 1 && chosen.length === 0 && <small className="muted">Choose at least one.</small>}
           </fieldset>
           <div className="actions next-actions">
-            <button type="submit" className="btn btn-primary btn-sm" disabled={!ready || busy}>{busy ? "Sending…" : "Request assessment"}</button>
+            <button type="submit" className="btn btn-primary btn-sm" disabled={!ready || busy} aria-describedby={blocker && !busy ? "ask-why" : undefined}>{busy ? "Sending…" : "Request assessment"}</button>
+            {blocker && !busy && <span id="ask-why" className="ns-why">{blocker}</span>}
             {call}
           </div>
         </form>

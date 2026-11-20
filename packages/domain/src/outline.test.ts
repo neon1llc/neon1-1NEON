@@ -36,7 +36,11 @@ describe("words", () => {
     expect(listWords(["a", "b", "c"])).toBe("a, b, and c");
     expect(listWords(["a", "b"])).toBe("a and b");
     expect(outlineTip(["done", "measure"])).toBe("add what will be true when it's done and a measure with where it is now");
-    expect(outlineTip(["what", "today", "done", "who"])).toMatch(/, and more$/);
+    // More missing than the tip names: it names the first three and ends there, never "..., and more."
+    const long = outlineTip(["what", "today", "done", "who"]);
+    expect(long).toBe("add a sentence on what this is, one real example of how it works today, and what will be true when it's done");
+    expect(long).not.toMatch(/and more/);
+    expect(outlineTip(["what", "today", "done", "who", "measure", "limits"], 6)).toMatch(/a target date or any limits, such as budget or must-nots$/);
   });
 });
 

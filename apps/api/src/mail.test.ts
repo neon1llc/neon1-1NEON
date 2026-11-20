@@ -3,6 +3,7 @@
 
 
 import { readFileSync } from "node:fs";
+import { PROSPECT_FINAL_DAYS, PROSPECT_GRACE_DAYS, type Tenant } from "@1neon/domain";
 import { describe, expect, it } from "vitest";
 import { MAIL_FROM, SENDERS } from "./mail.ts";
 
@@ -212,5 +213,18 @@ describe("every email", () => {
     const { noticeEmail } = await import("./emails.ts");
     const m = noticeEmail({ orgName: "Harborline", trial: false, by: "Dana", action: "project.updated", summary: "FLOW-1: updated the project", url: "https://x", changes: ["health At risk → On track"] });
     expect(m.text).toContain("WHAT CHANGED\nhealth At risk → On track");
+  });
+});
+
+
+describe("the free account's final notice", () => {
+  it("says what the clock does: a notice after three quiet weeks, deleted nine days later", async () => {
+    // The words below are the clock's numbers, so a change to the clock has to change them
+    expect(PROSPECT_FINAL_DAYS).toBe(21);
+    expect(PROSPECT_GRACE_DAYS).toBe(9);
+    const { quietEmail } = await import("./routes/prospects.ts");
+    const m = quietEmail({ name: "Kim Dental" } as Tenant, "https://x/1NEON/", "final", "December 9, 2026", "https://x/1NEON/?signup=1");
+    expect(m.text).toContain("A final notice comes after three quiet weeks, and the account is deleted nine days later.");
+    expect(m.text).not.toContain("close after three quiet weeks");
   });
 });

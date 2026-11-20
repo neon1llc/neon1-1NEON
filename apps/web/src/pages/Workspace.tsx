@@ -16,6 +16,7 @@ import { ago, Changes, dateLabel, Health, LayerBadge, layerSlug } from "../compo
 import type { Project } from "@1neon/domain";
 type HealthT = Project["health"];
 import { qk } from "../lib/hooks.ts";
+import { noun } from "../lib/plural.ts";
 import { failureOf, hidesData, read } from "../lib/reads.ts";
 import type { Workspace } from "../lib/types.ts";
 import { FaceForm, faceAskDismissed } from "../components/OrgFace.tsx";
@@ -156,12 +157,12 @@ export function WorkspacePage() {
           )}
           {/* The headline numbers, each a way in */}
           <nav className="stats" aria-label="At a glance">
-            <Link to={`${base}/projects`}><b>{c?.projects ?? "–"}</b> projects</Link>
+            <Link to={`${base}/projects`}><b>{c?.projects ?? "–"}</b> {noun(c?.projects ?? 0, "project")}</Link>
             {/* Deciding opens Needs at its Decide stage; building opens the Execute layer, each listing just those projects */}
             <Link to={`${base}/layer/needs#stage-decide`} title="Projects waiting on a decision"><b>{c?.deciding ?? "–"}</b> deciding</Link>
             <Link to={`${base}/layer/execute`} title="Projects in the Execute layer"><b>{c?.building ?? "–"}</b> building</Link>
             <Link to={`${base}/people`}><b>{c?.people ?? "–"}</b> people{c?.invited ? <small>{c.invited} invited</small> : null}</Link>
-            <Link to={`${base}/documents`}><b>{c?.documents ?? "–"}</b> files</Link>
+            <Link to={`${base}/documents`}><b>{c?.documents ?? "–"}</b> {noun(c?.documents ?? 0, "file")}</Link>
           </nav>
           {/* Who's away in the next seven days, from leave on the calendar */}
           {(ws.data?.away?.length ?? 0) > 0 && (

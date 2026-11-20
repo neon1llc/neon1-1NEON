@@ -3,11 +3,30 @@
 // words for it. The rules themselves live in packages/domain/src/prospect.ts, shared with the API.
 
 
-import { isProspect, isSuspended, type Tenant } from "@1neon/domain";
+import { isProspect, isSuspended, PROSPECT_LIMITS, type Tenant } from "@1neon/domain";
 
 
 /** The same link neon1.tech uses for "Book a call" */
 export const BOOK_A_CALL = "https://calendly.com/1isgladtobeofservice/neon1-consultation";
+
+
+/** Why "Request assessment" is off, in the words shown beside it; undefined when nothing stops it. A note that has a problem
+ * says so under its own box, so this only points there */
+export function askBlocker(o: { chosen: number; several: boolean; note: string; noteProblem?: string }): string | undefined {
+  const noNote = !o.note.trim();
+  if (noNote && o.chosen === 0 && o.several) return "Add a note and choose a project to enable this.";
+  if (noNote) return "Add a note to enable this.";
+  if (o.noteProblem) return "Fix the note to enable this.";
+  if (o.chosen === 0) return "Choose a project to enable this.";
+  return undefined;
+}
+
+
+/** What a free account's file area holds, in one line: the same numbers the API refuses at (PROSPECT_LIMITS) */
+export function fileLimitsLine(): string {
+  const mb = (bytes: number) => bytes / 1024 / 1024;
+  return `Up to ${PROSPECT_LIMITS.files} files, ${mb(PROSPECT_LIMITS.fileBytes)} MB each and ${mb(PROSPECT_LIMITS.totalBytes)} MB in all.`;
+}
 
 
 /** Is this person limited as a prospect here? neon1 acting inside a prospect organization never is,

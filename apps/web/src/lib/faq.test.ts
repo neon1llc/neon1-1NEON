@@ -5,7 +5,9 @@
 
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { PROSPECT_LIMITS } from "@1neon/domain";
 import { ALIAS_IDS, aliasesOf, matches, parse, slug } from "./faq.ts";
+import { fileLimitsLine } from "./prospect.ts";
 
 
 const FAQ = parse(readFileSync(new URL("../help/faqs.md", import.meta.url), "utf8"));
@@ -42,6 +44,21 @@ describe("faq lengths", () => {
     const raw = readFileSync(new URL("../help/faqs.md", import.meta.url), "utf8");
     expect(length).toBeTruthy();
     expect(raw).toContain(`the full story takes ${length}.`);
+  });
+});
+
+
+describe("faq promises", () => {
+  const raw = readFileSync(new URL("../help/faqs.md", import.meta.url), "utf8");
+  it("states a free account's file limits as the API enforces them", () => {
+    const mb = (n: number) => n / 1024 / 1024;
+    expect(raw).toContain(`holds up to ${PROSPECT_LIMITS.files} files, ${mb(PROSPECT_LIMITS.fileBytes)} MB each and ${mb(PROSPECT_LIMITS.totalBytes)} MB in all`);
+    // The upload control says the same in one line
+    expect(fileLimitsLine().replace(/^Up to/, "up to")).toBe(`up to ${PROSPECT_LIMITS.files} files, ${mb(PROSPECT_LIMITS.fileBytes)} MB each and ${mb(PROSPECT_LIMITS.totalBytes)} MB in all.`);
+    expect(raw).not.toMatch(/Any file up to 100 MB/);
+  });
+  it("offers Start for free only while sign-up is open", () => {
+    expect(raw).toContain("When sign-up is open, choose **Start for free** on the sign-in screen");
   });
 });
 

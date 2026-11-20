@@ -443,7 +443,7 @@ function Overview({ project: p, items, docs }: { project: Project; items: Item[]
 
   return (
     <div className="two">
-      {/* Main column: the decision banner, summary and outcome, and measures */}
+      {/* Main column: the decision banner, readiness, and the summary and outcome */}
       <section>
         {decision && <DecisionCard d={decision} names={names} />}
         {/* Editors can change the summary and outcome in place */}
@@ -467,13 +467,11 @@ function Overview({ project: p, items, docs }: { project: Project; items: Item[]
           <>
             <p className="lead" style={{ marginTop: 0 }}>{p.summary || <span className="muted">No summary yet.</span>}</p>
             <p><b>Done when:</b> {p.outcome || <span className="muted">not written yet</span>}</p>
-            {canWrite && <button className="btn btn-ghost" onClick={() => { setDraft(basics()); setEditBase(p.version); setEditing(true); }}>Edit</button>}
+            {canWrite && <button className="btn btn-ghost" onClick={() => { setDraft(basics()); setEditBase(p.version); setEditing(true); }}>Edit summary and done when</button>}
           </>
         )}
-        <h2 className="section-h">Measures <small>baseline → target</small></h2>
-        {metrics.length === 0 ? <Empty text="No measures yet. Add them under Observe." /> : <div className="scores">{metrics.map((m) => <MetricCard key={m.id} item={m} path={`/t/${org.id}/projects/${p.id}`} />)}</div>}
       </section>
-      {/* Side column: health, dates, latest update, flags, people, and archiving */}
+      {/* Side column: health, dates, latest update, flags, people, measures, project level files, and archiving */}
       <aside>
         <h2 className="section-h" style={{ marginTop: 0 }}>Status</h2>
         <div className="card" style={{ display: "grid", gap: 10 }}>
@@ -521,6 +519,15 @@ function Overview({ project: p, items, docs }: { project: Project; items: Item[]
             ))}
           </div>
         )}
+        {/* Measures and the project's own files sit in this column, so the two columns end near each other */}
+        <h2 className="section-h">Measures <small>baseline → target</small></h2>
+        {metrics.length === 0 ? <Empty text="No measures yet. Add them under Observe." /> : <div className="scores">{metrics.map((m) => <MetricCard key={m.id} item={m} path={`/t/${org.id}/projects/${p.id}`} />)}</div>}
+        {/* Files for the project as a whole, not filed under one layer */}
+        <section className="kind-group">
+          <h2 className="section-h">Project level files <small>{docs.filter((d) => d.uploaded && !d.layer).length}</small></h2>
+          <FileList docs={docs.filter((d) => !d.layer)} empty="No project level files yet." />
+          {canWrite && <div className="actions" style={{ marginTop: 10 }}><UploadButton target={{ projectId: p.id }} label="Upload project level files" /></div>}
+        </section>
         {canWrite && (
           <p className="small" style={{ marginTop: 18 }}>
             {/* Archiving asks first, as deleting does: the project leaves every list and locks. Restoring doesn't need to */}
@@ -543,12 +550,6 @@ function Overview({ project: p, items, docs }: { project: Project; items: Item[]
           <div className="actions"><button className="btn btn-primary" disabled={!post.title.trim() || sending}>{sending ? "Posting…" : "Post"}</button><button type="button" className="btn btn-ghost" onClick={() => setPosting(false)}>Cancel</button></div>
         </form>
       </Dialog>
-      {/* Files for the project as a whole, not filed under one layer */}
-      <section className="kind-group">
-        <h2 className="section-h">Project level files <small>{docs.filter((d) => d.uploaded && !d.layer).length}</small></h2>
-        <FileList docs={docs.filter((d) => !d.layer)} empty="No project level files yet." />
-        {canWrite && <div className="actions" style={{ marginTop: 10 }}><UploadButton target={{ projectId: p.id }} label="Upload project level files" /></div>}
-      </section>
       {/* Who's on the project and in what role; the decision maker approves options */}
       <PeopleDialog open={peopleOpen} onClose={() => setPeopleOpen(false)} people={p.people} version={p.version} onSave={(list, version) => { setPeopleOpen(false); void save(version, { people: list }); }} />
       {/* Keep mine saves the same change over their version; Take theirs drops it */}

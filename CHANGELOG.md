@@ -4,6 +4,19 @@
 
 ## Unreleased
 
+### Fixed (audit, November 20)
+- Pages are centered with equal gutters on a wide screen (28px each at 1440), not pushed left with the spare room on the right.
+- The search window takes the cursor, so typing goes in the box. Every window now puts focus on what asked for it, so a confirmation opens on Cancel and not on the destructive button.
+- The page heading no longer shows a green box when a page loads.
+- Past days on Home's calendar are readable on the light looks, the month is one tab stop with arrow keys between days, and an empty month is shorter. Layer hints, "set aside", and "report" meet 4.5:1.
+- Touch screens get 44px buttons in the top bar, menu, and Mini rail. The two menu marks paint the same size, centered in their rows.
+- An invoice's lines and hours fit a 320px phone.
+- Notice emails open the item, project, or page they're about, not Home. The free account's final notice says "a final notice after three quiet weeks, deleted nine days later."
+- The FAQ states a free account's file limits (10 files, 10 MB each, 50 MB in all), and the Files page says so where files go in. Start for free is described as available only while sign-up is open.
+- A free account's Home has one right-column width and one gap between cards. Request assessment says why it is off, the single project is named instead of ticked, the outline tip no longer ends "and more", and counts read "1 project".
+- A project's Overview keeps Measures and project level files in the right column, and its Edit button says what it edits.
+- Small type (layer letters, notification count, chart dates, proposal codes) is on the type scale.
+
 ### Added
 - Home's Next step guides a project from first words to an assessment. It lists each open project with how far it's outlined (six parts: what it is, how it works today, what done looks like, who and what it touches, a measure, and timing and limits) and one tip for what would help most. Pick any or all of the projects (up to three), write a note, and send. A project that could say more gets one last look first, which can be skipped. Anyone who'd rather talk first can book the 30-minute call from the same card.
 - Each project's Overview shows how ready it is for Execute, from 0% to 100%: the six outline parts, the assessment, options, and the decision. Each part says where to write it and where it goes once work starts (scope, the Verify checks, the Observe baseline and measure, the Normalize handover).

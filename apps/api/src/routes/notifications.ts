@@ -2,47 +2,17 @@
 // marking them seen. Sending notices is the outbox's job (lib/transactions.ts, outbox.ts).
 
 
-import { actorHears, groupOf, isOwnOrg, isQuickFix, KIND_LAYER, neon1Only, noticeSummary, type AuditEvent, type ItemKind, type Layer, type Project } from "@1neon/domain";
+import { actorHears, groupOf, isOwnOrg, isQuickFix, neon1Only, noticeSummary } from "@1neon/domain";
 import { actorId, need, now, who } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
+import { eventLinks, type NoteLink } from "../lib/links.ts";
 
 
-/** Where a notification leads, in the organization's own terms; the web turns it into a path */
-export interface NoteLink { page?: "people" | "settings" | "documents" | "workspace"; project?: string; layer?: Layer; item?: string }
+export type { NoteLink };
 
 
 export function notificationRoutes(app: App, k: Kit) {
   const { repo } = k;
-
-  // Work out where each event leads. Projects come from the project list; items say their project in
-  // the summary's leading key ("FLOW-1: ..."), and comments read their item once to find its layer.
-  // Anything removed or trashed leads to what's left (the project), or nowhere
-  async function linksFor(tid: string, events: AuditEvent[]) {
-    const projects = (await repo.listProjects(tid)).filter((p: Project) => !p.deletedAt);
-    const byId = new Map(projects.map((p) => [p.id, p]));
-    const byKey = new Map(projects.map((p) => [p.key, p]));
-    return Promise.all(events.map(async (e): Promise<NoteLink | undefined> => {
-      const [kind, verb] = e.action.split(".") as [string, string];
-      if (kind === "member") return { page: "people" };
-      if (kind === "org") return e.action === "org.stages" ? { page: "settings" } : undefined;
-      if (kind === "doc") return { page: "documents" };
-      // Calendar events live on Home's calendar
-      if (kind === "calendar") return { page: "workspace" };
-      if (kind === "project") {
-        const p = byId.get(e.target);
-        return p ? { project: p.key } : undefined;
-      }
-      const p = byKey.get(/^([A-Z][A-Z0-9]*-\d+):/.exec(e.summary)?.[1] ?? "");
-      if (!p) return undefined;
-      if (verb === "deleted") return { project: p.key };
-      if (kind === "comment") {
-        const item = await repo.getItem(tid, p.id, e.target).catch(() => undefined);
-        return item ? { project: p.key, layer: KIND_LAYER[item.kind as ItemKind], item: item.id } : { project: p.key };
-      }
-      const layer = KIND_LAYER[kind as ItemKind];
-      return layer ? { project: p.key, layer, item: e.target } : { project: p.key };
-    }));
-  }
 
   // Notifications: what others did here lately, each with its group, importance, and where it leads,
   // and when the caller last looked. Info-level events (sign-ins) show in the list but never count as new
@@ -58,7 +28,7 @@ export function notificationRoutes(app: App, k: Kit) {
     // shows in the bell); in neon1's own organization, its billing too
     const own = isOwnOrg(t.slug);
     const mine = events.filter((e) => (e.actorId !== me || actorHears(e.action, own)) && (op || !neon1Only(e.action))).slice(0, 40);
-    const links = await linksFor(t.id, mine);
+    const links = await eventLinks(repo, t.id, mine);
     // A quick fix's client reads a quote, so notices about its proposal revisions say "Quote" (the
     // stored record keeps its number as issued). Projects are read only when such a notice is listed
     const quickKeys = mine.some((e) => e.action.startsWith("proposal."))
