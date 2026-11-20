@@ -177,8 +177,8 @@ export const JOURNEY: Show = {
         // The last look lists what could still be added, and she can send it anyway
         await s.hover("dialog[open] .ns-quote", 900);
         await s.click({ sel: "dialog[open] button", text: /^Submit request( anyway)?$/ }, 1400);
-        await s.think("Sent. The reply comes by email.");
-        await s.hover(".outline-list li.sent", 900);
+        await s.think("Saved and locked. She can edit it, and what's there is what reaches him.");
+        await s.hover(".next-status", 900);
       },
     },
     {

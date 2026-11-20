@@ -254,15 +254,15 @@ export function prospectFacts(t: { place?: string; link?: string; prospect?: { k
 
 
 /** The email to neon1 when someone asks for an assessment or a call from inside 1NEON; the reply goes to them */
-export function requestEmail(o: { kind: "assessment" | "call"; what: string; note: string; who?: string; email: string; org: string; ref?: string; free: boolean; place?: string; link?: string; projects?: string; url: string; at: Date }) {
-  const title = o.kind === "assessment" ? "Assessment requested" : "Call requested";
+export function requestEmail(o: { kind: "assessment" | "call"; what: string; updated?: boolean; note: string; who?: string; email: string; org: string; ref?: string; free: boolean; place?: string; link?: string; projects?: string; url: string; at: Date }) {
+  const title = o.kind === "assessment" ? (o.updated ? "Assessment request updated" : "Assessment requested") : "Call requested";
   const name = o.who || o.email;
   const mail = factMail({
     kicker: o.free ? "free account alert" : "client alert",
     title,
     sub: o.org,
     preheader: `${name} asked for ${o.what}${o.note ? `: ${gist(o.note, 80)}` : ""}`,
-    intro: [`${name} asked neon1 for ${o.what}.`],
+    intro: [o.updated ? `${name} changed their request for ${o.what}. This is the whole request as it stands now.` : `${name} asked neon1 for ${o.what}.`],
     facts: [
       { k: "Who", v: o.who ? `${o.who} <${o.email}>` : o.email },
       { k: "Organization", v: `${o.org}${o.ref ? ` (${o.ref}${o.free ? ", free account" : ""})` : ""}` },

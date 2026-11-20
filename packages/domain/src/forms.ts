@@ -156,6 +156,9 @@ export const MIN_TEXT = 2;
 export const MIN_ANSWER = 3;
 // A contact message says what's going on, so it needs a sentence's worth
 export const MIN_MESSAGE = 10;
+// An assessment request's note is the person's last word before neon1 reads their projects: a real
+// sentence, not "thanks"
+export const MIN_ASSESSMENT_NOTE = 20;
 
 
 /** One check for any free text a person types into a form (an organization's name, an "other" answer):
@@ -178,5 +181,17 @@ export function messageProblem(text: string): string | undefined {
   if (!t) return "Say what's going on.";
   if (t.length < MIN_MESSAGE) return `Tell me a little more, at least ${MIN_MESSAGE} characters.`;
   if (looksLikeJunk(t)) return "Describe what's going on in a few words.";
+  return undefined;
+}
+
+
+/** An assessment request's note: required, a real sentence (MIN_ASSESSMENT_NOTE), and not junk. Returns
+ * what to tell them, or undefined when it's fine */
+export function assessmentNoteProblem(text: string): string | undefined {
+  const t = text.trim().replace(/\s+/g, " ");
+  if (!t) return "Add a note for me to keep in mind.";
+  if (t.length < MIN_ASSESSMENT_NOTE) return `A sentence or two, please: at least ${MIN_ASSESSMENT_NOTE} characters.`;
+  if (looksLikeJunk(t)) return "Write it in a few real words.";
+  if (offensive(text)) return "Please reword the note.";
   return undefined;
 }

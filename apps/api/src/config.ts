@@ -50,6 +50,9 @@ export interface Config {
   recordsBucket?: string;
   /** Whether people may sign themselves up as prospects. Only SIGNUP=on opens it; anything else keeps it shut */
   signup?: boolean;
+  /** How long an assessment request waits after its last change before it's emailed (routes/requests.ts).
+   * Missing means an hour; the in-browser demo sets 0 so it goes at once */
+  requestDelayMs?: number;
   /** Cloudflare Turnstile: the public site key the sign-up form shows, and the SSM SecureString holding the secret */
   turnstileSiteKey?: string;
   turnstileSecretParam?: string;

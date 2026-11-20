@@ -17,6 +17,9 @@ export interface NotifyGroup {
   level: Level;
   email: boolean;
   match: (action: string) => boolean;
+  // Emails on by default only in a free account, and never by text (the outline tips)
+  free?: boolean;
+  emailOnly?: boolean;
 }
 
 
@@ -31,7 +34,18 @@ export const NOTIFY_GROUPS: NotifyGroup[] = [
   { id: "comments", label: "Comments", hint: "Someone comments on an item", level: "normal", email: false, match: (a) => a === "comment.created" },
   { id: "updates", label: "Updates and items", hint: "Status updates, requests, tasks, measures, calendar events, and other items", level: "normal", email: false, match: (a) => /^[a-z_]+\.(created|updated|deleted)$/.test(a) || a === "project.updated" },
   { id: "signins", label: "Sign-ins", hint: "Someone in the organization signs in", level: "info", email: false, match: (a) => a === "member.signedin" },
+  // Not an audit event: the outline pass (apps/api/src/routes/nudges.ts) asks for it by its id
+  { id: "outline", label: "Outline tips", hint: "A project's outline is unfinished and nothing has gone to neon1: tips about 3 and 7 days after the last change", level: "info", email: false, free: true, emailOnly: true, match: (a) => a === "outline.tips" },
 ];
+
+/** A group's email default for this person: the outline tips are on in a free account and off in a client's */
+export const emailDefault = (g: NotifyGroup, free: boolean) => (g.free ? free : g.email);
+
+/** Does this person want the outline tips by email? */
+export function wantsOutlineTips(prefs: NotifyPrefs | undefined, free: boolean): boolean {
+  const mine = prefs?.outline;
+  return mine ? mine.email : free;
+}
 
 
 /**

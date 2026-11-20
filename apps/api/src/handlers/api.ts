@@ -11,6 +11,8 @@ import { GetParametersCommand, SSMClient } from "@aws-sdk/client-ssm";
 import { AwsTexter, CognitoDirectory, S3Records, S3Storage, SesMailer, TurnstileCheck } from "../services.ts";
 import { sweepSignups } from "../routes/signup.ts";
 import { finishPurges, sweepQuietProspects } from "../routes/prospects.ts";
+import { sweepOutlineNudges } from "../routes/nudges.ts";
+import { sweepRequests } from "../routes/requests.ts";
 import { StripePayments } from "../payments.ts";
 import { beforeDeadline, drainOutbox } from "../outbox.ts";
 import { sweepFiles } from "../files.ts";
@@ -152,17 +154,21 @@ export const handler = async (event: Parameters<typeof http>[0] | { source?: str
     const files = await beforeDeadline(sweepFiles({ repo, storage }, { deadline: end - 500 }), end).catch((e) => ({ watched: 0, settled: 0, error: (e as Error).name }));
     // Bug reports waiting for their screenshots to scan go out, with the clean ones attached
     const bugs = await beforeDeadline(sweepBugs({ repo, storage, mailer, cfg }, { deadline: end - 400 }), end).catch((e) => ({ held: 0, sent: 0, error: (e as Error).name }));
+    // Assessment requests half an hour past their last change (and an hour past the last email) go to neon1
+    const requests = await beforeDeadline(sweepRequests({ repo, d: deps, cfg }, { deadline: end - 350 }), end).catch((e) => ({ waiting: 0, sent: 0, error: (e as Error).name }));
     // Sign-ups never confirmed lose their sign-in account after a day; quiet prospects get their emails
     // (and, at the end, deletion) once a day. Neither may hold up the next pass
     const signups = await beforeDeadline(sweepSignups({ repo, d: deps }, { deadline: end - 300 }), end).catch((e) => ({ removed: 0, error: (e as Error).name }));
     const quiet = Date.now() < end - 1_000 ? await beforeDeadline(sweepQuietProspects({ repo, d: deps, cfg }), end).catch((e) => ({ error: (e as Error).name })) : undefined;
+    // Unfinished outlines get their tips once a day, after the check-ins so the two never land together
+    const nudges = Date.now() < end - 1_000 ? await beforeDeadline(sweepOutlineNudges({ repo, d: deps, cfg }), end).catch((e) => ({ error: (e as Error).name })) : undefined;
     // Free-account deletions under way go on every minute until each is done and checked
     const purges = Date.now() < end - 1_000 ? await beforeDeadline(finishPurges({ repo, d: deps, cfg }, { deadline: end - 500 }), end).catch((e) => ({ error: (e as Error).name })) : undefined;
     // One line per pass in CloudWatch's embedded metric format: counts and queue age only, never
     // addresses or bodies. Written to stdout directly, because the JSON log wrapper would hide the
     // metric directive inside its message field
-    process.stdout.write(`${JSON.stringify({ ...outboxMetrics(result, cfg.env), files, bugs, signups, quiet, purges })}\n`);
-    return { ...result, files, bugs, signups, quiet, purges };
+    process.stdout.write(`${JSON.stringify({ ...outboxMetrics(result, cfg.env), files, bugs, requests, signups, quiet, nudges, purges })}\n`);
+    return { ...result, files, bugs, requests, signups, quiet, nudges, purges };
   }
   return http(event as Parameters<typeof http>[0], context);
 };

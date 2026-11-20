@@ -11,7 +11,7 @@ import { api, HttpError } from "../lib/api.ts";
 import { problem } from "../lib/hooks.ts";
 import { read } from "../lib/reads.ts";
 import { dateLabel, Dialog, useToast } from "./ui.tsx";
-import { listWords, messageProblem, outlineTip, requestAgainAt, requestOpen, type Outline } from "@1neon/domain";
+import { assessmentNoteProblem, listWords, outlineTip, requestAgainAt, requestOpen, type Outline } from "@1neon/domain";
 import { BOOK_A_CALL, prospectEverywhere } from "../lib/prospect.ts";
 import type { Me, OrgResponse } from "../lib/types.ts";
 
@@ -74,27 +74,29 @@ export function GuideCard({ me, prospect }: { me: Me; prospect: boolean }) {
 }
 
 
-// Next step's answer from routes/requests.ts: when each kind was last asked, and the open projects
-type RequestProject = { key: string; name: string; outline: Outline; sentAt?: string; again?: string; decided?: boolean };
-type Asked = { assessment?: { at: string }; call?: { at: string; again: string }; projects: RequestProject[]; limit: number };
-const keys = (list: RequestProject[]) => listWords(list.map((p) => p.key));
-// A project sent inside its window is still with neon1 (windows are in packages/domain/src/requests.ts)
-const waiting = (p: RequestProject) => requestOpen(p.sentAt);
-const NOTE_MAX = 1000;
+// Next step's answer from routes/requests.ts: the assessment request as saved, when a call was last asked,
+// and the open projects
+type RequestProject = { key: string; name: string; outline: Outline; sentAt?: string; decided?: boolean };
+type Saved = { state: "waiting" | "sent"; note: string; projects: string[]; editedAt?: string; dueAt?: string; sentAt?: string };
+type Asked = { assessment?: Saved; call?: { at: string; again: string }; projects: RequestProject[]; limit: number; minNote?: number; sendAfterMinutes?: number };
+const keys = (list: { key: string }[]) => listWords(list.map((p) => p.key));
+const NOTE_MAX = 2000;
+// "Nov 19, 9:45 PM" in the person's own time
+const whenLabel = (iso: string | undefined) => (iso ? `${dateLabel(iso)}, ${new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}` : "");
 
 
-/** One project's sent state, in the dates the API holds it to: when it was asked, and when it can go again */
-const sentLine = (p: RequestProject) => <>Assessment requested {dateLabel(p.sentAt)}. I'll reply by email. You can ask again from {dateLabel(p.again ?? requestAgainAt(p.sentAt!))}.</>;
-
-
-/** Next step, on Home: outline projects, then ask neon1 to assess any or all of them. The note is
- * required, the projects are chosen by checkbox, and the request opens a last look that lists what
- * could still be added, with the dates the window holds. A call is the other way in. A free account
- * sees how far each project is outlined; a client keeps the note, the projects, and the button */
+/** Next step, on Home: outline projects, then ask neon1 to assess any or all of them. The note is required,
+ * the projects are chosen by checkbox, and the request opens a last look that lists what could still be
+ * added. The request is a saved draft: submitting locks it, and it goes to neon1 30 minutes after the last
+ * change and never within an hour of the last email (routes/requests.ts), so Edit can change it as often as
+ * needed and what was written last is what arrives. A call is the other way in. A free account sees how far
+ * each project is outlined; a client keeps the note, the projects, and the button */
 export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: string; prospect: boolean }) {
   const qc = useQueryClient();
   const toast = useToast();
-  const asked = useQuery({ queryKey: ["requests", orgId], queryFn: () => read<Asked>(`/t/${orgId}/requests`, { projects: "array" }) });
+  const asked = useQuery({ queryKey: ["requests", orgId], queryFn: () => read<Asked>(`/t/${orgId}/requests`, { projects: "array" }), refetchInterval: 60_000 });
+  const saved = asked.data?.assessment;
+  const [editing, setEditing] = useState(false);
   const [note, setNote] = useState("");
   const [picked, setPicked] = useState<string[] | undefined>(undefined);
   const [busy, setBusy] = useState(false);
@@ -102,19 +104,23 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
   const [review, setReview] = useState(false);
   const [callOpen, setCallOpen] = useState(false);
   const [callNote, setCallNote] = useState("");
-  // One key per attempt at one request: pressing again after a lost reply is the same request, not a second
-  const attempt = useRef<Record<"assessment" | "call", string>>({ assessment: "", call: "" });
-  const keyFor = (kind: "assessment" | "call") => (attempt.current[kind] ||= crypto.randomUUID().replace(/-/g, ""));
+  // One key per attempt at a call request: pressing again after a lost reply is the same request, not a second
+  const callKey = useRef("");
   const base = `/o/${slug}`;
   // Projects already agreed are past assessing; a client with none left to assess sees no card at all
   const list = (asked.data?.projects ?? []).filter((p) => !p.decided);
   const limit = asked.data?.limit ?? 3;
-  const open = list.filter((p) => !waiting(p));
-  const sent = list.filter(waiting);
-  // One project is the obvious choice, so it starts chosen; with several the person chooses
-  const chosen = (picked ?? (open.length === 1 ? [open[0]!.key] : [])).filter((k) => open.some((p) => p.key === k));
+  const minNote = asked.data?.minNote ?? 20;
+  const wait = asked.data?.sendAfterMinutes ?? 30;
+  // Locked while a saved request waits or after it's sent, until Edit; open when there's none
+  const locked = Boolean(saved) && !editing;
+  // The chosen projects: as saved, or as picked while editing; with nothing saved and one project, that one
+  const unsent = list.filter((p) => !p.sentAt);
+  const start = saved?.projects ?? (unsent.length === 1 ? [unsent[0]!.key] : list.length === 1 ? [list[0]!.key] : []);
+  const chosen = (picked ?? start).filter((k) => list.some((p) => p.key === k));
   const short = prospect ? list.filter((p) => chosen.includes(p.key) && p.outline.missing.length > 0) : [];
-  const noteProblem = note.trim() ? messageProblem(note) : undefined;
+  const shownNote = locked ? saved?.note ?? "" : note;
+  const noteProblem = note.trim() ? assessmentNoteProblem(note) : undefined;
   const ready = chosen.length > 0 && Boolean(note.trim()) && !noteProblem;
   const toggle = (key: string) => setPicked(chosen.includes(key) ? chosen.filter((k) => k !== key) : [...chosen, key].slice(-limit));
   const callAsked = requestOpen(asked.data?.call?.at, "call") ? asked.data!.call! : undefined;
@@ -126,28 +132,76 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
     : callAsked
       ? <span className="small next-call" role="status">Call requested {dateLabel(callAsked.at)}. I'll reply by email. You can ask again from {dateLabel(callAsked.again)}.</span>
       : <span className="muted small next-call">Rather talk first? <OutLink href={BOOK_A_CALL}>Book the free 30-minute call</OutLink> or <button type="button" className="linkish" onClick={() => { setError(""); setCallOpen(true); }}>ask me to reach out</button>.</span>;
+  const refresh = () => qc.invalidateQueries({ queryKey: ["requests", orgId] });
 
-  const send = async (kind: "assessment" | "call") => {
+  const startEdit = () => {
+    setNote(saved?.note ?? "");
+    setPicked(saved?.projects);
+    setError("");
+    setEditing(true);
+  };
+  const save = async () => {
     setReview(false);
+    setBusy(true);
+    setError("");
+    try {
+      const r = await api<{ state: string; dueAt: string }>(`/t/${orgId}/requests/assessment`, { method: "PUT", body: { note, projects: chosen } });
+      setEditing(false);
+      setPicked(undefined);
+      toast(r?.state === "sent" ? "Sent. I'll reply by email." : `Saved. It goes to me at ${new Date(r?.dueAt ?? Date.now()).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} unless you change it.`);
+    } catch (e) {
+      setError(problem(e));
+    }
+    await refresh();
+    setBusy(false);
+  };
+  const withdraw = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      await api(`/t/${orgId}/requests/assessment`, { method: "DELETE" });
+      toast(saved?.sentAt ? "Withdrawn. What was sent before still stands." : "Withdrawn. Nothing was sent.");
+    } catch (e) {
+      setError(problem(e));
+    }
+    await refresh();
+    setBusy(false);
+  };
+  const askCall = async () => {
     setCallOpen(false);
     setBusy(true);
     setError("");
     try {
-      const r = await api<{ projects: string[] }>(`/t/${orgId}/requests`, { method: "POST", body: kind === "assessment" ? { kind, note, projects: chosen, key: keyFor(kind) } : { kind, note: callNote, key: keyFor(kind) } });
-      attempt.current[kind] = "";
-      if (kind === "assessment") { setNote(""); setPicked(undefined); toast(`Sent ${listWords(r?.projects?.length ? r.projects : chosen)} for assessment. You'll get a reply by email.`); }
-      else { setCallNote(""); toast("Call requested. I'll reply by email."); }
+      await api(`/t/${orgId}/requests`, { method: "POST", body: { kind: "call", note: callNote, key: (callKey.current ||= crypto.randomUUID().replace(/-/g, "")) } });
+      callKey.current = "";
+      setCallNote("");
+      toast("Call requested. I'll reply by email.");
     } catch (e) {
       // An answer that says it's already asked is an answer, not something to retry under the same key
-      if (e instanceof HttpError && e.status === 409) attempt.current[kind] = "";
+      if (e instanceof HttpError && e.status === 409) callKey.current = "";
       setError(problem(e));
     }
-    await qc.invalidateQueries({ queryKey: ["requests", orgId] });
+    await refresh();
     setBusy(false);
   };
 
+  function callDialog() {
+    return (
+      <Dialog open={callOpen} onClose={() => setCallOpen(false)} label="Ask for a call" className="ask">
+        <h2>Ask me to reach out</h2>
+        <p className="muted small">I'll reply by email to set a time. Once it's sent, you can ask again from {dateLabel(requestAgainAt(new Date().toISOString(), "call"))}.</p>
+        <label className="field-label" htmlFor="call-note">Good times, or what you'd like to cover (optional)</label>
+        <textarea id="call-note" rows={3} maxLength={NOTE_MAX} value={callNote} onChange={(e) => setCallNote(e.target.value)} />
+        <div className="actions">
+          <button className="btn btn-primary" type="button" disabled={busy} onClick={() => void askCall()}>Submit request</button>
+          <button className="btn btn-ghost" type="button" onClick={() => setCallOpen(false)}>Cancel</button>
+        </div>
+      </Dialog>
+    );
+  }
+
   // A client with nothing waiting for an assessment: no card. Free accounts always see it
-  if (!prospect && (!asked.data || list.length === 0)) return null;
+  if (!prospect && (!asked.data || (list.length === 0 && !saved))) return null;
   // Nothing outlined yet: the card says what comes first, dimmed until there's something to assess
   if (asked.data && list.length === 0) {
     return (
@@ -164,23 +218,15 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
     );
   }
 
-  function callDialog() {
-    return (
-      <Dialog open={callOpen} onClose={() => setCallOpen(false)} label="Ask for a call" className="ask">
-        <h2>Ask me to reach out</h2>
-        <p className="muted small">I'll reply by email to set a time. Once it's sent, you can ask again from {dateLabel(requestAgainAt(new Date().toISOString(), "call"))}.</p>
-        <label className="field-label" htmlFor="call-note">Good times, or what you'd like to cover (optional)</label>
-        <textarea id="call-note" rows={3} maxLength={NOTE_MAX} value={callNote} onChange={(e) => setCallNote(e.target.value)} />
-        <div className="actions">
-          <button className="btn btn-primary" type="button" disabled={busy} onClick={() => void send("call")}>Submit request</button>
-          <button className="btn btn-ghost" type="button" onClick={() => setCallOpen(false)}>Cancel</button>
-        </div>
-      </Dialog>
-    );
-  }
+  // Where the request stands, in a sentence
+  const status = !saved || editing ? ""
+    : saved.state === "waiting"
+      ? `Saved ${whenLabel(saved.editedAt)}. It goes to me at ${whenLabel(saved.dueAt)}, ${wait} minutes after your last change. Edit it as often as you like until then.`
+      : `Sent ${whenLabel(saved.sentAt)}. I'll reply by email. Edit it to send me an update.`;
+  const sentKeys = list.filter((p) => p.sentAt && !(saved?.state === "waiting" && saved.projects.includes(p.key)));
 
   return (
-    <section className="card next-step-ask" aria-labelledby="next-step-h" aria-busy={asked.isPending} data-tour="next-step-ask">
+    <section className={`card next-step-ask${locked ? " is-locked" : ""}`} aria-labelledby="next-step-h" aria-busy={asked.isPending} data-tour="next-step-ask">
       <h2 className="section-h" id="next-step-h">Next step</h2>
       {prospect && <p className="ns-note">You can outline up to {limit} <Link to={`${base}/projects`}>projects</Link>, after which you can request a free assessment for any or all right here. Time spent defining your needs before an assessment pays off on our call.</p>}
       <p>{intro}</p>
@@ -190,56 +236,58 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
           {list.map((p) => {
             const total = p.outline.have.length + p.outline.missing.length;
             return (
-              <li key={p.key} className={waiting(p) ? "sent" : ""}>
+              <li key={p.key} className={p.sentAt ? "sent" : ""}>
                 <span className="outline-pick"><span className="mono">{p.key}</span> {p.name}</span>
                 <span className="outline-meter" role="img" aria-label={`${p.outline.have.length} of ${total} outlined`}>
                   {Array.from({ length: total }, (_, i) => <i key={i} className={i < p.outline.have.length ? "on" : ""} />)}
                 </span>
                 <span className="small outline-tip">
-                  {waiting(p)
-                    ? sentLine(p)
-                    : p.outline.missing.length
-                      ? <><Link to={`${base}/projects/${p.key}`}>Continue</Link><span className="muted"> · Tip: {outlineTip(p.outline.missing)}.</span></>
-                      : <><Link to={`${base}/projects/${p.key}`}>Review</Link><span className="muted"> · Fully outlined.</span></>}
+                  {p.outline.missing.length
+                    ? <><Link to={`${base}/projects/${p.key}`}>Continue</Link><span className="muted"> · Tip: {outlineTip(p.outline.missing)}.</span></>
+                    : <><Link to={`${base}/projects/${p.key}`}>Review</Link><span className="muted"> · Fully outlined.</span></>}
+                  {p.sentAt && <span className="muted"> Sent for assessment {dateLabel(p.sentAt)}.</span>}
                 </span>
               </li>
             );
           })}
         </ul>
       )}
-      {/* A client keeps it simple: only what was sent, and when it can go again */}
-      {!prospect && sent.length > 0 && <p className="small" role="status">{keys(sent)}: {sentLine(sent[0]!)}</p>}
+      {/* A client keeps it simple: only what was sent, and when */}
+      {!prospect && sentKeys.length > 0 && <p className="small" role="status">{keys(sentKeys)} sent for assessment {dateLabel(sentKeys[0]!.sentAt)}.</p>}
       {error && <p className="notice" role="alert">{error}</p>}
-      {open.length > 0 ? (
-        <form className="next-form" onSubmit={(e) => { e.preventDefault(); if (ready) setReview(true); }}>
-          {prospect && <p className="ns-closing">I see you've outlined {keys(open)}. If you're ready for eyes, request the assessment below.</p>}
-          <label className="field-label" htmlFor="ask-note">Add some final thoughts, concerns, or requirements you'd like me to keep in mind as I take a look:<sup className="req" aria-hidden="true">*</sup></label>
-          <textarea id="ask-note" rows={3} maxLength={NOTE_MAX} required value={note} onChange={(e) => setNote(e.target.value)} aria-invalid={Boolean(noteProblem)} aria-describedby={noteProblem ? "ask-note-e" : undefined} placeholder="e.g. the intake form matters most; we're on Google Workspace; nothing can change during tax season" />
-          {noteProblem && <small id="ask-note-e" className="warn" role="alert">{noteProblem}</small>}
-          <fieldset className="ns-projects">
-            <legend>{open.length === 1 ? "Project to include" : `Projects to include (up to ${limit})`}</legend>
-            {open.map((p) => (
-              <label key={p.key} className="field-label ns-pick">
-                <input type="checkbox" disabled={busy} checked={chosen.includes(p.key)} onChange={() => toggle(p.key)} />
-                <span><span className="mono">{p.key}</span> {p.name}</span>
-              </label>
-            ))}
-            {open.length > 1 && chosen.length === 0 && <small className="muted">Choose at least one.</small>}
-          </fieldset>
-          <div className="actions next-actions">
-            <button type="submit" className="btn btn-primary btn-sm" disabled={!ready || busy}>{busy ? "Sending…" : "Request assessment"}</button>
-            {call}
-          </div>
-        </form>
-      ) : (
+      <form className="next-form" onSubmit={(e) => { e.preventDefault(); if (ready && !locked) setReview(true); }}>
+        {prospect && !saved && <p className="ns-closing">I see you've outlined {keys(unsent.length ? unsent : list)}. If you're ready for eyes, request the assessment below.</p>}
+        <label className="field-label" htmlFor="ask-note">Add some final thoughts, concerns, or requirements you'd like me to keep in mind as I take a look:<sup className="req" aria-hidden="true">*</sup></label>
+        <textarea id="ask-note" rows={3} maxLength={NOTE_MAX} required readOnly={locked} aria-readonly={locked} value={shownNote} onChange={(e) => setNote(e.target.value)} aria-invalid={Boolean(noteProblem)} aria-describedby={noteProblem ? "ask-note-e" : "ask-note-h"} placeholder="e.g. the intake form matters most; we're on Google Workspace; nothing can change during tax season" />
+        {noteProblem ? <small id="ask-note-e" className="warn" role="alert">{noteProblem}</small> : !locked && <small id="ask-note-h" className="muted">At least {minNote} characters. It reaches me {wait} minutes after you request it, so you can still change it.</small>}
+        <fieldset className="ns-projects" disabled={locked || busy}>
+          <legend>{list.length === 1 ? "Project to include" : `Projects to include (up to ${limit})`}</legend>
+          {list.map((p) => (
+            <label key={p.key} className="field-label ns-pick">
+              <input type="checkbox" checked={chosen.includes(p.key)} onChange={() => toggle(p.key)} />
+              <span><span className="mono">{p.key}</span> {p.name}</span>
+            </label>
+          ))}
+          {!locked && list.length > 1 && chosen.length === 0 && <small className="muted">Choose at least one.</small>}
+        </fieldset>
+        {status && <p className="small next-status" role="status">{status}</p>}
         <div className="actions next-actions">
+          {locked
+            ? <>
+                <button type="button" className="btn btn-sm" disabled={busy} onClick={startEdit}>Edit</button>
+                {saved?.state === "waiting" && <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => void withdraw()}>Withdraw</button>}
+              </>
+            : <>
+                <button type="submit" className="btn btn-primary btn-sm" disabled={!ready || busy}>{busy ? "Saving…" : saved ? "Save changes" : "Request assessment"}</button>
+                {editing && <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => { setEditing(false); setPicked(undefined); setError(""); }}>Cancel</button>}
+              </>}
           {prospect && list.length < limit && <Link className="btn btn-sm" to={`${base}/projects/new`}>Outline another project</Link>}
           {call}
         </div>
-      )}
-      {/* The last look: what's being sent, what could still be added, and the window. Everything is optional */}
+      </form>
+      {/* The last look: what's being sent, what could still be added, and when it goes. Everything is optional */}
       <Dialog open={review} onClose={() => setReview(false)} label="Request an assessment" className="ask">
-        <h2>Request an assessment?</h2>
+        <h2>{saved ? "Save these changes?" : "Request an assessment?"}</h2>
         <p>I'll read what's written in <b>{listWords(chosen)}</b> and reply by email. Your note:</p>
         <blockquote className="ns-quote">{note}</blockquote>
         {short.length > 0 && (
@@ -250,9 +298,9 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
             </ul>
           </>
         )}
-        <p className="muted small">Once it's sent, you can ask about {chosen.length === 1 ? "it" : "them"} again from {dateLabel(requestAgainAt(new Date().toISOString()))}. Changes you make before I read it are what I'll see.</p>
+        <p className="muted small">It reaches me {wait} minutes after your last change, so you can edit or withdraw it until then. After that, an edit sends me an update.</p>
         <div className="actions">
-          <button className="btn btn-primary" type="button" disabled={busy} onClick={() => void send("assessment")}>{short.length ? "Submit request anyway" : "Submit request"}</button>
+          <button className="btn btn-primary" type="button" disabled={busy} onClick={() => void save()}>{short.length ? "Submit request anyway" : "Submit request"}</button>
           <button className="btn btn-ghost" type="button" onClick={() => setReview(false)} autoFocus>Keep editing</button>
         </div>
       </Dialog>
