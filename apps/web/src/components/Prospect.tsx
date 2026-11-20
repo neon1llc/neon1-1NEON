@@ -59,15 +59,15 @@ export function GuideCard({ me, prospect }: { me: Me; prospect: boolean }) {
   };
   return (
     <section className="card guide-card" aria-labelledby="guide-h" data-tour="get-to-know">
-      <h2 className="section-h" id="guide-h">Get to know 1NEON <button type="button" className="linkish helper" disabled={busy} onClick={() => void hide()}>Hide</button></h2>
+      <h2 className="section-h" id="guide-h">Get to know 1NEON <button type="button" className="linkish small" disabled={busy} onClick={() => void hide()}>Hide</button></h2>
       <ul className="guide-links">
-        <li><Link to="/example">A sample project</Link><span className="helper">Three made-up clients, start to finish</span></li>
+        <li><Link to="/example">A sample project</Link><span className="muted small">Three made-up clients, start to finish</span></li>
         {prospect
-          ? <li><OutLink href="/1NEON/live?play=free">From free account to client</OutLink><span className="helper">A six-minute walkthrough</span></li>
-          : <li><OutLink href="/1NEON/live">The guided walkthrough</OutLink><span className="helper">Watch the portal work on its own</span></li>}
-        <li><OutLink href="/1NEON/demo/">Try the demo</OutLink><span className="helper">The same portal with made-up data</span></li>
-        <li><Link to="/faqs">FAQs</Link><span className="helper">Short answers to common questions</span></li>
-        {prospect && <li><OutLink href="/knowledge/guides/free-accounts/">How free accounts work</OutLink><span className="helper">Limits, keeping, and deleting</span></li>}
+          ? <li><a href="/1NEON/live?play=free">From free account to client</a><span className="muted small">A six-minute walkthrough</span></li>
+          : <li><a href="/1NEON/live">The guided walkthrough</a><span className="muted small">Watch the portal work on its own</span></li>}
+        <li><a href="/1NEON/demo/">Try the demo</a><span className="muted small">The same portal with made-up data</span></li>
+        <li><Link to="/faqs">FAQs</Link><span className="muted small">Short answers to common questions</span></li>
+        {prospect && <li><OutLink href="/knowledge/guides/free-accounts/">How free accounts work</OutLink><span className="muted small">Limits, keeping, and deleting</span></li>}
       </ul>
     </section>
   );
@@ -102,8 +102,6 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [review, setReview] = useState(false);
-  // The note's problem shows only after the field has been left, so the helper under it never changes while typing
-  const [touched, setTouched] = useState(false);
   const [callOpen, setCallOpen] = useState(false);
   const [callNote, setCallNote] = useState("");
   // One key per attempt at a call request: pressing again after a lost reply is the same request, not a second
@@ -132,10 +130,10 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
     ? "An assessment is free: my read of what's written here, plausible approaches, and the first questions to settle."
     : "An assessment is my read of what's written here, plausible approaches, and the first questions to settle, before any options or prices.";
   const call = !prospect
-    ? <span className="helper next-call">Rather talk it through? <Link to="/contact">Contact neon1</Link></span>
+    ? <span className="muted small next-call">Rather talk it through? <Link to="/contact">Contact neon1</Link></span>
     : callAsked
-      ? <span className="helper next-call" role="status">Call requested {dateLabel(callAsked.at)}. I'll reply by email. You can ask again from {dateLabel(callAsked.again)}.</span>
-      : <span className="helper next-call">Rather talk first? <OutLink href={BOOK_A_CALL}>Book a 30-minute call</OutLink> or <button type="button" className="linkish" onClick={() => { setError(""); setCallOpen(true); }}>ask me to reach out</button>.</span>;
+      ? <span className="small next-call" role="status">Call requested {dateLabel(callAsked.at)}. I'll reply by email. You can ask again from {dateLabel(callAsked.again)}.</span>
+      : <span className="muted small next-call">Rather talk first? <OutLink href={BOOK_A_CALL}>Book a 30-minute call</OutLink> or <button type="button" className="linkish" onClick={() => { setError(""); setCallOpen(true); }}>ask me to reach out</button>.</span>;
   const refresh = () => qc.invalidateQueries({ queryKey: ["requests", orgId] });
 
   const startEdit = () => {
@@ -212,7 +210,7 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
       <section className="card next-step-ask is-waiting" aria-labelledby="next-step-h" data-tour="next-step-ask">
         <h2 className="section-h" id="next-step-h">Next step</h2>
         <p className="ns-note">You can outline up to {limit} <Link to={`${base}/projects`}>projects</Link>, after which you can request an assessment for any or all right here. Time spent defining your needs before an assessment pays off on our call.</p>
-        <p className="muted ns-intro">{intro}</p>
+        <p>{intro}</p>
         <div className="actions next-actions">
           <Link className="btn btn-primary btn-sm" to={`${base}/projects/new`}>Start a project</Link>
           {call}
@@ -230,50 +228,40 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
   const sentKeys = list.filter((p) => p.sentAt && !(saved?.state === "waiting" && saved.projects.includes(p.key)));
 
   return (
-    <>
-    {/* Next step: how far each project is outlined, and a way to outline another. Clients have no outline, so for them Request assessment stands alone */}
-    {prospect && (
-      <section className="card next-step-ask" aria-labelledby="next-step-h" aria-busy={asked.isPending} data-tour="next-step-ask">
-        <h2 className="section-h" id="next-step-h">Next step</h2>
-        <p className="ns-note">You can outline up to {limit} <Link to={`${base}/projects`}>projects</Link>, after which you can request an assessment for any or all right here. Time spent defining your needs before an assessment pays off on our call.</p>
-        {/* One line per project, how far along it is, and what would help most */}
-        {list.length > 0 && (
-          <ul className="outline-list" aria-label="How your projects are coming along">
-            {list.map((p) => {
-              const total = p.outline.have.length + p.outline.missing.length;
-              return (
-                <li key={p.key} className={p.sentAt ? "sent" : ""}>
-                  <span className="outline-pick"><span className="mono">{p.key}</span> {p.name}</span>
-                  <span className="outline-meter" role="img" aria-label={`${p.outline.have.length} of ${total} outlined`}>
-                    {Array.from({ length: total }, (_, i) => <i key={i} className={i < p.outline.have.length ? "on" : ""} />)}
-                  </span>
-                  <span className="outline-tip">
-                    {p.outline.missing.length
-                      ? <><Link to={`${base}/projects/${p.key}`}>Continue</Link><span className="muted"> · Tip: {outlineTip(p.outline.missing)}.</span></>
-                      : <><Link to={`${base}/projects/${p.key}`}>Review</Link><span className="muted"> · Fully outlined.</span></>}
-                    {p.sentAt && <span className="muted"> Sent for assessment {dateLabel(p.sentAt)}.</span>}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-        {list.length < limit && <div className="actions"><Link className="btn btn-sm" to={`${base}/projects/new`}>Outline another project</Link></div>}
-      </section>
-    )}
-    <section className={`card request-ask${locked ? " is-locked" : ""}`} aria-labelledby="request-h" aria-busy={asked.isPending} {...(prospect ? {} : { "data-tour": "next-step-ask" })}>
-      <h2 className="section-h" id="request-h">Request assessment</h2>
-      <p className="muted ns-intro">{intro}</p>
+    <section className={`card next-step-ask${locked ? " is-locked" : ""}`} aria-labelledby="next-step-h" aria-busy={asked.isPending} data-tour="next-step-ask">
+      <h2 className="section-h" id="next-step-h">Next step</h2>
+      {prospect && <p className="ns-note">You can outline up to {limit} <Link to={`${base}/projects`}>projects</Link>, after which you can request an assessment for any or all right here. Time spent defining your needs before an assessment pays off on our call.</p>}
+      <p>{intro}</p>
+      {/* A free account: one line per project, how far along it is, and what would help most */}
+      {prospect && list.length > 0 && (
+        <ul className="outline-list" aria-label="How your projects are coming along">
+          {list.map((p) => {
+            const total = p.outline.have.length + p.outline.missing.length;
+            return (
+              <li key={p.key} className={p.sentAt ? "sent" : ""}>
+                <span className="outline-pick"><span className="mono">{p.key}</span> {p.name}</span>
+                <span className="outline-meter" role="img" aria-label={`${p.outline.have.length} of ${total} outlined`}>
+                  {Array.from({ length: total }, (_, i) => <i key={i} className={i < p.outline.have.length ? "on" : ""} />)}
+                </span>
+                <span className="small outline-tip">
+                  {p.outline.missing.length
+                    ? <><Link to={`${base}/projects/${p.key}`}>Continue</Link><span className="muted"> · Tip: {outlineTip(p.outline.missing)}.</span></>
+                    : <><Link to={`${base}/projects/${p.key}`}>Review</Link><span className="muted"> · Fully outlined.</span></>}
+                  {p.sentAt && <span className="muted"> Sent for assessment {dateLabel(p.sentAt)}.</span>}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
       {/* A client keeps it simple: only what was sent, and when */}
-      {!prospect && sentKeys.length > 0 && <p className="muted" role="status">{keys(sentKeys)} sent for assessment {dateLabel(sentKeys[0]!.sentAt)}.</p>}
+      {!prospect && sentKeys.length > 0 && <p className="small" role="status">{keys(sentKeys)} sent for assessment {dateLabel(sentKeys[0]!.sentAt)}.</p>}
       {error && <p className="notice" role="alert">{error}</p>}
       <form className="next-form" onSubmit={(e) => { e.preventDefault(); if (ready && !locked) setReview(true); }}>
         {prospect && !saved && <p className="ns-closing">I see you've outlined {keys(unsent.length ? unsent : list)}. If you're ready for eyes, request the assessment below.</p>}
         <label className="field-label" htmlFor="ask-note">Add some final thoughts, concerns, or requirements you'd like me to keep in mind as I take a look:<sup className="req" aria-hidden="true">*</sup></label>
-        <textarea id="ask-note" rows={3} maxLength={NOTE_MAX} required readOnly={locked} aria-readonly={locked} value={shownNote} onChange={(e) => setNote(e.target.value)} onBlur={() => setTouched(true)} aria-invalid={touched && Boolean(noteProblem)} aria-describedby={touched && noteProblem ? "ask-note-h ask-note-e" : "ask-note-h"} placeholder="e.g. the intake form matters most; we're on Google Workspace; nothing can change during tax season" />
-        {/* The helper is fixed text; a problem is a separate line under it, after the field has been left */}
-        {!locked && <small id="ask-note-h" className="helper">At least {minNote} characters. It reaches me {wait} minutes after you request it, so you can still change it.</small>}
-        {touched && noteProblem && <small id="ask-note-e" className="helper warn" role="alert">{noteProblem}</small>}
+        <textarea id="ask-note" rows={3} maxLength={NOTE_MAX} required readOnly={locked} aria-readonly={locked} value={shownNote} onChange={(e) => setNote(e.target.value)} aria-invalid={Boolean(noteProblem)} aria-describedby={noteProblem ? "ask-note-e" : "ask-note-h"} placeholder="e.g. the intake form matters most; we're on Google Workspace; nothing can change during tax season" />
+        {noteProblem ? <small id="ask-note-e" className="warn" role="alert">{noteProblem}</small> : !locked && <small id="ask-note-h" className="muted">At least {minNote} characters. It reaches me {wait} minutes after you request it, so you can still change it.</small>}
         <fieldset className="ns-projects" disabled={locked || busy}>
           <legend>{list.length === 1 ? "Project to include" : `Projects to include (up to ${limit})`}</legend>
           {/* One project is the only choice, so it is named, not ticked: a ticked box reads as done */}
@@ -285,9 +273,9 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
               <span><span className="mono">{p.key}</span> {p.name}</span>
             </label>
           ))}
-          {!locked && list.length > 1 && chosen.length === 0 && <small className="helper">Choose at least one.</small>}
+          {!locked && list.length > 1 && chosen.length === 0 && <small className="muted">Choose at least one.</small>}
         </fieldset>
-        {status && <p className="helper next-status" role="status">{status}</p>}
+        {status && <p className="small next-status" role="status">{status}</p>}
         <div className="actions next-actions">
           {locked
             ? <>
@@ -297,8 +285,9 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
             : <>
                 <button type="submit" className="btn btn-primary btn-sm" disabled={!ready || busy} aria-describedby={blocker && !busy ? "ask-why" : undefined}>{busy ? "Saving…" : saved ? "Save changes" : "Request assessment"}</button>
                 {blocker && !busy && <span id="ask-why" className="ns-why">{blocker}</span>}
-                {editing && <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => { setEditing(false); setPicked(undefined); setError(""); setTouched(false); }}>Cancel</button>}
+                {editing && <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => { setEditing(false); setPicked(undefined); setError(""); }}>Cancel</button>}
               </>}
+          {prospect && list.length < limit && <Link className="btn btn-sm" to={`${base}/projects/new`}>Outline another project</Link>}
           {call}
         </div>
       </form>
@@ -323,7 +312,6 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
       </Dialog>
       {callDialog()}
     </section>
-    </>
   );
 }
 

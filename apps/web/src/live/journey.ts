@@ -173,7 +173,7 @@ export const JOURNEY: Show = {
         await s.hover(".outline-list li", 1200);
         await s.think("One project, so it's already chosen. A note for him, and she asks.");
         await s.type("#ask-note", "The insurer's deadline is the end of the month. Weekday mornings are best if a call helps.", 300);
-        await s.click({ sel: ".request-ask button", text: "Request assessment" }, 1000);
+        await s.click({ sel: ".next-step-ask button", text: "Request assessment" }, 1000);
         // The last look lists what could still be added, and she can send it anyway
         await s.hover("dialog[open] .ns-quote", 900);
         await s.click({ sel: "dialog[open] button", text: /^Submit request( anyway)?$/ }, 1400);

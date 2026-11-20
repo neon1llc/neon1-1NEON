@@ -9,20 +9,25 @@ const css = readFileSync(join(__dirname, "app.css"), "utf8");
 const sentinel = readFileSync(join(__dirname, "sentinel.css"), "utf8");
 
 describe("type and spacing scales", () => {
-  it("has one named scale and no scale multiplier", () => {
+  // The base scale belongs to neon1.tech's shared/neon1.css; this stylesheet may only use its steps and add portal-level ones
+  const STEPS = new Set(["xs", "sm", "ui", "md", "base", "lg", "xl", "2xl", "3xl", "title", "input"]);
+  it("defines no base step of its own and uses only steps that exist", () => {
     expect(css).not.toMatch(/--type\b/);
-    for (const t of ["xs", "sm", "ui", "md", "lg", "xl", "2xl", "3xl", "title", "input"]) expect(css).toMatch(new RegExp(`--fs-${t}:`));
-    for (let i = 0; i <= 7; i++) expect(css).toMatch(new RegExp(`--sp-${i}:`));
+    expect(css).not.toMatch(/--fs-(xs|sm|ui|md|base|lg|xl|2xl|3xl):/);
+    expect(css).not.toMatch(/--sp-\d:/);
+    const used = new Set([...css.matchAll(/var\(--fs-([\w]+)\)/g)].map((m) => m[1]));
+    expect([...used].filter((u) => !STEPS.has(u!))).toEqual([]);
+    const spaces = new Set([...css.matchAll(/var\(--sp-(\d)\)/g)].map((m) => Number(m[1])));
+    expect([...spaces].filter((n) => n > 7)).toEqual([]);
   });
   it("sizes text only by naming a step (a size written as a number is the rare, commented exception)", () => {
-    const loose = [...css.matchAll(/(?<![\w-])font(?:-size)?:([^;{}]*)/g)].map((m) => m[0]).filter((d) => /\d(px|rem)\b/.test(d) && !/^font(-size)?: *(var\(--fs-|clamp\()/.test(d) && !/var\(--fs-/.test(d));
-    expect(loose.filter((d) => !/clamp\(|1em\/0/.test(d))).toEqual([]);
+    const loose = [...css.matchAll(/(?<![\w-])font(?:-size)?:([^;{}]*)/g)].map((m) => m[0]).filter((d) => /\d(px|rem)\b/.test(d) && !/var\(--fs-/.test(d) && !/clamp\(|1em\/0/.test(d));
+    expect(loose).toEqual([]);
   });
-  it("keeps helper and caption text no larger than card titles", () => {
-    const px = (n: string) => Number(css.match(new RegExp(`--fs-${n}: ([\\d.]+)rem`))![1]) * 16;
-    expect(px("sm")).toBeLessThan(px("md"));
+  it("keeps card and section titles at the compact-body step, above the helper text step", () => {
     expect(css).toMatch(/\.card-h \{[^}]*font-size: var\(--fs-md\)/);
     expect(css).toMatch(/\.section-h \{[^}]*font-size: var\(--fs-md\)/);
+    expect(css).toMatch(/\.field-label \{[^}]*font: var\(--fs-sm\)/);
   });
 });
 

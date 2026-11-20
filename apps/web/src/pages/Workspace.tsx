@@ -109,8 +109,8 @@ export function WorkspacePage() {
         </section>
 
         <ComingUp tid={org.id} base={base} />
-        {/* Every live project at a glance: where it is, how far along, and what's next. A free account's Next step already lists each project with its progress, so the same list is not repeated */}
-        {(ws.data?.glance?.length ?? 0) > 0 && !prospect && (
+        {/* Every live project at a glance: where it is, how far along, and what's next */}
+        {(ws.data?.glance?.length ?? 0) > 0 && (
           <section className="card glance" data-tour="glance">
             <h2 className="section-h">Projects at a glance <small><Link to={`${base}/projects`}>All projects</Link></small></h2>
             <ul>

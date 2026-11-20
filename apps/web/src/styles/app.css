@@ -3,23 +3,13 @@
  * awake light layer. */
 
 /* Semantic tokens every component uses, built on the shared brand tokens */
-/* Design tokens: one type scale and one spacing scale; every component names a step and never writes its own size.
-   Sizes are rem so a person's own text-size setting scales the whole app; the px beside each is at the default 16px root.
-   Type: caption and meta 12, labels and buttons 13, interface text 14, body and card titles 15, lead 17, then headings.
-   Rule: helper, caption, and meta text never exceed 13; a card or section title is never below 15.
-   Spacing: 2 4 8 12 16 24 32 48, on a 4px grid. An exception gets a comment saying why */
+/* Design tokens, as a lineage. neon1.tech's shared/neon1.css is the parent: it defines the type scale (--fs-xs to --fs-3xl), the
+   spacing scale (--sp-0 to --sp-7), and .helper, and 1NEON inherits all of them. This file adds only what is the portal's own, built
+   on those steps, and a component below overrides a step only where it must, with a comment saying why. The rule: helper, caption,
+   and meta text never exceed 13px; a card or section title is never below 15px */
 :root {
-  --fs-xs: .75rem;      /* 12  captions, meta, badges, mono labels */
-  --fs-sm: .8125rem;    /* 13  buttons, field labels, helper text, rail labels */
-  --fs-ui: .875rem;     /* 14  menu rows, table rows, secondary body */
-  --fs-md: .9375rem;    /* 15  body, inputs, card and section titles */
-  --fs-lg: 1.0625rem;   /* 17  lead paragraphs */
-  --fs-xl: 1.25rem;     /* 20  phone page title, large numbers */
-  --fs-2xl: 1.5rem;     /* 24  large numbers */
-  --fs-3xl: 2rem;       /* 32  display */
-  --fs-title: clamp(1.375rem, 2.6vw, 1.875rem);   /* page title, 22 to 30 */
-  --fs-input: var(--fs-md);
-  --sp-0: .125rem; --sp-1: .25rem; --sp-2: .5rem; --sp-3: .75rem; --sp-4: 1rem; --sp-5: 1.5rem; --sp-6: 2rem; --sp-7: 3rem;
+  --fs-title: clamp(1.375rem, 2.6vw, 1.875rem);   /* the page title, 22 to 30 */
+  --fs-input: var(--fs-md);                        /* text fields */
 }
 /* A touch screen's text fields stay at 16px or larger so iOS never zooms the page on focus */
 @media (pointer: coarse) { :root { --fs-input: 1rem; } }
@@ -85,11 +75,6 @@ h1, h2, h3 { font-family: var(--mono); font-weight: 600; letter-spacing: .01em; 
 .chip { font: var(--fs-xs) var(--mono); color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 99px; padding: var(--sp-1) var(--sp-3); cursor: pointer; min-height: 26px; }
 .chip:hover, .chip[aria-pressed="true"] { color: var(--accent); border-color: var(--line-strong); }
 .linkish { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
-
-/* Helper text: one style for every hint, caption, and status line under a control or inside a card. It is never larger
-   than a card title (--fs-md), and a problem is the same line in red, not different text in the same place */
-.helper { margin: 0; font-size: var(--fs-sm); color: var(--muted); }
-.helper.warn { color: var(--red); }
 
 /* Form fields */
 .field-label { display: block; font: var(--fs-sm)/1.4 var(--sans); color: var(--muted); }
@@ -2300,7 +2285,7 @@ dialog:has(.ns-quote), dialog:has(#call-note) { max-width: min(560px, calc(100vw
 .outline-example { list-style: none; margin: var(--sp-2) 0 0; padding: 0; display: grid; gap: var(--sp-3); }
 .outline-example li { display: grid; gap: var(--sp-0); }
 /* A saved assessment request: read-only until Edit */
-.request-ask.is-locked textarea { opacity: .7; background: var(--line); cursor: default; }
+:is(.next-step-ask, .request-ask).is-locked textarea { opacity: .7; background: var(--line); cursor: default; }
 .next-status { margin: 0; }
 
 
