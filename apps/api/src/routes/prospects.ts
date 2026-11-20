@@ -293,7 +293,7 @@ export async function finishPurges(k: PurgeKit, opts: { at?: Date; deadline?: nu
 
 
 // What each quiet-prospect email says: two kind check-ins, then the final notice. Replies reach Pradeep
-function quietEmail(t: Tenant, portal: string, step: "nudge" | "final", when: string, signup: string) {
+export function quietEmail(t: Tenant, portal: string, step: "nudge" | "final", when: string, signup: string) {
   if (step === "nudge") {
     return {
       subject: `How are things going with ${t.name}?`,

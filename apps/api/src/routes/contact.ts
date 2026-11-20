@@ -8,7 +8,7 @@ import { z } from "zod";
 import { body, fail } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
 import { viewerIp } from "../lib/edge.ts";
-import { contactMail } from "../lib/contactmail.ts";
+import { contactMail, contactSubject } from "../lib/contactmail.ts";
 
 
 export const CONTACT_TO = "hello@neon1.tech";
@@ -105,8 +105,8 @@ export function contactRoutes(app: App, k: Kit) {
       at: now,
       zone: DEFAULT_TIME_ZONE, // goes to neon1, so the sent time reads in neon1's zone
     });
-    // From "neon1" (the website); dev's mailer marks sender and subject itself
-    await d.mailer.send(CONTACT_TO, `[request] ${topic} · ${m.name}`, text, html, m.email, undefined, undefined, "requests");
+    // From "neon1 Reach" (the website's contact form); dev's mailer marks the sender name itself
+    await d.mailer.send(CONTACT_TO, contactSubject({ name: m.name, about: topic }), text, html, m.email, undefined, undefined, "requests");
     return c.json({ ok: true });
   });
 }

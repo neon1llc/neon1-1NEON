@@ -1,7 +1,8 @@
 // apps/api/src/emails.ts - The emails 1NEON sends, as plain text plus branded HTML.
 
 
-import { branded, esc, link, sentAt } from "./mail.ts";
+import { gist, factMail } from "./lib/factmail.ts";
+import { branded, esc, link, sentAt, type SenderKind } from "./mail.ts";
 
 
 /** The invite email: plain text plus the branded HTML version */
@@ -113,27 +114,107 @@ export function factorRemovedEmail(opts: { url: string; what: string; how: "remo
 }
 
 
-/** A notification by email: who did what, where, with a link to look */
-export function noticeEmail(opts: { orgName: string; by: string; summary: string; url: string; button?: string; important?: boolean; at?: Date; zone?: string }) {
-  const at = opts.at ?? new Date();
-  const subject = `${opts.orgName}: ${opts.summary}`.slice(0, 140);
-  const text = [
-    `${opts.by} in ${opts.orgName}: ${opts.summary}`,
-    "",
-    `${opts.button ?? "Open 1NEON"}: ${opts.url}`,
-    "",
-    "Choose which of these reach you in your 1NEON profile, under Notifications.",
-    sentAt(at, opts.zone),
-  ].join("\n");
-  const html = branded({
-    label: opts.important ? "something important changed" : "something changed",
-    preheader: `${opts.by}: ${opts.summary}`,
-    heading: opts.summary,
-    body: `<p style="margin:0">${esc(opts.by)} in <b>${esc(opts.orgName)}</b>.</p>`,
-    button: { label: opts.button ?? "Open 1NEON", url: opts.url },
-    note: "Choose which of these reach you in your 1NEON profile, under Notifications.",
-    at,
-    zone: opts.zone,
+// --- Notices -----------------------------------------------------------------
+
+/** A short name for each kind of event, for the subject and the title */
+const LABELS: Record<string, string> = {
+  "prospect.signedup": "Free account created", "prospect.kept": "Free account kept", "prospect.promoted": "Became a client",
+  "prospect.suspended": "Free account suspended", "prospect.resumed": "Free account resumed", "prospect.held": "Free account held", "prospect.released": "Free account released",
+  "member.invited": "Person invited", "member.joined": "Person joined", "member.updated": "Access changed", "member.signedin": "Signed in",
+  "doc.uploaded": "File uploaded", "doc.moved": "File moved", "doc.deleted": "File removed",
+  "decision.approved": "Decision approved", "decision.changed": "Decision changed", "option.quoted": "Quote issued",
+  "proposal.issued": "Proposal issued", "proposal.refresh_asked": "Refresh asked", "purchase.agreed": "Purchase agreed", "handoff.accepted": "Handover accepted",
+  "agreement.signed": "Agreement signed", "invoice.issued": "Invoice issued", "invoice.voided": "Invoice voided", "invoice.drafted": "Invoice drafted",
+  "payment.started": "Payment started", "payment.received": "Payment received", "payment.failed": "Payment failed",
+  "project.moved": "Project moved", "project.created": "Project created", "project.trashed": "Project moved to Trash", "project.updated": "Project updated",
+  "project.decider_changed": "Decision maker changed", "org.stages": "Stages changed", "org.profile": "Profile changed", "org.created": "Organization created",
+  "comment.created": "New comment", "request.assessment": "Assessment requested", "request.call": "Call requested",
+  "calendar.created": "Calendar event added", "calendar.updated": "Calendar event changed", "calendar.deleted": "Calendar event removed",
+};
+
+/** The short name for an action; an item's own kind names the rest ("task.created" is "Task added") */
+export function noticeLabel(action: string): string {
+  if (LABELS[action]) return LABELS[action]!;
+  const m = /^([a-z_]+)\.(created|updated|deleted)$/.exec(action);
+  if (!m) return "Update";
+  const kind = m[1]!.replace(/_/g, " ");
+  return `${kind[0]!.toUpperCase()}${kind.slice(1)} ${{ created: "added", updated: "changed", deleted: "removed" }[m[2] as "created"]}`;
+}
+
+/** What to do about an event, said once and only where there is something to do */
+const TODO: Record<string, string> = {
+  "request.assessment": "Reply to this email to answer them, or open their account.",
+  "request.call": "Reply to this email to answer them, or open their account.",
+  "prospect.signedup": "Nothing yet. Their first project and any request arrive as separate emails.",
+  "invoice.issued": "Open the invoice, then pay it or ask a question.",
+  "payment.failed": "Open the invoice and try another way to pay.",
+  "proposal.issued": "Open it, then decide or ask a question.",
+  "option.quoted": "Open it, then decide or ask a question.",
+  "proposal.refresh_asked": "Update the proposal and issue it again.",
+  "comment.created": "Open the item and reply.",
+};
+
+// First words of a summary that need the actor in front of them ("Added task" becomes "Dana added task")
+const ACTOR_VERBS = new Set(["added", "removed", "created", "uploaded", "moved", "asked", "changed", "approved", "quoted", "issued", "drafted", "voided", "invited", "updated", "deleted", "renamed"]);
+
+/** One plain sentence: who did what. The stored summary has the project's key in front, which the Project row carries */
+export function noticeSentence(by: string, summary: string): string {
+  const s = summary.replace(/^[A-Z][A-Z0-9]*-\d+: /, "");
+  if (!s) return summary;
+  const first = /^([A-Za-z]+)/.exec(s)?.[1]?.toLowerCase();
+  return first && ACTOR_VERBS.has(first) ? `${by} ${s[0]!.toLowerCase()}${s.slice(1)}` : `${s[0]!.toUpperCase()}${s.slice(1)}`;
+}
+
+
+/** What the outbox knows about one event and one reader */
+export interface NoticeOpts {
+  orgName: string;
+  trial: boolean; // a free account's space, not a client's
+  ref?: string; // the organization's id, such as NP-0002
+  by: string; // "You", a person's name, or the payment page
+  byEmail?: string;
+  action: string; // the audit action, which names the kind of event
+  summary: string; // the stored summary, worded for this reader
+  projectKey?: string;
+  projectUrl?: string;
+  url: string; // what the button opens
+  button?: string;
+  important?: boolean; // in a group that emails by default
+  operator?: boolean; // the reader is neon1 itself
+  quick?: boolean; // a quick fix, whose client reads "quote" where a project says "proposal"
+  at?: Date;
+  zone?: string; // the reader's IANA time zone
+}
+
+
+/**
+ * A notification by email: what happened, who did it, where, and what to do. The sender says what part of 1NEON it is
+ * from: "1NEON Reach" for an important action in a free account (to neon1 only), "1NEON Trial" for the rest of a free
+ * account's changes, and "1NEON" for a client's. The subject is the kind of event and where, never the whole story
+ */
+export function noticeEmail(o: NoticeOpts) {
+  const at = o.at ?? new Date();
+  const as: SenderKind = o.trial ? (o.operator && o.important ? "reach" : "trial") : "portal";
+  const label = o.quick ? noticeLabel(o.action).replace("Proposal", "Quote") : noticeLabel(o.action);
+  const sentence = noticeSentence(o.by, o.summary);
+  const subject = gist([label, o.projectKey, o.orgName].filter(Boolean).join(" · "), 90);
+  const todo = o.quick ? TODO[o.action]?.replace("proposal", "quote") : TODO[o.action];
+  const mail = factMail({
+    kicker: o.trial ? (as === "reach" ? "free account alert" : "free account update") : "update",
+    title: label,
+    sub: o.orgName,
+    preheader: gist(sentence, 110),
+    facts: [
+      { k: "Who", v: o.byEmail && o.by !== "You" ? `${o.by} <${o.byEmail}>` : o.by },
+      { k: "Organization", v: o.operator && o.ref ? `${o.orgName} (${o.ref}${o.trial ? ", free account" : ""})` : o.orgName },
+      ...(o.projectKey ? [{ k: "Project", v: o.projectKey, href: o.projectUrl, mono: true }] : []),
+      { k: "Sent", v: sentAt(at, o.zone).replace(/^Sent /, "") },
+    ],
+    blocks: [["What happened", sentence]],
+    todo,
+    action: { label: o.button ?? "Open in 1NEON", url: o.url },
+    footer: [...(as === "reach" ? ["Reply to this email to answer them directly."] : []), "Choose which of these reach you in your 1NEON profile, under Notifications."],
+    textHead: `${label} · ${o.orgName}`,
   });
-  return { subject, text, html };
+  return { subject, text: mail.text, html: mail.html, as, replyTo: as === "reach" && o.byEmail && o.by !== "You" ? o.byEmail : undefined };
 }

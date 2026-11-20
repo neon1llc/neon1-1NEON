@@ -18,20 +18,24 @@ const SANS = "Figtree,-apple-system,'Segoe UI',Roboto,sans-serif";
 // the walkthrough's pretend inbox shows the same sender
 export const MAIL_FROM = { name: "1NEON", address: "noreply@notify.neon1.tech" } as const;
 
-// Who a message is from, by the part of neon1 that sends it, so a glance at the sender says what it is:
-// "1NEON" is only the portal; "neon1" is the website (contact and use-case requests, bug reports, feedback);
-// "neon1 alerts" is system mail neon1 controls. All send from the one verified notify.neon1.tech domain,
-// so SPF and DKIM stay aligned for every address
+// Who a message is from, by what it is, so the sender name alone says what an email is before it is opened.
+// Mail only neon1 receives: "neon1 Reach" (a contact form message), "neon1 Bugs", "neon1 Feedback", and "1NEON Reach"
+// (an important action by someone on a free account, such as signing up or asking for an assessment). Mail the
+// portal sends: "1NEON Trial" (changes in a free account's own space), and "1NEON" (everything else: client changes,
+// invitations, sign-in codes, security notices). Dev adds "[DEV] " before the name and nowhere else. All send from
+// the one verified notify.neon1.tech domain, so SPF and DKIM stay aligned for every address
 export const SENDERS = {
   portal: { name: "1NEON", local: "noreply" },
-  requests: { name: "neon1", local: "requests" },
-  bugs: { name: "neon1", local: "bugs" },
-  feedback: { name: "neon1", local: "feedback" },
-  alerts: { name: "neon1 alerts", local: "alerts" },
+  trial: { name: "1NEON Trial", local: "trial" },
+  reach: { name: "1NEON Reach", local: "reach" },
+  requests: { name: "neon1 Reach", local: "requests" },
+  bugs: { name: "neon1 Bugs", local: "bugs" },
+  feedback: { name: "neon1 Feedback", local: "feedback" },
+  alerts: { name: "neon1 Alerts", local: "alerts" },
 } as const;
 export type SenderKind = keyof typeof SENDERS;
 
-/** A From header for one sender on the sending domain; dev puts "[DEV] " first in the display name */
+/** A From header for one sender on the sending domain; dev puts "[DEV] " first in the display name, never in the subject */
 export function fromHeader(kind: SenderKind, domain: string, dev = false) {
   const s = SENDERS[kind];
   // Quoted, since "[" and "]" are specials in a display name

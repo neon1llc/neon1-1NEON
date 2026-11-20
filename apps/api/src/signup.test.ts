@@ -740,7 +740,8 @@ describe("asking neon1 for an assessment or a call", () => {
     const r = await as("r@example.com", `/t/${tid}/requests`, "POST", { kind: "assessment", note: "The intake form first" });
     expect(r.status).toBe(200);
     const mail = mailer.sent.find((m) => m.to === "hello@neon1.tech")!;
-    expect(mail.subject).toContain("asked for an assessment");
+    expect(mail.subject).toBe("Assessment requested · Kim Dental");
+    expect(mail.as).toBe("reach");
     expect(mail.replyTo).toBe("r@example.com");
     expect(mail.text).toContain("The intake form first");
     const seen = await (await as("r@example.com", `/t/${tid}/requests`)).json() as Record<string, { at: string }>;
