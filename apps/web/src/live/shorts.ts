@@ -111,7 +111,7 @@ const invite: Show = {
         const mail = await openMail(s);
         try {
           await s.think("An email from neon1. That must be the invite Pradeep mentioned.");
-          await read(s, mail, "You're invited");
+          await read(s, mail, /invitation/i);
           await s.think(`Pradeep invited me to ${S.org.name}. No password to make. Good.`);
           await s.hover(() => mail.link("Join"), 900);
           await s.click(() => mail.link("Join"), 600);
