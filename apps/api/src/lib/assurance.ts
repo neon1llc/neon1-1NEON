@@ -7,6 +7,7 @@ import type { Context } from "hono";
 import { factorInventory, type FactorInventory } from "../factors.ts";
 import { checkTotp } from "../totp.ts";
 import { newId } from "@1neon/domain";
+import type { SenderKind } from "../mail.ts";
 import { keys } from "../store/repo.ts";
 import { ConflictError, type Row, type WriteOp } from "../store/types.ts";
 import { bounded } from "../outbox.ts";
@@ -66,8 +67,8 @@ export function assurance(k: Kit) {
   }
 
   /** Mail a security notice; a mail failure never undoes the change, but it is logged */
-  async function notice(user: User, mail: { subject: string; text: string; html: string }) {
-    await d.mailer.send(user.email, mail.subject, mail.text, mail.html).catch((e) => console.error(JSON.stringify({ level: "error", message: `security notice: ${String(e)}` })));
+  async function notice(user: User, mail: { subject: string; text: string; html: string; as?: SenderKind; replyTo?: string }) {
+    await d.mailer.send(user.email, mail.subject, mail.text, mail.html, mail.replyTo, undefined, undefined, mail.as).catch((e) => console.error(JSON.stringify({ level: "error", message: `security notice: ${String(e)}` })));
   }
 
   // --- Counted codes ------------------------------------------------------------

@@ -2,7 +2,7 @@
 // left-aligned table of facts (from, organization, about, timing, how they found neon1, their local time, when it was
 // sent), then what they wrote in its own blocks. Plain text carries the same rows in aligned columns.
 import { sentAt } from "../mail.ts";
-import { factMail, gist } from "./factmail.ts";
+import { factMail, gist, replyTo, subjectOf } from "./factmail.ts";
 
 /** What the form sent and the route checked: everything one message holds */
 export interface ContactMessage {
@@ -19,16 +19,17 @@ export interface ContactMessage {
   zone: string; // the zone the sent time reads in (neon1's)
 }
 
-/** The subject: who wrote, then what about, short: the sender name already says it is the contact form */
-export function contactSubject(m: Pick<ContactMessage, "name" | "about">) {
-  return `${m.name} · ${gist(m.about, 50)}`;
+/** The subject: what it is and who wrote ("Contact message — Dana Kim (Kim Dental)"); the topics are in the body and the preview line */
+export function contactSubject(m: Pick<ContactMessage, "name" | "company">) {
+  return subjectOf("Contact message", m.company ? `${m.name} (${m.company})` : m.name);
 }
 
 export function contactMail(m: ContactMessage) {
   return factMail({
     kicker: "contact form",
     title: m.name,
-    sub: gist(m.about, 60),
+    sub: m.company || undefined,
+    intro: [`${m.name} wrote through the contact form about: ${gist(m.about, 120)}.`],
     preheader: `${m.name}: ${gist(m.about)}`,
     facts: [
       { k: "From", v: `${m.name} <${m.email}> (reply to this email)` },
@@ -40,6 +41,8 @@ export function contactMail(m: ContactMessage) {
       { k: "Sent", v: sentAt(m.at, m.zone).replace(/^Sent /, "") },
     ],
     blocks: [["What happens today", m.today], ...(m.better ? [["What would be better", m.better] as [string, string]] : [])],
-    footer: ["Reply to this email to answer them directly."],
+    action: { label: `Reply to ${m.name}`, url: replyTo(m.email, contactSubject(m)) },
+    why: "Someone sent this through the contact form on neon1.tech.",
+    reply: "Reply to this email to answer them directly.",
   });
 }

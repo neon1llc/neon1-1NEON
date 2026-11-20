@@ -11,7 +11,8 @@ import type { Context } from "hono";
 import { z } from "zod";
 import { body, check, fail, need, now, who, type Env } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
-import { branded, link } from "../mail.ts";
+import { sentAt, type SenderKind } from "../mail.ts";
+import { factMail, subjectOf } from "../lib/factmail.ts";
 import type { WriteOp } from "../store/types.ts";
 import { SIGNUP_PK, SIGNUP_SWITCH, signupOpen } from "./signup.ts";
 
@@ -293,23 +294,35 @@ export async function finishPurges(k: PurgeKit, opts: { at?: Date; deadline?: nu
 
 
 // What each quiet-prospect email says: two kind check-ins, then the final notice. Replies reach Pradeep
-export function quietEmail(t: Tenant, portal: string, step: "nudge" | "final", when: string, signup: string) {
+export function quietEmail(t: Tenant, portal: string, step: "nudge" | "final", when: string, signup: string, at = new Date()) {
+  const sent = { k: "Sent", v: sentAt(at).replace(/^Sent /, "") };
   if (step === "nudge") {
-    return {
-      subject: `How are things going with ${t.name}?`,
+    const mail = factMail({
+      kicker: "free account check-in",
+      title: "Checking in",
+      sub: t.name,
       preheader: "Add or update your needs any time, or reply to talk it through.",
-      heading: "Checking in",
-      paras: [`I wanted to check in on ${t.name}. If your needs have changed, update them on ${link("1NEON", portal)}, then ask for an assessment from Next step on Home and book the call.`, "If it's easier to talk, reply to this email and we'll find a time."],
-      text: `I wanted to check in on ${t.name}. If your needs have changed, update them on 1NEON, then ask for an assessment from Next step on Home and book the call: ${portal}\n\nIf it's easier to talk, reply to this email and we'll find a time.`,
-    };
+      intro: [`I wanted to check in on ${t.name}. If your needs have changed, update them in 1NEON, then ask for an assessment from Next step on Home and book the call.`, "If it's easier to talk, reply to this email and we'll find a time."],
+      facts: [{ k: "Organization", v: t.name }, sent],
+      action: { label: "Open 1NEON", url: portal },
+      why: `You have a free 1NEON account for ${t.name}, and nothing has changed in it for a while.`,
+      reply: "Reply to this email to reach me.",
+    });
+    return { subject: subjectOf("Checking in", t.name), ...mail, as: "trial" as SenderKind, replyTo: "hello@neon1.tech" };
   }
-  return {
-    subject: `Your 1NEON space for ${t.name} closes on ${when}`,
+  const mail = factMail({
+    kicker: "free account closing",
+    title: `Your free account closes on ${when}`,
+    sub: t.name,
     preheader: `Add or change anything before ${when} to keep it.`,
-    heading: "Keep your 1NEON space?",
-    paras: [`Nothing has changed in ${t.name} on ${link("1NEON", portal)} for three weeks. To keep it, add or change anything there before ${when}.`, `Otherwise ${t.name}, its projects, and its files will be deleted on ${when}. You can ${link("sign up again", signup)} any time and start fresh, or reply to this email to talk.`],
-    text: `Nothing has changed in ${t.name} on 1NEON for three weeks. To keep it, add or change anything there before ${when}: ${portal}\n\nOtherwise ${t.name}, its projects, and its files will be deleted on ${when}. You can sign up again any time and start fresh (${signup}), or reply to this email to talk.`,
-  };
+    intro: [`Nothing has changed in ${t.name} on 1NEON for three weeks. To keep it, add or change anything there before ${when}.`, `Otherwise ${t.name}, its projects, and its files will be deleted on ${when}. You can sign up again any time and start fresh, or reply to this email to talk.`],
+    facts: [{ k: "Organization", v: t.name }, { k: "Closes", v: when }, sent],
+    action: { label: "Open 1NEON to keep it", url: portal },
+    why: `You have a free 1NEON account for ${t.name}. Free accounts close after three quiet weeks, with this notice first.`,
+    settings: { text: "After it closes, you can start fresh.", url: signup, label: "Sign up again" },
+    reply: "Reply to this email to reach me.",
+  });
+  return { subject: subjectOf(`Free account closes ${when}`, t.name), ...mail, as: "trial" as SenderKind, replyTo: "hello@neon1.tech" };
 }
 
 
@@ -353,15 +366,14 @@ export async function sweepQuietProspects(k: Pick<Kit, "repo" | "d" | "cfg">, at
     }
     const portal = `${cfg.publicUrl}/1NEON/`;
     const when = new Date(at.getTime() + PROSPECT_GRACE_DAYS * DAY_MS).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "America/New_York" });
-    const mail = quietEmail(t, portal, step, when, `${portal}?signup=1`);
-    const html = branded({ label: "your 1NEON space", preheader: mail.preheader, heading: mail.heading, body: mail.paras.map((x, i) => `<p style="margin:${i ? "14px" : "0"} 0 0">${x}</p>`).join(""), button: { label: "Open 1NEON", url: portal }, at });
+    const mail = quietEmail(t, portal, step, when, `${portal}?signup=1`, at);
     // Replies reach Pradeep, so a check-in can turn into a conversation. The clock moves on only if the
     // mail service took at least one; otherwise the same email is tried again on the next pass
     const to = (await repo.listMembers(t.id)).filter((m) => m.status === "joined" && !cfg.operatorEmails.includes(m.email.toLowerCase()));
     let accepted = 0;
     for (const m of to) {
       try {
-        await d.mailer.send(m.email, mail.subject, mail.text, html, "hello@neon1.tech");
+        await d.mailer.send(m.email, mail.subject, mail.text, mail.html, mail.replyTo, undefined, undefined, mail.as);
         accepted++;
       } catch (e) {
         console.error(JSON.stringify({ level: "error", message: "quiet-prospect email refused", tenant: t.id, step, error: String(e).slice(0, 200) }));

@@ -131,7 +131,7 @@ module "auth" {
   passkey_rp_id                  = var.domain
   ses_identity_arn               = module.mail.identity_arn
   ses_configuration_set          = module.mail.configuration_set
-  mail_from                      = module.mail.from
+  mail_from                      = module.mail.from_security
   pre_sign_up_arn                = module.api.trigger_arn
   google_client_id               = var.google_client_id
   google_client_secret_parameter = "/1neon/prod/google_client_secret"

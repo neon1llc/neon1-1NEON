@@ -106,7 +106,7 @@ export function contactRoutes(app: App, k: Kit) {
       zone: DEFAULT_TIME_ZONE, // goes to neon1, so the sent time reads in neon1's zone
     });
     // From "neon1 Reach" (the website's contact form); dev's mailer marks the sender name itself
-    await d.mailer.send(CONTACT_TO, contactSubject({ name: m.name, about: topic }), text, html, m.email, undefined, undefined, "requests");
+    await d.mailer.send(CONTACT_TO, contactSubject({ name: m.name, company: m.company }), text, html, m.email, undefined, undefined, "requests");
     return c.json({ ok: true });
   });
 }
