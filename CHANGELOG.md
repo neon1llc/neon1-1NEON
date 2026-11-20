@@ -21,7 +21,8 @@
 - The menu's light/dark and Matrix/Sentinel switches no longer undo each other. Each switch kept its own copy of the look, so flipping the mode and then the family put the old mode back. Both now read the saved choice at every click and redraw together, and a slow change to light can't paint over a quicker pick made during it.
 - The sample project switches between its three engagements in place: no page load, the scroll position kept, and Matrix's cross-fade (Sentinel changes at once). Back and forward still move between them.
 - The sample project now applies the site's theme itself, so Neo's window has the right colors in Matrix dark, and a theme or mode change in another tab carries over at once.
-- On the sample project, the top bar's buttons keep to one line on a phone.
+- The sample project's top bar has the site's light/dark switch, like the other public pages, and its buttons keep to one line on a phone (there the bar shows "1NEON", Watch it, Demo, and the switch).
+- The sample project says neon1 listened on a thirty-minute call, the length of the free first call everywhere else.
 
 ### Changed
 - Desktop type matches neon1.tech: a 16px base instead of 15px, with every other size scaled in proportion, and the same 64px top bar. At 100% zoom 1NEON had read about a size smaller than the site. Phones keep their 15px base.
