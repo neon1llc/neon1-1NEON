@@ -129,7 +129,7 @@ export const JOURNEY: Show = {
           await s.think("A tour? Maybe later.");
           await s.click({ sel: "dialog[open] button", text: "Skip" }, 900);
         }
-        await s.say("Home says what a free account is for and where to ask for the next step");
+        await s.say("Home says what a free account is for, with the sample project, walkthrough, and FAQs beside it");
         await s.hover(".prospect-note", 1400);
         await s.say("It also says how long the account is kept, and offers a download");
         await s.hover(".keep-card", 1200);
@@ -168,13 +168,17 @@ export const JOURNEY: Show = {
       id: "free-ask",
       title: "Ask for an assessment",
       run: async (s) => {
-        await s.say("From Home she asks for an assessment, then books the free 30-minute call");
+        await s.say("Home's Next step shows how far her project is outlined, with a tip for what would help");
         await s.go(`${await shop()}/workspace`, "Home");
-        await s.hover(".next-step-ask", 900);
-        await s.type("#ask-note", "Weekday mornings are best if a call helps.", 300);
-        await s.click({ sel: ".next-step-ask button", text: "Ask for an assessment" }, 1400);
+        await s.hover(".outline-list li", 1200);
+        await s.think("It's ticked already. One note for him, and it goes.");
+        await s.type("#ask-note", "The insurer's deadline is the end of the month. Weekday mornings are best if a call helps.", 300);
+        await s.click({ sel: ".next-step-ask button", text: "Request assessment" }, 1000);
+        // A project that could say more gets one last look, which she can skip
+        const review = await s.waitFor({ sel: "dialog[open] h2", text: "Before it goes" }, 2500).catch(() => undefined);
+        if (review) await s.click({ sel: "dialog[open] button", text: "Send it anyway" }, 1200);
         await s.think("Sent. The reply comes by email.");
-        await s.hover(".next-step-ask [role=status]", 900);
+        await s.hover(".outline-list li.sent", 900);
       },
     },
     {

@@ -2,7 +2,7 @@
 // Execute, Observe, Normalize).
 
 
-import { isQuickFix, outlineOf, outlineTip, OUTLINE_PARTS, QUICK_FIX_HOURS, QUICK_FIX_MAX_HOURS, quoteFields, priceLine, type QuoteInput, balanceOf, billedOn, depositLines, hoursLogged, hoursText, lineage, lineCents, dollars as wholeDollars, failedOn, invoiceState, InvoiceFields, money as dollars, payableOn, paymentPlan, priceMeaning, priceOf, betterWhen, canApprove, changedSince, currentDecision, todayIn, isClosed, isOwnOrg, KIND_LAYER, metricProgress, MetricFields, OptionFields, priceCheckDue, ProjectRole, proposalRef, PurchaseFields, HandoffFields, optionHistory, revisions, type DocumentRecord, type Item, type ItemKind, type Layer, type Project, type Stage } from "@1neon/domain";
+import { isQuickFix, QUICK_FIX_HOURS, QUICK_FIX_MAX_HOURS, quoteFields, priceLine, type QuoteInput, balanceOf, billedOn, depositLines, hoursLogged, hoursText, lineage, lineCents, dollars as wholeDollars, failedOn, invoiceState, InvoiceFields, money as dollars, payableOn, paymentPlan, priceMeaning, priceOf, betterWhen, canApprove, changedSince, currentDecision, todayIn, isClosed, isOwnOrg, KIND_LAYER, metricProgress, MetricFields, OptionFields, priceCheckDue, ProjectRole, proposalRef, PurchaseFields, HandoffFields, optionHistory, revisions, type DocumentRecord, type Item, type ItemKind, type Layer, type Project, type Stage } from "@1neon/domain";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, ExternalLink, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
@@ -13,6 +13,7 @@ import { downloadDocx, FICTIONAL } from "../lib/docx.ts";
 import { MarkupList } from "../components/Markup.tsx";
 import { gate, Stale } from "../components/Reads.tsx";
 import { Link, NavLink, useLocation, useNavigate, useParams } from "react-router";
+import { Readiness } from "../components/Readiness.tsx";
 import { useOrg, useSession, useTopBar } from "../components/Shell.tsx";
 import { Avatar, ConflictDialog, Dialog, Empty, Health, HEALTH_LABEL, Standing, LayerBadge, LAYERS, layerHint, layerName, layerProgress, OnionProgress, Trend, ago, dateLabel, daysSince, inStageFor, layerFromSlug, layerSlug, useAsk, useToast } from "../components/ui.tsx";
 import { api, BASE_PATH, DEMO, HttpError, NEW_TAB } from "../lib/api.ts";
@@ -363,7 +364,7 @@ function Presence({ edits }: { edits: EditMarker[] }) {
 
 /** Overview: decision, summary and outcome, measures, status, and people */
 function Overview({ project: p, items, docs }: { project: Project; items: Item[]; docs: DocumentRecord[] }) {
-  const { org, canWrite, access } = useOrg();
+  const { org, canWrite, access, prospect } = useOrg();
   const me = useSession();
   const members = useMembers(org.id);
   const toast = useToast();
@@ -424,9 +425,6 @@ function Overview({ project: p, items, docs }: { project: Project; items: Item[]
   };
   // The summary edit started from an older version than the one now on screen
   const newerWhileEditing = editing && p.version > editBase && JSON.stringify(draft) !== JSON.stringify(basics());
-  // How well it's outlined (the same six parts Home's Next step and neon1's assessment read), until a
-  // decision is made: after that the work, not the outline, is the point
-  const outline = outlineOf(p, items);
   // The rows the conflict dialog compares: only the fields this save was changing
   const people = (list: Project["people"]) => list.map((x) => `${names.get(x.userId) ?? "Former member"} (${x.role.replace("_", " ")})`).join(", ");
   const conflictFields = conflict ? [
@@ -449,17 +447,8 @@ function Overview({ project: p, items, docs }: { project: Project; items: Item[]
       <section>
         {decision && <DecisionCard d={decision} names={names} />}
         {/* Editors can change the summary and outcome in place */}
-        {/* Until a decision, the outline: six parts with where to write each, the ones still open first */}
-        {canWrite && !editing && !decision && outline.missing.length > 0 && (
-          <div className="notice small finish outline-box" role="status">
-            <span><b>Outline {outline.have.length} of {OUTLINE_PARTS.length}.</b> Tip: {outlineTip(outline.missing)}. Everything is optional; each part makes the assessment and the call sharper.</span>
-            <span className="outline-go">
-              {outline.missing.some((m) => m === "what" || m === "done" || m === "limits") && <button className="linkish small" onClick={() => { setDraft(basics()); setEditBase(p.version); setEditing(true); }}>Edit the basics</button>}
-              {outline.missing.some((m) => m === "today" || m === "who") && <Link className="small" to={`/o/${org.slug}/projects/${p.key}/${layerSlug("needs")}`}>Open Needs</Link>}
-              {outline.missing.includes("measure") && <Link className="small" to={`/o/${org.slug}/projects/${p.key}/${layerSlug("observation")}`}>Open Observe</Link>}
-            </span>
-          </div>
-        )}
+        {/* Until a decision: how ready it is for Execute, with the outline's parts and where each goes next */}
+        {!editing && <Readiness project={p} items={items} orgId={org.id} slug={org.slug} canWrite={canWrite} prospect={prospect} onEditBasics={() => { setDraft(basics()); setEditBase(p.version); setEditing(true); }} />}
         {/* Editors change the basics in place, under the same questions the new-project form asked */}
         {editing ? (
           <form className="form" onSubmit={(e) => { e.preventDefault(); if (draft.name.trim()) void save(editBase, { name: draft.name.trim(), summary: draft.summary, outcome: draft.outcome, targetDate: draft.targetDate || null }); }}>

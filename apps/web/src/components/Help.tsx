@@ -304,7 +304,7 @@ export function HelpProvider({ me, children }: { me: Me; children: ReactNode }) 
           {g.tour.length > 0 && <button className="btn btn-primary" onClick={() => { setSheet(false); setTimeout(() => runTour(g.tour), 250); }}>Show me on this page</button>}
           <button className="btn btn-ghost" onClick={welcomeTour}>Full tour</button>
         </div>
-        <p className="small muted">More answers in the <Link to="/faqs" onClick={() => setSheet(false)}>FAQs</Link>, or <Link to={loc.pathname.startsWith("/all/") ? "/all/contact" : "/contact"} onClick={() => setSheet(false)}>contact neon1</Link>.</p>
+        <p className="small muted">More answers in the <Link to="/faqs" onClick={() => setSheet(false)}>FAQs</Link>, or <Link to={loc.pathname.startsWith("/all/") ? "/all/contact" : "/contact"} onClick={() => setSheet(false)}>contact neon1</Link>. To see a whole project first, open <Link to="/example" onClick={() => setSheet(false)}>a sample project</Link> or <a href="/1NEON/live">the guided walkthrough</a>.</p>
       </Dialog>
       {/* First sign-in: offer the tour, with remind-me and skip */}
       <Dialog open={welcome} onClose={() => setWelcome(false)} label="Welcome to 1NEON">

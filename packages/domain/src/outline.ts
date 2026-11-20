@@ -78,3 +78,43 @@ export function outlineTip(missing: readonly OutlinePart[], max = 3): string {
   const tips = missing.slice(0, max).map((id) => OUTLINE_PARTS.find((x) => x.id === id)!.tip);
   return `add ${listWords(tips)}${missing.length > max ? ", and more" : ""}`;
 }
+
+
+// --- Readiness: from a first outline to an agreed option ---------------------------------------
+// The outline is the part the client writes. After it come the assessment, the options neon1 writes,
+// and one approved option, which is when Execute can start. Readiness counts all four, so a project
+// is 100% ready exactly when there is a decision.
+
+/** Where each outline part goes once the work is agreed, so writing it never feels like a form */
+export const OUTLINE_CARRIES: Record<OutlinePart, string> = {
+  what: "Becomes the scope in the proposal.",
+  today: "Sets the starting point Observe measures against.",
+  done: "Becomes the checks in Verify that say it's finished.",
+  who: "Feeds the handover in Normalize: accounts, access, and training.",
+  measure: "Tracked in Observe, before and after.",
+  limits: "Shapes the proposal's schedule and constraints.",
+};
+
+/** The steps to ready, in order */
+export type ReadyStep = "outline" | "assess" | "options" | "decide";
+
+/** How ready a project is for Execute, as a percent and as four steps */
+export interface Readiness {
+  percent: number;
+  outline: Outline;
+  steps: Record<ReadyStep, boolean>;
+}
+
+// Each outline part is worth 10, the assessment 10, options 10, and the decision 20
+const PART = 10;
+
+/** Readiness from a project's basics and items, and when it was sent for assessment (if known). An
+ * option already proposed means the assessment happened, whether or not it was asked for in 1NEON */
+export function readinessOf(p: OutlineProject, items: readonly (OutlineItem & { status?: string })[], sentAt?: string): Readiness {
+  const outline = outlineOf(p, items);
+  const decide = items.some((i) => i.kind === "decision") || items.some((i) => i.kind === "option" && i.status === "approved");
+  const options = decide || items.some((i) => i.kind === "option" && (i.status === "proposed" || i.status === "approved"));
+  const assess = options || Boolean(sentAt);
+  const percent = decide ? 100 : Math.min(99, outline.have.length * PART + (assess ? 10 : 0) + (options ? 10 : 0));
+  return { percent, outline, steps: { outline: outline.missing.length === 0, assess, options, decide } };
+}

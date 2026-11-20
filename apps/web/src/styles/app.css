@@ -2208,3 +2208,21 @@ body:has(.shell.mini) .n1chat.n1chat-right { left: auto; right: max(16px, env(sa
   .outline-list li { grid-template-columns: minmax(0, 1fr); }
   .outline-meter { padding-left: 28px; }
 }
+/* A project's readiness for Execute (components/Readiness.tsx) */
+.readiness { display: grid; gap: 10px; margin-bottom: 16px; }
+.readiness > p { margin: 0; }
+.ready-bar { display: block; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.ready-bar i { display: block; height: 100%; background: var(--accent); }
+.ready-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.ready-steps > li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; }
+.ready-steps > li:first-child { display: block; }
+.ready-steps summary { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; cursor: pointer; list-style: none; }
+.ready-steps summary::-webkit-details-marker { display: none; }
+.readiness .tick { width: 20px; height: 20px; border-radius: 99px; border: 1.5px solid var(--line-strong); display: grid; place-items: center; color: var(--accent-ink); margin-top: 1px; }
+.readiness .tick.on { background: var(--accent); border-color: var(--accent); }
+.ready-parts { list-style: none; margin: 8px 0 0 30px; padding: 0; display: grid; gap: 8px; }
+.ready-parts li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; }
+.ready-parts .tick { width: 16px; height: 16px; }
+.ready-part { font-weight: 600; }
+.ready-parts li.done .ready-part { color: var(--muted); font-weight: 400; }
+.ready-carries { display: block; }

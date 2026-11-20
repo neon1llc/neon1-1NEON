@@ -39,3 +39,15 @@ describe("words", () => {
     expect(outlineTip(["what", "today", "done", "who"])).toMatch(/, and more$/);
   });
 });
+
+
+describe("readinessOf", () => {
+  it("counts the outline, the assessment, options, and the decision, reaching 100 only with a decision", async () => {
+    const { readinessOf } = await import("./outline.ts");
+    expect(readinessOf({}, []).percent).toBe(0);
+    expect(readinessOf({ summary: "Patients email forms to one inbox." }, [], "2026-11-19T00:00:00Z").percent).toBe(20);
+    const opt = { kind: "option", title: "Use the EHR's portal", status: "proposed" };
+    expect(readinessOf({}, [opt]).steps).toMatchObject({ assess: true, options: true, decide: false });
+    expect(readinessOf({}, [opt, { kind: "decision", title: "Approved" }]).percent).toBe(100);
+  });
+});
