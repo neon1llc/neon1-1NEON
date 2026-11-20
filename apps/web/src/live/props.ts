@@ -107,7 +107,9 @@ export class MailWindow {
     // policy refuses inline style attributes, and refuses them as the HTML is read, so each one is
     // read under another name and then set through the style object, which the policy allows. The
     // email looks as it would in a mail app, and the browser has nothing to refuse
-    const doc = new DOMParser().parseFromString(m.html.replace(/(<[^>]*?\s)style=(?=["'])/g, "$1data-css="), "text/html");
+    // A <style> block (a mail app's dark mode) is refused the same way, so it's left out: the inline styles carry the look
+    const html = m.html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "").replace(/(<[^>]*?\s)style=(?=["'])/g, "$1data-css=");
+    const doc = new DOMParser().parseFromString(html, "text/html");
     const styled = [...doc.body.querySelectorAll<HTMLElement>("[data-css]")].map((el) => {
       const css = el.getAttribute("data-css") ?? "";
       el.removeAttribute("data-css");

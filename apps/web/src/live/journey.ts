@@ -176,9 +176,9 @@ export const JOURNEY: Show = {
         await s.click({ sel: ".next-step-ask button", text: "Request assessment" }, 1000);
         // A project that could say more gets one last look, which she can skip
         const review = await s.waitFor({ sel: "dialog[open] h2", text: "Before it goes" }, 2500).catch(() => undefined);
-        if (review) await s.click({ sel: "dialog[open] button", text: "Send it anyway" }, 1200);
-        await s.think("Sent. The reply comes by email.");
-        await s.hover(".outline-list li.sent", 900);
+        if (review) await s.click({ sel: "dialog[open] button", text: "Request it anyway" }, 1200);
+        await s.think("Saved and locked. She can still edit it before it goes.");
+        await s.hover(".next-status", 900);
       },
     },
     {

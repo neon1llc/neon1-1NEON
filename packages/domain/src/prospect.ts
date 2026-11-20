@@ -189,6 +189,8 @@ const ALLOWED: [method: string, path: RegExp][] = [
   ["POST", /^\/notifications\/seen$/],
   // Asking neon1 for an assessment or a call: the point of a free account
   ["POST", /^\/requests$/],
+  ["PUT", /^\/requests\/assessment$/],
+  ["DELETE", /^\/requests\/assessment$/],
   // Keeping a quiet account 30 more days, once (routes/prospects.ts)
   ["POST", /^\/keep$/],
 ];
