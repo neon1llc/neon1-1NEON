@@ -13,7 +13,7 @@ locals {
   public_url  = "https://dev.${var.domain}"
   auth_domain = "auth-dev.${var.domain}"
   boundary    = "neon1-boundary-1neon-dev"
-  mail_from   = "1NEON dev <noreply@notify.${var.domain}>"
+  mail_from   = "\"[DEV] 1NEON\" <noreply@notify.${var.domain}>"
 
   # No GuardDuty scan in dev (nothing there comes from a client); the bucket and the API must agree
   malware_scan = false
