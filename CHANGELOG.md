@@ -11,6 +11,7 @@
 - The open desktop menu shortens its rows with the window's height so the whole menu fits without scrolling down to about 700px high.
 
 ### Fixed
+- Text no longer stays enlarged after an iPhone is turned to landscape and back to portrait.
 - One link rule in every look and mode, as on neon1.tech: a link that stays in 1NEON is underlined thinly at 55% and takes the full color on hover and focus, and a link that leaves is never underlined and nudges its arrow. The dark-only dimmed underlines and the sign-in and menu one-offs are gone; list-item titles and "Hide"-style text buttons follow the same rule.
 - The Mini menu has a visible edge line on a phone and a stronger one on a wide screen, in light and dark; the phone's clipped drawer had hidden its own border.
 - "Outside the US" shows in full in the State list in sign-up and Settings: the list is wide enough for it, and the city and state fields stack on a narrow card.

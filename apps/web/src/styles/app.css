@@ -46,6 +46,8 @@
 /* Base elements and utilities */
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
+/* iPhone browsers enlarge text when the phone turns to landscape and keep it enlarged on the way back; text stays the size the page sets (neon1.tech does the same) */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body { margin: 0; background: var(--bg); color: var(--text); font: var(--fs-md)/1.6 var(--sans); -webkit-font-smoothing: antialiased; }
 /* Links, one rule (as on neon1.tech): a link that stays in 1NEON is underlined thinly at 55% of its color and takes the full color on hover and focus; a link
    that leaves (a.out) is never underlined and moves its arrow instead. It holds in every look and mode, so nothing below restates it per theme */
