@@ -6,7 +6,7 @@ import { sentAt } from "../mail.ts";
 
 
 /** To neon1: someone wrote. The message is in the mail itself, so the inbox link is only needed to answer */
-export function chatAlertMail(o: { name: string; email: string; org?: string; free: boolean; body: string; unread: number; url: string; at: Date; zone?: string }) {
+export function chatAlertMail(o: { name: string; email: string; org?: string; free: boolean; body: string; private?: boolean; unread: number; url: string; at: Date; zone?: string }) {
   const first = o.unread <= 1;
   return {
     subject: subjectOf("Chat", o.org ? `${o.name} (${o.org})` : o.name),
@@ -17,13 +17,13 @@ export function chatAlertMail(o: { name: string; email: string; org?: string; fr
       intro: [first ? `${o.name} wrote to you in 1NEON.` : `${o.name} wrote to you again. ${o.unread} messages are waiting.`],
       preheader: `${o.name}: ${gist(o.body, 80)}`,
       facts: [
-        { k: "From", v: `${o.name} <${o.email}>` },
+        { k: "From", v: o.email ? `${o.name} <${o.email}>` : o.name },
         ...(o.org ? [{ k: "Organization", v: `${o.org}${o.free ? " (free account)" : ""}` }] : []),
         { k: "Sent", v: sentAt(o.at, o.zone).replace(/^Sent /, "") },
       ],
-      blocks: [["Latest message", o.body]],
+      blocks: [[o.private ? "Latest message (private to you)" : "Latest message", o.body]],
       action: { label: "Reply in 1NEON", url: o.url },
-      why: "Someone wrote to you in 1NEON chat. More messages in this thread add to the same alert until you open it.",
+      why: "Someone wrote in an organization's 1NEON chat. More messages there add to the same alert until you open it.",
     }),
     as: "reach" as const,
   };
@@ -37,7 +37,7 @@ export function chatReplyMail(o: { body: string; url: string; at: Date; zone?: s
     ...factMail({
       kicker: "chat reply",
       title: "Pradeep replied",
-      intro: ["He answered your message in 1NEON. Reply in 1NEON to keep the conversation in one place."],
+      intro: ["He answered in your organization's chat in 1NEON, where everyone in it can see the conversation."],
       preheader: gist(o.body, 90),
       facts: [{ k: "Sent", v: sentAt(o.at, o.zone).replace(/^Sent /, "") }],
       blocks: [["Reply", o.body]],

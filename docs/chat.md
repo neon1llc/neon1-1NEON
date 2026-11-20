@@ -1,6 +1,6 @@
 # Chat
 
-Direct, asynchronous messaging between a signed-in person (a free account or a client) and neon1's lead. People write any time. Replies come in the reply hours (weekdays 6 to 9 pm, Fridays to 8 pm, weekends 8 am to 8 pm, Eastern), so the page never promises a live answer.
+One shared chat per organization. Every member and neon1's lead write in the same conversation, with their names, so it is also the record of what was said. A free account is an organization of one. Messages are asynchronous: people write any time, and replies come in the reply hours (weekdays 6 to 9 pm, Fridays to 8 pm, weekends 8 am to 8 pm, Eastern), so the page never promises a live answer.
 
 ## Where it lives
 
@@ -8,33 +8,40 @@ Direct, asynchronous messaging between a signed-in person (a free account or a c
 |---|---|
 | Rules, limits, reply hours | `packages/domain/src/chat.ts` |
 | Routes | `apps/api/src/routes/chat.ts` |
-| Storage | `apps/api/src/store/repo.ts` (`getChat`, `chatMessages`, `chatOps`, `chatInbox`) |
-| Delivery | `apps/api/src/outbox.ts` (`chat-owner`, `chat-user`), `apps/api/src/lib/chatmail.ts` |
-| Pages | `apps/web/src/pages/Chat.tsx` |
+| Storage | `apps/api/src/store/repo.ts` (`getChat`, `chatMessages`, `chatOps`, `chatSeen`, `chatInbox`) |
+| Delivery | `apps/api/src/outbox.ts` (`chat-owner`, `chat-members`), `apps/api/src/lib/chatmail.ts` |
+| Page | `apps/web/src/pages/Chat.tsx` |
 
 ## Routes
 
-All sit under `/1NEON/api`, need a sign-in and the `x-1neon` header, and are not tied to an organization.
+Under `/1NEON/api`. All need a sign-in and the `x-1neon` header.
 
 | Route | Who | Does |
 |---|---|---|
-| `GET /chat` | the person | Their thread and the reply hours. Opening it marks replies seen. |
-| `POST /chat` | the person | Sends a message (`{ text }`). |
-| `GET /chat/inbox` | neon1 only | Every thread, most recent first. |
-| `GET /chat/threads/:uid` | neon1 only | One thread. Opening it marks it seen. |
-| `POST /chat/threads/:uid` | neon1 only | Replies. |
+| `GET /t/:tid/chat` | a member, or neon1 | The conversation you may see, how many messages are new to you, and the reply hours. Opening it marks it seen. |
+| `POST /t/:tid/chat` | a member who can comment, or neon1 | Sends `{ text }`. A member may add `private: true`; neon1 may add `to` (a member's ID). |
+| `PATCH /t/:tid/chat/:mid` | the message's author | Edits it. The earlier text stays on the message. |
+| `GET /chat/inbox` | neon1 only | Every organization that wrote, most recent first. |
 
-Anyone else gets 404 on the neon1 routes. A person can only ever read their own thread: the thread key is the signed-in person's ID, never a parameter.
+A member of another organization gets 404. A free account passes the free-account allowlist for `POST` and `PATCH` (`packages/domain/src/prospect.ts`).
 
 ## Storage
 
-One summary row per person (`CHAT#<uid>` / `META`, in the inbox index `GSI1` partition `CHATBOX` sorted by last message) and one row per message (`MSG#<id>`). A message and its summary save in one transaction. Messages are kept until a person asks for them to be erased, like project data.
+One partition per organization (`CHAT#<tenant>`): a summary row (`META`, listed in the inbox through `GSI1` partition `CHATBOX`), one row per message (`MSG#<id>`, the ID sorts by time), and one row per member for when they last opened the chat (`SEEN#<user>`). A message and the summary save in one transaction. Nothing is deleted: an edit keeps up to 20 earlier versions on the message, and messages stay until an organization asks for them to be erased, like project data.
+
+## Private messages
+
+The same rows, with a flag. A member's private message has `privateWith` set to themselves, and neon1's private reply has it set to the member it answers. Only that member and neon1 can read it; it is left out of everyone else's list, unread count and summary (a member's summary carries no preview, author or neon1 counts). A private reply emails only that member.
+
+## Sending and drafts
+
+A message saves the moment Send is pressed. What is typed and not sent is kept on the device in local storage (`1neon.chat.draft.<organization>`, listed in the cookie notice) and cleared once a send is accepted, so closing the page or locking a phone loses nothing. Earlier versions of an edited message are shown to neon1 only; everyone sees that it was edited.
 
 ## Alerts
 
-- A new message emails every operator address (sender "1NEON Reach") with the message in the mail. A burst of messages alerts once, until neon1 opens the thread.
-- With `PUSHOVER_TOKEN_PARAM` and `PUSHOVER_USER_PARAM` set, the same event also pushes "Chat: name" to neon1's phone, without the message, and quietly outside the reply hours. Without them, nothing else changes.
-- A reply emails the person unless they opened the thread in the last two minutes, once per burst of replies. The reply is in the mail.
+- A member's message emails every operator address (sender "1NEON Reach") with the message in the mail. A burst alerts once, until neon1 opens the chat.
+- With `PUSHOVER_TOKEN_PARAM` and `PUSHOVER_USER_PARAM` set, the same event pushes "Chat: organization" to neon1's phone, without the message, quietly outside the reply hours. Without them, nothing else changes.
+- A reply from neon1 emails each member it is for who opened the chat more than two minutes ago and has not been emailed since they last looked. The reply is in the mail. Members are not emailed about each other's messages.
 - Delivery uses the existing outbox: durable, retried with backoff, one receipt per recipient and channel.
 
 ## Limits
@@ -44,8 +51,8 @@ One summary row per person (`CHAT#<uid>` / `META`, in the inbox index `GSI1` par
 | Free account | 6 | 20 |
 | Client | 20 | 100 |
 
-A message is 1 to 2,000 characters. A free account's message may carry up to two links. Counters expire after two days.
+Per person. A message is 1 to 2,000 characters, a free account's may carry two links, and a message can be edited 20 times.
 
 ## Not here yet
 
-Attachments, Neo answering first, and replying by answering the alert email. Each is a separate step; none changes these routes.
+Attachments, Neo answering first, replying by answering the alert email, and a way for a member to turn the reply emails off.

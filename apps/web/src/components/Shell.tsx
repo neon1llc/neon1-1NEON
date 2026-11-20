@@ -970,6 +970,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
                 </ul>
               </li>
               <li className="sep"><span className="lbl gl"><span className="gt">Organization</span></span></li>
+              <Item to={`${base}/chat`} icon={<Icon name="chat" />} label={me.operator ? "Chat" : "Chat with Pradeep"} tour="nav-chat" />
               <Item to={`${base}/people`} icon={<Icon name="people" />} label="People" />
               <Item to={`${base}/settings`} icon={<Icon name="settings" />} label="Settings" />
             </>
@@ -983,7 +984,8 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
         {/* Every way to reach neon1, for every account, new ones included; the signed-in person ends the
             Organization group, so it shows on the first screen and is never taken for Report a bug */}
         <ul className="nav contact-nav">
-          <Item to={all ? "/all/chat" : "/chat"} icon={<Icon name="chat" />} label={me.operator ? "Chat" : "Chat with Pradeep"} tour="nav-chat" />
+          {/* Inside an organization, Chat sits with its places; elsewhere it is neon1's inbox (or goes to your organization's chat) */}
+          {!navOrg && <Item to={all ? "/all/chat" : "/chat"} icon={<Icon name="chat" />} label={me.operator ? "Chat" : "Chat with Pradeep"} tour="nav-chat" />}
           <Item to={all ? "/all/contact" : "/contact"} icon={<Icon name="contact" />} label="Contact neon1" tour="nav-contact" />
           <li>
             <NavLink to={all ? "/all/me" : "/me"} className="who-link" title="Your profile" data-tour="nav-me">

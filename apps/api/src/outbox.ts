@@ -46,8 +46,8 @@ export type OutboxPayload =
   | { kind: "event"; event: AuditEvent }
   | { kind: "sms-confirmation"; userId: string; to: string; consentAt: string }
   | { kind: "sms-confirmed"; userId: string; to: string; verifiedAt: string }
-  | { kind: "chat-owner"; userId: string; at: string }
-  | { kind: "chat-user"; userId: string; at: string }
+  | { kind: "chat-owner"; tenantId: string; at: string }
+  | { kind: "chat-members"; tenantId: string; at: string; userIds: string[] }
   | { kind: "invite"; tenantId: string; userId: string; email: string; orgName: string; inviter: string; url: string };
 
 
@@ -210,7 +210,7 @@ async function deliver(d: OutboxDeps, row: Row, clock: Clock): Promise<{ sent: n
   const targets: Target[] = payload.kind === "invite"
     ? [{ key: payload.email, channel: "email", send: (signal) => sendInvite(d, payload, signal) }]
     : payload.kind === "event" ? await eventTargets(d, payload.event, clock)
-    : payload.kind === "chat-owner" || payload.kind === "chat-user" ? await chatTargets(d, payload)
+    : payload.kind === "chat-owner" || payload.kind === "chat-members" ? await chatTargets(d, payload)
     : await smsSetupTarget(d, payload);
   let sent = 0;
   let open = 0;
@@ -322,28 +322,37 @@ async function eventTargets(d: OutboxDeps, e: AuditEvent, clock: Clock): Promise
 
 
 /**
- * Chat alerts. To neon1 (every operator): an email with the message, and a push without it (the text of a
- * client's message never goes to a third party), quiet outside the reply hours. To the person: an email
- * with the reply. Both read the thread as it is now and send nothing once the other side has opened it
+ * Chat alerts. To neon1 (every operator): an email with the member's message, and a push without it (a client's
+ * words never go to a third party), quiet outside the reply hours. To members: an email with neon1's reply.
+ * Each reads the chat as it is now and sends nothing once the other side has opened it
  */
-async function chatTargets(d: OutboxDeps, p: Extract<OutboxPayload, { kind: "chat-owner" | "chat-user" }>): Promise<Target[]> {
+async function chatTargets(d: OutboxDeps, p: Extract<OutboxPayload, { kind: "chat-owner" | "chat-members" }>): Promise<Target[]> {
   const { repo, cfg } = d;
-  const [thread, messages] = await Promise.all([repo.getChat(p.userId), repo.chatMessages(p.userId, 1)]);
-  const last = messages[0];
-  if (!thread || !last) return [];
-  const url = `${cfg.publicUrl}/1NEON/${p.kind === "chat-owner" ? `all/chat/${thread.userId}` : "chat"}`;
-  if (p.kind === "chat-user") {
-    // Opened since the reply: nothing to say
-    if (thread.userUnread === 0 || last.from !== "neon1") return [];
-    const mail = chatReplyMail({ body: last.body, url, at: new Date(last.at) });
-    return [{ key: thread.userId, channel: "email", send: (signal) => d.mailer.send(thread.email, mail.subject, mail.text, mail.html, undefined, signal, undefined, mail.as) }];
+  const [thread, recent] = await Promise.all([repo.getChat(p.tenantId), repo.chatMessages(p.tenantId, 10)]);
+  if (!thread || !recent.length) return [];
+  const url = `${cfg.publicUrl}/1NEON/o/${thread.orgSlug}/chat`;
+  if (p.kind === "chat-members") {
+    const reply = recent.find((m) => m.from === "neon1" && m.at === p.at);
+    if (!reply) return [];
+    const mail = chatReplyMail({ body: reply.body, url, at: new Date(reply.at) });
+    const out: Target[] = [];
+    for (const uid of p.userIds) {
+      // Opened since the reply: the mark was cleared, so nothing is sent
+      const seen = (await repo.chatSeen(p.tenantId)).find((s) => s.userId === uid);
+      const u = await repo.getUser(uid);
+      if (!u || seen?.mailedAt !== p.at) continue;
+      out.push({ key: uid, channel: "email", send: (signal) => d.mailer.send(u.email, mail.subject, mail.text, mail.html, undefined, signal, undefined, mail.as) });
+    }
+    return out;
   }
-  if (thread.ownerUnread === 0 || last.from !== "user") return [];
-  const mail = chatAlertMail({ name: thread.name, email: thread.email, org: thread.orgName, free: thread.free, body: last.body, unread: thread.ownerUnread, url, at: new Date(last.at) });
+  const last = recent[recent.length - 1]!;
+  if (thread.ownerUnread === 0 || last.from !== "member") return [];
+  const author = await repo.getUser(last.authorId);
+  const mail = chatAlertMail({ name: last.authorName, email: author?.email ?? "", org: thread.orgName, free: thread.free, body: last.body, private: Boolean(last.privateWith), unread: thread.ownerUnread, url, at: new Date(last.at) });
   const targets: Target[] = cfg.operatorEmails.map((to) => ({ key: to, channel: "email" as const, send: (signal: AbortSignal) => d.mailer.send(to, mail.subject, mail.text, mail.html, undefined, signal, undefined, mail.as) }));
   if (d.pusher) {
     const pusher = d.pusher;
-    targets.push({ key: "owner", channel: "push", send: (signal) => pusher.send(`Chat: ${thread.name}`, `${thread.free ? "A free account" : "A client"} wrote in 1NEON.`, { url, quiet: !replyOpen(), signal }) });
+    targets.push({ key: "owner", channel: "push", send: (signal) => pusher.send(`Chat: ${thread.orgName}`, `${thread.free ? "A free account" : "A client"} wrote in 1NEON.`, { url, quiet: !replyOpen(), signal }) });
   }
   return targets;
 }

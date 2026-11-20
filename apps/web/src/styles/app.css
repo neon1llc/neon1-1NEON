@@ -2426,3 +2426,11 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 .chat-inbox a:hover { background: var(--accent-soft); }
 .chat-inbox a.unread .who { font-weight: 700; }
 .chat-inbox .preview { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-msg .who { font-weight: 600; }
+.chat-msg.lead { border-color: var(--accent); }
+.chat-msg.private { border-style: dashed; }
+.chat-msg .linklike { background: none; border: 0; padding: 0; font: inherit; color: var(--accent); cursor: pointer; text-decoration: underline; }
+.chat-history ol { margin: var(--sp-2) 0 0; padding-left: var(--sp-4); }
+.chat-to { display: grid; gap: var(--sp-1); }
+.chat-private { display: flex; align-items: center; gap: var(--sp-2); }
+.chat-private input { width: auto; min-height: 0; }

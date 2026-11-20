@@ -3,7 +3,7 @@
 // hand.
 
 
-import type { AuditEvent, CalEvent, ChatMessage, ChatThread, DocumentRecord, Item, Member, Project, Tenant, User } from "@1neon/domain";
+import type { AuditEvent, CalEvent, ChatMessage, ChatSeen, ChatThread, DocumentRecord, Item, Member, Project, Tenant, User } from "@1neon/domain";
 import { newId, themeOf } from "@1neon/domain";
 import { ConflictError, type Guard, type Row, type TableStore, type WriteOp } from "./types.ts";
 
@@ -58,9 +58,11 @@ export const keys = {
   audit: (tid: string) => `T#${tid}#AUDIT`,
   // The organization's own calendar events, in its partition beside its projects
   calEvent: (tid: string, eid: string) => ({ PK: `T#${tid}`, SK: `CAL#${eid}` }),
-  // One chat thread per person: its summary row, and its messages in time order (the ID sorts by time)
-  chat: (uid: string) => ({ PK: `CHAT#${uid}`, SK: "META" }),
-  chatMessage: (uid: string, mid: string) => ({ PK: `CHAT#${uid}`, SK: `MSG#${mid}` }),
+  // One chat per organization: its summary row, its messages in time order (the ID sorts by time), and
+  // when each member last opened it, all in one partition
+  chat: (tid: string) => ({ PK: `CHAT#${tid}`, SK: "META" }),
+  chatMessage: (tid: string, mid: string) => ({ PK: `CHAT#${tid}`, SK: `MSG#${mid}` }),
+  chatSeen: (tid: string, uid: string) => ({ PK: `CHAT#${tid}`, SK: `SEEN#${uid}` }),
 };
 
 // Every thread's summary sits in this one index partition, newest first by its sort key, so the inbox is one query
@@ -553,27 +555,47 @@ export class Repo {
     return (await this.table.query(keys.audit(tid))).map((r) => entity<AuditEvent>(r)!);
   }
 
-  // --- Direct chat ---------------------------------------------------------
+  // --- Organization chat ----------------------------------------------------
 
-  /** One person's chat thread summary */
-  async getChat(uid: string) {
-    return entity<ChatThread>(await this.table.get(keys.chat(uid).PK, "META"));
+  /** One organization's chat summary */
+  async getChat(tid: string) {
+    return entity<ChatThread>(await this.table.get(keys.chat(tid).PK, "META"));
   }
 
-  /** A thread's newest messages, oldest first */
-  async chatMessages(uid: string, limit = 100): Promise<ChatMessage[]> {
-    return (await this.table.query(keys.chat(uid).PK, "MSG#", { limit, reverse: true })).map((r) => entity<ChatMessage>(r)!).reverse();
+  /** A chat's newest messages, oldest first */
+  async chatMessages(tid: string, limit = 100): Promise<ChatMessage[]> {
+    return (await this.table.query(keys.chat(tid).PK, "MSG#", { limit, reverse: true })).map((r) => entity<ChatMessage>(r)!).reverse();
   }
 
-  /** The writes for a thread's new state, with its new message if any. `expected` is the version it was read at (none for a new thread) */
+  /** One message by its ID */
+  async getChatMessage(tid: string, mid: string) {
+    return entity<ChatMessage>(await this.table.get(keys.chatMessage(tid, mid).PK, keys.chatMessage(tid, mid).SK));
+  }
+
+  /** The writes for a chat's new state with its new message, if any. `expected` is the summary's version when read (none for a new chat) */
   chatOps(t: ChatThread, message: ChatMessage | undefined, expected: number | undefined): WriteOp[] {
     return [
-      { put: { ...keys.chat(t.userId), type: "chat", GSI1PK: CHAT_INBOX, GSI1SK: `${t.lastAt}#${t.userId}`, ...t }, guard: expected === undefined ? { create: true } : { version: expected } },
-      ...(message ? [{ put: { ...keys.chatMessage(t.userId, message.id), type: "chat-message", ...message }, guard: { create: true } } as WriteOp] : []),
+      { put: { ...keys.chat(t.tenantId), type: "chat", GSI1PK: CHAT_INBOX, GSI1SK: `${t.lastAt}#${t.tenantId}`, ...t }, guard: expected === undefined ? { create: true } : { version: expected } },
+      ...(message ? [{ put: { ...keys.chatMessage(t.tenantId, message.id), type: "chat-message", ...message }, guard: { create: true } } as WriteOp] : []),
     ];
   }
 
-  /** Every thread, most recent first, for the operator's inbox */
+  /** Replace one message (an edit), guarded by the version it was read at */
+  chatEditOp(tid: string, m: ChatMessage, expected: number): WriteOp {
+    return { put: { ...keys.chatMessage(tid, m.id), type: "chat-message", ...m, version: expected + 1 }, guard: { version: expected } };
+  }
+
+  /** Every member's last-opened marker */
+  async chatSeen(tid: string): Promise<ChatSeen[]> {
+    return (await this.table.query(keys.chat(tid).PK, "SEEN#")).map((r) => entity<ChatSeen>(r)!);
+  }
+
+  /** The write that records a member opening the chat (or being emailed a reply) */
+  chatSeenOp(tid: string, s: ChatSeen): WriteOp {
+    return { put: { ...keys.chatSeen(tid, s.userId), type: "chat-seen", ...s }, guard: { always: true } };
+  }
+
+  /** Every organization's chat, most recent first, for the operator's inbox */
   async chatInbox(): Promise<ChatThread[]> {
     return (await this.table.queryIndex("GSI1", CHAT_INBOX)).map((r) => entity<ChatThread>(r)!).reverse();
   }

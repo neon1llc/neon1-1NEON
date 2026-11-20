@@ -1,6 +1,6 @@
 // packages/domain/src/chat.test.ts - Chat text rules and the reply hours, including daylight saving.
 import { describe, expect, it } from "vitest";
-import { ChatText, CHAT_MAX, chatProblem, linkCount, nextReplyAt, replyExpectation, replyOpen } from "./chat.ts";
+import { ChatText, CHAT_MAX, chatProblem, chatVisibleTo, linkCount, nextReplyAt, replyExpectation, replyOpen } from "./chat.ts";
 
 // 2026-11-20 is a Friday; New York is on standard time (UTC-5)
 const ny = (iso: string) => new Date(`${iso}-05:00`);
@@ -47,5 +47,17 @@ describe("message text", () => {
     expect(chatProblem("a https://a.com b https://b.com c www.c.com", true)).toMatch(/links/);
     expect(chatProblem("a https://a.com b https://b.com c www.c.com", false)).toBeUndefined();
     expect(chatProblem("no links here", true)).toBeUndefined();
+  });
+});
+
+
+describe("private messages", () => {
+  it("are visible to neon1 and the one member they are with, and to no one else", () => {
+    const everyone = {};
+    const withDana = { privateWith: "u_dana" };
+    expect(chatVisibleTo(everyone, "u_raj", false)).toBe(true);
+    expect(chatVisibleTo(withDana, "u_dana", false)).toBe(true);
+    expect(chatVisibleTo(withDana, "u_raj", false)).toBe(false);
+    expect(chatVisibleTo(withDana, "u_op", true)).toBe(true);
   });
 });

@@ -20,47 +20,68 @@ export const CHAT_LIMITS = {
 
 /** Messages kept in a thread's reply to the browser (the newest); older ones stay stored */
 export const CHAT_PAGE = 100;
+/** Earlier versions kept on one edited message */
+export const CHAT_EDIT_HISTORY = 20;
+/** A member who opened the chat this recently is reading it, so a reply needs no email to them */
+export const CHAT_READING_MS = 2 * 60 * 1000;
 
 
-/** One message in a thread: from the person, or from neon1 (the lead's own reply) */
+/** One message in an organization's chat: from a member of the organization, or from neon1's lead. An edit
+ * keeps what the message said before in `history`, so the record shows every version */
 export const ChatMessage = z.object({
   id: z.string(),
   at: z.string(),
-  from: z.enum(["user", "neon1"]),
+  authorId: z.string(),
+  authorName: z.string(),
+  from: z.enum(["member", "neon1"]),
   body: z.string().max(CHAT_MAX),
+  // Set on a private message: the one member it is between neon1 and. Everyone else in the organization never sees it
+  privateWith: z.string().optional(),
+  editedAt: z.string().optional(),
+  history: z.array(z.object({ at: z.string(), body: z.string() })).max(CHAT_EDIT_HISTORY).optional(),
+  version: z.number().optional(),
 });
 export type ChatMessage = z.infer<typeof ChatMessage>;
+
+
+/** May this reader see this message? Private ones are for neon1 and the member they are with only */
+export const chatVisibleTo = (m: Pick<ChatMessage, "privateWith">, userId: string, operator: boolean): boolean => !m.privateWith || operator || m.privateWith === userId;
 
 
 /** The text of a message to send: trimmed, not empty, not too long */
 export const ChatText = z.string().trim().min(1, "Write a message first.").max(CHAT_MAX, `Keep it under ${CHAT_MAX} characters.`);
 
 
-/** One conversation: who it is with and where it stands. Each person has at most one */
+/**
+ * One organization's chat: every member and neon1's lead share it, so the whole conversation is the record.
+ * A free account is an organization of one. This row is the summary the inbox lists
+ */
 export interface ChatThread {
-  userId: string;
-  name: string;
-  email: string;
-  // The organization they last wrote from, and whether it is a free account
-  orgName?: string;
-  orgSlug?: string;
+  tenantId: string;
+  orgName: string;
+  orgSlug: string;
   free: boolean;
   startedAt: string;
   lastAt: string;
-  lastFrom: "user" | "neon1";
+  lastId: string;
+  lastBy: string;
+  lastFrom: "member" | "neon1";
   // The start of the latest message, for the inbox list
   preview: string;
-  // Messages the other side has not seen yet
+  // Messages from members since neon1 last opened the chat, and when it did
   ownerUnread: number;
-  userUnread: number;
-  // When each side last opened the thread
-  userSeenAt?: string;
   ownerSeenAt?: string;
-  // When neon1 was last alerted, and when the person was last emailed a reply. Each stays set until the
-  // other side opens the thread, so a burst of messages alerts once
+  // When neon1 was last alerted. It stays set until neon1 opens the chat, so a burst alerts once
   ownerAlertedAt?: string;
-  replyMailedAt?: string;
   version: number;
+}
+
+
+/** When one member last opened their organization's chat, and when they were last emailed a reply (cleared on opening) */
+export interface ChatSeen {
+  userId: string;
+  at: string;
+  mailedAt?: string;
 }
 
 
@@ -120,10 +141,15 @@ export function replyExpectation(at: Date = new Date()): { open: boolean; next: 
 }
 
 
-/** What the browser gets for one thread: the thread (none before the first message), its newest messages,
- * and when replies come in */
+/** What a member may know of a chat's summary: nothing from a message they can't see, so no preview, author, or neon1's counts */
+export type ChatThreadPublic = Pick<ChatThread, "tenantId" | "orgName" | "orgSlug" | "free" | "startedAt" | "lastAt" | "lastFrom">;
+
+/** What the browser gets for one organization's chat: the summary (none before the first message), its newest
+ * messages, how many are new to the caller, and when replies come in. Earlier versions of an edited message
+ * go to neon1 only */
 export interface ChatView {
-  thread: ChatThread | null;
+  thread: ChatThread | ChatThreadPublic | null;
   messages: ChatMessage[];
+  unread: number;
   hours: { open: boolean; nextAt: string; text: string };
 }

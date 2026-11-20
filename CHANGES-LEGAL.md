@@ -48,3 +48,8 @@ counters), ten minutes (Neo fingerprints).
 - Service agreement text (`packages/domain/src/agreement.ts`, edition 2.0). Any wording change needs a new edition and a re-sign by every client, so I did not touch it. Suggested for a future edition: remove "Please" in What you provide, replace the two semicolons in Paying with full stops, and drop the Regulated data and Records sections in favor of the privacy policy's wording.
 - The sign-in-time summary in `Project.tsx` (three bullets: scope and price, 15 days and ownership, 14 days' notice) repeats the agreement, but the agreement has no short version, so it stays.
 - Terms section 5 and the privacy policy both say an admin can download everything. Keep one, probably the privacy policy.
+
+
+## Cookie notice (chat draft)
+
+Added one local-storage row to the portal's table: `1neon.chat.draft.<organization>`, a chat message typed and not sent, kept on the device until it is sent or cleared. Matches nothing yet in the corpus copy of the cookie notice, which must add the same row. Privacy policy: chat messages are kept with the organization's records and erased when an organization asks, and members of an organization see each other's chat messages except one marked private, which only the author and neon1 see. Flag for the lawyer list.
