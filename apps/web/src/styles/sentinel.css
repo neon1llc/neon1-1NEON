@@ -63,8 +63,6 @@
 :root[data-style="sentinel"] .demo-tag { background: var(--accent); color: var(--accent-ink); }
 :root[data-style="sentinel"] :is(.nav a.active, .who-link.active) { background: var(--accent-soft); }
 :root[data-style="sentinel"] .content :is(p, li) { letter-spacing: normal; }
-:root[data-style="sentinel"] .side :is(.bug-row, .site-end) .lbl { text-decoration-color: color-mix(in srgb, currentColor 55%, transparent); }
-:root[data-style="sentinel"] .side :is(.bug-row, .site-end):is(:hover, :focus-visible, :active) .lbl { text-decoration-color: currentColor; }
 :root[data-style="sentinel"] .btn:disabled { opacity: .6; }
 :root[data-style="sentinel"][data-theme="awake"] .n1chat { --bg: #F5F8F4; --fg: #18271D; --line: rgb(24 39 29 / .6); --soft: rgb(24 39 29 / .14); --bot: #E7EFE6;
   --you: rgb(36 111 56 / .08); --muted: #526858; --accent: #246F38; --accent-ink: #F2F4F2; --field: #F2F4F2; --link: #246F38; box-shadow: 0 8px 24px rgb(24 39 29 / .16); }

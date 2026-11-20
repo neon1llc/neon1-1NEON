@@ -47,7 +47,10 @@
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
 body { margin: 0; background: var(--bg); color: var(--text); font: var(--fs-md)/1.6 var(--sans); -webkit-font-smoothing: antialiased; }
-a { color: var(--accent); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+/* Links, one rule (as on neon1.tech): a link that stays in 1NEON is underlined thinly at 55% of its color and takes the full color on hover and focus; a link
+   that leaves (a.out) is never underlined and moves its arrow instead. It holds in every look and mode, so nothing below restates it per theme */
+a { color: var(--accent); text-underline-offset: 3px; text-decoration-thickness: 1px; text-decoration-color: color-mix(in srgb, currentColor 55%, transparent); }
+a:not(.out):is(:hover, :focus-visible) { text-decoration-color: currentColor; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
 h1, h2, h3 { font-family: var(--mono); font-weight: 600; letter-spacing: .01em; margin: 0; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -74,7 +77,8 @@ h1, h2, h3 { font-family: var(--mono); font-weight: 600; letter-spacing: .01em; 
 .btn:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
 .chip { font: var(--fs-xs) var(--mono); color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 99px; padding: var(--sp-1) var(--sp-3); cursor: pointer; min-height: 26px; }
 .chip:hover, .chip[aria-pressed="true"] { color: var(--accent); border-color: var(--line-strong); }
-.linkish { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.linkish { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; cursor: pointer; text-decoration-line: underline; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, currentColor 55%, transparent); }
+.linkish:is(:hover, :focus-visible) { text-decoration-color: currentColor; }
 
 /* Form fields */
 .field-label { display: block; font: var(--fs-sm)/1.4 var(--sans); color: var(--muted); }
@@ -600,7 +604,8 @@ dialog.palette .dlg { padding: 0; }
 @media (max-width: 520px) { .todo li { grid-template-columns: auto minmax(0, 1fr); } .todo li .btn { grid-column: 2; justify-self: start; } }
 .empty-line { display: flex; gap: var(--sp-2); align-items: center; color: var(--ok); margin: var(--sp-1) 0; }
 .btn.btn-sm { min-height: 32px; padding: var(--sp-1) var(--sp-3); font-size: var(--fs-sm); }
-button.link { border: 0; background: none; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; font: inherit; }
+button.link { border: 0; background: none; padding: 0; color: var(--accent); text-decoration-line: underline; text-decoration-color: color-mix(in srgb, currentColor 55%, transparent); cursor: pointer; font: inherit; }
+button.link:is(:hover, :focus-visible) { text-decoration-color: currentColor; }
 .checklist li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--sp-2); align-items: center; padding: var(--sp-2) 0; }
 .checklist .tick { width: 20px; height: 20px; border-radius: 99px; border: 1.5px solid var(--line-strong); display: grid; place-items: center; color: var(--accent-ink); }
 .checklist li.done .tick { background: var(--accent); border-color: var(--accent); }
@@ -689,8 +694,8 @@ details.faq p { margin: 0 0 var(--sp-3); }
 
 /* --- Item rows open a side panel --- */
 .item { grid-template-columns: auto minmax(0, 1fr) auto; }
-.item-open { all: unset; cursor: pointer; display: block; font-weight: 500; }
-.item-open:hover, .item-open:focus-visible { color: var(--accent); text-decoration: underline; }
+.item-open { all: unset; cursor: pointer; display: block; font-weight: 500; text-decoration-line: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, currentColor 55%, transparent); }
+.item-open:hover, .item-open:focus-visible { color: var(--accent); text-decoration-color: currentColor; }
 .item-open:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
 .item .body.clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .item-meta { display: inline-flex; gap: var(--sp-2); align-items: center; }
@@ -809,7 +814,7 @@ details.history summary { cursor: pointer; font: var(--fs-xs) var(--mono); color
 .updates { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
 .updates li { display: grid; gap: var(--sp-1); padding: var(--sp-2) 0; border-top: 1px solid var(--line); }
 .updates li:first-child { border-top: 0; }
-.updates a { color: inherit; text-decoration: none; font-weight: 500; }
+.updates a { color: inherit; text-decoration-line: underline; font-weight: 500; }
 .updates a:hover { color: var(--accent); }
 .updates .s { font: var(--fs-xs) var(--mono); color: var(--muted); }
 .updates .u-line { display: flex; gap: var(--sp-2); align-items: center; font: var(--fs-xs) var(--mono); color: var(--muted); }
@@ -842,8 +847,8 @@ details.history summary { cursor: pointer; font: var(--fs-xs) var(--mono); color
 .ag-group li:first-child { border-top: 0; }
 .ag-group time { font: var(--fs-xs) var(--mono); color: var(--muted); }
 .ag-group.late time { color: var(--red); }
-.ag-group a { color: inherit; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ag-group a:hover { color: var(--accent); text-decoration: underline; }
+.ag-group a { color: inherit; text-decoration-line: underline; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ag-group a:hover { color: var(--accent); }
 .ag-group .s { font: var(--fs-xs) var(--mono); color: var(--muted); white-space: nowrap; }
 @media (max-width: 520px) { .ag-group li { grid-template-columns: 52px minmax(0, 1fr); } .ag-group .s { grid-column: 2; } }
 
@@ -1290,8 +1295,8 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 .ag-group.fold .fold-body { padding-top: var(--sp-0); }
 .ag-group li.done a, .ag-group li.done .t { color: var(--muted); }
 .ag-group li .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ag-group .linkish { text-align: left; text-decoration: none; color: inherit; }
-.ag-group .linkish:hover { color: var(--accent); text-decoration: underline; }
+.ag-group .linkish { text-align: left; color: inherit; }
+.ag-group .linkish:hover { color: var(--accent); }
 .agenda { gap: var(--sp-1); }
 :root { interpolate-size: allow-keywords; }
 /* The arrow turns in exactly the time the group takes to open */
@@ -1959,7 +1964,7 @@ html:has(.signin.awake), html:has(.signin.awake) body { background: var(--bg); c
 /* Awake sign-up: the divider lines and the terms line take the light palette (the dark ones were pale green on white) */
 .signin.awake .signup-form .su-opt, .signin.awake .signup-form .face-hint { border-color: var(--line); }
 .signin.awake label.agree { color: var(--text); }
-.signin.awake label.agree a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.signin.awake label.agree a { color: var(--accent); text-decoration-line: underline; text-underline-offset: 2px; }
 .signin.awake .opt { color: var(--muted); }
 
 /* Even spacing in the panel: the same gap above and below "Or see how it works", and a calmer top and bottom to match */
@@ -2020,13 +2025,11 @@ html:has(.signin.awake), html:has(.signin.awake) body { background: var(--bg); c
   :root[data-theme="device"] :is(.tag.client, .tag.prio-must, .next-step .eyebrow, .bell-new) { color: var(--muted); }
   :root[data-theme="device"] .tag.prio-must { border-color: var(--line-strong); }
   :root[data-theme="device"] .content :is(p, li) { letter-spacing: .01em; }
-  :root[data-theme="device"] .content :is(p, li) a:not(.btn, .tab, .linkish, .row, .name) { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: rgb(108 255 168 / .55); }
 }
 :root[data-theme="matrix"] .tag.prio-could, :root[data-theme="matrix"] .demo-pick button span, :root[data-theme="matrix"] .bell-list .lvl-info .what, :root[data-theme="matrix"] .strip .day.past, :root[data-theme="matrix"] .strip.month .day.past, :root[data-theme="matrix"] select:disabled { opacity: 1; color: var(--faint); }
 :root[data-theme="matrix"] :is(.tag.client, .tag.prio-must, .next-step .eyebrow, .bell-new) { color: var(--muted); }
 :root[data-theme="matrix"] .tag.prio-must { border-color: var(--line-strong); }
 :root[data-theme="matrix"] .content :is(p, li) { letter-spacing: .01em; }
-:root[data-theme="matrix"] .content :is(p, li) a:not(.btn, .tab, .linkish, .row, .name) { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: rgb(108 255 168 / .55); }
 
 
 /* ---- Matrix controls: native and custom controls follow the dark theme ----
@@ -2075,7 +2078,6 @@ html:has(.signin.awake), html:has(.signin.awake) body { background: var(--bg); c
 /* Without the rain controls (sign-in and create account) the corner needs only Neo's row */
 .signin:not(.awake):not(:has(.rainctl)) { padding-bottom: calc(48px + max(16px, env(safe-area-inset-bottom)) + 20px); }
 .signin .bug-corner .bug-glyph { vertical-align: 0; width: 14px; height: 14px; }
-.signin .bug-corner a:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
 .side .nav a.bug-row .ico { color: var(--accent); }
 .side .nav a.bug-row .bug-glyph { margin: 0; vertical-align: 0; }
 .side .nav a.bug-row:hover .out-arrow, .side .nav a.bug-row:focus-visible .out-arrow { transform: translate(1px, -1px); }
@@ -2220,15 +2222,8 @@ body:has(.shell.mini) .n1chat.n1chat-right { left: auto; right: max(16px, env(sa
    in its row, the same width in the Mini rail and the open menu (the other rows keep rounded pills) */
 .side .site-end:hover { background: linear-gradient(var(--accent-soft), var(--accent-soft)) center / 100% 40px no-repeat; }
 
-/* Report a bug, Feedback, and neon1.tech are links like the front page's: the theme's green (dark green awake, matrix
-   green in the dark), no underline in awake; in the dark an underline in a dulled green that turns full on hover, focus, or tap */
+/* Report a bug, Feedback, and neon1.tech leave 1NEON, so they are outbound links: the theme's green and never an underline */
 .side :is(.bug-row, .site-end), .side :is(.bug-row, .site-end) .lbl { color: var(--accent); }
-:root[data-theme="matrix"] .side :is(.bug-row, .site-end) .lbl { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: rgb(108 255 168 / .55); transition: text-decoration-color var(--t-fast) var(--ease); }
-:root[data-theme="matrix"] .side :is(.bug-row, .site-end):is(:hover, :focus-visible, :active) .lbl { text-decoration-color: rgb(108 255 168); }
-@media (prefers-color-scheme: dark) {
-  :root[data-theme="device"] .side :is(.bug-row, .site-end) .lbl { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: rgb(108 255 168 / .55); transition: text-decoration-color var(--t-fast) var(--ease); }
-  :root[data-theme="device"] .side :is(.bug-row, .site-end):is(:hover, :focus-visible, :active) .lbl { text-decoration-color: rgb(108 255 168); }
-}
 
 
 /* Home's Next step: outline projects, then ask for an assessment (components/Prospect.tsx) */
