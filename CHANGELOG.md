@@ -23,11 +23,13 @@
 - The sample project switches between its three engagements in place: no page load, the scroll position kept, and Matrix's cross-fade (Sentinel changes at once). Back and forward still move between them.
 - The sample project now applies the site's theme itself, so Neo's window has the right colors in Matrix dark, and a theme or mode change in another tab carries over at once.
 - The sample project's top bar has the site's light/dark switch, like the other public pages, and its buttons keep to one line on a phone (there the bar shows "1NEON", Watch it, Demo, and the switch).
-- The sample project says neon1 listened on a thirty-minute call, the length of the free first call everywhere else.
+- Every theme change is painted from the one saved choice (family, mode, shared flag), read when the paint runs. The menu, the public bar, the sample project, the signed-in profile arriving, another tab, a page restored by Back, and a tab brought forward all ask for a repaint and can no longer paint an older pick over a newer one, however fast the switches are pressed.
+- The sample project's title drops the Matrix prompt mark in Sentinel, which stays plain.
+- The sample project and the walkthrough call the first call 30 minutes, the length of the free booking link, instead of twenty.
 
 ### Changed
-- Desktop type matches neon1.tech: a 16px base instead of 15px, with every other size scaled in proportion, and the same 64px top bar. At 100% zoom 1NEON had read about a size smaller than the site. Phones keep their 15px base.
-- The free account's top cards on Home are spaced 16px apart, like the cards below them.
+- Desktop is 10% larger: at 100% zoom 1NEON now reads as it did at 110%, with type, buttons, fields, content widths, and dialogs scaled together (the 64px top bar matches neon1.tech). Phones keep their 15px base.
+- A free account's Home arranges its cards in a grid: Next step beside Your free account on desktop, one column on a phone, 16px between every card.
 
 ### Changed
 - Every email neon1 and 1NEON send uses one layout: a headline, a table of key facts, one action, and small print that says why it arrived and where to change that. The plain-text version has the same parts in the same order. It follows dark mode, stacks the table on a narrow phone, and carries a page language and title.

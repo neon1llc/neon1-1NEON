@@ -450,7 +450,7 @@ export const STORY: Section[] = [
     title: "neon1 listens",
     why: "Pradeep asked me for a few things. Let me sign in and see what's new.",
     run: async (s) => {
-      await s.say("Pradeep reads it, calls for twenty minutes, and writes down what he heard, including the limits");
+      await s.say("Pradeep reads it, calls for thirty minutes, and writes down what he heard, including the limits");
       await s.others(async () => {
         await moveTo("intake");
         await moveTo("listen");

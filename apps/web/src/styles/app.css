@@ -3,11 +3,12 @@
  * awake light layer. */
 
 /* Semantic tokens every component uses, built on the shared brand tokens */
-/* Type scale. Every size below is written for a 15px base and multiplied by --type. On desktop it is 16/15, so body text is
-   neon1.tech's 16px and the rest keeps its proportions; at 100% zoom 1NEON had read about a size smaller than the site.
-   Phones keep the 15px base their layouts were fitted to */
+/* Type scale. Every size below is written for a 15px base and multiplied by --type. On desktop it is 1.1, so at 100% zoom the app
+   reads as it did at 110% (the size it was designed for: body 16.5px, mono labels and buttons 14.3px), and the controls, content
+   widths, and dialogs that were fixed in pixels grow by the same factor so proportions hold. Phones keep the 15px base their
+   layouts were fitted to. One number to tune */
 :root { --type: 1; }
-@media (min-width: 901px) { :root { --type: calc(16 / 15); } }
+@media (min-width: 901px) { :root { --type: 1.1; } }
 
 :root {
   --r: 14px; --r-sm: 10px;
@@ -59,7 +60,7 @@ h1, h2, h3 { font-family: var(--mono); font-weight: 600; letter-spacing: .01em; 
 .small { font-size: calc(13px * var(--type)); }
 
 /* Buttons: one system (primary, ghost, chip, danger), same as the site */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 36px; font: 500 calc(13px * var(--type)) var(--mono); letter-spacing: .02em;
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: calc(36px * var(--type)); font: 500 calc(13px * var(--type)) var(--mono); letter-spacing: .02em;
   border-radius: var(--r-sm); padding: 8px 16px; text-decoration: none; cursor: pointer; border: 1px solid var(--accent); transition: box-shadow .2s, background .2s, color .2s; }
 .btn-primary { background: var(--accent); color: var(--accent-ink); }
 .btn-primary:hover { box-shadow: 0 6px 18px rgba(3, 87, 4, .25); }
@@ -74,7 +75,7 @@ h1, h2, h3 { font-family: var(--mono); font-weight: 600; letter-spacing: .01em; 
 /* Form fields */
 label.field { display: grid; gap: 6px; font-size: calc(13px * var(--type)); color: var(--muted); }
 label.field > span { font-family: var(--mono); font-size: calc(12px * var(--type)); }
-input, textarea, select { font: calc(16px * var(--type)) var(--sans); color: var(--text); background: var(--panel); border: 1px solid var(--field-line); border-radius: var(--r-sm); padding: 9px 12px; min-height: 40px; width: 100%; }
+input, textarea, select { font: calc(16px * var(--type)) var(--sans); color: var(--text); background: var(--panel); border: 1px solid var(--field-line); border-radius: var(--r-sm); padding: 9px 12px; min-height: calc(40px * var(--type)); width: 100%; }
 textarea { min-height: 96px; resize: vertical; }
 /* Dropdowns: as wide as their choices (not the whole row), with a small chevron drawn in the text's
    own color right after the words, so it suits both themes and never floats far off to the side */
@@ -175,10 +176,10 @@ a.org { text-decoration: none; }
 .kbd { font: calc(11px * var(--type)) var(--mono); border: 1px solid var(--line-strong); border-radius: 5px; padding: 1px 5px; color: var(--muted); }
 /* The All clients banner, then page titles and section headings */
 .readonly-bar { display: flex; align-items: center; gap: 10px; padding: 8px 28px; font: calc(13px * var(--type)) var(--mono); color: #3B2600; background: repeating-linear-gradient(-45deg, #FFE1A8, #FFE1A8 12px, #FFD98F 12px, #FFD98F 24px); border-bottom: 1px solid #E0B25A; }
-.content { padding: 28px; max-width: 1280px; width: 100%; }
+.content { padding: 28px; max-width: calc(1280px * var(--type)); width: 100%; }
 .page-title { font-size: calc(clamp(22px, 2.6vw, 30px) * var(--type)); font-weight: 600; margin: 0 0 6px; color: var(--accent); }
 .page-title::before { content: "> "; color: var(--mark); }
-.lead { color: var(--muted); margin: 0 0 24px; max-width: 680px; }
+.lead { color: var(--muted); margin: 0 0 24px; max-width: calc(680px * var(--type)); }
 .section-h { font-size: calc(15px * var(--type)); margin: 32px 0 12px; display: flex; align-items: baseline; gap: 10px; }
 .section-h small { font: calc(12px * var(--type)) var(--mono); color: var(--muted); font-weight: 400; }
 
@@ -202,7 +203,7 @@ a.row:hover { background: var(--accent-soft); }
 .empty { border: 1px dashed var(--line-strong); border-radius: var(--r); padding: 28px; text-align: center; color: var(--muted); }
 .empty p { margin: 0 0 14px; }
 /* A read that failed: what happened, Try again, and a way out; compact inside cards and menus */
-.problem { border: 1px solid var(--amber); border-radius: var(--r); padding: 18px 20px; background: color-mix(in srgb, var(--amber) 8%, transparent); max-width: 680px; }
+.problem { border: 1px solid var(--amber); border-radius: var(--r); padding: 18px 20px; background: color-mix(in srgb, var(--amber) 8%, transparent); max-width: calc(680px * var(--type)); }
 .problem p { margin: 0 0 12px; }
 .problem-acts { display: flex; gap: 8px; flex-wrap: wrap; }
 .problem.compact { padding: 10px 12px; border-radius: var(--r-sm); font-size: calc(14px * var(--type)); margin: 6px 0; }
@@ -308,11 +309,11 @@ a.row:hover { background: var(--accent-soft); }
 .steps span.on { border-color: var(--accent); color: var(--accent); }
 .steps span.done { background: var(--accent-soft); }
 /* Forms, action rows, and native dialogs */
-.form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; max-width: 640px; } /* one track that can shrink, so a wide field never widens a phone screen */
+.form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; max-width: calc(640px * var(--type)); } /* one track that can shrink, so a wide field never widens a phone screen */
 .form > * { min-width: 0; }
 .form select { min-width: 0; width: 100%; }
 .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: flex-start; }
-dialog { border: 1px solid var(--line-strong); border-radius: var(--r); padding: 24px; background: var(--panel); color: var(--text); max-width: 560px; width: calc(100% - 32px); box-shadow: 0 24px 64px rgba(0, 0, 0, .25); }
+dialog { border: 1px solid var(--line-strong); border-radius: var(--r); padding: 24px; background: var(--panel); color: var(--text); max-width: calc(560px * var(--type)); width: calc(100% - 32px); box-shadow: 0 24px 64px rgba(0, 0, 0, .25); }
 dialog::backdrop { background: rgba(13, 2, 8, .45); backdrop-filter: blur(2px); }
 dialog h2 { font-size: calc(17px * var(--type)); margin-bottom: 10px; }
 /* Conflict dialog: yours and theirs side by side */
@@ -584,7 +585,7 @@ dialog.palette .dlg { padding: 0; }
 .todo-t small .mono { font: calc(12px * var(--type)) var(--mono); margin-right: 4px; }
 @media (max-width: 520px) { .todo li { grid-template-columns: auto minmax(0, 1fr); } .todo li .btn { grid-column: 2; justify-self: start; } }
 .empty-line { display: flex; gap: 8px; align-items: center; color: var(--ok); margin: 4px 0; }
-.btn.btn-sm { min-height: 32px; padding: 4px 12px; font-size: calc(13px * var(--type)); }
+.btn.btn-sm { min-height: calc(32px * var(--type)); padding: 4px 12px; font-size: calc(13px * var(--type)); }
 button.link { border: 0; background: none; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; font: inherit; }
 .checklist li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 0; }
 .checklist .tick { width: 20px; height: 20px; border-radius: 99px; border: 1.5px solid var(--line-strong); display: grid; place-items: center; color: var(--accent-ink); }
@@ -958,7 +959,7 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 .example .top-acts .narrow-only { display: none; }
 @media (max-width: 640px) { .example .crumb-tail { display: none; } }
 @media (max-width: 480px) { .example .top-acts .wide-only { display: none; } .example .top-acts .narrow-only { display: inline; } .example .top-acts { gap: 6px; } }
-.example-body { max-width: 920px; margin: 0 auto; padding-top: 40px; }
+.example-body { max-width: calc(920px * var(--type)); margin: 0 auto; padding-top: 40px; }
 .example-layer { margin-top: 48px; scroll-margin-top: 80px; }
 .example-h { display: flex; align-items: center; gap: 10px; font-size: calc(26px * var(--type)); margin: 0 0 4px; }
 .example-cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin-top: 14px; }
@@ -1693,7 +1694,21 @@ ul.md-says { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; 
 /* The note on a new account's workspace stays calm: the notice look, in the accent instead of amber */
 .prospect-note { border-color: var(--line-strong); background: var(--accent-soft); }
 /* Home's top cards for a free account (the note, Your free account, Next step) stack with the same 16px gap as the cards below them */
-:is(.prospect-note, .keep-card, .next-step-ask) + .card { margin-top: 16px; }
+:not(:has(> .keep-card)) > :is(.prospect-note, .keep-card, .next-step-ask) + .card { margin-top: 16px; }
+/* A free account's Home is one grid, so the cards sit in columns instead of full-width rows and every gap is the same 16px (20px
+   between columns, like .home below). The title, note, and the line under the cards take the whole width; Next step is the main
+   column, with the account's expiry, and the place-and-link question when it is asked, stacked beside it. On a phone: one column */
+:has(> .keep-card) { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+:has(> .keep-card) > * { grid-column: 1 / -1; margin-top: 0; margin-bottom: 0; }
+:has(> .keep-card) > .page-title { margin-bottom: -6px; }
+:has(> .keep-card) > .lead { margin-bottom: 8px; }
+@media (min-width: 901px) {
+  :has(> .keep-card) { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); column-gap: 20px; grid-auto-flow: row dense; }
+  :has(> .keep-card) > .next-step-ask { grid-column: 1; }
+  :has(> .keep-card) > :is(.keep-card, .face-form.card) { grid-column: 2; }
+  :has(> .keep-card):has(> .face-form.card) > .next-step-ask { grid-row: span 2; }
+  :has(> .keep-card) > .face-form.card { max-width: none; }
+}
 /* The operator's list: one card each, which stacks as it is on a phone */
 .signup-switch { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-bottom: 18px; }
 .prospect { margin-bottom: 14px; display: grid; gap: 10px; }
@@ -1712,7 +1727,7 @@ a.out:hover .out-arrow, a.out:focus-visible .out-arrow { transform: translate(1p
 @media (prefers-reduced-motion: reduce) { a.out .out-arrow { transition: none; } }
 /* The place-and-link form, in Settings and on Home */
 /* Contact: one row per way to reach neon1 */
-.contact-ways { max-width: 640px; }
+.contact-ways { max-width: calc(640px * var(--type)); }
 .contact-ways .facts { display: grid; gap: 14px; margin: 0 0 14px; }
 .contact-ways .facts dt { font: calc(11px * var(--type)) var(--mono); color: var(--muted); }
 .contact-ways .facts dd { margin: 2px 0 0; overflow-wrap: anywhere; }

@@ -22,8 +22,8 @@ import { Offline } from "./Glitch.tsx";
 import { Rain } from "./Rain.tsx";
 import { PublicBar } from "./PublicBar.tsx";
 import { useSiteTheme } from "../lib/sitetheme.ts";
+import { paintTheme, setAccountTheme, watchTheme } from "../lib/themepaint.ts";
 import { isSentinel, isDarkLook, lookFor, normalizeLook, onLookChange, resolveTheme, saveLook, sharedThemeChoice, styleChoice } from "../lib/style.ts";
-import { dawn } from "../lib/dawn.ts";
 import { FileText as FileIcon, Folder as FolderIcon, Home as HomeIcon, Kanban as KanbanIcon, Menu as MenuIcon, Moon, Search as SearchIcon, Sun } from "lucide-react";
 import { ConfirmDialog } from "./Confirm.tsx";
 import { HelpProvider, useHelp } from "./Help.tsx";
@@ -55,58 +55,8 @@ const MeCtx = createContext<Me | null>(null);
 export const useSession = () => useContext(MeCtx)!;
 
 
-/** Apply a theme to the page; with no attribute the styles show awake */
-export function applyTheme(theme: string) {
-  // Named looks map to the existing light/dark CSS values; data-look retains the public name
-  const look = normalizeLook(theme);
-  const biz = isSentinel(look);
-  const root = document.documentElement;
-  root.setAttribute("data-theme", theme === "device" ? "device" : isDarkLook(look) ? "matrix" : "awake");
-  root.setAttribute("data-look", theme === "device" ? "device" : look);
-  if (biz) root.setAttribute("data-style", "sentinel"); else root.removeAttribute("data-style");
-  syncDark();
-}
-// An account's saved theme as it shows here, through the landing's style choice (lib/style.ts); kept so a "device" theme in the
-// sentinel theme follows the device's light and dark setting as it changes
-let accountTheme: string | null = null;
-export function applyAccountTheme(theme: string) {
-  accountTheme = theme;
-  applyTheme(resolveTheme(theme));
-}
-
-
-// Whether the page shows a dark mode right now: chosen outright, or "device" on a device set to dark.
-// The html element carries it as the class n1-dark, so Neo's window can follow the same look as the
-// landing page (dark over the rain, light over awake pages) and repaint the moment either one changes
-const darkDevice = matchMedia("(prefers-color-scheme: dark)");
-export function isDark() {
-  const t = document.documentElement.getAttribute("data-theme");
-  return t === "matrix" || (t === "device" && darkDevice.matches);
-}
-/** A theme the person is trying in Settings (Save keeps it, and sets the style to match): leaving dark is a slow dawn (lib/dawn.ts)
- * within the matrix theme; the sentinel theme, and a move between styles, change at once. A named theme shows as named; "device"
- * follows the device inside the style the landing chose */
-// The newest look asked for. A slow dawn paints its change a frame or more later, so a quick second pick (the other switch)
-// could land first and then be painted over by the older one; each change paints whatever is newest instead
-let wanted = "";
-export function changeTheme(theme: string) {
-  accountTheme = theme;
-  const next = theme === "device" ? resolveTheme(theme) : theme;
-  wanted = next;
-  const willBeDark = isDarkLook(next) || (next === "device" && darkDevice.matches);
-  const plain = isSentinel(next) || document.documentElement.getAttribute("data-style") === "sentinel";
-  dawn(!plain && isDark() && !willBeDark, () => applyTheme(wanted));
-}
-function syncDark() {
-  const dark = isDark();
-  document.documentElement.classList.toggle("n1-dark", dark);
-  // The tab icon follows the app's theme, not just the device's: matrix green on dark, brand green on awake
-  const icon = document.getElementById("favicon") as HTMLLinkElement | null;
-  if (icon) icon.href = dark ? "/favicon-matrix.svg" : "/favicon-awake.svg";
-}
-darkDevice.addEventListener?.("change", () => {
-  if (accountTheme === "device" && styleChoice() === "sentinel") applyAccountTheme("device"); else syncDark();
-});
+// The theme is painted by lib/themepaint.ts from the one saved choice (lib/style.ts); this file only tells it who is signed in
+watchTheme();
 
 
 /** Top-level gate: sign-in, error, first-visit redirect, then the app */
@@ -153,14 +103,11 @@ function App() {
     return () => removeEventListener("1neon:signed-out", check);
   }, [qc]);
   useEffect(() => {
-    if (!me.data) { accountTheme = null; return; }
-    applyAccountTheme(me.data.user.theme);
-    const follow = (event: StorageEvent) => {
-      if (!["neon1.style", "neon1.mode", "neon1.theme.shared", null].includes(event.key)) return;
-      applyAccountTheme(me.data.user.theme);
-    };
-    addEventListener("storage", follow);
-    return () => removeEventListener("storage", follow);
+    if (!me.data) { setAccountTheme(null); return; }
+    // The account's theme is only the fallback until a shared choice exists, and arriving late never paints over one
+    setAccountTheme(me.data.user.theme);
+    paintTheme({ instant: true });
+    return () => setAccountTheme(null);
   }, [me.data]);
   // First sign-in from a browser with no saved time zone: keep the browser's, so email shows times in
   // the person's own zone. Once per page load; the profile changes it, and a failure is simply skipped
@@ -740,8 +687,8 @@ function MenuThemeControls({ theme, kind }: { theme: string; kind: "mode" | "fam
     const now = currentMenuLook(theme);
     const nowDark = isDarkLook(now), nowFamily = isSentinel(now) ? "sentinel" : "matrix";
     const next = flip === "mode" ? lookFor(nowFamily, !nowDark) : lookFor(nowFamily === "sentinel" ? "matrix" : "sentinel", nowDark);
+    // Saving announces the pick to this page and other tabs; the page repaints from the saved choice (lib/themepaint.ts)
     saveLook(next);
-    changeTheme(next);
   };
   if (kind === "family") {
     return <button className="menu-theme-switch style-switch" type="button" role="switch" aria-checked={family === "sentinel"} aria-label="Sentinel theme" title={`Switch to ${family === "sentinel" ? "Matrix" : "Sentinel"}`} onClick={() => pick("family")}>
