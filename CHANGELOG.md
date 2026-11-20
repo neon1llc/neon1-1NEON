@@ -11,6 +11,7 @@
 - The open desktop menu shortens its rows with the window's height so the whole menu fits without scrolling down to about 700px high.
 
 ### Fixed
+- Choosing Outside the US in sign-up, or in Settings, marks State and City and country with the required asterisk, since both are needed once it is chosen. State is also marked once a city is typed.
 - Every link in Get to know 1NEON leaves the page with the outbound arrow, the sample project and FAQs included, and Contact's website link reads "Send a message" and opens the form on neon1.tech (/#contact?message=1).
 - Outbound links are bold, never underlined, and in the page's own light or dark green in every look, as on neon1.tech; the arrow marks them and follows the same color.
 - The top bar's mark, menu button, and wordmark share one center on whole pixels at every zoom level. The bar's bottom line is drawn inside its box so its content is an even 64px, and the mark's ink is 30px (the rings 32px) instead of 29px; before, the mark and the menu button sat up to 0.8px apart at some zooms.

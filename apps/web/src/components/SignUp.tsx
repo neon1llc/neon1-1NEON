@@ -186,12 +186,12 @@ export function SignUp({ info: known, email: start, remember, onStep, onBack, lo
         <div className="f f-place">
           <div className="su-pair">
             <div className="f">
-              <label className="field-label" htmlFor="su-city">{state === OUTSIDE_US ? "City and country" : "City"}</label>
-              <input id="su-city" name="city" maxLength={80} autoComplete={state === OUTSIDE_US ? "off" : "address-level2"} placeholder={state === OUTSIDE_US ? "Toronto, Canada" : "Albany"} value={city} onChange={(e) => edit("place", setCity)(e.target.value)} onBlur={leave("place")} {...invalid("place", problem("place"), "su-face-hint")} />
+              <label className="field-label" htmlFor="su-city">{state === OUTSIDE_US ? "City and country" : "City"}{state === OUTSIDE_US && <span className="req" aria-hidden="true">*</span>}</label>
+              <input id="su-city" name="city" aria-required={state === OUTSIDE_US || undefined} maxLength={80} autoComplete={state === OUTSIDE_US ? "off" : "address-level2"} placeholder={state === OUTSIDE_US ? "Toronto, Canada" : "Albany"} value={city} onChange={(e) => edit("place", setCity)(e.target.value)} onBlur={leave("place")} {...invalid("place", problem("place"), "su-face-hint")} />
             </div>
             <div className="f">
-              <label className="field-label" htmlFor="su-state">State</label>
-              <select id="su-state" name="state" autoComplete="address-level1" className={state ? undefined : "unpicked"} value={state} onChange={(e) => edit("place", setState)(e.target.value)} onBlur={leave("place")} {...invalid("place", problem("place"), "su-face-hint")}>
+              <label className="field-label" htmlFor="su-state">State{(state === OUTSIDE_US || city.trim() !== "") && <span className="req" aria-hidden="true">*</span>}</label>
+              <select id="su-state" name="state" aria-required={state === OUTSIDE_US || city.trim() !== "" || undefined} autoComplete="address-level1" className={state ? undefined : "unpicked"} value={state} onChange={(e) => edit("place", setState)(e.target.value)} onBlur={leave("place")} {...invalid("place", problem("place"), "su-face-hint")}>
                 <option value="">State</option>
                 {Object.entries(US_STATES).map(([code, n]) => <option key={code} value={code}>{n}</option>)}
                 {/* US first; anywhere else is welcome to ask */}

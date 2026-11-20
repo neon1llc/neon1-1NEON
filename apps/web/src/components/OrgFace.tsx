@@ -89,12 +89,12 @@ export function FaceForm({ ask = false, onDone }: { ask?: boolean; onDone?: () =
       {/* City and state side by side, the state narrower */}
       <div className="face-pair">
         <div>
-          <label className="field-label" htmlFor="face-city">{state === OUTSIDE_US ? "City and country" : "City"}</label>
-          <input id="face-city" maxLength={80} autoComplete={state === OUTSIDE_US ? "off" : "address-level2"} placeholder={state === OUTSIDE_US ? "Toronto, Canada" : "Albany"} aria-invalid={placeMsg ? true : undefined} aria-describedby={placeMsg ? "face-place-error" : undefined} value={city} onChange={(e) => { setCity(e.target.value); setFieldErrs(({ place: _p, ...r }) => r); }} />
+          <label className="field-label" htmlFor="face-city">{state === OUTSIDE_US ? "City and country" : "City"}{state === OUTSIDE_US && <span className="req" aria-hidden="true">*</span>}</label>
+          <input id="face-city" aria-required={state === OUTSIDE_US || undefined} maxLength={80} autoComplete={state === OUTSIDE_US ? "off" : "address-level2"} placeholder={state === OUTSIDE_US ? "Toronto, Canada" : "Albany"} aria-invalid={placeMsg ? true : undefined} aria-describedby={placeMsg ? "face-place-error" : undefined} value={city} onChange={(e) => { setCity(e.target.value); setFieldErrs(({ place: _p, ...r }) => r); }} />
         </div>
         <div>
-          <label className="field-label" htmlFor="face-state">State</label>
-          <select id="face-state" autoComplete="address-level1" aria-invalid={placeMsg ? true : undefined} value={state} onChange={(e) => { setState(e.target.value); setFieldErrs(({ place: _p, ...r }) => r); }}>
+          <label className="field-label" htmlFor="face-state">State{(state === OUTSIDE_US || city.trim() !== "") && <span className="req" aria-hidden="true">*</span>}</label>
+          <select id="face-state" aria-required={state === OUTSIDE_US || city.trim() !== "" || undefined} autoComplete="address-level1" aria-invalid={placeMsg ? true : undefined} value={state} onChange={(e) => { setState(e.target.value); setFieldErrs(({ place: _p, ...r }) => r); }}>
             <option value="">State</option>
             {Object.entries(US_STATES).map(([code, n]) => <option key={code} value={code}>{n}</option>)}
             <option value={OUTSIDE_US}>Outside the US</option>
