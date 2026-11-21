@@ -271,6 +271,12 @@ describe("a free account", () => {
     expect(alerts()).toHaveLength(1);
   });
 
+  it("does not hold neon1's replies to a member's allowance or link cap", async () => {
+    const tid = s.calder.id;
+    for (let i = 0; i < CHAT_LIMITS.free.hourly + 2; i++) expect((await say(OP, tid, `Reply ${i}`)).status).toBe(201);
+    expect((await say(OP, tid, "see a.com https://a.com https://b.com https://c.com")).status).toBe(201);
+  });
+
   it("needs a sign-in and the CSRF header", async () => {
     const tid = s.acme.id;
     expect((await app.request(`/1NEON/api${chat(tid)}`, { method: "POST", headers: { "content-type": "application/json", "x-1neon": "1" }, body: JSON.stringify({ text: "hi" }) })).status).toBe(401);

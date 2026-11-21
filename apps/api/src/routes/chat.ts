@@ -112,16 +112,19 @@ export function chatRoutes(app: App, k: Kit) {
     // `private` (a member) keeps the message between them and neon1; `to` (neon1) answers one member privately
     const { text, private: priv, to } = await body(c, z.object({ text: ChatText, private: z.boolean().optional(), to: z.string().max(40).optional() }));
     const free = isProspect(tenant);
-    const problem = chatProblem(text, free);
+    // neon1's own replies aren't held to a member's allowance or link cap, whichever organization they go to
+    const problem = actor.operator ? undefined : chatProblem(text, free);
     if (problem) fail(400, "invalid", problem);
 
     // Each person's hourly and daily allowance; a free account's is smaller
     const limit = CHAT_LIMITS[free ? "free" : "client"];
     const hour = new Date().toISOString().slice(0, 13);
     const until = Math.floor(Date.now() / 1000) + KEEP_S;
-    const h = await repo.table.increment("COUNTER", `CHAT#${user.id}#${hour}`, 1, until);
-    const day = await repo.table.increment("COUNTER", `CHAT#${user.id}#${hour.slice(0, 10)}`, 1, until);
-    if (h > limit.hourly || day > limit.daily) fail(429, "too_many_messages", "That's a lot of messages for now. I'll read what's here and answer when I can.");
+    if (!actor.operator) {
+      const h = await repo.table.increment("COUNTER", `CHAT#${user.id}#${hour}`, 1, until);
+      const day = await repo.table.increment("COUNTER", `CHAT#${user.id}#${hour.slice(0, 10)}`, 1, until);
+      if (h > limit.hourly || day > limit.daily) fail(429, "too_many_messages", "That's a lot of messages for now. I'll read what's here and answer when I can.");
+    }
 
     const at = now();
     const from = actor.operator ? "neon1" : "member";
