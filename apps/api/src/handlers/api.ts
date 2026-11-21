@@ -20,7 +20,7 @@ import { sweepBugs } from "../routes/bug.ts";
 import { DynamoTable } from "../store/dynamo.ts";
 import { Repo } from "../store/repo.ts";
 import { bedrockNeo } from "../neo/bedrock.ts";
-import { DEFAULT_BUDGET } from "../routes/neo.ts";
+import { DEFAULT_BUDGET, priceFor } from "../routes/neo.ts";
 import { RealVetting } from "../vetting/real.ts";
 import { guardDirectory, guardMailer } from "../dev-guard.ts";
 import { handleInboundSms, type InboundSms } from "../sms-inbound.ts";
@@ -131,7 +131,7 @@ const deps: Deps = {
   humanCheck,
   // The form checks that look outside: mail domains, websites, and places
   vetting: new RealVetting(),
-  neo: cfg.neoModel ? { model: bedrockNeo(), modelId: cfg.neoModel, budget: { ...DEFAULT_BUDGET, monthlyUsd: cfg.neoMonthlyUsd ?? DEFAULT_BUDGET.monthlyUsd } } : undefined,
+  neo: cfg.neoModel ? { model: bedrockNeo(), modelId: cfg.neoModel, budget: { ...DEFAULT_BUDGET, price: priceFor(cfg.neoModel), monthlyUsd: cfg.neoMonthlyUsd ?? DEFAULT_BUDGET.monthlyUsd } } : undefined,
 };
 const app = createApp(deps);
 

@@ -26,6 +26,14 @@ export interface NeoBudget {
 // Claude Sonnet 5.5 list prices, with cache reads counted high on purpose, so the estimate errs over
 export const DEFAULT_BUDGET: NeoBudget = { monthlyUsd: 8, dailyPerPerson: 60, price: { input: 2, output: 10, cacheWrite: 2.5, cacheRead: 0.2 } };
 
+// Claude Sonnet 4.x list prices ($3 and $15 per million tokens), cache reads again counted high. Dev's Neo runs on Sonnet 4.6
+// because Sonnet 5.5 is "not available for this account" (2026-11-20); counting its tokens at 5.5's lower prices would let the
+// cap run a third over
+export const SONNET_4_PRICE: NeoBudget["price"] = { input: 3, output: 15, cacheWrite: 3.75, cacheRead: 0.6 };
+
+/** The prices to count a model's tokens at: Sonnet 4.x's for a Sonnet 4 profile, otherwise the default's */
+export const priceFor = (modelId: string): NeoBudget["price"] => (/claude-sonnet-4/.test(modelId) ? SONNET_4_PRICE : DEFAULT_BUDGET.price);
+
 // One question may take this long in all; the function and the HTTP API allow 28 seconds
 const DEADLINE_MS = 24_000;
 
@@ -51,9 +59,11 @@ export function neoRoutes(app: App, k: Kit) {
       fail(429, "neo_month", "Neo has reached this month's limit and is resting until the 1st. Email hello@neon1.tech, and I'll answer directly.");
     }
 
-    // Reads as the caller: the same headers that identified them, sent back through this app
+    // Reads as the caller: the same headers that identified them, sent back through this app. The edge secret goes
+    // with them: where the API is origin locked (dev and production) a read without it is refused, and Neo would
+    // read every answer as "not found" and tell a member they belong to no organization
     const headers = new Headers();
-    for (const h of ["cookie", "x-dev-user", "x-dev-session"]) {
+    for (const h of ["cookie", "x-dev-user", "x-dev-session", "x-origin-verify"]) {
       const v = c.req.header(h);
       if (v) headers.set(h, v);
     }
