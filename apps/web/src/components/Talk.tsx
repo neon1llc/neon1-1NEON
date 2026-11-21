@@ -162,7 +162,12 @@ function Thread({ org, me, operator, active, inbox }: { org: ChatOrg; me: string
   useEffect(() => { log.current?.scrollTo({ top: log.current.scrollHeight }); }, [messages.length, org.id]);
   const who = (id: string) => people.find((p) => p.userId === id)?.name ?? "member";
   const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: ["chat", org.id] }), qc.invalidateQueries({ queryKey: ["chat", "unread"] })]);
-  const send = async (text: string, how: { private?: boolean; to?: string }) => { await api(`/t/${org.id}/chat`, { method: "POST", body: { text, ...how } }); await refresh(); };
+  const send = async (text: string, how: { private?: boolean; to?: string }) => {
+    const r = await api<{ message: ChatMessage }>(`/t/${org.id}/chat`, { method: "POST", body: { text, ...how } });
+    // The sent message shows at once, without waiting for the refresh below
+    qc.setQueryData<ChatView>(["chat", org.id], (v) => (v ? { ...v, messages: [...v.messages.filter((m) => m.id !== r.message.id), r.message] } : v));
+    await refresh();
+  };
   const edit = async (id: string, text: string) => { await api(`/t/${org.id}/chat/${id}`, { method: "PATCH", body: { text } }); await refresh(); };
   const h = q.data?.hours;
   return (
