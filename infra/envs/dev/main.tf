@@ -123,11 +123,11 @@ module "api" {
   sms_inbound_topic_arn   = var.texts_live ? module.sms.inbound_topic_arn : ""
   sms_allowlist_parameter = var.texts_live ? "/1neon/dev/sms/allowlist/pradeep_personal_cell" : ""
   texts_live              = var.texts_live
-  # neon1's Pushover keys (kept in SSM outside this stack) for chat alerts; prod has none yet
-  pushover_token_parameter = "/neon1-notify/dev/pushover_app_token"
-  pushover_user_parameter  = "/neon1-notify/dev/pushover_user_key"
-  neo_model                = var.neo_model
-  neo_monthly_usd          = 2
+  # neon1's own alerts (chat, contact, bugs, feedback, requests) and their phone push go through the neon1-notify
+  # service, which holds the Pushover keys; the API reads none
+  notify_function_arn = "arn:aws:lambda:us-east-1:${data.aws_caller_identity.current.account_id}:function:neon1-notify-dev"
+  neo_model           = var.neo_model
+  neo_monthly_usd     = 2
   # Prospect sign-up, tried here first with Cloudflare's invisible always-pass test key
   signup             = true
   turnstile_site_key = "1x00000000000000000000BB"

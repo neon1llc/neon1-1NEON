@@ -52,6 +52,12 @@ variable "neo_monthly_usd" {
 }
 # neon1's Pushover app token and user key (SecureStrings kept outside this stack, in /neon1-notify/<env>/), which
 # the API reads at cold start to push chat alerts to neon1's phone. Empty keeps chat alerts to email only
+# neon1's alert service function (neon1-notify). When set, alerts to neon1 go through it and this role may invoke it
+variable "notify_function_arn" {
+  type    = string
+  default = ""
+}
+
 variable "pushover_token_parameter" {
   type    = string
   default = ""
@@ -183,6 +189,15 @@ data "aws_iam_policy_document" "api" {
       sid       = "SmsAllowlist"
       actions   = ["ssm:GetParameters"]
       resources = ["arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${statement.value}"]
+    }
+  }
+  # neon1's alert service: this one function, nothing else
+  dynamic "statement" {
+    for_each = var.notify_function_arn == "" ? [] : [var.notify_function_arn]
+    content {
+      sid       = "NotifyInvoke"
+      actions   = ["lambda:InvokeFunction"]
+      resources = [statement.value]
     }
   }
   # The Pushover keys for chat alerts, when this environment has them
@@ -377,6 +392,7 @@ resource "aws_lambda_function" "api" {
       SIGNUP                              = var.signup ? "on" : "off"
       TURNSTILE_SITE_KEY                  = var.turnstile_site_key
       TURNSTILE_SECRET_PARAM              = aws_ssm_parameter.turnstile_secret.name
+      NOTIFY_FUNCTION                     = var.notify_function_arn
       PUSHOVER_TOKEN_PARAM                = var.pushover_token_parameter
       PUSHOVER_USER_PARAM                 = var.pushover_user_parameter
       ORIGIN_SECRET                       = random_password.origin_secret.result
