@@ -744,7 +744,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
   // (the profile previews its pick here before it is saved: lib/preview.ts)
   const previewed = usePreviewedMenu();
   const mini = (previewed ?? menuOf(me.user.menu)) === "mini";
-  // Until it's known whether this is a new account, the panel stays away so it doesn't flash in; new accounts get it too, with Chat in it
+  // Until it's known whether this is a new account, the panel stays away so it doesn't flash in. A new account never gets Neo, but it does get the panel with the chat with Pradeep in it
   const newAccount = useProspectEverywhere(me);
   // The organization in view, when this frame is inside one, for hiding what a new account can't do
   const inOrg = useContext(OrgCtx);
@@ -1058,7 +1058,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
       <Palette me={me} org={org} prospect={inOrg?.prospect} open={search} setOpen={setSearch} onHelp={help.open} onTour={help.welcomeTour} />
       <ConfirmDialog me={me} />
       {/* Neo for signed-in people, where a model is wired; elsewhere the public Neo stays */}
-      {me.neo && !IN_DEMO && newAccount !== undefined && <Neo open={neoOpen} setOpen={setNeoOpen} org={navOrg ? { id: navOrg.id, name: navOrg.name, slug: navOrg.slug } : undefined} me={{ id: me.user.id, operator: me.operator }} />}
+      {!IN_DEMO && newAccount !== undefined && (me.neo || me.operator || navOrg) && <Neo open={neoOpen} setOpen={setNeoOpen} neo={me.neo && newAccount === false} org={navOrg ? { id: navOrg.id, name: navOrg.name, slug: navOrg.slug } : undefined} me={{ id: me.user.id, operator: me.operator }} />}
     </div>
   );
 }
