@@ -87,16 +87,29 @@ const STYLES = `
 
 
 // The neon1 mark drawn as nested bordered boxes (a quarter-turn arc each: top and right borders with a rounded corner),
-// scaled from the 64-unit site mark at .45 so the stroke is 1px. Borders, not an image, so a mail app that recolors
-// HTML for dark mode recolors the logo with the text. Outlook for Windows ignores border-radius, so it gets the image
+// scaled from the 64-unit site mark so it stands 26px tall beside 13px text, as the site's logo does, with a 1px stroke.
+// Borders, not an image, so a mail app that recolors HTML for dark mode recolors the logo with the text. Outlook for
+// Windows ignores border-radius, so it gets the image
 function markHtml() {
-  // Outer width, content height and corner radius per arc, widest first; each arc nests 1.7px inside the last
-  const arcs = [[11.3, 23.8, 11.3], [8.6, 21.1, 8.6], [5.9, 18.4, 5.9], [3.2, 15.7, 3.2]];
-  const group = arcs.reduceRight((inner, [w, h, r], i) =>
-    `<div class="mk" style="${i ? "margin:1.7px 1.7px 0 0;" : `width:${((w ?? 0) - 1).toFixed(1)}px;`}height:${h}px;border-top:1px solid ${BRAND};border-right:1px solid ${BRAND};border-top-right-radius:${r}px;font-size:0;line-height:0">${inner}</div>`, "");
-  return `<!--[if !mso]><!--><table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:2px"><tr><td valign="top" style="width:11.3px;padding:0">${group}</td><td style="width:1.3px;padding:0"></td><td valign="top" style="width:11.3px;padding:0">${group}</td></tr></table><!--<![endif]-->`
-    + `<!--[if mso]><img src="${MARK}" width="24" height="24" alt="" style="display:block;width:24px;height:24px;border:0"><![endif]-->`;
+  const k = 0.48, px = (n: number) => +n.toFixed(2);
+  // Arc radii in mark units, widest first; each arc nests one stroke gap inside the last
+  const radii = [24, 18, 12, 6], gap = px(6 * k - 1);
+  const outerW = (r: number) => px(r * k + 0.5);
+  let h = px(60 * k - (6 * k - 0.5)) - 1;
+  const group = radii.map((r, i) => {
+    const content = px(h - i * (gap + 1));
+    return { r, content };
+  }).reduceRight((inner, { r, content }, i) =>
+    `<div class="mk" style="${i ? `margin:${gap}px ${gap}px 0 0;` : `width:${px(outerW(r) - 1)}px;`}height:${content}px;border-top:1px solid ${BRAND};border-right:1px solid ${BRAND};border-top-right-radius:${outerW(r)}px;font-size:0;line-height:0">${inner}</div>`, "");
+  const cell = `<td valign="top" style="width:${outerW(24)}px;padding:0">${group}</td>`;
+  return `<!--[if !mso]><!--><table role="presentation" cellpadding="0" cellspacing="0"><tr>${cell}<td style="width:${px(4 * k - 0.5)}px;padding:0"></td>${cell}</tr></table><!--<![endif]-->`
+    + `<!--[if mso]><img src="${MARK}" width="26" height="26" alt="" style="display:block;width:26px;height:26px;border:0"><![endif]-->`;
 }
+
+// The wordmark as the site sets it: JetBrains Mono, "neon" at 1.3x and weight 450 so its letters match the "1" in height
+// and stroke, and the "1" at 700, then the kind of email in the same green
+const wordmark = (kicker: string) =>
+  `<span style="font-size:13px;letter-spacing:.06em"><span style="font-size:1.3em;font-weight:450">neon</span><span style="font-weight:700">1</span></span><span style="font-size:12px;font-weight:600;letter-spacing:.06em"> · ${esc(kicker)}</span>`;
 
 /** The card around everything: the brand line, the title, then what the caller puts inside, then the small print */
 export function shell(m: Pick<FactMail, "kicker" | "title" | "sub" | "preheader" | "intro">, inner: string, footer: string) {
@@ -106,7 +119,7 @@ export function shell(m: Pick<FactMail, "kicker" | "title" | "sub" | "preheader"
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all">${esc(m.preheader)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="page" style="background:${PAPER}"><tr><td align="center" style="padding:20px 10px 24px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="card" style="max-width:600px;background:#fff;border:1px solid ${LINE};border-radius:12px"><tr><td class="pad" style="padding:22px 24px 20px;text-align:left">
-<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 14px"><tr><td style="vertical-align:middle;padding-right:8px">${markHtml()}</td><td class="brand" style="vertical-align:middle;font:600 12px ${MONO};letter-spacing:.06em;color:${BRAND}">neon1 · ${esc(m.kicker)}</td></tr></table>
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 14px"><tr><td style="vertical-align:middle">${markHtml()}</td><td class="brand" style="vertical-align:middle;padding-left:10px;font-family:${MONO};color:${BRAND}">${wordmark(m.kicker)}</td></tr></table>
 <h1 class="ink" style="margin:0 0 14px;font:700 22px/1.3 ${MONO};color:${INK}">${esc(m.title)}${m.sub ? ` <span class="muted" style="display:block;font:500 15px/1.4 ${SANS};color:${MUTED};margin-top:4px">${esc(m.sub)}</span>` : ""}</h1>
 ${intro}${inner}
 ${footer}

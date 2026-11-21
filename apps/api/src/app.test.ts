@@ -113,7 +113,7 @@ describe("email", () => {
     await call("raj@acmedental.example", "POST", `/t/${s.acme.id}/members/invite`, { people: [{ email: "x@y.example" }] });
     const mail = mailer.sent.at(-1)!;
     expect(mail.html.match(/neon1-mark-mid\.png/g)).toHaveLength(1);
-    expect(mail.html).toContain("neon1 · invitation");
+    expect(mail.html).toContain(" · invitation</span>");
     expect(mail.html).toContain('<html lang="en">');
     expect(mail.subject).toBe("Invitation: Acme Dental, from Raj Patel");
     expect(mail.as).toBe("portal");
@@ -130,7 +130,7 @@ describe("email", () => {
     expect(out.response.emailMessage).toMatch(/user-select:all">\{####\}<\/span>/);
     expect(out.response.emailMessage).toContain("Your 1NEON sign-in code is {####}. Use it to sign in to 1NEON.");
     expect(out.response.emailMessage).toContain("Nov 6, 2026, 3:22 PM EST (20:22 UTC)");
-    expect(out.response.emailMessage).toContain("neon1 · sign-in code");
+    expect(out.response.emailMessage).toContain(" · sign-in code</span>");
     // The link finishes sign-in with the code in the fragment, never in a server-visible query
     expect(out.response.emailMessage).toContain('href="https://neon1.tech/1NEON/#code={####}"');
   });
