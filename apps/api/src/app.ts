@@ -24,6 +24,7 @@ import { keepRoutes, prospectRoutes } from "./routes/prospects.ts";
 import { QUOTA_SK, accountGuard, prospectGuard } from "./lib/guards.ts";
 import { commentRoutes } from "./routes/comments.ts";
 import { contactRoutes } from "./routes/contact.ts";
+import { chatInboxRoutes, chatRoutes } from "./routes/chat.ts";
 import { bugRoutes } from "./routes/bug.ts";
 import { feedbackRoutes } from "./routes/feedback.ts";
 import { gateRoutes } from "./lib/formgate.ts";
@@ -167,6 +168,9 @@ export function createApp(d: Deps) {
   meRoutes(app, k);
   factorRoutes(app, k);
 
+  // --- The operator's chat inbox: every organization that wrote ---
+  chatInboxRoutes(app, k);
+
   // --- Neo for signed-in people: reads as the caller through this same app --
   neoRoutes(app, k);
 
@@ -204,6 +208,8 @@ export function createApp(d: Deps) {
   projectRoutes(app, k);
   itemRoutes(app, k);
   commentRoutes(app, k);
+  // The organization's shared chat with neon1
+  chatRoutes(app, k);
   editRoutes(app, k);
   docRoutes(app, k);
   billingRoutes(app, k, pay);

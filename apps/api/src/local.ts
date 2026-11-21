@@ -2,7 +2,7 @@
 // sign-in accounts, and mail, all kept in memory. No AWS here, so the demo bundle stays small.
 
 
-import type { Directory, Inspection, Mailer, ScanVerdict, Storage, Texter } from "./services.ts";
+import type { Directory, Inspection, Mailer, Pusher, ScanVerdict, Storage, Texter } from "./services.ts";
 import type { SenderKind } from "./mail.ts";
 
 
@@ -92,5 +92,14 @@ export class MemoryTexter implements Texter {
   readonly sent: { to: string; body: string }[] = [];
   async send(to: string, body: string) {
     this.sent.push({ to, body });
+  }
+}
+
+
+/** Push alerts kept in memory for tests */
+export class MemoryPusher implements Pusher {
+  readonly sent: { title: string; message: string; url?: string; quiet?: boolean }[] = [];
+  async send(title: string, message: string, opts: { url?: string; quiet?: boolean } = {}) {
+    this.sent.push({ title, message, url: opts.url, quiet: opts.quiet });
   }
 }

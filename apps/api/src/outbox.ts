@@ -9,11 +9,12 @@
 // "Accepted" means the provider took the message; it is not proof that it was delivered.
 
 
-import { actorHears, groupOf, isOwnOrg, isProspect, isQuickFix, neon1Only, noticeSummary, wants, type AuditEvent, type Member, type User } from "@1neon/domain";
+import { replyOpen, actorHears, groupOf, isOwnOrg, isProspect, isQuickFix, neon1Only, noticeSummary, wants, type AuditEvent, type Member, type User } from "@1neon/domain";
 import type { Config } from "./config.ts";
 import { inviteEmail, noticeEmail, prospectFacts } from "./emails.ts";
 import { eventLinks, linkUrl } from "./lib/links.ts";
-import type { Mailer, Texter } from "./services.ts";
+import type { Mailer, Pusher, Texter } from "./services.ts";
+import { chatAlertMail, chatReplyMail } from "./lib/chatmail.ts";
 import { smsReady, smsSendAllowed, textNotice, welcomeText, confirmedText, isOptOut } from "./sms.ts";
 import type { Repo } from "./store/repo.ts";
 import { ConflictError, type Row, type WriteOp } from "./store/types.ts";
@@ -45,6 +46,8 @@ export type OutboxPayload =
   | { kind: "event"; event: AuditEvent }
   | { kind: "sms-confirmation"; userId: string; to: string; consentAt: string }
   | { kind: "sms-confirmed"; userId: string; to: string; verifiedAt: string }
+  | { kind: "chat-owner"; tenantId: string; at: string }
+  | { kind: "chat-members"; tenantId: string; at: string; userIds: string[] }
   | { kind: "invite"; tenantId: string; userId: string; email: string; orgName: string; inviter: string; url: string };
 
 
@@ -68,6 +71,8 @@ export interface OutboxDeps {
   repo: Repo;
   mailer: Mailer;
   texter?: Texter;
+  // Optional: push alerts to neon1's phone (chat only)
+  pusher?: Pusher;
   cfg: Config;
   // Per-call provider time limit; tests shorten it
   sendTimeoutMs?: number;
@@ -188,7 +193,7 @@ function ageOf(rows: Row[]) {
 /** One recipient on one channel; `send` takes an abort signal the provider call should honor */
 interface Target {
   key: string;
-  channel: "email" | "sms";
+  channel: "email" | "sms" | "push";
   send: (signal: AbortSignal) => Promise<void>;
   optedOut?: () => Promise<void>;
 }
@@ -204,7 +209,9 @@ async function deliver(d: OutboxDeps, row: Row, clock: Clock): Promise<{ sent: n
   const payload = row.payload as OutboxPayload;
   const targets: Target[] = payload.kind === "invite"
     ? [{ key: payload.email, channel: "email", send: (signal) => sendInvite(d, payload, signal) }]
-    : payload.kind === "event" ? await eventTargets(d, payload.event, clock) : await smsSetupTarget(d, payload);
+    : payload.kind === "event" ? await eventTargets(d, payload.event, clock)
+    : payload.kind === "chat-owner" || payload.kind === "chat-members" ? await chatTargets(d, payload)
+    : await smsSetupTarget(d, payload);
   let sent = 0;
   let open = 0;
   let deferred = 0;
@@ -309,6 +316,44 @@ async function eventTargets(d: OutboxDeps, e: AuditEvent, clock: Clock): Promise
         optedOut: () => markOptedOut(repo, u),
       });
     }
+  }
+  return targets;
+}
+
+
+/**
+ * Chat alerts. To neon1 (every operator): an email with the member's message, and a push without it (a client's
+ * words never go to a third party), quiet outside the reply hours. To members: an email with neon1's reply.
+ * Each reads the chat as it is now and sends nothing once the other side has opened it
+ */
+async function chatTargets(d: OutboxDeps, p: Extract<OutboxPayload, { kind: "chat-owner" | "chat-members" }>): Promise<Target[]> {
+  const { repo, cfg } = d;
+  const [thread, recent] = await Promise.all([repo.getChat(p.tenantId), repo.chatMessages(p.tenantId, 10)]);
+  if (!thread || !recent.length) return [];
+  // Opens the organization's page with the chat panel already open (?chat=1)
+  const url = `${cfg.publicUrl}/1NEON/o/${thread.orgSlug}/workspace?chat=1`;
+  if (p.kind === "chat-members") {
+    const reply = recent.find((m) => m.from === "neon1" && m.at === p.at);
+    if (!reply) return [];
+    const mail = chatReplyMail({ body: reply.body, url, at: new Date(reply.at) });
+    const out: Target[] = [];
+    for (const uid of p.userIds) {
+      // Opened since the reply: the mark was cleared, so nothing is sent
+      const seen = (await repo.chatSeen(p.tenantId)).find((s) => s.userId === uid);
+      const u = await repo.getUser(uid);
+      if (!u || seen?.mailedAt !== p.at) continue;
+      out.push({ key: uid, channel: "email", send: (signal) => d.mailer.send(u.email, mail.subject, mail.text, mail.html, undefined, signal, undefined, mail.as) });
+    }
+    return out;
+  }
+  const last = recent[recent.length - 1]!;
+  if (thread.ownerUnread === 0 || last.from !== "member") return [];
+  const author = await repo.getUser(last.authorId);
+  const mail = chatAlertMail({ name: last.authorName, email: author?.email ?? "", org: thread.orgName, free: thread.free, body: last.body, private: Boolean(last.privateWith), unread: thread.ownerUnread, url, at: new Date(last.at) });
+  const targets: Target[] = cfg.operatorEmails.map((to) => ({ key: to, channel: "email" as const, send: (signal: AbortSignal) => d.mailer.send(to, mail.subject, mail.text, mail.html, undefined, signal, undefined, mail.as) }));
+  if (d.pusher) {
+    const pusher = d.pusher;
+    targets.push({ key: "owner", channel: "push", send: (signal) => pusher.send(`Chat: ${thread.orgName}`, `${thread.free ? "A free account" : "A client"} wrote in 1NEON.`, { url, quiet: !replyOpen(), signal }) });
   }
   return targets;
 }

@@ -35,6 +35,7 @@ The portal also saves, on your device only:
 | `1neon.last` (local storage) | Whether you were last signed in, so a reload starts on the right background | Until you clear it |
 | `1neon.email` (local storage) | With Remember me ticked, the email you signed in with, so it's filled in next time. Unticked, it's cleared | Until you sign in with Remember me unticked, or clear it |
 | `1neon.lastOrg` (local storage) | The organization you last had open, so pages outside one (your profile, the FAQs) keep its menu | Until you clear it |
+| `1neon.chat.draft.<organization>` (local storage) | A chat message you've typed and not sent, kept on this device so closing the page loses nothing | Until you send it or clear it |
 | `1neon.signup` (local storage) | Whether free-account sign-up was open when you last opened sign-in, so the page shows the right wording at once | Until you clear it |
 | `neon1.theme` and `neon1.theme.business` (local storage) | Older theme choices, read only to migrate to the shared mode | Until you clear them |
 | `neon1.style` (local storage) | Matrix or Sentinel, shared with neon1.tech | Until you clear it |

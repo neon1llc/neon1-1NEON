@@ -5,7 +5,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "./app.ts";
 import { readable, type NeoModel } from "./neo/agent.ts";
-import { DEFAULT_BUDGET } from "./routes/neo.ts";
+import { DEFAULT_BUDGET, priceFor, SONNET_4_PRICE } from "./routes/neo.ts";
 import { seed } from "./seed.ts";
 import { MemoryDirectory, MemoryMailer, MemoryStorage } from "./services.ts";
 import { MemoryTable } from "./store/memory.ts";
@@ -58,6 +58,14 @@ const orgOf = async (as: string, slug: string) => {
   return ((await r.json()) as { orgs: { id: string; slug: string }[] }).orgs.find((o) => o.slug === slug)!;
 };
 
+describe("neo prices", () => {
+  it("counts a Sonnet 4 profile's tokens at Sonnet 4's prices and anything else at the default", () => {
+    expect(priceFor("us.anthropic.claude-sonnet-4-6")).toBe(SONNET_4_PRICE);
+    expect(priceFor("us.anthropic.claude-sonnet-5-5")).toBe(DEFAULT_BUDGET.price);
+    expect(SONNET_4_PRICE.output).toBeGreaterThan(DEFAULT_BUDGET.price.output);
+  });
+});
+
 describe("neo", () => {
   it("needs a signed-in person and the change header", async () => {
     const anon = await app.request("/1NEON/api/neo", { method: "POST", headers: { "content-type": "application/json", "x-1neon": "1" }, body: "{}" });
@@ -80,6 +88,27 @@ describe("neo", () => {
     expect(last[0]!.text).toContain("Organization in view: Acme Dental");
     expect(last[0]!.text).toContain("FLOW-1");
     expect(last[1]!.text).toBe("What is N1-0001?");
+  });
+
+  it("reads as the caller where the API is origin locked (dev and production), so its context holds their organizations", async () => {
+    // Behind CloudFront every request carries the edge secret; Neo's own reads must carry it too, or each answers 403
+    // and Neo tells a member of Acme Dental that they belong to no organization
+    app = createApp({
+      cfg: { env: "local", publicUrl: "https://neon1.tech", operatorEmails: [OP], devAuth: true, originLock: true, originSecret: "edge-secret-value" },
+      repo, directory: new MemoryDirectory(), mailer: new MemoryMailer(), storage: new MemoryStorage(),
+      neo: { model: fake, modelId: "fake-model", budget: DEFAULT_BUDGET },
+    });
+    script.push(say("You're in Acme Dental."));
+    const r = await app.request("/1NEON/api/neo", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-1neon": "1", "x-dev-user": "dana@acmedental.example", "x-origin-verify": "edge-secret-value" },
+      body: JSON.stringify({ messages: [{ role: "user", content: "What's waiting on me?" }], where: "/o/acme-dental/workspace" }),
+    });
+    expect(r.status).toBe(200);
+    const text = (calls[0]!.messages.at(-1)!.content as Anthropic.TextBlockParam[])[0]!.text;
+    expect(text).toContain("Acme Dental");
+    expect(text).not.toMatch(/Organizations \(id \| slug \| client ID \| name \| their access\): none/);
+    expect(text).toContain("Organization in view: Acme Dental");
   });
 
   it("reads as the caller, so another organization's data stays out of reach", async () => {

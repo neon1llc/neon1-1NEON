@@ -50,6 +50,16 @@ variable "neo_monthly_usd" {
   type    = number
   default = 8
 }
+# neon1's Pushover app token and user key (SecureStrings kept outside this stack, in /neon1-notify/<env>/), which
+# the API reads at cold start to push chat alerts to neon1's phone. Empty keeps chat alerts to email only
+variable "pushover_token_parameter" {
+  type    = string
+  default = ""
+}
+variable "pushover_user_parameter" {
+  type    = string
+  default = ""
+}
 # Where locked copies of signed and billing records go
 variable "records_bucket" { type = string }
 # Prospect sign-up (apps/api/src/routes/signup.ts): off unless turned on here, and shut anyway until the
@@ -173,6 +183,15 @@ data "aws_iam_policy_document" "api" {
       sid       = "SmsAllowlist"
       actions   = ["ssm:GetParameters"]
       resources = ["arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${statement.value}"]
+    }
+  }
+  # The Pushover keys for chat alerts, when this environment has them
+  dynamic "statement" {
+    for_each = var.pushover_token_parameter == "" || var.pushover_user_parameter == "" ? [] : [[var.pushover_token_parameter, var.pushover_user_parameter]]
+    content {
+      sid       = "PushoverKeys"
+      actions   = ["ssm:GetParameters"]
+      resources = [for p in statement.value : "arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${p}"]
     }
   }
   # SecureString decryption, only through SSM
@@ -358,6 +377,8 @@ resource "aws_lambda_function" "api" {
       SIGNUP                              = var.signup ? "on" : "off"
       TURNSTILE_SITE_KEY                  = var.turnstile_site_key
       TURNSTILE_SECRET_PARAM              = aws_ssm_parameter.turnstile_secret.name
+      PUSHOVER_TOKEN_PARAM                = var.pushover_token_parameter
+      PUSHOVER_USER_PARAM                 = var.pushover_user_parameter
       ORIGIN_SECRET                       = random_password.origin_secret.result
       ORIGIN_LOCK                         = var.origin_lock ? "on" : "off"
       NODE_OPTIONS                        = "--enable-source-maps"

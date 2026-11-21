@@ -56,6 +56,9 @@ export interface Config {
   /** Cloudflare Turnstile: the public site key the sign-up form shows, and the SSM SecureString holding the secret */
   turnstileSiteKey?: string;
   turnstileSecretParam?: string;
+  /** SSM SecureStrings holding neon1's Pushover app token and user key; unset means chat alerts go by email only */
+  pushoverTokenParam?: string;
+  pushoverUserParam?: string;
   /** The secret CloudFront adds to every request (x-origin-verify), and whether requests without it are refused */
   originSecret?: string;
   originLock?: boolean;
@@ -104,6 +107,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     signup: env.SIGNUP?.trim().toLowerCase() === "on",
     turnstileSiteKey: env.TURNSTILE_SITE_KEY || undefined,
     turnstileSecretParam: env.TURNSTILE_SECRET_PARAM || undefined,
+    pushoverTokenParam: env.PUSHOVER_TOKEN_PARAM || undefined,
+    pushoverUserParam: env.PUSHOVER_USER_PARAM || undefined,
     originSecret: env.ORIGIN_SECRET || undefined,
     originLock: env.ORIGIN_LOCK?.trim().toLowerCase() === "on",
     neoMonthlyUsd: Number(env.NEO_MONTHLY_USD) > 0 ? Math.min(Number(env.NEO_MONTHLY_USD), 50) : 8,

@@ -116,6 +116,29 @@ export interface Texter {
 }
 
 
+/** Push alerts to neon1's own phone (Pushover). Only neon1 is ever the recipient, never a client */
+export interface Pusher {
+  // `quiet` delivers without a sound; an aborted signal cancels the request
+  send(title: string, message: string, opts?: { url?: string; quiet?: boolean; signal?: AbortSignal }): Promise<void>;
+}
+
+
+/** Pushover's message API. The app token and user key come from SSM at cold start, never the repo */
+export class PushoverPusher implements Pusher {
+  constructor(private token: string, private user: string) {}
+  async send(title: string, message: string, opts: { url?: string; quiet?: boolean; signal?: AbortSignal } = {}) {
+    const r = await fetch("https://api.pushover.net/1/messages.json", {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ token: this.token, user: this.user, title, message, priority: opts.quiet ? "-1" : "0", ...(opts.url ? { url: opts.url, url_title: "Open the inbox" } : {}) }),
+      signal: opts.signal ?? AbortSignal.timeout(5000),
+    });
+    // The status only: the body can echo the request
+    if (!r.ok) throw Object.assign(new Error(`pushover ${r.status}`), { name: "PushoverError" });
+  }
+}
+
+
 // Upload and download links live five minutes: long enough for a phone on a slow network
 const LINK_SECONDS = 300;
 
@@ -304,7 +327,7 @@ export class AwsTexter implements Texter {
 
 // The local and test stand-ins and the email templates live in their own files, free of AWS, so the
 // browser demo can run the same API; they're re-exported here for existing imports
-export { MemoryDirectory, MemoryMailer, MemoryStorage, MemoryTexter } from "./local.ts";
+export { MemoryDirectory, MemoryMailer, MemoryPusher, MemoryStorage, MemoryTexter } from "./local.ts";
 export { inviteEmail, passkeyEmail } from "./emails.ts";
 
 

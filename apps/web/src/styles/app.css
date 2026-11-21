@@ -2409,3 +2409,27 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 
 /* Text fields at 16px on touch screens: iPhone browsers zoom the page in when a field under 16px takes focus */
 @media (pointer: coarse) { :root:root :is(input:not([type=checkbox], [type=radio], [type=file], [type=range], [type=color]), textarea, select) { font-size: var(--fs-md); } }
+
+
+/* Chat with Pradeep, inside Neo's panel (components/Talk.tsx): Neo's own log, bubbles and composer, plus the tab switch,
+   author and edit marks, the unread badge, and neon1's inbox rows */
+.talk-tabs { display: inline-flex; align-items: center; gap: var(--sp-3); }
+.talk-tab { background: none; border: 0; padding: 0 0 2px; cursor: pointer; opacity: .6; display: inline-flex; align-items: center; gap: var(--sp-1); border-bottom: 2px solid transparent; }
+.talk-tab[aria-selected="true"] { opacity: 1; border-bottom-color: var(--accent); }
+.talk-badge { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: var(--accent-ink, #0d0208); font: 700 var(--fs-xs) var(--mono); display: inline-grid; place-items: center; }
+.talk-badge-launch { position: absolute; top: -6px; right: -6px; }
+.talk-hint { margin: 0; padding: var(--sp-1) var(--sp-3); color: var(--muted); font-size: var(--fs-xs); border-bottom: 1px solid var(--soft); }
+.talk-who, .talk-meta { display: block; font-size: var(--fs-xs); color: var(--muted); }
+.n1chat-msg.talk-private { border: 1px dashed var(--muted); }
+.talk-edit { width: 100%; }
+.talk-acts { display: flex; justify-content: flex-end; gap: var(--sp-2); margin-top: var(--sp-1); }
+.talk-edit-btn { margin-left: var(--sp-2); padding: 0; background: none; border: 0; }
+.talk-history summary { cursor: pointer; font-size: var(--fs-xs); color: var(--muted); }
+.talk-history p { margin: var(--sp-1) 0 0; opacity: .75; }
+.talk-row { display: grid; gap: 2px; width: 100%; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--soft); padding: var(--sp-2) 0; color: inherit; cursor: pointer; font: inherit; }
+.talk-row-name { display: flex; align-items: center; gap: var(--sp-2); }
+.talk-row.new .talk-row-name { font-weight: 700; }
+.talk-row-text { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.talk-row small { color: var(--muted); }
+.talk-priv.on { background: var(--accent); color: var(--accent-ink, #0d0208); }
+.talk-to { width: auto; min-height: 0; padding: var(--sp-1) var(--sp-2); font-size: var(--fs-sm); }
