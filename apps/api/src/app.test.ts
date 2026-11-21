@@ -112,7 +112,7 @@ describe("email", () => {
   it("sends the invite with the mark, the portal link, and a timed sign-off", async () => {
     await call("raj@acmedental.example", "POST", `/t/${s.acme.id}/members/invite`, { people: [{ email: "x@y.example" }] });
     const mail = mailer.sent.at(-1)!;
-    expect(mail.html.match(/neon1-mark\.png/g)).toHaveLength(1);
+    expect(mail.html.match(/neon1-mark-mid\.png/g)).toHaveLength(1);
     expect(mail.html).toContain("neon1 · invitation");
     expect(mail.html).toContain('<html lang="en">');
     expect(mail.subject).toBe("Invitation: Acme Dental, from Raj Patel");

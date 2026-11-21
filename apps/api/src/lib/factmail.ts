@@ -93,7 +93,7 @@ function markHtml() {
   // Outer width, content height and corner radius per arc, widest first; each arc nests 1.7px inside the last
   const arcs = [[11.3, 23.8, 11.3], [8.6, 21.1, 8.6], [5.9, 18.4, 5.9], [3.2, 15.7, 3.2]];
   const group = arcs.reduceRight((inner, [w, h, r], i) =>
-    `<div class="mk" style="${i ? "margin:1.7px 1.7px 0 0;" : `width:${(w - 1).toFixed(1)}px;`}height:${h}px;border-top:1px solid ${BRAND};border-right:1px solid ${BRAND};border-top-right-radius:${r}px;font-size:0;line-height:0">${inner}</div>`, "");
+    `<div class="mk" style="${i ? "margin:1.7px 1.7px 0 0;" : `width:${((w ?? 0) - 1).toFixed(1)}px;`}height:${h}px;border-top:1px solid ${BRAND};border-right:1px solid ${BRAND};border-top-right-radius:${r}px;font-size:0;line-height:0">${inner}</div>`, "");
   return `<!--[if !mso]><!--><table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:2px"><tr><td valign="top" style="width:11.3px;padding:0">${group}</td><td style="width:1.3px;padding:0"></td><td valign="top" style="width:11.3px;padding:0">${group}</td></tr></table><!--<![endif]-->`
     + `<!--[if mso]><img src="${MARK}" width="24" height="24" alt="" style="display:block;width:24px;height:24px;border:0"><![endif]-->`;
 }
