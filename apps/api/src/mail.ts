@@ -43,11 +43,9 @@ export function fromHeader(kind: SenderKind, domain: string, dev = false) {
   return `"${dev ? "[DEV] " : ""}${s.name}" <${s.local}@${domain}>`;
 }
 
-// The marks the site serves for mail, 96px on transparent and shown at 24px for sharp screens. MARK is a mid green that
-// reads on a white card and on the dark card a mail app draws when it force-inverts colors (Gmail's apps ignore
-// prefers-color-scheme and leave images alone); MARK_DARK is Matrix green for clients that do honor dark mode
+// The mark as an image, 96px on transparent and shown at 24px: only Outlook for Windows uses it, since it cannot draw the
+// HTML mark (factmail.ts markHtml)
 export const MARK = "https://neon1.tech/shared/mail/neon1-mark-mid.png";
-export const MARK_DARK = "https://neon1.tech/shared/mail/neon1-mark-dark.png";
 // Links read as links without shouting: brand green with a thin underline
 const LINK = `color:${BRAND};text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px`;
 
