@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+## v0.24.0 - 2026-11-21
+
 ### Added
 - Chat with Pradeep: Neo's floating panel has a second conversation, with Pradeep, opened from anywhere without leaving the page. Each organization shares one conversation with neon1 (members and Pradeep, with names). A small count on the launcher shows what is new. Messages send with Enter, unsent text is kept on the device, you can edit your own messages (neon1 keeps the earlier text), and a private toggle keeps one between you and Pradeep. neon1 gets an inbox of every organization in the same panel and is alerted by email (with the message) and, when its Pushover keys are configured, by a push without it. Members are emailed Pradeep's replies unless they are reading. Free accounts send up to 6 messages an hour and 20 a day, clients 20 and 100. See docs/chat.md.
 - Answer a chat alert by replying to its email. The alert's Reply-To is a signed address on reply.neon1.tech that names the conversation, and a reply from one of neon1's own addresses posts into that organization's chat as Pradeep, with the quoted history cut. Anyone else, or an address that was not signed, is dropped.
@@ -13,7 +15,7 @@
 - Neo no longer tells a member they belong to no organization. Its reads of the person's own data are sent through the API as that person, and where the API is origin locked (dev and production) they left out the edge's secret, so every read was refused and Neo saw nothing. Neo's spend cap also counts Sonnet 4 tokens at Sonnet 4's prices when it runs on Sonnet 4.
 
 ### Changed
-- Alerts to neon1 (a chat message, a contact form message, bug and feedback reports, assessment and call requests) go through the neon1-notify service on dev: the email as before, and a phone push that names no client or sender (it now also announces a contact message or request). Production sends them directly until its service is deployed. A chat push no longer carries the organization's name.
+- Alerts to neon1 (a chat message, a contact form message, bug and feedback reports, assessment and call requests) go through the neon1-notify service: the email as before, and a phone push that names no client or sender (it now also announces a contact message or request). A chat push no longer carries the organization's name.
 - The logo in every email is drawn from HTML borders, set as on the site (26px mark, "neon" at 1.3x, bold "1"), so it changes color with the text in dark mode, including in Gmail's apps. Outlook for Windows gets the image.
 - Terms of use, the privacy policy, and the cookie notice state each retention schedule and repeated clause once, with no obligation, right, deadline, or number removed. The proposal and signing text no longer restate what the service agreement covers. The short walkthroughs and the full-account journey lose a third of their captions, and the sample stories lose their unused lines.
 - The live walkthrough's captions and thoughts are about a third shorter, one idea each, with the story beats unchanged. Sign-in's link now reads "Create an account" in place of "Start for free", and "free" is named once per page (sign-up lead, Home note, FAQ limits). Short labels and buttons follow verb and object: "Confirm code", "Sign with initials", "Move project", "Show the problem", "Tour this page".

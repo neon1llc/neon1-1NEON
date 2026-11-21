@@ -3,6 +3,9 @@
 # bottom of this file.
 
 
+data "aws_caller_identity" "current" {}
+
+
 # One name prefix and the public, sign-in, and mail hostnames
 locals {
   name        = "1neon-prod"
@@ -91,8 +94,10 @@ module "api" {
   sms_number            = module.sms.number
   sms_inbound_topic_arn = var.texts_live ? module.sms.inbound_topic_arn : ""
   texts_live            = var.texts_live
-  neo_model             = var.neo_model
-  neo_monthly_usd       = var.neo_monthly_usd
+  # neon1's own alerts and their phone push go through the neon1-notify service, which holds the Pushover keys
+  notify_function_arn = "arn:aws:lambda:us-east-1:${data.aws_caller_identity.current.account_id}:function:neon1-notify-prod"
+  neo_model           = var.neo_model
+  neo_monthly_usd     = var.neo_monthly_usd
   # Prospect sign-up with Cloudflare's invisible Turnstile; the secret is in SSM, put in by hand
   signup             = true
   turnstile_site_key = "0x4AAAAAAGCHPE2pRvBUzJiO"

@@ -1,7 +1,7 @@
 {
   "name": "1neon",
   "private": true,
-  "version": "0.23.0",
+  "version": "0.24.0",
   "description": "The neon1 client portal.",
   "license": "MIT",
   "type": "module",
