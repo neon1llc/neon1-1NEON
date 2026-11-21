@@ -392,7 +392,7 @@ export function Neo({ open, setOpen, org, me, neo = true }: { open: boolean; set
     <>
       <button ref={launcher} type="button" className={`n1chat-launch n1chat-right n1neo${look}${open ? " n1chat-hidden" : ""}`} aria-expanded={open} aria-label={unread > 0 ? `Ask Neo or message Pradeep, ${unread} new` : canTalk ? (neo ? "Ask Neo or message Pradeep" : "Message Pradeep") : "Ask Neo, your 1NEON assistant"} onClick={() => setOpen(true)} data-tour="neo">
         <Mark />
-        <span className="n1chat-label" aria-hidden="true">ask Neo</span>
+        <span className="n1chat-label" aria-hidden="true">{neo || !canTalk ? "ask Neo" : "message Pradeep"}</span>
         {unread > 0 && <b className="talk-badge talk-badge-launch" aria-hidden="true">{unread > 9 ? "9+" : unread}</b>}
       </button>
       {body}
