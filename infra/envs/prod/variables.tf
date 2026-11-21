@@ -63,12 +63,13 @@ variable "texts_live" {
 }
 
 
-# Neo for signed-in people. Off (empty) until the neon1-boundary-1neon boundary allows
-# bedrock:InvokeModel on this profile and the model is enabled in Bedrock; then set the profile ID
+# Neo for signed-in people, which is also where the chat with Pradeep lives (its second tab). On with Sonnet 4.6, the model
+# this account can invoke (Sonnet 5.5 is "not available for this account", 2026-11-20). The neon1-boundary-1neon boundary
+# in neon1-aws-infrastructure/github must allow bedrock:InvokeModel on this profile BEFORE this is applied; set empty to keep Neo (and the chat) off
 variable "neo_model" {
   description = "Bedrock inference profile ID for Neo, or empty to keep Neo off."
   type        = string
-  default     = ""
+  default     = "us.anthropic.claude-sonnet-4-6"
 }
 
 # Neo stops for the month once its estimated model spend reaches this many dollars
