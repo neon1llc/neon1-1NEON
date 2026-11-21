@@ -339,12 +339,12 @@ const texts: Show = {
         await profile(s);
         await s.type("#ph", MOBILE, 300);
         // A new number is saved first; agreeing to texts is its own save, so consent is always for the number on file
-        await s.click({ sel: "button", text: /^Save$/ }, 1200);
+        await s.click({ sel: "button", text: /^Save phone and text settings$/ }, 1200);
         await s.say("Agreeing to texts is its own step, bound to that number");
         await s.hover("#notifications .sms-consent", 900);
         await s.think("Texts are optional, and I can reply STOP anytime. Yes.");
         await s.click("#notifications .sms-consent input", 500);
-        await s.click({ sel: "button", text: /^Save$/ }, 1200);
+        await s.click({ sel: "button", text: /^Save phone and text settings$/ }, 1200);
         await s.say("A texted code proves the number is hers");
         await s.click({ sel: "button", text: "Text me a code" }, 900);
         const ph = new Phone();
@@ -370,7 +370,7 @@ const texts: Show = {
         await s.think("Decisions and files matter most. Text me those.");
         await s.click('input[aria-label="Text me: Decisions and options"]', 500);
         await s.click('input[aria-label="Text me: Files"]', 500);
-        await s.click({ sel: "button", text: /^Save$/ }, 1200);
+        await s.waitFor({ sel: ".settings-head [role=status]", text: "All changes saved." });
         await s.think("The texts only say something's new. The details stay in 1NEON.");
         await s.wait(900);
       },
