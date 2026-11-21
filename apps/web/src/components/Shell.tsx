@@ -1058,7 +1058,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
       <Palette me={me} org={org} prospect={inOrg?.prospect} open={search} setOpen={setSearch} onHelp={help.open} onTour={help.welcomeTour} />
       <ConfirmDialog me={me} />
       {/* Neo for signed-in people, where a model is wired; elsewhere the public Neo stays */}
-      {(me.neo || Boolean(navOrg) || me.operator) && !IN_DEMO && newAccount === false && <Neo neo={me.neo} open={neoOpen} setOpen={setNeoOpen} org={navOrg ? { id: navOrg.id, name: navOrg.name, slug: navOrg.slug } : undefined} me={{ id: me.user.id, operator: me.operator }} />}
+      {me.neo && !IN_DEMO && newAccount === false && <Neo open={neoOpen} setOpen={setNeoOpen} org={navOrg ? { id: navOrg.id, name: navOrg.name, slug: navOrg.slug } : undefined} me={{ id: me.user.id, operator: me.operator }} />}
     </div>
   );
 }
