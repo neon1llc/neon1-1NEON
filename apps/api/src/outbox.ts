@@ -13,7 +13,8 @@ import { replyOpen, actorHears, groupOf, isOwnOrg, isProspect, isQuickFix, neon1
 import type { Config } from "./config.ts";
 import { inviteEmail, noticeEmail, prospectFacts } from "./emails.ts";
 import { eventLinks, linkUrl } from "./lib/links.ts";
-import type { Mailer, Pusher, Texter } from "./services.ts";
+import type { Mailer, Notifier, Pusher, Texter } from "./services.ts";
+import { alertNeon1 } from "./lib/alert.ts";
 import { chatAlertMail, chatReplyMail } from "./lib/chatmail.ts";
 import { smsReady, smsSendAllowed, textNotice, welcomeText, confirmedText, isOptOut } from "./sms.ts";
 import type { Repo } from "./store/repo.ts";
@@ -73,6 +74,8 @@ export interface OutboxDeps {
   texter?: Texter;
   // Optional: push alerts to neon1's phone (chat only)
   pusher?: Pusher;
+  // Optional: neon1's alert service, which then carries chat alerts to neon1
+  notifier?: Notifier;
   cfg: Config;
   // Per-call provider time limit; tests shorten it
   sendTimeoutMs?: number;
@@ -349,7 +352,17 @@ async function chatTargets(d: OutboxDeps, p: Extract<OutboxPayload, { kind: "cha
   const last = recent[recent.length - 1]!;
   if (thread.ownerUnread === 0 || last.from !== "member") return [];
   const author = await repo.getUser(last.authorId);
-  const mail = chatAlertMail({ name: last.authorName, email: author?.email ?? "", org: thread.orgName, free: thread.free, body: last.body, private: Boolean(last.privateWith), unread: thread.ownerUnread, url, at: new Date(last.at) });
+  const mail = chatAlertMail({ name: last.authorName, email: author?.email ?? "", org: thread.orgName, free: thread.free, body: last.body, private: Boolean(last.privateWith), replyable: Boolean(d.notifier), unread: thread.ownerUnread, url, at: new Date(last.at) });
+  // Through the alert service one call carries the email and the push, and the email gets a signed Reply-To so a reply
+  // from the inbox lands in this chat. The push says nothing of who wrote
+  if (d.notifier) {
+    const notifier = d.notifier;
+    return [{
+      key: "owner",
+      channel: "email",
+      send: (signal) => alertNeon1({ mailer: d.mailer, pusher: d.pusher, notifier }, { severity: "important", title: "1NEON chat", text: `${thread.free ? "A free account" : "A client"} wrote in 1NEON.`, source: "chat", url, quiet: !replyOpen(), to: cfg.operatorEmails, mail: { subject: mail.subject, text: mail.text, html: mail.html, as: mail.as, replyThread: { kind: "chat", ref: p.tenantId } } }, signal),
+    }];
+  }
   const targets: Target[] = cfg.operatorEmails.map((to) => ({ key: to, channel: "email" as const, send: (signal: AbortSignal) => d.mailer.send(to, mail.subject, mail.text, mail.html, undefined, signal, undefined, mail.as) }));
   if (d.pusher) {
     const pusher = d.pusher;

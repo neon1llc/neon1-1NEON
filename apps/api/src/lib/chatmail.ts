@@ -6,7 +6,7 @@ import { sentAt } from "../mail.ts";
 
 
 /** To neon1: someone wrote. The message is in the mail itself, so the inbox link is only needed to answer */
-export function chatAlertMail(o: { name: string; email: string; org?: string; free: boolean; body: string; private?: boolean; unread: number; url: string; at: Date; zone?: string }) {
+export function chatAlertMail(o: { name: string; email: string; org?: string; free: boolean; body: string; private?: boolean; replyable?: boolean; unread: number; url: string; at: Date; zone?: string }) {
   const first = o.unread <= 1;
   return {
     subject: subjectOf("Chat", o.org ? `${o.name} (${o.org})` : o.name),
@@ -24,6 +24,7 @@ export function chatAlertMail(o: { name: string; email: string; org?: string; fr
       blocks: [[o.private ? "Latest message (private to you)" : "Latest message", o.body]],
       action: { label: "Reply in 1NEON", url: o.url },
       why: "Someone wrote in an organization's 1NEON chat. More messages there add to the same alert until you open it.",
+      ...(o.replyable ? { reply: "Reply to this email to answer in the chat." } : {}),
     }),
     as: "reach" as const,
   };

@@ -8,7 +8,7 @@ import type { Deps } from "../lib/kit.ts";
 import { CognitoAuth } from "../auth.ts";
 import { loadConfig, type Config } from "../config.ts";
 import { GetParametersCommand, SSMClient } from "@aws-sdk/client-ssm";
-import { AwsTexter, CognitoDirectory, PushoverPusher, S3Records, S3Storage, SesMailer, TurnstileCheck } from "../services.ts";
+import { AwsTexter, CognitoDirectory, LambdaNotifier, PushoverPusher, S3Records, S3Storage, SesMailer, TurnstileCheck } from "../services.ts";
 import { sweepSignups } from "../routes/signup.ts";
 import { finishPurges, sweepQuietProspects } from "../routes/prospects.ts";
 import { sweepOutlineNudges } from "../routes/nudges.ts";
@@ -17,6 +17,7 @@ import { StripePayments } from "../payments.ts";
 import { beforeDeadline, drainOutbox } from "../outbox.ts";
 import { sweepFiles } from "../files.ts";
 import { sweepBugs } from "../routes/bug.ts";
+import { chatReplyByEmail } from "../routes/chat.ts";
 import { DynamoTable } from "../store/dynamo.ts";
 import { Repo } from "../store/repo.ts";
 import { bedrockNeo } from "../neo/bedrock.ts";
@@ -110,6 +111,8 @@ async function pushover() {
   return token && user ? new PushoverPusher(token, user) : undefined;
 }
 const pusher = await pushover();
+// neon1's own alerts go through the neon1-notify function where one is set up
+const notifier = cfg.notifyFunction ? new LambdaNotifier(cfg.notifyFunction) : undefined;
 
 // Production wiring, shared by the API and the scheduled pass
 const deps: Deps = {
@@ -120,6 +123,7 @@ const deps: Deps = {
   storage,
   texter,
   pusher,
+  notifier,
   auth: new CognitoAuth({ userPoolId: cfg.userPoolId, clientId: cfg.clientId, authDomain: cfg.authDomain, publicUrl: cfg.publicUrl }),
   // Messages wait in the outbox for the scheduled worker below, never inside a request
   outbox: "worker",
@@ -159,16 +163,25 @@ export const handler = async (event: Parameters<typeof http>[0] | { source?: str
     }
     return { statusCode: 200, body: "ok" };
   }
+  // neon1-notify posting an emailed reply into a chat. A direct invoke needs IAM permission on this function, and no
+  // browser request has this top-level shape, so it cannot be forged from the internet
+  if ((event as { source?: string }).source === "neon1-notify") {
+    const e = event as unknown as { op?: string; tenantId?: string; text?: string; from?: string };
+    if (e.op !== "chat-reply" || !e.tenantId || !e.text || !e.from) throw new Error("bad neon1-notify event");
+    const result = await chatReplyByEmail({ repo, d: deps, cfg, drainNow: async () => undefined }, e.tenantId, e.text, e.from);
+    console.log(JSON.stringify({ level: "info", message: "chat reply by email", posted: result.posted, ...(result.posted ? {} : { reason: result.reason }) }));
+    return result;
+  }
   if ((event as { source?: string }).source === "aws.events") {
     // One absolute end for the whole pass, from the time Lambda says is left (less room to log and
     // return). The outbox gets up to seven seconds of it and the file sweep the rest
     const left = typeof context?.getRemainingTimeInMillis === "function" ? context.getRemainingTimeInMillis() : 15_000;
     const end = Date.now() + Math.max(0, left - 2_000);
-    const result = await drainOutbox({ repo, mailer, texter, pusher, cfg }, { deadline: Math.min(end - 2_000, Date.now() + 7_000) });
+    const result = await drainOutbox({ repo, mailer, texter, pusher, notifier, cfg }, { deadline: Math.min(end - 2_000, Date.now() + 7_000) });
     // Then files whose scan finished since the last pass become ready (or rejected) without a re-upload
     const files = await beforeDeadline(sweepFiles({ repo, storage }, { deadline: end - 500 }), end).catch((e) => ({ watched: 0, settled: 0, error: (e as Error).name }));
     // Bug reports waiting for their screenshots to scan go out, with the clean ones attached
-    const bugs = await beforeDeadline(sweepBugs({ repo, storage, mailer, cfg }, { deadline: end - 400 }), end).catch((e) => {
+    const bugs = await beforeDeadline(sweepBugs({ repo, storage, mailer, notifier, cfg }, { deadline: end - 400 }), end).catch((e) => {
       // The reason too (no report text or addresses are in these messages), so a held report that never goes out can be traced
       console.error(JSON.stringify({ level: "error", message: "bug report sweep failed", error: (e as Error).name, detail: String((e as Error).message ?? "").slice(0, 300) }));
       return { held: 0, sent: 0, error: (e as Error).name };

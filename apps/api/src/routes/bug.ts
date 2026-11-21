@@ -18,6 +18,7 @@ import { originCheck, readForm, themeOk, verifyGate, viewportOk } from "../lib/f
 import type { App, Kit } from "../lib/kit.ts";
 import { viewerIp } from "../lib/edge.ts";
 import type { Attachment } from "../lib/mime.ts";
+import { alertNeon1 } from "../lib/alert.ts";
 import { bugMail, bugSubject, type BugReport, type Shot } from "../lib/bugmail.ts";
 import type { Deps } from "../lib/kit.ts";
 import { COUNTER_KEEP_S, CONTACT_TO } from "./contact.ts";
@@ -190,11 +191,11 @@ export function bugRoutes(app: App, k: Kit) {
 
 
 /** Mail neon1 the report, with the given screenshots attached and inline, and `notes` for any left out */
-async function deliver(d: Pick<Deps, "mailer" | "cfg">, r: BugReport, files: { name: string; type: string; bytes: Uint8Array }[], notes: string[]) {
+async function deliver(d: Pick<Deps, "mailer" | "pusher" | "notifier" | "cfg">, r: BugReport, files: { name: string; type: string; bytes: Uint8Array }[], notes: string[]) {
   const attach: Attachment[] = files.map((f, i) => ({ ...f, cid: `shot${i + 1}@neon1` }));
   const shots: Shot[] = attach.map((a) => ({ name: a.name, type: a.type, size: a.bytes.length, cid: a.cid! }));
   const { text, html } = bugMail(r, shots, notes);
-  await d.mailer.send(d.cfg.bugTo ?? CONTACT_TO, bugSubject(r), text, html, r.email || undefined, undefined, attach, "bugs");
+  await alertNeon1(d, { severity: "info", title: "New bug report", text: "A bug report arrived.", source: "bug-report", to: [d.cfg.bugTo ?? CONTACT_TO], mail: { subject: bugSubject(r), text, html, replyTo: r.email || undefined, as: "bugs", attachments: attach } });
 }
 
 /**
@@ -202,7 +203,7 @@ async function deliver(d: Pick<Deps, "mailer" | "cfg">, r: BugReport, files: { n
  * attach; one with a threat, or that never scanned, is named instead), or after WAIT_MS with whatever is ready.
  * An environment with no scan (dev) attaches what arrived. Returns how many reports it sent
  */
-export async function sweepBugs(d: Pick<Deps, "repo" | "storage" | "mailer" | "cfg">, opts: { deadline?: number } = {}): Promise<{ held: number; sent: number }> {
+export async function sweepBugs(d: Pick<Deps, "repo" | "storage" | "mailer" | "pusher" | "notifier" | "cfg">, opts: { deadline?: number } = {}): Promise<{ held: number; sent: number }> {
   const rows = await d.repo.table.query(PENDING);
   let sent = 0;
   for (const row of rows) {

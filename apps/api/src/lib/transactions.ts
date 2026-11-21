@@ -32,7 +32,7 @@ export function installOutbox(d: Deps) {
   /** Inline mode: send the rows just written; a failure stays queued and is logged, never thrown */
   async function drainNow(queued: WriteOp[]) {
     const ids = queued.flatMap((o) => ("put" in o ? [o.put.SK] : []));
-    await drainOutbox({ repo, mailer: d.mailer, texter: d.texter, pusher: d.pusher, cfg }, { ids }).catch((e) => console.error(JSON.stringify({ level: "error", message: `outbox: ${(e as Error).name}` })));
+    await drainOutbox({ repo, mailer: d.mailer, texter: d.texter, pusher: d.pusher, notifier: d.notifier, cfg }, { ids }).catch((e) => console.error(JSON.stringify({ level: "error", message: `outbox: ${(e as Error).name}` })));
   }
   return drainNow;
 }

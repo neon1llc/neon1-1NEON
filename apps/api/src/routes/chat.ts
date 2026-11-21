@@ -4,7 +4,7 @@
 // earlier text stays on it for the record. neon1 is alerted (email, and a push to its phone when configured) when a
 // member writes, and members are emailed when neon1 replies, unless they are reading. Replies come in the reply
 // hours (packages/domain/src/chat.ts).
-import { CHAT_EDIT_HISTORY, CHAT_LIMITS, CHAT_PAGE, CHAT_READING_MS, ChatText, chatVisibleTo, REPLY_HOURS_TEXT, chatProblem, isProspect, newId, replyExpectation, type ChatMessage, type ChatThread, type ChatThreadPublic, type ChatView } from "@1neon/domain";
+import { CHAT_EDIT_HISTORY, CHAT_LIMITS, CHAT_PAGE, CHAT_READING_MS, ChatText, chatVisibleTo, REPLY_HOURS_TEXT, chatProblem, isProspect, newId, replyExpectation, type ChatMessage, type ChatThread, type ChatThreadPublic, type ChatView, type Tenant, type User } from "@1neon/domain";
 import { z } from "zod";
 import { body, fail, need, now, who } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
@@ -22,6 +22,100 @@ const gist = (s: string) => { const t = s.replace(/\s+/g, " ").trim(); return t.
 
 /** What a change produces: the chat's new summary, an optional new message, and other writes for the same transaction */
 interface Change { thread: ChatThread; message?: ChatMessage; extra?: WriteOp[] }
+
+
+/** Save a chat change, trying again when someone saved at the same moment. `change` sees the summary as just read; returning nothing leaves it alone */
+async function saveChat(k: Pick<Kit, "repo" | "d" | "drainNow">, tid: string, change: (t: ChatThread | undefined) => Change | undefined) {
+  const { repo } = k;
+  const inline = (k.d.outbox ?? "inline") === "inline";
+  for (let tries = 0; ; tries++) {
+    const cur = await repo.getChat(tid);
+    const out = change(cur);
+    if (!out) return undefined;
+    const thread = { ...out.thread, version: (cur?.version ?? 0) + 1 };
+    try {
+      await repo.table.write([...repo.chatOps(thread, out.message, cur?.version), ...(out.extra ?? [])]);
+      const queued = (out.extra ?? []).filter((o) => "put" in o && o.put.PK === "OUTBOX");
+      if (queued.length && inline) await k.drainNow(queued);
+      return { thread, message: out.message };
+    } catch (e) {
+      if (!(e instanceof ConflictError) || tries >= 2) throw e;
+    }
+  }
+}
+
+
+/**
+ * Write one message into an organization's chat: the summary, the row, and the alert or the members' email it
+ * implies. The route calls this with the signed-in person; a reply by email calls it for neon1 (below)
+ */
+export async function writeChat(k: Pick<Kit, "repo" | "d" | "drainNow">, a: { tenant: Tenant; user: User; operator: boolean; text: string; priv?: boolean; to?: string }) {
+  const { tenant, user, operator, text, priv, to } = a;
+  const { repo } = k;
+  const free = isProspect(tenant);
+  const at = now();
+  const from = operator ? "neon1" : "member";
+  // Who a private message is with: the member who wrote it, or the member neon1 chose (who must be in the organization)
+  let privateWith: string | undefined;
+  if (from === "member" && priv) privateWith = user.id;
+  if (from === "neon1" && to) {
+    const m = await repo.getMember(tenant.id, to);
+    if (!m || m.status !== "joined") fail(400, "not_member", "Choose someone who is in this organization.");
+    privateWith = to;
+  }
+  const message: ChatMessage = { id: newId("m"), at, authorId: user.id, authorName: user.name || user.email, from, body: text, ...(privateWith ? { privateWith } : {}), version: 1 };
+
+  // A reply from neon1 emails each member who isn't reading and wasn't already emailed since they last looked
+  const recipients: string[] = [];
+  const seenOps: WriteOp[] = [];
+  if (from === "neon1") {
+    const [members, seen] = await Promise.all([repo.listMembers(tenant.id), repo.chatSeen(tenant.id)]);
+    const mark = new Map(seen.map((s) => [s.userId, s]));
+    for (const m of members) {
+      // A private reply goes to the one member it is with
+      if (m.status !== "joined" || m.userId === user.id || (privateWith && m.userId !== privateWith)) continue;
+      const s = mark.get(m.userId);
+      const reading = s !== undefined && Date.parse(at) - Date.parse(s.at) < CHAT_READING_MS;
+      if (reading || s?.mailedAt) continue;
+      recipients.push(m.userId);
+      seenOps.push(repo.chatSeenOp(tenant.id, { userId: m.userId, at: s?.at ?? "", mailedAt: at }));
+    }
+  }
+
+  const saved = await saveChat(k, tenant.id, (t) => {
+    const base = { tenantId: tenant.id, orgName: tenant.name, orgSlug: tenant.slug, free, startedAt: t?.startedAt ?? at, lastAt: at, lastId: message.id, lastBy: message.authorName, lastFrom: from, preview: gist(text), version: 0 } as const;
+    if (from === "member") {
+      // One alert per burst: the next waits until neon1 opens the chat
+      const alert = !t || t.ownerUnread === 0;
+      return {
+        thread: { ...base, ownerUnread: (t?.ownerUnread ?? 0) + 1, ownerSeenAt: t?.ownerSeenAt, ownerAlertedAt: alert ? at : t?.ownerAlertedAt },
+        message,
+        extra: alert ? [outboxOp(`C#${tenant.id}#O#${at}`, { kind: "chat-owner", tenantId: tenant.id, at })] : [],
+      };
+    }
+    return {
+      thread: { ...base, ownerUnread: 0, ownerSeenAt: at, ownerAlertedAt: undefined },
+      message,
+      extra: recipients.length ? [...seenOps, outboxOp(`C#${tenant.id}#M#${at}`, { kind: "chat-members", tenantId: tenant.id, at, userIds: recipients })] : [],
+    };
+  });
+  return { thread: saved!.thread, message };
+}
+
+
+/** A reply sent from neon1's own mailbox, accepted by the alert service: posted as neon1's lead in that organization's chat */
+export async function chatReplyByEmail(k: Pick<Kit, "repo" | "d" | "cfg" | "drainNow">, tenantId: string, text: string, from: string) {
+  const { repo, cfg } = k;
+  // Only an operator's own address may speak as neon1
+  const userId = cfg.operatorEmails.includes(from.toLowerCase()) ? await repo.userIdForEmail(from.toLowerCase()) : undefined;
+  const user = userId ? await repo.getUser(userId) : undefined;
+  const tenant = await repo.getTenant(tenantId);
+  if (!user || !tenant) return { posted: false as const, reason: !user ? "not_operator" : "no_chat" };
+  const body = ChatText.safeParse(text);
+  if (!body.success) return { posted: false as const, reason: "invalid" };
+  await writeChat(k, { tenant, user, operator: true, text: body.data });
+  return { posted: true as const };
+}
 
 
 /** The operator's inbox: every organization that has written, most recent first. It sits outside any organization */
@@ -44,24 +138,6 @@ export function chatRoutes(app: App, k: Kit) {
     return { open: h.open, nextAt: h.next.toISOString(), text: REPLY_HOURS_TEXT };
   }
 
-  /** Save a chat change, trying again when someone saved at the same moment. `change` sees the summary as just read; returning nothing leaves it alone */
-  async function save(tid: string, change: (t: ChatThread | undefined) => Change | undefined) {
-    for (let tries = 0; ; tries++) {
-      const cur = await repo.getChat(tid);
-      const out = change(cur);
-      if (!out) return undefined;
-      const thread = { ...out.thread, version: (cur?.version ?? 0) + 1 };
-      try {
-        await repo.table.write([...repo.chatOps(thread, out.message, cur?.version), ...(out.extra ?? [])]);
-        const queued = (out.extra ?? []).filter((o) => "put" in o && o.put.PK === "OUTBOX");
-        if (queued.length && inline) await k.drainNow(queued);
-        return { thread, message: out.message };
-      } catch (e) {
-        if (!(e instanceof ConflictError) || tries >= 2) throw e;
-      }
-    }
-  }
-
   /** The summary as a reader may see it: neon1 gets everything; a member gets none of what could come from a message they can't see */
   const summary = (t: ChatThread, operator: boolean): ChatThread | ChatThreadPublic =>
     operator ? t : { tenantId: t.tenantId, orgName: t.orgName, orgSlug: t.orgSlug, free: t.free, startedAt: t.startedAt, lastAt: t.lastAt, lastFrom: t.lastFrom };
@@ -80,7 +156,7 @@ export function chatRoutes(app: App, k: Kit) {
     let unread = 0;
     if (actor.operator) {
       unread = thread?.ownerUnread ?? 0;
-      if (thread && (thread.ownerUnread > 0 || thread.ownerAlertedAt)) await save(tid, (t) => t && { thread: { ...t, ownerUnread: 0, ownerSeenAt: now(), ownerAlertedAt: undefined } }).catch(() => undefined);
+      if (thread && (thread.ownerUnread > 0 || thread.ownerAlertedAt)) await saveChat(k, tid, (t) => t && { thread: { ...t, ownerUnread: 0, ownerSeenAt: now(), ownerAlertedAt: undefined } }).catch(() => undefined);
     } else {
       const mine = (await repo.chatSeen(tid)).find((s) => s.userId === user.id);
       unread = messages.filter((m) => m.authorId !== user.id && m.at > (mine?.at ?? "")).length;
@@ -126,53 +202,9 @@ export function chatRoutes(app: App, k: Kit) {
       if (h > limit.hourly || day > limit.daily) fail(429, "too_many_messages", "That's a lot of messages for now. I'll read what's here and answer when I can.");
     }
 
-    const at = now();
-    const from = actor.operator ? "neon1" : "member";
-    // Who a private message is with: the member who wrote it, or the member neon1 chose (who must be in the organization)
-    let privateWith: string | undefined;
-    if (from === "member" && priv) privateWith = user.id;
-    if (from === "neon1" && to) {
-      const m = await repo.getMember(tenant.id, to);
-      if (!m || m.status !== "joined") fail(400, "not_member", "Choose someone who is in this organization.");
-      privateWith = to;
-    }
-    const message: ChatMessage = { id: newId("m"), at, authorId: user.id, authorName: user.name || user.email, from, body: text, ...(privateWith ? { privateWith } : {}), version: 1 };
-
-    // A reply from neon1 emails each member who isn't reading and wasn't already emailed since they last looked
-    const recipients: string[] = [];
-    const seenOps: WriteOp[] = [];
-    if (from === "neon1") {
-      const [members, seen] = await Promise.all([repo.listMembers(tenant.id), repo.chatSeen(tenant.id)]);
-      const mark = new Map(seen.map((s) => [s.userId, s]));
-      for (const m of members) {
-        // A private reply goes to the one member it is with
-        if (m.status !== "joined" || m.userId === user.id || (privateWith && m.userId !== privateWith)) continue;
-        const s = mark.get(m.userId);
-        const reading = s !== undefined && Date.parse(at) - Date.parse(s.at) < CHAT_READING_MS;
-        if (reading || s?.mailedAt) continue;
-        recipients.push(m.userId);
-        seenOps.push(repo.chatSeenOp(tenant.id, { userId: m.userId, at: s?.at ?? "", mailedAt: at }));
-      }
-    }
-
-    const saved = await save(tenant.id, (t) => {
-      const base = { tenantId: tenant.id, orgName: tenant.name, orgSlug: tenant.slug, free, startedAt: t?.startedAt ?? at, lastAt: at, lastId: message.id, lastBy: message.authorName, lastFrom: from, preview: gist(text), version: 0 } as const;
-      if (from === "member") {
-        // One alert per burst: the next waits until neon1 opens the chat
-        const alert = !t || t.ownerUnread === 0;
-        return {
-          thread: { ...base, ownerUnread: (t?.ownerUnread ?? 0) + 1, ownerSeenAt: t?.ownerSeenAt, ownerAlertedAt: alert ? at : t?.ownerAlertedAt },
-          message,
-          extra: alert ? [outboxOp(`C#${tenant.id}#O#${at}`, { kind: "chat-owner", tenantId: tenant.id, at })] : [],
-        };
-      }
-      return {
-        thread: { ...base, ownerUnread: 0, ownerSeenAt: at, ownerAlertedAt: undefined },
-        message,
-        extra: recipients.length ? [...seenOps, outboxOp(`C#${tenant.id}#M#${at}`, { kind: "chat-members", tenantId: tenant.id, at, userIds: recipients })] : [],
-      };
-    });
-    return c.json({ message: shown(message, actor.operator), thread: summary(saved!.thread, actor.operator), hours: hours() }, 201);
+    const saved = await writeChat(k, { tenant, user, operator: actor.operator, text, priv, to });
+    const message = saved.message;
+    return c.json({ message: shown(message, actor.operator), thread: summary(saved.thread, actor.operator), hours: hours() }, 201);
   });
 
   // Edit your own message. The earlier text stays on it for the record; nobody else's message can be edited, and
@@ -192,7 +224,7 @@ export function chatRoutes(app: App, k: Kit) {
     if (history.length > CHAT_EDIT_HISTORY) fail(409, "edit_limit", `A message can be edited ${CHAT_EDIT_HISTORY} times. Write a new one instead.`);
     const edited: ChatMessage = { ...m, body: text, editedAt: now(), history, version: (m.version ?? 1) + 1 };
     // The summary's preview follows when this is the latest message
-    await save(tid, (t) => t && { thread: { ...t, preview: t.lastId === m.id ? gist(text) : t.preview }, extra: [repo.chatEditOp(tid, edited, m.version ?? 1)] });
+    await saveChat(k, tid, (t) => t && { thread: { ...t, preview: t.lastId === m.id ? gist(text) : t.preview }, extra: [repo.chatEditOp(tid, edited, m.version ?? 1)] });
     return c.json(shown(edited, actor.operator));
   });
 

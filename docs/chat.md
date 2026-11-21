@@ -53,7 +53,7 @@ A message saves the moment Send is pressed (Enter sends, Shift Enter adds a line
 ## Alerts
 
 - A member's message emails every operator address (sender "1NEON Reach") with the message in the mail. A burst alerts once, until neon1 opens the chat.
-- With `PUSHOVER_TOKEN_PARAM` and `PUSHOVER_USER_PARAM` set, the same event pushes "Chat: organization" to neon1's phone, without the message, quietly outside the reply hours. Without them, nothing else changes.
+- Where `NOTIFY_FUNCTION` names the neon1-notify service (dev), one call carries the email and a phone push that says only that a client or free account wrote, quiet outside the reply hours. The email's Reply-To is a signed address on reply.neon1.tech: answering the email posts the reply into this chat as Pradeep (the service drops anything not signed, not from an operator, or failing SPF and DKIM; the API takes the post as a direct invoke, `source: "neon1-notify"`). Without the service (production for now), `PUSHOVER_TOKEN_PARAM` and `PUSHOVER_USER_PARAM` push "Chat: organization" the same way, and there is no reply by email.
 - A reply from neon1 emails each member it is for who opened the chat more than two minutes ago and has not been emailed since they last looked. The reply is in the mail. Members are not emailed about each other's messages.
 - Delivery uses the existing outbox: durable, retried with backoff, one receipt per recipient and channel.
 
@@ -68,4 +68,4 @@ Per person. A message is 1 to 2,000 characters, a free account's may carry two l
 
 ## Not here yet
 
-Attachments, Neo answering first, replying by answering the alert email, and a way for a member to turn the reply emails off.
+Attachments, Neo answering first, replying by email in production, and a way for a member to turn the reply emails off.

@@ -6,7 +6,7 @@ import { canNameDecider, deciderIds, isOwnOrg, fileState, type Project } from "@
 import type { Context, Hono } from "hono";
 import type { CognitoAuth } from "../auth.ts";
 import type { Config } from "../config.ts";
-import type { Directory, HumanCheck, Mailer, Pusher, Storage, Texter } from "../services.ts";
+import type { Directory, HumanCheck, Mailer, Notifier, Pusher, Storage, Texter } from "../services.ts";
 import type { Repo } from "../store/repo.ts";
 import type { NeoModel } from "../neo/agent.ts";
 import type { NeoBudget } from "../routes/neo.ts";
@@ -27,6 +27,9 @@ export interface Deps {
   texter?: Texter;
   // Optional: push alerts to neon1's phone. Without it, chat alerts go by email only
   pusher?: Pusher;
+  // Optional: neon1's alert service. When set, mail only neon1 receives and phone pushes go through it; without it
+  // (local runs, tests, production until its service exists) they are sent here directly
+  notifier?: Notifier;
   auth?: CognitoAuth;
   // "worker": a scheduled worker sends queued messages (production). "inline" (the default): sent
   // right after the change, for local runs, tests, and the browser demo

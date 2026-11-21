@@ -9,6 +9,7 @@ import { fail } from "../lib/http.ts";
 import { originCheck, readForm, themeOk, verifyGate, viewportOk } from "../lib/formgate.ts";
 import type { App, Kit } from "../lib/kit.ts";
 import { viewerIp } from "../lib/edge.ts";
+import { alertNeon1 } from "../lib/alert.ts";
 import { feedbackMail, feedbackSubject, type Feedback } from "../lib/feedbackmail.ts";
 import { COUNTER_KEEP_S, CONTACT_TO } from "./contact.ts";
 import { WHERE } from "./bug.ts";
@@ -96,7 +97,7 @@ export function feedbackRoutes(app: App, k: Kit) {
     const ref = `FDB-${[...bytes].map((b) => REF_CHARS[b % REF_CHARS.length]).join("")}`;
     const fb: Feedback = { ref, kind: KIND[m.kind], where: WHERE[m.where], what: m.what, email: m.email, page: cleanPage(m.page), theme: themeOk(m.theme), browser: m.browser, viewport: viewportOk(m.viewport), at: new Date().toISOString() };
     const { text, html } = feedbackMail(fb);
-    await d.mailer.send(d.cfg.feedbackTo ?? CONTACT_TO, feedbackSubject(fb), text, html, fb.email || undefined, undefined, undefined, "feedback");
+    await alertNeon1(d, { severity: "info", title: "New feedback", text: "Feedback arrived.", source: "feedback", to: [d.cfg.feedbackTo ?? CONTACT_TO], mail: { subject: feedbackSubject(fb), text, html, replyTo: fb.email || undefined, as: "feedback" } });
     return c.json({ ok: true, ref });
   });
 }

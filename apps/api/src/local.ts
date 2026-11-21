@@ -2,7 +2,7 @@
 // sign-in accounts, and mail, all kept in memory. No AWS here, so the demo bundle stays small.
 
 
-import type { Directory, Inspection, Mailer, Pusher, ScanVerdict, Storage, Texter } from "./services.ts";
+import type { Directory, Inspection, Mailer, Notifier, NotifyRequest, Pusher, ScanVerdict, Storage, Texter } from "./services.ts";
 import type { SenderKind } from "./mail.ts";
 
 
@@ -92,6 +92,18 @@ export class MemoryTexter implements Texter {
   readonly sent: { to: string; body: string }[] = [];
   async send(to: string, body: string) {
     this.sent.push({ to, body });
+  }
+}
+
+
+/** neon1-notify stand-in: records each request and answers as if every routed channel sent */
+export class MemoryNotifier implements Notifier {
+  readonly sent: NotifyRequest[] = [];
+  async notify(n: NotifyRequest) {
+    this.sent.push(n);
+    const routed = n.severity === "info" ? ["email"] : ["email", "push"];
+    const out = (c: string) => (routed.includes(c) ? "sent" : "skipped:not_routed");
+    return { delivered: { email: out("email"), push: out("push"), sms: "skipped:not_routed" }, deduped: false };
   }
 }
 

@@ -15,6 +15,7 @@ import {
 } from "@aws-sdk/client-cognito-identity-provider";
 import { DeleteObjectCommand, GetObjectCommand, GetObjectTaggingCommand, GetObjectAttributesCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { SendTextMessageCommand, PinpointSMSVoiceV2Client } from "@aws-sdk/client-pinpoint-sms-voice-v2";
+import { InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
 import { SendEmailCommand, SESv2Client } from "@aws-sdk/client-sesv2";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import type { Records } from "./payments.ts";
@@ -113,6 +114,54 @@ export interface Storage {
 export interface Texter {
   // An aborted signal cancels the request where the provider's SDK supports it
   send(to: string, body: string, signal?: AbortSignal): Promise<void>;
+}
+
+
+/** What neon1's alert service is asked to send. The title and text reach third parties (push, text), so they never name a client or quote one; any detail rides in `email`, which only neon1's own addresses receive */
+export interface NotifyRequest {
+  severity: "critical" | "important" | "info";
+  title: string;
+  text: string;
+  source: string;
+  url?: string;
+  dedupeKey?: string;
+  quiet?: boolean;
+  channels?: ("email" | "push" | "sms")[];
+  email?: {
+    to?: string[];
+    subject: string;
+    text: string;
+    html: string;
+    as?: SenderKind;
+    replyTo?: string;
+    // A chat thread the alert can be answered from: the service adds a signed Reply-To
+    replyThread?: { kind: "chat"; ref: string };
+    attachments?: { name: string; type: string; b64: string; cid?: string }[];
+  };
+}
+
+/** The service's answer: what each channel did (sent, skipped:<reason>, or error) and whether a repeat was dropped */
+export interface NotifyResult {
+  delivered: { email: string; push: string; sms: string };
+  deduped: boolean;
+}
+
+/** neon1's own alerts: email, phone push and text by severity (the neon1-notify service) */
+export interface Notifier {
+  notify(n: NotifyRequest, signal?: AbortSignal): Promise<NotifyResult>;
+}
+
+
+/** Calls the neon1-notify function directly; IAM allows this role to invoke that one function only */
+export class LambdaNotifier implements Notifier {
+  private client = new LambdaClient({});
+  constructor(private fn: string) {}
+  async notify(n: NotifyRequest, signal?: AbortSignal) {
+    const r = await this.client.send(new InvokeCommand({ FunctionName: this.fn, Payload: new TextEncoder().encode(JSON.stringify(n)) }), { abortSignal: signal });
+    // A function error carries its message in the payload; name only that it failed
+    if (r.FunctionError) throw Object.assign(new Error("notify failed"), { name: "NotifyError" });
+    return JSON.parse(new TextDecoder().decode(r.Payload)) as NotifyResult;
+  }
 }
 
 
@@ -327,7 +376,7 @@ export class AwsTexter implements Texter {
 
 // The local and test stand-ins and the email templates live in their own files, free of AWS, so the
 // browser demo can run the same API; they're re-exported here for existing imports
-export { MemoryDirectory, MemoryMailer, MemoryPusher, MemoryStorage, MemoryTexter } from "./local.ts";
+export { MemoryDirectory, MemoryMailer, MemoryNotifier, MemoryPusher, MemoryStorage, MemoryTexter } from "./local.ts";
 export { inviteEmail, passkeyEmail } from "./emails.ts";
 
 

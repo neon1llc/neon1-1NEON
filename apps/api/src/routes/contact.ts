@@ -9,6 +9,7 @@ import { body, fail } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
 import { viewerIp } from "../lib/edge.ts";
 import { contactMail, contactSubject } from "../lib/contactmail.ts";
+import { alertNeon1 } from "../lib/alert.ts";
 
 
 export const CONTACT_TO = "hello@neon1.tech";
@@ -106,7 +107,7 @@ export function contactRoutes(app: App, k: Kit) {
       zone: DEFAULT_TIME_ZONE, // goes to neon1, so the sent time reads in neon1's zone
     });
     // From "neon1 Reach" (the website's contact form); dev's mailer marks the sender name itself
-    await d.mailer.send(CONTACT_TO, contactSubject({ name: m.name, company: m.company }), text, html, m.email, undefined, undefined, "requests");
+    await alertNeon1(d, { severity: "important", title: "New contact message", text: "Someone wrote through the contact form.", source: "contact-form", to: [CONTACT_TO], mail: { subject: contactSubject({ name: m.name, company: m.company }), text, html, replyTo: m.email, as: "requests" } });
     return c.json({ ok: true });
   });
 }
