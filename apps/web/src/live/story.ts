@@ -321,7 +321,8 @@ export const STORY: Section[] = [
         await s.think("Menu: Default or Mini? Let me try Mini.");
         await s.click({ sel: ".chip", text: "Mini" }, 500);
       }
-      await s.click({ sel: "button", text: /^Save$/ }, 1200);
+      // The profile saves by itself; the status line at the top says when
+      await s.waitFor({ sel: ".settings-head [role=status]", text: "All changes saved." });
       if (small) {
         await s.say("The mini menu keeps every page one tap away");
         await s.click(".top .menu-btn", 900);
