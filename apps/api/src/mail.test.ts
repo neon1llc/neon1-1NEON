@@ -156,7 +156,7 @@ describe("every email", () => {
       expect(m.html, at).toContain("prefers-color-scheme:dark");
       expect(m.html, at).toContain('name="color-scheme" content="light dark"');
       // Two logos swapped by mode (not one filtered image), with Outlook's dark rewrite covered
-      expect(m.html, at).toContain('class="mark-l" src="https://neon1.tech/shared/mail/neon1-mark.png"');
+      expect(m.html, at).toContain('class="mark-l" src="https://neon1.tech/shared/mail/neon1-mark-mid.png"');
       expect(m.html, at).toContain('class="mark-d" src="https://neon1.tech/shared/mail/neon1-mark-dark.png"');
       expect(m.html, at).toMatch(/\[data-ogsc\] \.mark-d\{display:block/);
       expect(m.html, at).not.toContain("invert(1)");

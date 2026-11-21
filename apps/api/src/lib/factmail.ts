@@ -59,8 +59,8 @@ export const block = (k: string, v: string) =>
   `<p class="muted" style="margin:0 0 8px;${label()}">${esc(k)}</p>
 <div class="quote ink" style="margin:0 0 22px;padding:12px 14px;background:${PAPER};border-left:3px solid ${BRAND};border-radius:4px;font:15px/1.55 ${SANS};color:${INK};white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere">${esc(v)}</div>`;
 
-// Dark mode and the narrow-phone table. Two logos swap by mode: the light one shows by default (clients that ignore
-// media queries stay on it) and the dark one is hidden until dark mode or Outlook's [data-ogsc] dark rewrite. Dark colors keep AA contrast: light text on #16241c, bright green links and a
+// Dark mode and the narrow-phone table. Two logos swap by mode: the mid-green one shows by default (clients that only force-invert, like
+// Gmail's apps, stay on it and it reads on both card colors) and the dark one is hidden until dark mode or Outlook's [data-ogsc] dark rewrite. Dark colors keep AA contrast: light text on #16241c, bright green links and a
 // bright green button with dark text
 const STYLES = `
 :root{color-scheme:light dark;supported-color-schemes:light dark}
