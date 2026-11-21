@@ -6,12 +6,15 @@
 
 
 import { LASTING_OPS, type NeoPlan, type NeoTour } from "@1neon/domain";
+import { useQuery } from "@tanstack/react-query";
 import { driver } from "driver.js";
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useLocation } from "react-router";
 import { problem } from "../lib/hooks.ts";
 import { askNeo, blocks, fit, keep, runStep, type Piece, type Turn } from "../lib/neo.ts";
 import { navigate, refreshAll } from "../lib/nav.ts";
+import { api } from "../lib/api.ts";
+import { Talk, type ChatOrg } from "./Talk.tsx";
 
 
 // Starting points, shown until the first question
@@ -203,9 +206,39 @@ function Plan({ plan }: { plan: NeoPlan }) {
 
 // --- The window -------------------------------------------------------------------------
 
-export function Neo({ open, setOpen }: { open: boolean; setOpen: (open: boolean) => void }) {
+// The launcher's count of what is new from Pradeep (or, for neon1, from everyone): read now and then, never marking anything seen
+function useUnread(org: ChatOrg | undefined, operator: boolean, watching: boolean) {
+  const q = useQuery({
+    queryKey: ["chat", "unread", org?.id ?? "", operator],
+    queryFn: async () => (operator
+      ? (await api<{ threads: { ownerUnread: number }[] }>("/chat/inbox")).threads.reduce((n, t) => n + t.ownerUnread, 0)
+      : (await api<{ unread: number }>(`/t/${org!.id}/chat/unread`)).unread),
+    enabled: (operator || Boolean(org)) && !watching,
+    refetchInterval: 60_000,
+  });
+  return watching ? 0 : q.data ?? 0;
+}
+
+
+/** Neo's panel, with a second conversation in it: the organization's chat with Pradeep (components/Talk.tsx). Opened from anywhere, so nobody leaves the page */
+export function Neo({ open, setOpen, org, me, neo = true }: { open: boolean; setOpen: (open: boolean) => void; org?: ChatOrg; me: { id: string; operator: boolean }; neo?: boolean }) {
   const light = useLight();
   const loc = useLocation();
+  // Without Neo (no model set up) the panel is only the conversation with Pradeep
+  const [tabWas, setTab] = useState<"neo" | "pradeep">("neo");
+  const tab = neo ? tabWas : "pradeep";
+  // neon1 can pick any organization from its inbox; everyone else has their own
+  const [picked, setPicked] = useState<ChatOrg | undefined>();
+  const chatOrg = me.operator ? picked ?? org : org;
+  const canTalk = me.operator || Boolean(org);
+  const unread = useUnread(chatOrg, me.operator, open && tab === "pradeep");
+  // Alert emails open the page with ?chat=1, and other places ask with this event
+  useEffect(() => {
+    const talk = () => { if (!canTalk) return; setTab("pradeep"); setOpen(true); };
+    if (new URLSearchParams(loc.search).get("chat") === "1") talk();
+    addEventListener("1neon:chat", talk);
+    return () => removeEventListener("1neon:chat", talk);
+  }, [canTalk, loc.search, setOpen]);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [history, setHistory] = useState<Turn[]>([]);
   const [busy, setBusy] = useState(false);
@@ -291,60 +324,76 @@ export function Neo({ open, setOpen }: { open: boolean; setOpen: (open: boolean)
   const submit = (e: FormEvent) => { e.preventDefault(); void ask(text); };
   let body: ReactNode = null;
   if (open) body = (
-    <div ref={panel} className={`n1chat n1chat-right n1neo${look}`} role="dialog" aria-label="Neo, your 1NEON assistant" tabIndex={-1} onKeyDown={(e) => e.key === "Escape" && close()}>
+    <div ref={panel} className={`n1chat n1chat-right n1neo${look}`} role="dialog" aria-label={canTalk ? (neo ? "Chat with Neo or Pradeep" : "Chat with Pradeep") : "Neo, your 1NEON assistant"} tabIndex={-1} onKeyDown={(e) => e.key === "Escape" && close()}>
       <div className="n1chat-head">
-        <strong className="n1chat-title"><Mark />Neo</strong>
+        {canTalk && !neo ? (
+          <strong className="n1chat-title"><Mark />{me.operator ? "Inbox" : "Pradeep"}</strong>
+        ) : canTalk ? (
+          <span className="talk-tabs" role="tablist">
+            <button type="button" role="tab" aria-selected={tab === "neo"} className="n1chat-title talk-tab" onClick={() => setTab("neo")}><Mark />Neo</button>
+            <button type="button" role="tab" aria-selected={tab === "pradeep"} className="n1chat-title talk-tab" onClick={() => setTab("pradeep")}>{me.operator ? "Inbox" : "Pradeep"}{unread > 0 && tab !== "pradeep" && <b className="talk-badge">{unread}</b>}</button>
+          </span>
+        ) : (
+          <strong className="n1chat-title"><Mark />Neo</strong>
+        )}
         <span className="n1chat-tools">
-          <button type="button" className="n1chat-tool" onClick={fresh} aria-label="Start a new conversation">new</button>
+          {tab === "neo" && <button type="button" className="n1chat-tool" onClick={fresh} aria-label="Start a new conversation">new</button>}
           <button type="button" className="n1chat-tool" onClick={() => close()} aria-label="Close">close</button>
         </span>
       </div>
-      <div ref={log} className="n1chat-log" role="log" aria-live="polite">
-        <div className="n1chat-msg n1chat-bot">
-          <p>I'm Neo, 1NEON's automated assistant. Ask about anything here, and I can point you to it, show you around, or offer to do it with you.</p>
+      {tab === "pradeep" && canTalk ? (
+        <Talk org={chatOrg} me={me.id} operator={me.operator} active={open && tab === "pradeep"} pick={setPicked} />
+      ) : (
+        <>
+        <div ref={log} className="n1chat-log" role="log" aria-live="polite">
+          <div className="n1chat-msg n1chat-bot">
+            <p>I'm Neo, 1NEON's automated assistant. Ask about anything here, and I can point you to it, show you around, or offer to do it with you.</p>
+          </div>
+          {!msgs.length && (
+            <div className="n1chat-chips">
+              {SUGGESTIONS.map((q) => <button key={q} type="button" className="n1chat-chip" onClick={() => void ask(q)}>{q}</button>)}
+            </div>
+          )}
+          {msgs.map((m) => (
+            <div key={m.id} className={`n1chat-msg n1chat-${m.who} n1chat-in`}>
+              {m.who === "you" ? m.text : <Reply text={m.text} />}
+              {m.tour && (
+                <div className="neo-acts">
+                  <button type="button" className="n1chat-send" onClick={() => { setOpen(false); void startTour(m.tour!); }}>Start the tour</button>
+                  <span className="neo-note">{m.tour.title}</span>
+                </div>
+              )}
+              {m.plan && <Plan plan={m.plan} />}
+            </div>
+          ))}
+          {busy && <div className="n1chat-msg n1chat-bot n1chat-typing n1chat-in" aria-label="Neo is typing"><span /><span /><span /></div>}
         </div>
-        {!msgs.length && (
-          <div className="n1chat-chips">
-            {SUGGESTIONS.map((q) => <button key={q} type="button" className="n1chat-chip" onClick={() => void ask(q)}>{q}</button>)}
-          </div>
-        )}
-        {msgs.map((m) => (
-          <div key={m.id} className={`n1chat-msg n1chat-${m.who} n1chat-in`}>
-            {m.who === "you" ? m.text : <Reply text={m.text} />}
-            {m.tour && (
-              <div className="neo-acts">
-                <button type="button" className="n1chat-send" onClick={() => { setOpen(false); void startTour(m.tour!); }}>Start the tour</button>
-                <span className="neo-note">{m.tour.title}</span>
-              </div>
-            )}
-            {m.plan && <Plan plan={m.plan} />}
-          </div>
-        ))}
-        {busy && <div className="n1chat-msg n1chat-bot n1chat-typing n1chat-in" aria-label="Neo is typing"><span /><span /><span /></div>}
-      </div>
-      <form className="n1chat-form" onSubmit={submit}>
-        <textarea
-          ref={input}
-          className="n1chat-input"
-          rows={1}
-          maxLength={2000}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void ask(text); } }}
-          aria-label="Your question"
-          placeholder="Ask Neo"
-        />
-        <button type="submit" className="n1chat-send" disabled={busy}>send</button>
-      </form>
-      <p className="n1chat-note">Neo reads only what you can open, and changes nothing unless you say yes.</p>
+        <form className="n1chat-form" onSubmit={submit}>
+          <textarea
+            ref={input}
+            className="n1chat-input"
+            rows={1}
+            maxLength={2000}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void ask(text); } }}
+            aria-label="Your question"
+            placeholder="Ask Neo"
+          />
+          <button type="submit" className="n1chat-send" disabled={busy}>send</button>
+        </form>
+        <p className="n1chat-note">Neo reads only what you can open, and changes nothing unless you say yes.</p>
+        </>
+      )}
     </div>
   );
 
   return (
     <>
-      <button ref={launcher} type="button" className={`n1chat-launch n1chat-right n1neo${look}${open ? " n1chat-hidden" : ""}`} aria-expanded={open} aria-label="Ask Neo, your 1NEON assistant" onClick={() => setOpen(true)} data-tour="neo">
+      <button ref={launcher} type="button" className={`n1chat-launch n1chat-right n1neo${look}${open ? " n1chat-hidden" : ""}`} aria-expanded={open} aria-label={unread > 0 ? `Ask Neo or message Pradeep, ${unread} new` : canTalk ? (neo ? "Ask Neo or message Pradeep" : "Message Pradeep") : "Ask Neo, your 1NEON assistant"} onClick={() => setOpen(true)} data-tour="neo">
         <Mark />
         <span className="n1chat-label" aria-hidden="true">ask Neo</span>
+        {unread > 0 && <b className="talk-badge talk-badge-launch" aria-hidden="true">{unread > 9 ? "9+" : unread}</b>}
       </button>
       {body}
     </>

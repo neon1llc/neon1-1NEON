@@ -91,6 +91,19 @@ export function chatRoutes(app: App, k: Kit) {
     return c.json(view);
   });
 
+  // How many messages are new to you, without opening the chat: the launcher's badge asks this, so it never marks anything seen
+  app.get("/t/:tid/chat/unread", async (c) => {
+    need(c, "read");
+    const tid = c.get("tenant").id;
+    const { user, actor } = who(c);
+    const thread = await repo.getChat(tid);
+    if (!thread) return c.json({ unread: 0 });
+    if (actor.operator) return c.json({ unread: thread.ownerUnread });
+    const mine = (await repo.chatSeen(tid)).find((x) => x.userId === user.id);
+    const recent = await repo.chatMessages(tid, CHAT_PAGE);
+    return c.json({ unread: recent.filter((m) => chatVisibleTo(m, user.id, false) && m.authorId !== user.id && m.at > (mine?.at ?? "")).length });
+  });
+
   // Write in the chat
   app.post("/t/:tid/chat", async (c) => {
     need(c, "comment");

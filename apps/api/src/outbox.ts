@@ -330,7 +330,8 @@ async function chatTargets(d: OutboxDeps, p: Extract<OutboxPayload, { kind: "cha
   const { repo, cfg } = d;
   const [thread, recent] = await Promise.all([repo.getChat(p.tenantId), repo.chatMessages(p.tenantId, 10)]);
   if (!thread || !recent.length) return [];
-  const url = `${cfg.publicUrl}/1NEON/o/${thread.orgSlug}/chat`;
+  // Opens the organization's page with the chat panel already open (?chat=1)
+  const url = `${cfg.publicUrl}/1NEON/o/${thread.orgSlug}/workspace?chat=1`;
   if (p.kind === "chat-members") {
     const reply = recent.find((m) => m.from === "neon1" && m.at === p.at);
     if (!reply) return [];

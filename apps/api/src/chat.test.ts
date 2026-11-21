@@ -80,6 +80,28 @@ describe("one chat for the whole organization", () => {
 });
 
 
+describe("the unread count", () => {
+  it("is read without marking anything seen", async () => {
+    const tid = s.acme.id;
+    await say(RAJ, tid, "One");
+    await say(RAJ, tid, "Two");
+    const unread = async (email: string) => ((await (await as(email, `${chat(tid)}/unread`)).json()) as { unread: number }).unread;
+    expect(await unread(DANA)).toBe(2);
+    expect(await unread(DANA)).toBe(2);
+    expect(await unread(RAJ)).toBe(0);
+    expect(await unread(OP)).toBe(2);
+    // Opening is what marks it seen
+    await open(DANA, tid);
+    expect(await unread(DANA)).toBe(0);
+    expect(await unread(OP)).toBe(2);
+    // A private message counts only for the member it is with
+    await as(RAJ, chat(tid), "POST", { text: "just for neon1", private: true });
+    expect(await unread(DANA)).toBe(0);
+    expect(await unread(OP)).toBe(3);
+  });
+});
+
+
 describe("alerts to neon1", () => {
   it("emails the message and pushes without it, once per burst, again after neon1 opens the chat", async () => {
     const tid = s.acme.id;

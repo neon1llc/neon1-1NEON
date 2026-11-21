@@ -10,7 +10,7 @@ One shared chat per organization. Every member and neon1's lead write in the sam
 | Routes | `apps/api/src/routes/chat.ts` |
 | Storage | `apps/api/src/store/repo.ts` (`getChat`, `chatMessages`, `chatOps`, `chatSeen`, `chatInbox`) |
 | Delivery | `apps/api/src/outbox.ts` (`chat-owner`, `chat-members`), `apps/api/src/lib/chatmail.ts` |
-| Page | `apps/web/src/pages/Chat.tsx` |
+| Conversation view | `apps/web/src/components/Talk.tsx` (inside Neo's panel, `apps/web/src/components/Neo.tsx`) |
 
 ## Routes
 
@@ -18,6 +18,7 @@ Under `/1NEON/api`. All need a sign-in and the `x-1neon` header.
 
 | Route | Who | Does |
 |---|---|---|
+| `GET /t/:tid/chat/unread` | a member, or neon1 | How many messages are new to you, without opening the chat. The launcher badge asks this. |
 | `GET /t/:tid/chat` | a member, or neon1 | The conversation you may see, how many messages are new to you, and the reply hours. Opening it marks it seen. |
 | `POST /t/:tid/chat` | a member who can comment, or neon1 | Sends `{ text }`. A member may add `private: true`; neon1 may add `to` (a member's ID). |
 | `PATCH /t/:tid/chat/:mid` | the message's author | Edits it. The earlier text stays on the message. |
@@ -33,9 +34,21 @@ One partition per organization (`CHAT#<tenant>`): a summary row (`META`, listed 
 
 The same rows, with a flag. A member's private message has `privateWith` set to themselves, and neon1's private reply has it set to the member it answers. Only that member and neon1 can read it; it is left out of everyone else's list, unread count and summary (a member's summary carries no preview, author or neon1 counts). A private reply emails only that member.
 
+## How it looks, and what it follows
+
+There is no chat page and no menu entry. Chat is a second conversation inside Neo's floating panel, opened from anywhere without leaving the page. The patterns, and what each one is used for:
+
+- **Neo's own widget (the first model).** The panel, launcher, log, message bubbles, composer, sizes, safe areas and phone behavior are Neo's, unchanged. The conversation with Pradeep is the same shell with a different log, so it needs nothing new to learn.
+- **Intercom Messenger.** One launcher for everything, with a switch between conversations inside the panel and a count on the launcher for what is new. Replies you have not seen are emailed after a short wait (here, two minutes).
+- **Crisp.** A short line under the header for when to expect an answer, instead of a paragraph. The reply hours are one line: "Pradeep is reading now", or when he next is.
+- **Help Scout Beacon.** Opens in context and returns you to the page you were on. Alert emails open the organization's page with the panel already open (`?chat=1`).
+- **Slack and shared channels (for the shared record).** Everyone in an organization sees one conversation with names; an author can edit their own message and the edit is marked.
+
+Rules for the screen: no explanatory copy (the controls explain themselves), one short hours line, private is a small toggle next to Send, and nothing is added to the menu.
+
 ## Sending and drafts
 
-A message saves the moment Send is pressed. What is typed and not sent is kept on the device in local storage (`1neon.chat.draft.<organization>`, listed in the cookie notice) and cleared once a send is accepted, so closing the page or locking a phone loses nothing. Earlier versions of an edited message are shown to neon1 only; everyone sees that it was edited.
+A message saves the moment Send is pressed (Enter sends, Shift Enter adds a line, as in Neo). What is typed and not sent is kept on the device in local storage (`1neon.chat.draft.<organization>`, listed in the cookie notice) and cleared once a send is accepted, so closing the page or locking a phone loses nothing. Earlier versions of an edited message are shown to neon1 only; everyone sees that it was edited. For neon1, the panel's inbox lists every organization that wrote, with new counts; choosing one opens its conversation without leaving the page.
 
 ## Alerts
 

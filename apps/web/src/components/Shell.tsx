@@ -970,7 +970,6 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
                 </ul>
               </li>
               <li className="sep"><span className="lbl gl"><span className="gt">Organization</span></span></li>
-              <Item to={`${base}/chat`} icon={<Icon name="chat" />} label={me.operator ? "Chat" : "Chat with Pradeep"} tour="nav-chat" />
               <Item to={`${base}/people`} icon={<Icon name="people" />} label="People" />
               <Item to={`${base}/settings`} icon={<Icon name="settings" />} label="Settings" />
             </>
@@ -984,8 +983,6 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
         {/* Every way to reach neon1, for every account, new ones included; the signed-in person ends the
             Organization group, so it shows on the first screen and is never taken for Report a bug */}
         <ul className="nav contact-nav">
-          {/* Inside an organization, Chat sits with its places; elsewhere it is neon1's inbox (or goes to your organization's chat) */}
-          {!navOrg && <Item to={all ? "/all/chat" : "/chat"} icon={<Icon name="chat" />} label={me.operator ? "Chat" : "Chat with Pradeep"} tour="nav-chat" />}
           <Item to={all ? "/all/contact" : "/contact"} icon={<Icon name="contact" />} label="Contact neon1" tour="nav-contact" />
           <li>
             <NavLink to={all ? "/all/me" : "/me"} className="who-link" title="Your profile" data-tour="nav-me">
@@ -1061,7 +1058,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
       <Palette me={me} org={org} prospect={inOrg?.prospect} open={search} setOpen={setSearch} onHelp={help.open} onTour={help.welcomeTour} />
       <ConfirmDialog me={me} />
       {/* Neo for signed-in people, where a model is wired; elsewhere the public Neo stays */}
-      {me.neo && !IN_DEMO && newAccount === false && <Neo open={neoOpen} setOpen={setNeoOpen} />}
+      {(me.neo || Boolean(navOrg) || me.operator) && !IN_DEMO && newAccount === false && <Neo neo={me.neo} open={neoOpen} setOpen={setNeoOpen} org={navOrg ? { id: navOrg.id, name: navOrg.name, slug: navOrg.slug } : undefined} me={{ id: me.user.id, operator: me.operator }} />}
     </div>
   );
 }

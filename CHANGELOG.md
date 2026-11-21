@@ -5,7 +5,7 @@
 ## Unreleased
 
 ### Added
-- Chat with Pradeep: each organization has one shared chat with neon1 under Chat in its menu. Members and Pradeep write in the same conversation with their names, so it is the record. A message sends at once; unsent text is kept on the device. You can edit your own messages (neon1 keeps the earlier text), and send one privately to Pradeep, who can answer one member privately. neon1 is alerted by email (with the message) and, when its Pushover keys are configured, by a push without it. Members are emailed Pradeep's replies unless they are reading. Free accounts send up to 6 messages an hour and 20 a day, clients 20 and 100. See docs/chat.md.
+- Chat with Pradeep: Neo's floating panel has a second conversation, with Pradeep, opened from anywhere without leaving the page. Each organization shares one conversation with neon1 (members and Pradeep, with names). A small count on the launcher shows what is new. Messages send with Enter, unsent text is kept on the device, you can edit your own messages (neon1 keeps the earlier text), and a private toggle keeps one between you and Pradeep. neon1 gets an inbox of every organization in the same panel and is alerted by email (with the message) and, when its Pushover keys are configured, by a push without it. Members are emailed Pradeep's replies unless they are reading. Free accounts send up to 6 messages an hour and 20 a day, clients 20 and 100. See docs/chat.md.
 - Matrix text fields have the site's green caret (shared/caret.js and shared/neon1.css from neon1.tech), dark green in light mode and Matrix green in dark. Sentinel is unchanged.
 
 ### Changed
