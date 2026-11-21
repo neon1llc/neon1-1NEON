@@ -106,8 +106,15 @@ export async function writeChat(k: Pick<Kit, "repo" | "d" | "drainNow">, a: { te
 /** A reply sent from neon1's own mailbox, accepted by the alert service: posted as neon1's lead in that organization's chat */
 export async function chatReplyByEmail(k: Pick<Kit, "repo" | "d" | "cfg" | "drainNow">, tenantId: string, text: string, from: string) {
   const { repo, cfg } = k;
-  // Only an operator's own address may speak as neon1
-  const userId = cfg.operatorEmails.includes(from.toLowerCase()) ? await repo.userIdForEmail(from.toLowerCase()) : undefined;
+  // Only an operator's address may speak as neon1. An operator address with no account of its own (the shared
+  // mailbox) speaks as the first operator who has one
+  let userId: string | undefined;
+  if (cfg.operatorEmails.includes(from.toLowerCase())) {
+    for (const email of [from.toLowerCase(), ...cfg.operatorEmails]) {
+      userId = await repo.userIdForEmail(email);
+      if (userId) break;
+    }
+  }
   const user = userId ? await repo.getUser(userId) : undefined;
   const tenant = await repo.getTenant(tenantId);
   if (!user || !tenant) return { posted: false as const, reason: !user ? "not_operator" : "no_chat" };

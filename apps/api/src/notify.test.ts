@@ -89,6 +89,13 @@ describe("a reply by email", () => {
     expect(v.thread).toMatchObject({ lastFrom: "neon1", ownerUnread: 0 });
   });
 
+  it("lets an operator address with no account of its own speak as the first operator who has one", async () => {
+    const shared = { ...cfg, operatorEmails: ["shared@neon1.tech", OP] };
+    expect(await chatReplyByEmail({ ...kit(), cfg: shared }, s.acme.id, "From the shared mailbox.", "shared@neon1.tech")).toEqual({ posted: true });
+    const v = (await (await as(OP, `/t/${s.acme.id}/chat`)).json()) as ChatView;
+    expect(v.messages[0]).toMatchObject({ from: "neon1", body: "From the shared mailbox." });
+  });
+
   it("refuses a sender who is not an operator, an unknown chat and empty text", async () => {
     expect(await chatReplyByEmail(kit(), s.acme.id, "hi", RAJ)).toEqual({ posted: false, reason: "not_operator" });
     expect(await chatReplyByEmail(kit(), "nope", "hi", OP)).toEqual({ posted: false, reason: "no_chat" });
