@@ -327,11 +327,11 @@ export function Neo({ open, setOpen, org, me, neo = true }: { open: boolean; set
     <div ref={panel} className={`n1chat n1chat-right n1neo${look}`} role="dialog" aria-label={canTalk ? (neo ? "Chat with Neo or Pradeep" : "Chat with Pradeep") : "Neo, your 1NEON assistant"} tabIndex={-1} onKeyDown={(e) => e.key === "Escape" && close()}>
       <div className="n1chat-head">
         {canTalk && !neo ? (
-          <strong className="n1chat-title"><Mark />{me.operator ? "Inbox" : "Pradeep"}</strong>
+          <strong className="n1chat-title"><Mark />{me.operator ? "Chat" : "Pradeep"}</strong>
         ) : canTalk ? (
           <span className="talk-tabs" role="tablist">
             <button type="button" role="tab" aria-selected={tab === "neo"} className="n1chat-title talk-tab" onClick={() => setTab("neo")}><Mark />Neo</button>
-            <button type="button" role="tab" aria-selected={tab === "pradeep"} className="n1chat-title talk-tab" onClick={() => setTab("pradeep")}>{me.operator ? "Inbox" : "Pradeep"}{unread > 0 && tab !== "pradeep" && <b className="talk-badge">{unread}</b>}</button>
+            <button type="button" role="tab" aria-selected={tab === "pradeep"} className="n1chat-title talk-tab" onClick={() => setTab("pradeep")}>{me.operator ? "Chat" : "Pradeep"}{unread > 0 && tab !== "pradeep" && <b className="talk-badge">{unread}</b>}</button>
           </span>
         ) : (
           <strong className="n1chat-title"><Mark />Neo</strong>
