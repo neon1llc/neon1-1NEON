@@ -245,11 +245,26 @@ export function MePage() {
   return (
     <div>
       {/* Who this is */}
-      <h1 className="page-title" style={{ display: "flex", gap: 12, alignItems: "center" }}><Avatar id={me.user.id} name={me.user.name || me.user.email} size={40} />Your profile</h1>
+      <div className="page-head settings-head">
+        <h1 className="page-title" style={{ display: "flex", gap: 12, alignItems: "center" }}><Avatar id={me.user.id} name={me.user.name || me.user.email} size={40} />Your profile</h1>
+        {/* Everything here saves by itself; the phone and text consent keep their own button, since saving a new number texts it */}
+        <span className="muted small" role="status" aria-live="polite">
+          {status === "saving" ? "Saving…" : status === "failed" ? "Couldn't save your changes." : waiting ? (pendingQuick.current ? "Saving in a moment…" : "Saves when you leave the field.") : status === "saved" ? "All changes saved." : ""}
+        </span>
+        {status === "failed" && <button className="linkish small" type="button" onClick={() => void flush()}>Retry</button>}
+      </div>
       <p className="lead">{me.user.email}{me.operator ? " · neon1 operator" : ""}</p>
       {/* Name, title, and mobile number */}
       {/* Two columns on a wide screen: profile and preferences beside notifications; one column when narrow */}
-      <div className="cols2">
+      <div className="settings">
+      <nav className="settings-nav" aria-label="Profile sections">
+        <a href="#profile">Details</a>
+        <a href="#preferences">Preferences</a>
+        <a href="#notifications">Notifications</a>
+        <a href="#security">Security</a>
+        <a href="#help">Help</a>
+      </nav>
+      <div className="settings-main">
       <form id="profile" className="form profile-form" onSubmit={(e) => { e.preventDefault(); if (smsDirty) void save(); else void flush(); }}>
         <section className="card profile-section">
           <h2 className="card-h">Your details</h2>
@@ -265,7 +280,7 @@ export function MePage() {
           <span className="muted">Emails show times in this zone, with UTC beside them. Daylight saving follows it automatically.</span>
         </div>
         </section>
-        <section className="card profile-section">
+        <section className="card profile-section" id="preferences">
           <h2 className="card-h">Preferences</h2>
         {/* Motion: smooth by default; Reduced turns every animation off in this browser at once, and a device
             that asks for less motion keeps it reduced (lib/motion.ts) */}
@@ -296,7 +311,6 @@ export function MePage() {
         </fieldset>
         </section>
       </form>
-      <div className="form">
         {/* Each notification kind keeps its email and text choices together */}
         <div className="card small notify" id="notifications">
           <b>Notifications</b>
@@ -348,20 +362,9 @@ export function MePage() {
               ))}
             {smsDirty && (draft.smsConsent || draft.phone !== me.user.phone) && draft.phone.trim() && <span className="muted">Save first, then confirm the number with a texted code.</span>}
           </fieldset>}
-        </div>
-      </div>
-      </div>
-        {/* Everything here saves by itself; the phone and text consent keep their own button, since saving a new number texts it */}
-        <div className="actions" style={{ marginTop: 20 }}>
-          {smsDirty && <button className="btn btn-primary" form="profile" disabled={busy}>{busy ? "Saving…" : "Save phone and text settings"}</button>}
-          <span className="muted small" role="status" aria-live="polite">
-            {status === "saving" ? "Saving…" : status === "failed" ? "Couldn't save your changes." : waiting ? (pendingQuick.current ? "Saving in a moment…" : "Saves when you leave the field.") : status === "saved" ? "All changes saved." : ""}
-          </span>
-          {status === "failed" && <button className="linkish small" type="button" onClick={() => void flush()}>Retry</button>}
+          {smsDirty && <div className="actions"><button className="btn btn-primary" form="profile" disabled={busy}>{busy ? "Saving…" : "Save phone and text settings"}</button></div>}
         </div>
       {/* Everything below takes effect right away, so it sits outside the profile form */}
-      <div className="cols2" style={{ marginTop: 28 }}>
-      <div className="form">
         {/* Two-step verification: any one of these confirms it's you before admin actions */}
         <div className="card small security" data-tour="passkey" id="security">
           <b>Two-step verification</b>
@@ -398,26 +401,28 @@ export function MePage() {
             {me.strongSession ? "This session is confirmed. Admin actions are open." : me.factors?.any ? <>To use admin actions, <button type="button" className="link" onClick={askToConfirm}>confirm it's you</button>.</> : "Add one of these to use admin actions."}
           </span>
         </div>
-      </div>
-      <div className="form">
-        {/* The tutorial: replay the welcome tour, or read the FAQs */}
-        <div className="card small" style={{ display: "grid", gap: 8, justifyItems: "start" }}>
-          <b>Tutorial</b>
-          <span className="muted">Each page also has its own guide under ?.</span>
-          <div className="actions">
-            <button className="btn btn-ghost" type="button" onClick={help.welcomeTour}>Replay the tour</button>
-            {me.user.guide === "hidden" && <button className="btn btn-ghost" type="button" onClick={() => void showGuide()}>Show Get to know 1NEON on Home</button>}
-            <Link className="btn btn-ghost" to="/faqs">FAQs</Link>
+        {/* Help: replay the welcome tour, read the FAQs, or tell neon1 what broke */}
+        <div className="card small settings-rows" id="help">
+          <b>Help</b>
+          <div className="settings-row">
+            <span><b>Tutorial</b><br /><span className="muted">Each page also has its own guide under ?.</span></span>
+            <span className="actions">
+              <button className="btn btn-ghost btn-sm" type="button" onClick={help.welcomeTour}>Replay the tour</button>
+              {me.user.guide === "hidden" && <button className="btn btn-ghost btn-sm" type="button" onClick={() => void showGuide()}>Show Get to know 1NEON on Home</button>}
+              <Link className="btn btn-ghost btn-sm" to="/faqs">FAQs</Link>
+            </span>
+          </div>
+          {/* Something broken or confusing: straight to neon1, with the page and theme */}
+          <div className="settings-row">
+            <span><b>Something not working?</b><br /><span className="muted">Tell me what happened, or what you think, on a page that opens in a new tab.</span></span>
+            <span className="actions"><ReportBug kind="buttons" /></span>
           </div>
         </div>
-        {/* Something broken or confusing: straight to neon1, with the page and theme */}
-        <div className="card small" style={{ display: "grid", gap: 8, justifyItems: "start" }}>
-          <b>Something not working?</b>
-          <span className="muted">Tell me what happened, or what you think, on a page that opens in a new tab.</span>
-          <div className="actions"><ReportBug kind="buttons" /></div>
-        </div>
-        <div className="actions">
-          <button className="btn btn-ghost" type="button" onClick={() => void signOut()}>Sign out</button>
+        <div className="card small settings-rows" id="session">
+          <div className="settings-row">
+            <span><b>Sign out</b><br /><span className="muted">Ends this session on this device.</span></span>
+            <span className="actions"><button className="btn btn-ghost btn-sm" type="button" onClick={() => void signOut()}>Sign out</button></span>
+          </div>
         </div>
       </div>
       </div>
