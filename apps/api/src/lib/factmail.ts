@@ -4,7 +4,7 @@
 // order, so a mail app without HTML reads it as clearly. Inline styles carry the light look, since mail clients
 // strip many style sheets; a small style block adds dark mode and a stacked table on a narrow phone where the
 // client keeps it, and where it doesn't, the inline look is already readable.
-import { MARK, esc } from "../mail.ts";
+import { MARK, MARK_DARK, esc } from "../mail.ts";
 
 const BRAND = "#035704", PAPER = "#F2F4F2", INK = "#12241A", MUTED = "#56665c", LINE = "rgba(18,36,26,.14)";
 const MONO = "'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace";
@@ -59,7 +59,8 @@ export const block = (k: string, v: string) =>
   `<p class="muted" style="margin:0 0 8px;${label()}">${esc(k)}</p>
 <div class="quote ink" style="margin:0 0 22px;padding:12px 14px;background:${PAPER};border-left:3px solid ${BRAND};border-radius:4px;font:15px/1.55 ${SANS};color:${INK};white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere">${esc(v)}</div>`;
 
-// Dark mode and the narrow-phone table. Dark colors keep AA contrast: light text on #16241c, bright green links and a
+// Dark mode and the narrow-phone table. Two logos swap by mode: the light one shows by default (clients that ignore
+// media queries stay on it) and the dark one is hidden until dark mode or Outlook's [data-ogsc] dark rewrite. Dark colors keep AA contrast: light text on #16241c, bright green links and a
 // bright green button with dark text
 const STYLES = `
 :root{color-scheme:light dark;supported-color-schemes:light dark}
@@ -74,8 +75,11 @@ const STYLES = `
 .btn{background:#6fe36f !important;color:#08210a !important}
 .code{background:#0e1712 !important;color:#6fe36f !important;border-color:rgba(111,227,111,.5) !important}
 .warn{color:#fbbf24 !important}
-.mark{filter:invert(1) hue-rotate(180deg)}
+.mark-l{display:none !important}
+.mark-d{display:block !important;max-height:none !important;overflow:visible !important;width:24px !important;height:24px !important}
 }
+[data-ogsc] .mark-l{display:none !important}
+[data-ogsc] .mark-d{display:block !important;max-height:none !important;overflow:visible !important;width:24px !important;height:24px !important}
 @media (max-width:480px){
 .pad{padding:18px 16px 16px !important}
 .k{display:block !important;padding:10px 0 0 !important;border-bottom:0 !important}
@@ -91,7 +95,7 @@ export function shell(m: Pick<FactMail, "kicker" | "title" | "sub" | "preheader"
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all">${esc(m.preheader)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="page" style="background:${PAPER}"><tr><td align="center" style="padding:20px 10px 24px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="card" style="max-width:600px;background:#fff;border:1px solid ${LINE};border-radius:12px"><tr><td class="pad" style="padding:22px 24px 20px;text-align:left">
-<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 14px"><tr><td style="vertical-align:middle;padding-right:8px"><img class="mark" src="${MARK}" width="24" height="24" alt="" style="display:block;width:24px;height:24px;border:0"></td><td class="brand" style="vertical-align:middle;font:600 12px ${MONO};letter-spacing:.06em;color:${BRAND}">neon1 · ${esc(m.kicker)}</td></tr></table>
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 14px"><tr><td style="vertical-align:middle;padding-right:8px"><img class="mark-l" src="${MARK}" width="24" height="24" alt="" style="display:block;width:24px;height:24px;border:0"><!--[if !mso]><!--><img class="mark-d" src="${MARK_DARK}" width="24" height="24" alt="" style="display:none;width:0;height:0;max-height:0;overflow:hidden;border:0;mso-hide:all"><!--<![endif]--></td><td class="brand" style="vertical-align:middle;font:600 12px ${MONO};letter-spacing:.06em;color:${BRAND}">neon1 · ${esc(m.kicker)}</td></tr></table>
 <h1 class="ink" style="margin:0 0 14px;font:700 22px/1.3 ${MONO};color:${INK}">${esc(m.title)}${m.sub ? ` <span class="muted" style="display:block;font:500 15px/1.4 ${SANS};color:${MUTED};margin-top:4px">${esc(m.sub)}</span>` : ""}</h1>
 ${intro}${inner}
 ${footer}

@@ -43,8 +43,10 @@ export function fromHeader(kind: SenderKind, domain: string, dev = false) {
   return `"${dev ? "[DEV] " : ""}${s.name}" <${s.local}@${domain}>`;
 }
 
-// The mark the site serves for mail: 96px dark green on transparent, shown at 32px for sharp screens
+// The marks the site serves for mail, 96px on transparent and shown at 24px for sharp screens: dark green for light
+// mode and Matrix green for dark mode, since mail clients cannot recolor one image
 export const MARK = "https://neon1.tech/shared/mail/neon1-mark.png";
+export const MARK_DARK = "https://neon1.tech/shared/mail/neon1-mark-dark.png";
 // Links read as links without shouting: brand green with a thin underline
 const LINK = `color:${BRAND};text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px`;
 
