@@ -120,3 +120,10 @@ describe("the menu's site link", () => {
     expect(css).toMatch(/\.side \.site-end \.lbl \{ text-box: trim-both cap alphabetic; \}/);
   });
 });
+
+describe("the menu's mark rows", () => {
+  it("light as rounded pills that hug their content, like the other rows", () => {
+    expect(css).toMatch(/\.side :is\(\.brand, \.site-end\)::before \{[^}]*border-radius: var\(--r-sm\)/);
+    expect(css).toMatch(/\.side\.open :is\(\.brand, \.site-end\), \.side\.open \.side-head \.brand \{ flex: none; width: auto; padding-left: 6px; padding-right: 6px; \}/);
+  });
+});
