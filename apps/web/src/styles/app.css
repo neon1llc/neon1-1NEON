@@ -856,13 +856,14 @@ details.history summary { cursor: pointer; font: var(--fs-xs) var(--mono); color
 @media (max-width: 520px) { .ag-group li { grid-template-columns: 52px minmax(0, 1fr); } .ag-group .s { grid-column: 2; } }
 
 /* --- Insights --- */
-.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--sp-3); margin: var(--sp-2) 0 var(--sp-4); }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); gap: var(--sp-3); margin: var(--sp-2) 0 var(--sp-4); }
 .kpi { display: grid; gap: var(--sp-0); padding: var(--sp-3) var(--sp-4); }
 .kpi b { font: 600 var(--fs-2xl) var(--mono); color: var(--accent); }
 .kpi span { font-size: var(--fs-sm); }
 .kpi small { font: var(--fs-xs) var(--mono); color: var(--muted); }
 .kpi small.warn { color: var(--red); }
-.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--sp-4); }
+.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: var(--sp-4); }
+.charts > .chart { min-width: 0; }
 /* The counting notes sit one gap (16px) below the charts, like the charts do from each other */
 .charts + .chart { margin-top: var(--sp-4); }
 .chart .section-h { margin-top: 0; }
@@ -2410,7 +2411,7 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 .ns-one { margin: 0; min-height: 36px; display: flex; align-items: center; gap: var(--sp-2); }
 
 /* Text fields at 16px on touch screens: iPhone browsers zoom the page in when a field under 16px takes focus */
-@media (pointer: coarse) { :root:root :is(input:not([type=checkbox], [type=radio], [type=file], [type=range], [type=color]), textarea, select) { font-size: var(--fs-input); } }
+@media (pointer: coarse) { :root:root :is(input:not([type=file], [type=range], [type=color]), textarea, select) { font-size: var(--fs-input); } }
 
 
 /* Chat with Pradeep, inside Neo's panel (components/Talk.tsx): Neo's own log, bubbles and composer, plus the tab switch,
@@ -2479,10 +2480,7 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
   input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"]), select, textarea, .stage textarea, textarea.title-line { min-height: 44px; }
   .filters input[type="search"], .filters select, .filters .chip, .filters .check { min-height: 44px; }
   .props label.check { min-height: 44px; }
-  .chip, .icon-act, .row-menu-btn, .theme-sw { position: relative; }
-  .chip::after { content: ""; position: absolute; inset: -9px 0; }
-  .icon-act::after { content: ""; position: absolute; inset: -6px; }
-  .row-menu-btn::after { content: ""; position: absolute; inset: -7px; }
+  .theme-sw { position: relative; }
   .theme-sw::after { content: ""; position: absolute; inset: -8px 0; }
   .pub-back { min-height: 44px; }
   .signin .signin-more a, .signin .fine a { display: inline-flex; align-items: center; min-height: 44px; }
@@ -2495,4 +2493,35 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 /* The Neo launcher floats over the bottom corner, so a public page ends with room under its last line */
 @media (max-width: 640px) {
   .pub-foot { padding-bottom: calc(var(--sp-7) + var(--sp-7) + env(safe-area-inset-bottom)); }
+}
+
+/* A task's tick box sits in a label, so on a touch screen the label is the 44px target and the box keeps its place */
+.item-check { display: contents; }
+@media (pointer: coarse) {
+  .item-check { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: -13px; cursor: pointer; }
+  /* Real controls reach 44px: chips, the List and Timeline switch, tabs, selects and date fields, summaries, and the plain text buttons and links that stand alone in a row */
+  .chip { min-height: 44px; }
+  .switch button { min-height: 44px; }
+  .tabs a, .tabs button { min-height: 44px; }
+  .props input[type="date"], .props select, .props input { min-height: 44px; }
+  .page select, .content select { min-height: 44px; }
+  summary { padding-block: 11px; }
+  .item-open { min-height: 44px; display: flex; align-items: center; }
+  .glance .g-name { display: block; line-height: 44px; }
+  a.name { display: inline-flex; align-items: center; min-height: 44px; }
+  .strip.month .day, .strip.month.sparse .day { min-height: 44px; }
+  .site-link.site-end { min-width: 44px; }
+  :root:root :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"]), select, textarea) { min-height: 44px; }
+  :root:root :is(.ag-group.fold, details.history) > summary { padding-block: 11px; min-height: 44px; box-sizing: border-box; }
+  .ag-group li a, .ag-group li button.linkish, .guide-links li > a, .glance li > a { display: inline-flex; align-items: center; min-height: 44px; }
+  .row-menu-btn, .icon-act { width: 44px; min-width: 44px; height: 44px; }
+  .glance .g-meta a, .updates li > a { display: flex; align-items: center; min-height: 44px; }
+  .chip, .linkish.small, .linkish.helper, button.link.small { min-width: 44px; justify-content: center; }
+  /* A few fields and buttons carry a smaller height inline for dense rows; a touch screen overrides it */
+  :root:root :is(input, select, .btn)[style*="min-height"] { min-height: 44px !important; }
+  /* A text button inside a sentence keeps its line and takes a 44px hit area around it */
+  .linkish, .link { position: relative; }
+  .linkish::after, .link::after { content: ""; position: absolute; inset: -12px -6px; }
+  .linkish.small, .linkish.helper, button.link.small { min-height: 44px; display: inline-flex; align-items: center; }
+  .linkish.small::after, .linkish.helper::after, button.link.small::after { content: none; }
 }

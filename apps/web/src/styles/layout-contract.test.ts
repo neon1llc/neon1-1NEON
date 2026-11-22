@@ -84,7 +84,7 @@ describe("touch targets", () => {
   // The design standard asks 44 by 44 for primary controls on a touch screen
   it("grows buttons and fields to 44px under a coarse pointer", () => {
     expect(css).toMatch(/@media \(pointer: coarse\) \{\n  \.btn, \.btn\.btn-sm \{ min-height: 44px; \}/);
-    expect(css).toMatch(/\.chip::after \{ content: ""; position: absolute; inset: -9px 0; \}/);
+    expect(css).toMatch(/\n  \.chip \{ min-height: 44px; \}/);
   });
 });
 

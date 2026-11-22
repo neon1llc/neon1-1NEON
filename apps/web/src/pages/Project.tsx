@@ -89,7 +89,12 @@ export function ProjectPage() {
   const waitList = gate([projects], { out });
   if (waitList) return waitList;
   // An unknown key gets a clear empty state, not a spinner
-  if (!pid) return <Empty text={`There's no project ${key} in ${org.name}.`} action={<Link className="btn btn-ghost" to={out.to}>All projects</Link>} />;
+  if (!pid) return (
+    <>
+      <h1 className="page-title">Not found</h1>
+      <Empty text={`There's no project ${key} in ${org.name}.`} action={<Link className="btn btn-ghost" to={out.to}>All projects</Link>} />
+    </>
+  );
   const wait = gate([detail], { out });
   if (wait || !detail.data) return wait;
   const { project: p, items } = detail.data;
@@ -835,7 +840,7 @@ function ItemRow({ item, path, marker, onToggle, locked, extra }: { item: Item; 
     <div className="item" id={`item-${item.id}`}>
       {/* A checkbox for checkable kinds, an empty cell otherwise */}
       {/* A step accepted with a signature stays ticked: the box shows it and no longer changes */}
-      {locked ? <input type="checkbox" checked disabled aria-label={`Done and accepted: ${item.title}`} /> : onToggle ? <input type="checkbox" checked={item.status === "done"} onChange={onToggle} aria-label={`Done: ${item.title}`} /> : <span style={{ width: 18 }} />}
+      {locked ? <label className="item-check"><input type="checkbox" checked disabled aria-label={`Done and accepted: ${item.title}`} /></label> : onToggle ? <label className="item-check"><input type="checkbox" checked={item.status === "done"} onChange={onToggle} aria-label={`Done: ${item.title}`} /></label> : <span style={{ width: 18 }} />}
       <div>
         <button type="button" className={`item-open title${item.status === "done" ? " is-done" : ""}`} onClick={() => setOpen(true)}>{item.title}</button>
         {item.body && <div className="body clamp">{item.body}</div>}
