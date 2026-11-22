@@ -5,7 +5,7 @@
 ## Unreleased
 
 ### Fixed
-- The Mini rail's mark sits in the middle of the rail's icons at every width, and on phones the rail's rows end at the rail, so no wide highlight shows over the page while a picker is open.
+- The Mini rail's mark sits in the middle of the rail's icons at every width, and on phones the rail's rows end at the rail, so no wide highlight shows over the page while a picker is open. Holding a rail button no longer lifts a wide preview of its row: the rail's lists end at the rail and its links give no iOS link preview.
 
 ## v0.24.0 - 2026-11-21
 
