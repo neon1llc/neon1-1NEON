@@ -106,3 +106,10 @@ describe("text fields on a touch screen", () => {
     expect(css).toMatch(/textarea, select\) \{ font-size: var\(--fs-input\); \} \}/);
   });
 });
+
+// The collapsed rail on a pointer screen
+describe("the mini rail", () => {
+  it("shares its height among sixteen rows, so the whole rail fits a desktop window without scrolling", () => {
+    expect(css).toMatch(/\.side \{ --row: clamp\(24px, calc\(\(100dvh - var\(--demo-h, 0px\) - var\(--top-h\) - 120px\) \/ 16\), 40px\); \}/);
+  });
+});

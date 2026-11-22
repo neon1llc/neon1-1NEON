@@ -1266,8 +1266,9 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 /* The menu's mark row: the top bar's height, from the very top of the menu */
 .side .brand, .shell.mini .side:not(.open) .brand, .side.open .brand { height: var(--top-h) !important; min-height: var(--top-h) !important; margin-top: 0; flex: none; }
 .side .brand { color: var(--accent); }
-/* The other fourteen rows share what's left of the height (the mark row now has its own) */
-.side { --row: clamp(24px, calc((100dvh - var(--demo-h, 0px) - 70px - var(--top-h) + 48px) / 14), 40px); }
+/* The rail's sixteen rows share what's left of the height: 120px is the mark row plus everything that is not a row (rules, padding),
+   measured 2026-11-22 as 178px at 64px bars. 40px at the most, 24px at the least, where the rail scrolls */
+.side { --row: clamp(24px, calc((100dvh - var(--demo-h, 0px) - var(--top-h) - 120px) / 16), 40px); }
 /* The open menu's rows shrink with the window's height until the whole menu fits without scrolling: 162px is everything that
    is not a row (brand, org, footer, switches), and there are 16.5 rows' worth of rows (measured, 2026-11-20); 40px at the most, 30px at the least */
 .side.open { --row: clamp(30px, calc((100dvh - var(--demo-h, 0px) - 166px) / 16.5), 40px); }
