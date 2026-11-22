@@ -98,3 +98,11 @@ describe("color tokens", () => {
     expect(css).not.toMatch(/#e5484d|#B45309|#3b82c4/i);
   });
 });
+
+
+describe("text fields on a touch screen", () => {
+  it("are 16px (--fs-input), so iOS never zooms the page when one takes focus", () => {
+    expect(css).toMatch(/@media \(pointer: coarse\) \{ :root \{ --fs-input: 1rem; \} \}/);
+    expect(css).toMatch(/textarea, select\) \{ font-size: var\(--fs-input\); \} \}/);
+  });
+});
