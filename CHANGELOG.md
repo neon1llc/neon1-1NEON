@@ -8,6 +8,7 @@
 - Shadows, the dialog dim, ink on a colored chip, and the calendar's office blue come from tokens (--shadow-pop, --shadow-float, --scrim, --on-color, --info) in every look, in place of per-rule colors. Error text uses the red and amber tokens.
 
 ### Fixed
+- Confirming it's you with a passkey no longer fails with "Couldn't reach 1NEON" when no passkey works on the site (a passkey saved for another address, such as neon1.tech on dev). Cognito offered only an email code, and the API both emailed that code and lost its own session, so the check failed. The API now says so with a distinct step and sends no code, the dialog says "No passkey works on this site yet. Add one on your profile, or use a code.", and every failure in the dialog says what happened. The same fix keeps a code-only sign-in from failing the same way.
 - The Motion and Menu choices in the profile center their labels in their pills. In Coming up, a long title or detail line scrolls sideways in place, with a fade at the edge where more is hidden, instead of ending in an ellipsis.
 - Insights fits a 320 or 360px screen: the chart grid no longer holds a 300px minimum wider than the screen. A project address that does not exist now has a heading.
 - More controls reach 44px on a touch screen: chips, the List and Timeline switch, project tabs, selects, date fields, summaries, row menus, icon buttons, standalone text buttons and list links. A task's tick box sits in a 44px label. Checkboxes and radios take the 16px field size too.

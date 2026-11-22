@@ -26,6 +26,8 @@ export type SignInStep =
   | { step: "code" }
   | { step: "totp" }
   | { step: "passkey"; options: unknown }
+  // A passkey was asked for and none works on this site, so no code was sent
+  | { step: "no_passkey" }
   | { step: "done" }
   | { step: "failed" };
 
@@ -206,9 +208,14 @@ export class CognitoAuth {
       case "SELECT_CHALLENGE": {
         const have = r.AvailableChallenges ?? [];
         const methods = [...(have.includes("WEB_AUTHN") ? ["passkey" as const] : []), ...(have.includes("EMAIL_OTP") ? ["code" as const] : [])];
-        // Only a code on offer: send it straight away
-        if (methods.length === 1 && methods[0] === "code") return this.choose(c, "code");
-        return { next: { step: "choose", methods } };
+        // A passkey was asked for and Cognito offers none (it holds none for this site's relying party): say so, and send no code
+        if (method === "passkey" && !have.includes("WEB_AUTHN")) {
+          deleteCookie(c, COOKIE.step, { path: "/1NEON/api", secure: true });
+          return { next: { step: "no_passkey" } };
+        }
+        // Only a code on offer: send it straight away, with the session in this answer (the cookie is only on the response)
+        if (methods.length === 1 && methods[0] === "code" && r.Session) return this.pick(c, email, r.Session, "code");
+        return { next: { step: methods.length ? "choose" : "failed", methods } as SignInStep };
       }
       default:
         return { next: { step: "failed" } };
@@ -229,13 +236,18 @@ export class CognitoAuth {
   async choose(c: Context, method: "code" | "passkey") {
     const h = this.held(c);
     if (!h) return { next: { step: "failed" } as SignInStep };
+    return this.pick(c, h.email, h.session, method);
+  }
+
+  // Answers Cognito's choice with a method, from a session in hand
+  private async pick(c: Context, email: string, session: string, method: "code" | "passkey") {
     const r = await this.idp.send(new RespondToAuthChallengeCommand({
       ClientId: this.cfg.clientId,
       ChallengeName: "SELECT_CHALLENGE",
-      Session: h.session,
-      ChallengeResponses: { USERNAME: h.email, ANSWER: method === "code" ? "EMAIL_OTP" : "WEB_AUTHN" },
+      Session: session,
+      ChallengeResponses: { USERNAME: email, ANSWER: method === "code" ? "EMAIL_OTP" : "WEB_AUTHN" },
     }));
-    return this.next(c, h.email, method === "passkey" ? "passkey" : "code", r);
+    return this.next(c, email, method === "passkey" ? "passkey" : "code", r);
   }
 
   /** POST /auth/answer: the emailed code, an authenticator code, or the passkey's signed response */

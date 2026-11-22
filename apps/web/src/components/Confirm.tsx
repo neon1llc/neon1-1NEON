@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { api } from "../lib/api.ts";
 import { problem } from "../lib/hooks.ts";
-import { passkeyAssertion } from "../lib/passkey.ts";
+import { confirmWithPasskey, StepUpError, stepUpMessage } from "../lib/stepup.ts";
 import { cleanCode } from "../lib/signin.ts";
 import type { Me } from "../lib/types.ts";
 import { Dialog, useToast } from "./ui.tsx";
@@ -16,16 +16,6 @@ import { Dialog, useToast } from "./ui.tsx";
 
 /** Open the confirm dialog from anywhere */
 export const askToConfirm = () => dispatchEvent(new CustomEvent("1neon:confirm"));
-
-
-/** Confirm with a passkey: a fresh passkey sign-in for the same email, which marks the session strong */
-export async function confirmWithPasskey(email: string) {
-  const r = await api<{ step: string; options?: unknown }>("/auth/step", { method: "POST", body: { op: "start", email, prefer: "passkey" } });
-  if (r.step !== "passkey") throw new Error("This account has no passkey yet.");
-  const credential = await passkeyAssertion(r.options as Parameters<typeof passkeyAssertion>[0]);
-  const done = await api<{ step: string }>("/auth/step", { method: "POST", body: { op: "answer", kind: "passkey", value: credential } });
-  if (done.step !== "done") throw new Error("The passkey wasn't accepted. Try again.");
-}
 
 
 /** The dialog itself; the frame mounts it once */
@@ -37,6 +27,9 @@ export function ConfirmDialog({ me }: { me: Me }) {
   const [busy, setBusy] = useState(false);
   // A texted code: asked for, then typed (its own field, so it never mixes with the app's code)
   const [texted, setTexted] = useState<string | undefined>(undefined);
+  // What went wrong, kept in the dialog beside the buttons until the next try, and whether a passkey is missing here
+  const [error, setError] = useState("");
+  const [noPasskey, setNoPasskey] = useState(false);
   // The API's "needs a confirmed session" answer opens it
   useEffect(() => {
     const show = () => setOpen(true);
@@ -49,16 +42,21 @@ export function ConfirmDialog({ me }: { me: Me }) {
     setOpen(false);
     setCode("");
     setTexted(undefined);
+    setError("");
+    setNoPasskey(false);
     qc.invalidateQueries({ queryKey: ["me"] });
     toast("Confirmed. Try that again.");
   };
   const byPasskey = async () => {
     setBusy(true);
+    setError("");
+    setNoPasskey(false);
     try {
       await confirmWithPasskey(me.user.email);
       finish();
     } catch (e) {
-      toast(e instanceof DOMException ? "The passkey wasn't used. Try again when you're ready." : problem(e));
+      setNoPasskey(e instanceof StepUpError && e.kind === "no_passkey");
+      setError(stepUpMessage(e));
     }
     setBusy(false);
   };
@@ -68,7 +66,7 @@ export function ConfirmDialog({ me }: { me: Me }) {
       await api("/me/confirm", { method: "POST", body: { code } });
       finish();
     } catch (e) {
-      toast(problem(e));
+      setError(stepUpMessage(e));
     }
     setBusy(false);
   };
@@ -80,7 +78,7 @@ export function ConfirmDialog({ me }: { me: Me }) {
       setTexted("");
       toast("Code sent. It's good for 10 minutes.");
     } catch (e) {
-      toast(problem(e));
+      setError(stepUpMessage(e));
     }
     setBusy(false);
   };
@@ -90,7 +88,7 @@ export function ConfirmDialog({ me }: { me: Me }) {
       await api("/me/confirm", { method: "POST", body: { code: texted, via: "text" } });
       finish();
     } catch (e) {
-      toast(problem(e));
+      setError(stepUpMessage(e));
     }
     setBusy(false);
   };
@@ -101,6 +99,11 @@ export function ConfirmDialog({ me }: { me: Me }) {
       <p className="muted">Inviting people, changing access, and changing settings need a second check.</p>
       {!f?.passkey && !f?.totp && !f?.sms && (
         <p>Add a passkey, an authenticator app, or text codes on <Link to="/me" onClick={() => setOpen(false)}>your profile</Link> first. It takes a minute.</p>
+      )}
+      {error && (
+        <p className="helper warn" role="alert">
+          {noPasskey ? <>No passkey works on this site yet. Add one on <Link to="/me" onClick={() => setOpen(false)}>your profile</Link>, or use a code.</> : error}
+        </p>
       )}
       <div className="form" style={{ gap: 12 }}>
         {f?.passkey && <button className="btn btn-primary" disabled={busy} onClick={() => void byPasskey()}>Use my passkey</button>}
