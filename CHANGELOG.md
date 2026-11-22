@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+### Changed
+- Shadows, the dialog dim, ink on a colored chip, and the calendar's office blue come from tokens (--shadow-pop, --shadow-float, --scrim, --on-color, --info) in every look, in place of per-rule colors. Error text uses the red and amber tokens.
+
 ### Fixed
 - Emails wrap a long organization or person name inside the card instead of widening it on a phone, and the invite button reads "Accept the invitation". A notice, the invite, and the free-account check-in and closing emails name the organization once, under the title, not again in a table row or the plain text's first line. Pradeep's chat reply email speaks in the first person. Dark-mode links and buttons use the shared Matrix green (#6cffa8). Inbox previews no longer run into the body's first line. Right-to-left names and messages read correctly in every email.
 - A page that does not exist shows inside the portal's frame, with the menu, search, and help, so a signed-in person can go anywhere from it.

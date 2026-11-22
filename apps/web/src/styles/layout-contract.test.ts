@@ -87,3 +87,14 @@ describe("touch targets", () => {
     expect(css).toMatch(/\.chip::after \{ content: ""; position: absolute; inset: -9px 0; \}/);
   });
 });
+
+describe("color tokens", () => {
+  it("draws lifted surfaces, the dialog scrim, and ink on a colored chip from tokens", () => {
+    expect(css).toMatch(/--shadow-pop:/);
+    expect(css).toMatch(/--scrim:/);
+    expect(css).toMatch(/--on-color:/);
+    expect(css).not.toMatch(/box-shadow: 0 \d+px \d+px rgba\((0, 0, 0|16, 36, 26),/);
+    expect(css).not.toMatch(/(?<![\w-])color: #fff\b/i);
+    expect(css).not.toMatch(/#e5484d|#B45309|#3b82c4/i);
+  });
+});

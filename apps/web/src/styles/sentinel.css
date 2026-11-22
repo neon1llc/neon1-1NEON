@@ -19,7 +19,7 @@
   --bg: #0F0A0D; --frame: #0A0608; --panel: #17110F; --text: #F2F4F2; --muted: #B2BDB4; --faint: #9AA89C;
   --line: rgb(242 244 242 / .14); --line-strong: rgb(242 244 242 / .5); --field-line: rgb(242 244 242 / .5);
   --accent: #79CF91; --accent-ink: #0F0A0D; --accent-soft: rgb(121 207 145 / .1); --focus: #79CF91; --shadow: none;
-  --amber: #E8B35A; --red: #FF9A8F; --ok: #7CC59A;
+  --amber: #E8B35A; --red: #FF9A8F; --ok: #7CC59A; --info: #7FB2E6;
   --l1: #56AB70; --l2: #72BF89; --l3: #91D3A4; --l4: #B2E5BF; --badge-ink: #0F0A0D;
 }
 /* The accent stands in for every green and neon the shared and app styles still name */
