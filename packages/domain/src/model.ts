@@ -128,7 +128,7 @@ export const Tenant = z.object({
 export type Tenant = z.infer<typeof Tenant>;
 
 
-/** Display theme. Awake (light) is the default; "device" follows the device's light or dark setting. Matrix has awake/plugged; sentinel has
+/** Display theme. Providence (Sentinel light, the public pages' own look) is the default for new accounts; "device" follows the device's light or dark setting. Matrix has awake/plugged; sentinel has
  * providence/desert-of-the-real. Legacy values stay accepted for older clients */
 export const Theme = z.enum(["awake", "device", "plugged", "providence", "desert-of-the-real", "matrix", "alert", "lamp"]);
 export type Theme = z.infer<typeof Theme>;
@@ -165,7 +165,7 @@ export const User = z.object({
   // Whether a passkey or authenticator is enrolled, as last seen: a display hint only. Nothing is
   // authorized from it; factor changes read the live inventory and admin actions read the session
   strongAuth: z.boolean().default(false),
-  theme: Theme.default("awake"),
+  theme: Theme.default("providence"),
   // The IANA zone this person reads times in (from their browser, changeable on the profile); email shows
   // times in it. Missing reads as America/New_York
   timeZone: z.string().max(64).optional(),

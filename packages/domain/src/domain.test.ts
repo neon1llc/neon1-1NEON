@@ -117,10 +117,10 @@ describe("themes", () => {
     expect(themeOf(undefined)).toBe("awake");
   });
 
-  it("gives a new person awake", () => {
+  it("gives a new person the public pages' own look, Sentinel light", () => {
     const t = "2026-11-06T00:00:00.000Z";
     const u = User.parse({ id: "u1", email: "a@b.co", version: 1, createdAt: t, updatedAt: t, updatedBy: "u1" });
-    expect(u.theme).toBe("awake");
+    expect(u.theme).toBe("providence");
   });
 });
 

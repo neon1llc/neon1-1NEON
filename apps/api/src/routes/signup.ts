@@ -229,7 +229,7 @@ export async function claimSignup(k: Pick<Kit, "repo" | "cfg">, email: string): 
     updatedAt: ts,
     updatedBy: uid,
   };
-  const user: User = { id: uid, email, name, title: "", phone: "", operator: false, strongAuth: false, theme: "awake", menu: "default", tour: "new", version: 1, createdAt: ts, updatedAt: ts, updatedBy: uid };
+  const user: User = { id: uid, email, name, title: "", phone: "", operator: false, strongAuth: false, theme: "providence", menu: "default", tour: "new", version: 1, createdAt: ts, updatedAt: ts, updatedBy: uid };
 
   // The email claim decides a race between two confirmations: the loser reads the winner's user
   try {

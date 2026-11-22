@@ -9,6 +9,7 @@
 
 ### Fixed
 - Emails wrap a long organization or person name inside the card instead of widening it on a phone, and the invite button reads "Accept the invitation". A notice, the invite, and the free-account check-in and closing emails name the organization once, under the title, not again in a table row or the plain text's first line. Pradeep's chat reply email speaks in the first person. Dark-mode links and buttons use the shared Matrix green (#6cffa8). Inbox previews no longer run into the body's first line. Right-to-left names and messages read correctly in every email.
+- A new account lands in the look it signed in with (Sentinel light, as neon1.tech and the sign-in screen), in place of flipping to Matrix light on its first page. Accounts that already exist keep the theme they have.
 - Text fields are 16px on a touch screen, so iPhone browsers no longer zoom the page in when a field takes focus. Every field had been 15px since the type scale change.
 - A page that does not exist shows inside the portal's frame, with the menu, search, and help, so a signed-in person can go anywhere from it.
 - On a touch screen every control has a 44px target: buttons and fields grow, and chips, row menus, icon buttons and the theme switch keep their drawn size and take the rest as hit area. The public footer's links are a row of 44px targets, and a public page ends with room under its last line so the Neo button no longer covers it.
