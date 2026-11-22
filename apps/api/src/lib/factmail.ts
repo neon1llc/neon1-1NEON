@@ -45,6 +45,7 @@ export const subjectOf = (what: string, who: string, n = 80) => gist(`${what}: $
 // Each class has its light look inline; the style block below changes it for dark mode and narrow screens
 // A long name with no spaces must wrap inside the card, not widen it
 const WRAP = "word-break:break-word;overflow-wrap:anywhere";
+// dir="auto" on what someone wrote and bdi on the title let right-to-left text read correctly; facts stay left to right
 const label = (color = MUTED) => `font:600 12px ${MONO};letter-spacing:.06em;text-transform:uppercase;color:${color}`;
 
 /** One row of the fact table */
@@ -59,7 +60,7 @@ export function cell(f: Fact) {
 /** A labelled block for what someone wrote */
 export const block = (k: string, v: string) =>
   `<p class="muted" style="margin:0 0 8px;${label()}">${esc(k)}</p>
-<div class="quote ink" style="margin:0 0 22px;padding:12px 14px;background:${PAPER};border-left:3px solid ${BRAND};border-radius:4px;font:15px/1.55 ${SANS};color:${INK};white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere">${esc(v)}</div>`;
+<div class="quote ink" dir="auto" style="margin:0 0 22px;padding:12px 14px;background:${PAPER};border-left:3px solid ${BRAND};border-radius:4px;font:15px/1.55 ${SANS};color:${INK};white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere">${esc(v)}</div>`;
 
 // Dark mode and the narrow-phone table. The logo is HTML borders so it recolors with the text: a mail app that force-inverts colors
 // (Gmail's apps) flips its borders like the text, and one that honors dark mode takes the .mk rule. Dark colors keep AA contrast: light text on #16241c, bright green links and a
@@ -122,7 +123,7 @@ export function shell(m: Pick<FactMail, "kicker" | "title" | "sub" | "preheader"
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="page" style="background:${PAPER}"><tr><td align="center" style="padding:20px 10px 24px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="card" style="max-width:600px;background:#fff;border:1px solid ${LINE};border-radius:12px"><tr><td class="pad" style="padding:22px 24px 20px;text-align:left">
 <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 14px"><tr><td style="vertical-align:middle">${markHtml()}</td><td class="brand" style="vertical-align:middle;padding-left:10px;font-family:${MONO};color:${BRAND}">${wordmark(m.kicker)}</td></tr></table>
-<h1 class="ink" style="margin:0 0 14px;font:700 22px/1.3 ${MONO};color:${INK};${WRAP}">${esc(m.title)}${m.sub ? ` <span class="muted" style="display:block;font:500 15px/1.4 ${SANS};color:${MUTED};margin-top:4px;${WRAP}">${esc(m.sub)}</span>` : ""}</h1>
+<h1 class="ink" style="margin:0 0 14px;font:700 22px/1.3 ${MONO};color:${INK};${WRAP}"><bdi>${esc(m.title)}</bdi>${m.sub ? ` <span class="muted" style="display:block;font:500 15px/1.4 ${SANS};color:${MUTED};margin-top:4px;${WRAP}">${esc(m.sub)}</span>` : ""}</h1>
 ${intro}${inner}
 ${footer}
 </td></tr></table></td></tr></table></body></html>`;
