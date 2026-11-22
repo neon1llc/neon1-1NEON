@@ -5,13 +5,13 @@ import { Link } from "react-router";
 import { GlitchWord } from "../components/Glitch.tsx";
 
 
-// Inside Root, so only signed-in people reach it
+// Inside Root and the frame, so only signed-in people reach it and the menu still works
 export function NotFound() {
   return (
-    <main className="content">
+    <div className="content">
       <h1 className="page-title"><GlitchWord text="404" /> Not found</h1>
       <p className="lead">That page doesn't exist in 1NEON.</p>
       <Link className="btn btn-ghost" to="/">Go to my workspace</Link>
-    </main>
+    </div>
   );
 }
