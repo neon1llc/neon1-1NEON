@@ -22,13 +22,12 @@ export function inviteEmail(opts: { orgName: string; inviter: string; url: strin
     preheader: `${opts.inviter} invited you to ${opts.orgName}.`,
     intro: [`${opts.inviter} invited you to ${opts.orgName} on 1NEON, where your projects with neon1 stay in one place.`],
     facts: [
-      { k: "Organization", v: opts.orgName },
       { k: "Invited by", v: opts.inviter },
       { k: "Sign in", v: "With a code sent to this email address" },
       { k: "Sent", v: when(at, opts.zone) },
     ],
     action: { label: `Join ${opts.orgName}`, url: opts.url },
-    why: `${opts.inviter} invited this address to ${opts.orgName}. Ignore this email if you weren't expecting it. Nothing happens until someone signs in.`,
+    why: `${opts.inviter} invited this address. Ignore this email if you weren't expecting it. Nothing happens until someone signs in.`,
     reply: "Reply to this email to ask me a question.",
   });
   return { subject: subjectOf("Invitation", `${opts.orgName}, from ${opts.inviter}`, 90), ...mail, as: "portal" as SenderKind, replyTo: HELLO };
@@ -224,7 +223,7 @@ export function noticeEmail(o: NoticeOpts) {
     intro: [sentence],
     facts: [
       { k: "Who", v: who },
-      { k: "Organization", v: o.operator && o.ref ? `${o.orgName} (${o.ref}${o.trial ? ", free account" : ""})` : o.orgName },
+      ...(o.operator && o.ref ? [{ k: "Organization", v: `${o.orgName} (${o.ref}${o.trial ? ", free account" : ""})` }] : []),
       ...(o.projectKey ? [{ k: "Project", v: o.projectKey, href: o.projectUrl, mono: true }] : []),
       ...(o.details ?? []),
       { k: "When", v: when(at, o.zone) },
@@ -233,9 +232,8 @@ export function noticeEmail(o: NoticeOpts) {
     todo,
     action: { label: o.button ?? "Open in 1NEON", url: o.url },
     why,
-    settings: { text: "Choose which changes email you in your 1NEON profile, under Notifications.", url: o.settingsUrl },
+    settings: { text: "Choose which changes email you in your 1NEON profile.", url: o.settingsUrl, label: "Notification settings" },
     reply: as === "reach" ? "Reply to this email to answer them directly." : undefined,
-    textHead: `${label} · ${o.orgName}`,
   });
   return { subject: subjectOf(label, where, 90), text: mail.text, html: mail.html, as, replyTo: as === "reach" && o.byEmail && o.by !== "You" ? o.byEmail : undefined };
 }

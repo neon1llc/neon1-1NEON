@@ -43,6 +43,8 @@ export const gist = (s: string, n = 60) => { const t = s.replace(/\s+/g, " ").tr
 export const subjectOf = (what: string, who: string, n = 80) => gist(`${what}: ${who}`, n);
 
 // Each class has its light look inline; the style block below changes it for dark mode and narrow screens
+// A long name with no spaces must wrap inside the card, not widen it
+const WRAP = "word-break:break-word;overflow-wrap:anywhere";
 const label = (color = MUTED) => `font:600 12px ${MONO};letter-spacing:.06em;text-transform:uppercase;color:${color}`;
 
 /** One row of the fact table */
@@ -113,14 +115,14 @@ const wordmark = (kicker: string) =>
 
 /** The card around everything: the brand line, the title, then what the caller puts inside, then the small print */
 export function shell(m: Pick<FactMail, "kicker" | "title" | "sub" | "preheader" | "intro">, inner: string, footer: string) {
-  const intro = (m.intro ?? []).map((p) => `<p class="ink" style="margin:0 0 14px;font:16px/1.55 ${SANS};color:${INK}">${esc(p)}</p>`).join("");
+  const intro = (m.intro ?? []).map((p) => `<p class="ink" style="margin:0 0 14px;font:16px/1.55 ${SANS};color:${INK};${WRAP}">${esc(p)}</p>`).join("");
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><meta name="supported-color-schemes" content="light dark"><title>${esc(m.title)}${m.sub ? ` · ${esc(m.sub)}` : ""}</title><style>${STYLES}</style></head>
 <body class="page" style="margin:0;background:${PAPER};font:15px/1.55 ${SANS};color:${INK}">
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all">${esc(m.preheader)}</div>
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;mso-hide:all">${esc(m.preheader)}${"&#847;&zwnj;&nbsp;".repeat(60)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="page" style="background:${PAPER}"><tr><td align="center" style="padding:20px 10px 24px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="card" style="max-width:600px;background:#fff;border:1px solid ${LINE};border-radius:12px"><tr><td class="pad" style="padding:22px 24px 20px;text-align:left">
 <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 14px"><tr><td style="vertical-align:middle">${markHtml()}</td><td class="brand" style="vertical-align:middle;padding-left:10px;font-family:${MONO};color:${BRAND}">${wordmark(m.kicker)}</td></tr></table>
-<h1 class="ink" style="margin:0 0 14px;font:700 22px/1.3 ${MONO};color:${INK}">${esc(m.title)}${m.sub ? ` <span class="muted" style="display:block;font:500 15px/1.4 ${SANS};color:${MUTED};margin-top:4px">${esc(m.sub)}</span>` : ""}</h1>
+<h1 class="ink" style="margin:0 0 14px;font:700 22px/1.3 ${MONO};color:${INK};${WRAP}">${esc(m.title)}${m.sub ? ` <span class="muted" style="display:block;font:500 15px/1.4 ${SANS};color:${MUTED};margin-top:4px;${WRAP}">${esc(m.sub)}</span>` : ""}</h1>
 ${intro}${inner}
 ${footer}
 </td></tr></table></td></tr></table></body></html>`;
@@ -128,11 +130,11 @@ ${footer}
 
 /** The footer's small print, each line its own paragraph so a screen reader reads them apart */
 export const small = (lines: (string | { text: string; url?: string; label?: string })[]) =>
-  `<div class="muted rule" style="margin:14px 0 0;padding-top:12px;border-top:1px solid ${LINE};font:12px/1.65 ${SANS};color:${MUTED}">${lines.map((l) => (typeof l === "string" ? `<p style="margin:0 0 4px">${esc(l)}</p>` : `<p style="margin:0 0 4px">${esc(l.text)}${l.url ? ` <a class="lk" href="${esc(l.url)}" style="color:${BRAND};text-decoration:underline">${esc(l.label ?? "Notification settings")}</a>` : ""}</p>`)).join("")}</div>`;
+  `<div class="muted rule" style="margin:14px 0 0;padding-top:12px;border-top:1px solid ${LINE};font:12px/1.65 ${SANS};color:${MUTED}">${lines.map((l) => (typeof l === "string" ? `<p style="margin:0 0 4px;${WRAP}">${esc(l)}</p>` : `<p style="margin:0 0 4px;${WRAP}">${esc(l.text)}${l.url ? ` <a class="lk" href="${esc(l.url)}" style="color:${BRAND};text-decoration:underline">${esc(l.label ?? "Notification settings")}</a>` : ""}</p>`)).join("")}</div>`;
 
 /** The one primary action, left-aligned under the table, tall enough to tap */
 const button = (a: { label: string; url: string }) =>
-  `<p style="margin:0 0 20px"><a class="btn" href="${esc(a.url)}" style="display:inline-block;background:${BRAND};color:#fff;text-decoration:none;padding:13px 22px;min-height:20px;border-radius:8px;font:600 14px ${MONO};letter-spacing:.02em">${esc(a.label)}</a></p>`;
+  `<p style="margin:0 0 20px"><a class="btn" href="${esc(a.url)}" style="display:inline-block;background:${BRAND};color:#fff;text-decoration:none;padding:13px 22px;min-height:20px;border-radius:8px;font:600 14px ${MONO};letter-spacing:.02em;${WRAP}">${esc(a.label)}</a></p>`;
 
 /** A sign-in code: one unbroken text node that selects whole on a tap or double click */
 const codeBox = (code: string) =>

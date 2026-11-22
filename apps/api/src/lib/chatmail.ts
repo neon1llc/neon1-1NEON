@@ -38,7 +38,7 @@ export function chatReplyMail(o: { body: string; url: string; at: Date; zone?: s
     ...factMail({
       kicker: "chat reply",
       title: "Pradeep replied",
-      intro: ["He answered in your organization's chat in 1NEON, where everyone in it can see the conversation."],
+      intro: ["I answered in your organization's chat in 1NEON, where everyone in it can see the conversation."],
       preheader: gist(o.body, 90),
       facts: [{ k: "Sent", v: sentAt(o.at, o.zone).replace(/^Sent /, "") }],
       blocks: [["Reply", o.body]],
