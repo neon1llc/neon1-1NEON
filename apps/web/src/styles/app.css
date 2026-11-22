@@ -2489,8 +2489,7 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
   .signin .signin-more { gap: 0 var(--sp-4); }
   .pcard .move select { min-height: 44px; }
   /* The public footer's links are a row of 44px targets */
-  .pub-foot nav { display: flex; flex-wrap: wrap; align-items: center; }
-  .pub-foot nav a { display: inline-flex; align-items: center; min-height: 44px; padding-inline: var(--sp-1); }
+  .pub-foot nav a { display: inline-block; padding-block: var(--sp-3); }
 }
 
 /* The Neo launcher floats over the bottom corner, so a public page ends with room under its last line */
