@@ -1008,7 +1008,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
             <span className="ico site-mark" aria-hidden="true">
               <svg viewBox="3 4 58 58"><path d="M6 6a24 24 0 0 1 24 24v30M6 12a18 18 0 0 1 18 18v30M6 18a12 12 0 0 1 12 12v30M6 24a6 6 0 0 1 6 6v30M34 6a24 24 0 0 1 24 24v30M34 12a18 18 0 0 1 18 18v30M34 18a12 12 0 0 1 12 12v30M34 24a6 6 0 0 1 6 6v30" /></svg>
             </span>
-            <span className="lbl"><Wm />.tech</span>
+            <span className="lbl"><Wm /></span>
           </a>
           {open && <MenuThemeControls theme={me.user.theme} kind="family" />}
         </div>

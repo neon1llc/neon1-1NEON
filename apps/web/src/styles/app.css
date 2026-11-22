@@ -1260,7 +1260,7 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 .top-brand svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 5; }
 /* The wordmark's ink is centered on the bar by trimming its line box to the capitals (measured: a mono line box sat the capitals
    0.5 to 1px high at 90% to 100% zoom, because the font's ascent and descent are not equal). Browsers without text-box keep the old placement */
-@supports (text-box: trim-both cap alphabetic) { .top-brand .lbl, .side .brand .lbl { text-box: trim-both cap alphabetic; } }
+@supports (text-box: trim-both cap alphabetic) { .top-brand .lbl, .side .brand .lbl, .side .site-end .lbl { text-box: trim-both cap alphabetic; } }
 /* Phones keep the mark alone, so the page's crumbs keep their room */
 @media (max-width: 480px) { .top-brand .lbl { display: none; } .top-brand { margin-right: calc(-1 * var(--sp-2)); } }
 /* The menu's mark row: the top bar's height, from the very top of the menu */

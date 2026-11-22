@@ -113,3 +113,10 @@ describe("the mini rail", () => {
     expect(css).toMatch(/\.side \{ --row: clamp\(24px, calc\(\(100dvh - var\(--demo-h, 0px\) - var\(--top-h\) - 120px\) \/ 16\), 40px\); \}/);
   });
 });
+
+describe("the menu's site link", () => {
+  it("is the wordmark alone, trimmed to cap height so the 1 sits on the row's center with the mark and the switch", () => {
+    expect(readFileSync(join(__dirname, "../components/Shell.tsx"), "utf8")).not.toMatch(/<Wm \/>\.tech/);
+    expect(css).toMatch(/\.side \.site-end \.lbl \{ text-box: trim-both cap alphabetic; \}/);
+  });
+});
