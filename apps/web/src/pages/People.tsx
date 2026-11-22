@@ -10,7 +10,6 @@ import { ago, Avatar, useAsk, useToast } from "../components/ui.tsx";
 import { api } from "../lib/api.ts";
 import { problem, useMembers, useRefresh } from "../lib/hooks.ts";
 import type { MemberRow } from "../lib/types.ts";
-import { Wm } from "../components/Wordmark.tsx";
 
 
 // Plain descriptions of each access level, used in the invite form and the legend
@@ -91,7 +90,7 @@ export function People() {
               return (
               <tr key={m.userId} style={m.status === "deactivated" ? { opacity: 0.55 } : undefined}>
                 <td><span style={{ display: "inline-flex", gap: 10, alignItems: "center" }}><Avatar id={m.userId} name={m.name || m.email} /><span>{m.name || <span className="muted">{m.status === "invited" ? "Name comes when they join" : "No name yet"}</span>}<br /><span className="muted small">{m.title}</span></span></span></td>
-                <td className="mono small">{m.email}{m.neon1 && <span className="tag client" style={{ marginLeft: 8 }} title="neon1's access is managed by neon1"><Wm /></span>}</td>
+                <td className="mono small">{m.email}{m.neon1 && <span className="tag client" style={{ marginLeft: 8 }} title="neon1's access is managed by neon1">neon1</span>}</td>
                 <td>
                   {editable && m.status !== "deactivated" ? (
                     <select aria-label={`Access for ${m.email}`} value={m.access} onChange={(e) => void change(m, { access: e.target.value })} style={{ minHeight: 32, paddingTop: 2, paddingBottom: 2, paddingLeft: 8, maxWidth: 140 }}>

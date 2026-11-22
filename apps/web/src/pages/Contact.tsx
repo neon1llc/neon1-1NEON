@@ -7,7 +7,6 @@ import { Link } from "react-router";
 import { OutLink } from "../components/OutLink.tsx";
 import { useTopBar } from "../components/Shell.tsx";
 import { BOOK_A_CALL } from "../lib/prospect.ts";
-import { Wm } from "../components/Wordmark.tsx";
 
 
 // The contact form on the website, where a need can be written out without an account
@@ -29,7 +28,7 @@ export function ContactPage() {
   useTopBar(<span>Contact</span>, []);
   return (
     <>
-      <h1 className="page-title">Contact <Wm /></h1>
+      <h1 className="page-title">Contact neon1</h1>
       {/* Two cards side by side on a wide screen: the ways in, then when to expect an answer */}
       <div className="cols2">
         <section className="card contact-ways">

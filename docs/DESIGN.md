@@ -14,3 +14,5 @@
 The look is `data-style` (sentinel, or absent for Matrix), `data-theme` (`awake`, `matrix`, or `device`), and `data-look`, painted by `lib/themepaint.ts` from the saved choice.
 
 A component here overrides a step only where it must, with a comment saying why. `layout-contract.test.ts` fails when this stylesheet defines a base step of its own, uses a step that does not exist, or writes a text size as a number.
+
+The wordmark (`Wm`, neon1.tech's `.wm` rule) is for branding only: the public bar's logo, the menu's neon1.tech link, and letterheads. Everywhere else "neon1" is plain text at the text's size.

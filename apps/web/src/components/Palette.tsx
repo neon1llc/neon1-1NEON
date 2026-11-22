@@ -10,7 +10,6 @@ import { useLocation, useNavigate } from "react-router";
 import { read } from "../lib/reads.ts";
 import type { Me, OrgSummary } from "../lib/types.ts";
 import { Dialog } from "./ui.tsx";
-import { Wm } from "./Wordmark.tsx";
 
 
 /** The palette for one organization (or none, on profile and All clients) */
@@ -93,7 +92,7 @@ export function Palette({ me, org, prospect, open, setOpen, onHelp, onTour }: { 
             <Command.Item onSelect={go(onHelp)}>Help for this page</Command.Item>
             <Command.Item onSelect={go(onTour)}>Take the tour</Command.Item>
             <Command.Item onSelect={go(() => nav("/faqs"))}>FAQs</Command.Item>
-            <Command.Item value="contact neon1 email call text phone" onSelect={go(() => nav(all ? "/all/contact" : "/contact"))}>Contact <Wm /></Command.Item>
+            <Command.Item value="contact neon1 email call text phone" onSelect={go(() => nav(all ? "/all/contact" : "/contact"))}>Contact neon1</Command.Item>
           </Command.Group>
         </Command.List>
       </Command>

@@ -5,7 +5,7 @@
 ## Unreleased
 
 ### Changed
-- The name neon1 is set as neon1.tech's wordmark wherever it is a mark in live text: the Contact heading, menu entry and search result, the menu footer link, the public footer, the proposal and invoice letterheads, the agreement heading, Help and the profile's neon1 tag. The "1" keeps the text's size and the "neon" is scaled and lightened so their heights meet (shared .wm rule, a Wm component here). Needs neon1.tech's shared styles from the same rule. Measured at 390 and 1440 in Chromium and WebKit in all four looks: the 1 against n, e and o within 0.5px.
+- The name neon1 is set as neon1.tech's wordmark where it is branding only: the public bar's logo, the menu's neon1.tech link, and the proposal and invoice letterheads (a Wm component, the shared .wm rule). Menus, search results, headings, body text, and tags keep plain neon1 at the text's size. Measured at 390 and 1440 in Chromium and WebKit in all four looks: the 1 against n, e and o within 0.5px.
 - Shadows, the dialog dim, ink on a colored chip, and the calendar's office blue come from tokens (--shadow-pop, --shadow-float, --scrim, --on-color, --info) in every look, in place of per-rule colors. Error text uses the red and amber tokens.
 
 ### Fixed
