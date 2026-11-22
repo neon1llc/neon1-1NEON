@@ -26,7 +26,7 @@ export function inviteEmail(opts: { orgName: string; inviter: string; url: strin
       { k: "Sign in", v: "With a code sent to this email address" },
       { k: "Sent", v: when(at, opts.zone) },
     ],
-    action: { label: `Join ${opts.orgName}`, url: opts.url },
+    action: { label: "Accept the invitation", url: opts.url },
     why: `${opts.inviter} invited this address. Ignore this email if you weren't expecting it. Nothing happens until someone signs in.`,
     reply: "Reply to this email to ask me a question.",
   });
