@@ -45,7 +45,7 @@ export const GUIDES: Record<PageKey, Guide> = {
     purpose: "Your starting point: what needs you, and what changed lately.",
     howto: ["Under Next step, outline a project, then ask for an assessment.", "Work through Needs you, top to bottom.", "Use the calendar arrows to change month. Choose a day to see it or add leave, an office event, a meeting, or a care plan date.", "Insights in the menu has charts of how work is going."],
     tour: [
-      { at: "next-step-ask", title: "Next step", text: "Outline a project, then ask for an assessment of up to three. The note is required. You can ask again after two weeks, or for a call after one." },
+      { at: "next-step-ask", title: "Next step", text: "Outline a project, then ask for an assessment of up to three. The note is required, and you can edit it until it's sent. A call can be asked once a week." },
       { at: "needs-you", title: "Needs you", text: "Things waiting on you: approvals, tasks, and files to send. Open one to act on it." },
       { at: "coming-up", title: "Calendar", text: "Work due, milestones, targets, and your events. Choose a day to see or add. Past, Overdue, Upcoming, and Repeated open below." },
       { at: "glance", title: "Projects at a glance", text: "Each project's stage, health, progress, late work, and what's next." },

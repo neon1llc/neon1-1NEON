@@ -106,6 +106,19 @@ describe("an assessment request under pressure", () => {
 });
 
 
+describe("a request row from before versions existed", () => {
+  it("saves over it instead of conflicting, then carries on at version 1", async () => {
+    const a = await account();
+    await repo.table.write([{ put: { PK: `T#${a.tid}`, SK: "REQUEST#assessment", at: new Date().toISOString(), by: "u_old" }, guard: { always: true } }]);
+    const p = await a.project("Intake");
+    const first = await a.save({ note: NOTE, projects: [p.key] });
+    expect(first.status).toBe(200);
+    expect(((await repo.table.get(`T#${a.tid}`, "REQUEST#assessment")) as { version?: number }).version).toBe(1);
+    expect((await a.save({ note: `${NOTE} More.`, projects: [p.key] })).status).toBe(200);
+  });
+});
+
+
 describe("a call request", () => {
   it("is separate from an assessment, needs no note or project, and holds one a week", async () => {
     const a = await account();

@@ -81,8 +81,9 @@ const dueFrom = (edited: Date, lastSent: string | undefined, wait: number) =>
 // A race lost to a newer save: that save's own row and clock carry on
 const ignoreConflict = (e: unknown) => { if (!(e instanceof ConflictError)) throw e; };
 
-// A write that expects the row as it was read: create-only for a first request, else its version
-const sameAs = (a: Assessment) => (a.version ? { version: a.version } : { create: true as const });
+// A write that expects the row as it was read: its version, create-only when there's no row, and over a
+// row from before versions existed (it has fields but no version, so neither of the others can match it)
+const sameAs = (a: Assessment) => (a.version ? { version: a.version } : Object.keys(a).length ? { always: true as const } : { create: true as const });
 
 // A stored row without the table's keys or anything undefined, ready to write back under new values
 const rowOf = (tid: string, a: Assessment) => {
@@ -233,7 +234,8 @@ export function requestRoutes(app: App, k: Kit) {
         ]);
         break;
       } catch (e) {
-        if (!(e instanceof ConflictError) || tries >= 9) throw e;
+        if (!(e instanceof ConflictError)) throw e;
+        if (tries >= 9) fail(409, "busy", "Another change landed at the same moment. Try again.");
         row = await assessmentOf(t.id);
       }
     }

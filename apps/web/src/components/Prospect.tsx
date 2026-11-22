@@ -134,7 +134,7 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
   const call = !prospect
     ? <span className="helper next-call">Rather talk it through? <Link to="/contact">Contact neon1</Link></span>
     : callAsked
-      ? <span className="helper next-call" role="status">Call requested {dateLabel(callAsked.at)}. I'll reply by email. You can ask again from {dateLabel(callAsked.again)}.</span>
+      ? <span className="helper next-call" role="status">Call requested {dateLabel(callAsked.at)}. You can ask again from {dateLabel(callAsked.again)}.</span>
       : <span className="helper next-call">Rather talk first? <OutLink href={BOOK_A_CALL}>Book a 30-minute call</OutLink> or <button type="button" className="linkish" onClick={() => { setError(""); setCallOpen(true); }}>ask me to reach out</button>.</span>;
   const refresh = () => qc.invalidateQueries({ queryKey: ["requests", orgId] });
 
@@ -215,8 +215,8 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
         <p className="muted ns-intro">{intro}</p>
         <div className="actions next-actions">
           <Link className="btn btn-primary btn-sm" to={`${base}/projects/new`}>Start a project</Link>
-          {call}
         </div>
+        {call}
         {callDialog()}
       </section>
     );
@@ -299,8 +299,9 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
                 {blocker && !busy && <span id="ask-why" className="ns-why">{blocker}</span>}
                 {editing && <button type="button" className="btn btn-ghost btn-sm" disabled={busy} onClick={() => { setEditing(false); setPicked(undefined); setError(""); setTouched(false); }}>Cancel</button>}
               </>}
-          {call}
         </div>
+        {/* Its own line: a call's wait is about the call, not about this button */}
+        {call}
       </form>
       {/* The last look: what's being sent, what could still be added, and when it goes. Everything is optional */}
       <Dialog open={review} onClose={() => setReview(false)} label="Request an assessment" className="ask">
