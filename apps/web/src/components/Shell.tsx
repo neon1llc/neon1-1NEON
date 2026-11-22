@@ -38,6 +38,7 @@ import { gate, Stale, type Read } from "./Reads.tsx";
 import { Avatar, Icon, initials, LayerBadge, LAYERS, layerHint, layerName, layerSlug, Rings, useAsk } from "./ui.tsx";
 import { prefs } from "../lib/prefs.ts";
 import type { SignUpInfo } from "../lib/signup.ts";
+import { Wm } from "./Wordmark.tsx";
 
 
 // --- Session -----------------------------------------------------------------
@@ -595,13 +596,13 @@ export function useTopBar(node: ReactNode, deps: unknown[]) {
 
 
 /** One menu entry: its icon box and label line up with every other entry; picking it closes the full menu */
-function Item({ to, icon, label, sub, end, tour }: { to: string; icon: ReactNode; label: string; sub?: string; end?: boolean; tour?: string }) {
+function Item({ to, icon, label, wm, sub, end, tour }: { to: string; icon: ReactNode; label: string; wm?: boolean; sub?: string; end?: boolean; tour?: string }) {
   return (
     <li>
       <NavLink to={to} end={end} title={sub ? `${label}: ${sub}` : label} data-tour={tour}>
         {icon}
         {/* A layer's plain subtitle rides on the same row, so every row keeps its height */}
-        <span className="lbl">{label}{sub && <small className="sub"><span className="sr">, </span>{sub}</small>}</span>
+        <span className="lbl">{wm ? <>Contact <Wm /></> : label}{sub && <small className="sub"><span className="sr">, </span>{sub}</small>}</span>
       </NavLink>
     </li>
   );
@@ -983,7 +984,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
         {/* Every way to reach neon1, for every account, new ones included; the signed-in person ends the
             Organization group, so it shows on the first screen and is never taken for Report a bug */}
         <ul className="nav contact-nav">
-          <Item to={all ? "/all/contact" : "/contact"} icon={<Icon name="contact" />} label="Contact neon1" tour="nav-contact" />
+          <Item to={all ? "/all/contact" : "/contact"} icon={<Icon name="contact" />} label="Contact neon1" wm tour="nav-contact" />
           <li>
             <NavLink to={all ? "/all/me" : "/me"} className="who-link" title="Your profile" data-tour="nav-me">
               <span className="ico av-box"><Avatar id={me.user.id} name={me.user.name || me.user.email} size={24} /></span>
@@ -1007,7 +1008,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
             <span className="ico site-mark" aria-hidden="true">
               <svg viewBox="3 4 58 58"><path d="M6 6a24 24 0 0 1 24 24v30M6 12a18 18 0 0 1 18 18v30M6 18a12 12 0 0 1 12 12v30M6 24a6 6 0 0 1 6 6v30M34 6a24 24 0 0 1 24 24v30M34 12a18 18 0 0 1 18 18v30M34 18a12 12 0 0 1 12 12v30M34 24a6 6 0 0 1 6 6v30" /></svg>
             </span>
-            <span className="lbl">neon1.tech</span>
+            <span className="lbl"><Wm />.tech</span>
           </a>
           {open && <MenuThemeControls theme={me.user.theme} kind="family" />}
         </div>

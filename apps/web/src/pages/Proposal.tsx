@@ -15,6 +15,7 @@ import { Empty, useToast } from "../components/ui.tsx";
 import { DEMO } from "../lib/api.ts";
 import { downloadDocx, FICTIONAL, type Acceptance } from "../lib/docx.ts";
 import { problem, useMembers, useProject, useProjects } from "../lib/hooks.ts";
+import { Wm } from "../components/Wordmark.tsx";
 
 // A long date, the way a letter writes it
 const longDate = (iso: string) => new Date(iso.length === 10 ? `${iso}T00:00:00Z` : iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: iso.length === 10 ? "UTC" : undefined });
@@ -168,7 +169,7 @@ function Proposal({ snapshot: s, rev, latestRev, decided, inForce, timeZone, slu
             <path d="M34 6a24 24 0 0 1 24 24v30M34 12a18 18 0 0 1 18 18v30M34 18a12 12 0 0 1 12 12v30M34 24a6 6 0 0 1 6 6v30" />
           </svg>
           <div>
-            <b>neon1</b>
+            <b><Wm sans /></b>
             <span>418 Broadway, Ste R, Albany, NY 12207</span>
             <span>hello@neon1.tech · +1 424-326-3661</span>
           </div>

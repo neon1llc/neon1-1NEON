@@ -14,6 +14,7 @@ import { dateLabel, Dialog, useToast } from "./ui.tsx";
 import { assessmentNoteProblem, listWords, outlineTip, requestAgainAt, requestOpen, type Outline } from "@1neon/domain";
 import { askBlocker, BOOK_A_CALL, prospectEverywhere } from "../lib/prospect.ts";
 import type { Me, OrgResponse } from "../lib/types.ts";
+import { Wm } from "./Wordmark.tsx";
 
 
 /** Is this person limited as a prospect in every organization they belong to? Reads the same cached
@@ -132,7 +133,7 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
     ? "An assessment is my read of what's written here, plausible approaches, and the first questions to settle."
     : "An assessment is my read of what's written here, plausible approaches, and the first questions to settle, before any options or prices.";
   const call = !prospect
-    ? <span className="helper next-call">Rather talk it through? <Link to="/contact">Contact neon1</Link></span>
+    ? <span className="helper next-call">Rather talk it through? <Link to="/contact">Contact <Wm sans /></Link></span>
     : callAsked
       ? <span className="helper next-call" role="status">Call requested {dateLabel(callAsked.at)}. I'll reply by email. You can ask again from {dateLabel(callAsked.again)}.</span>
       : <span className="helper next-call">Rather talk first? <OutLink href={BOOK_A_CALL}>Book a 30-minute call</OutLink> or <button type="button" className="linkish" onClick={() => { setError(""); setCallOpen(true); }}>ask me to reach out</button>.</span>;

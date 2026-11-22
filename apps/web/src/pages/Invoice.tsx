@@ -14,6 +14,7 @@ import { Empty } from "../components/ui.tsx";
 import { DEMO } from "../lib/api.ts";
 import { FICTIONAL } from "../lib/docx.ts";
 import { useProject, useProjects } from "../lib/hooks.ts";
+import { Wm } from "../components/Wordmark.tsx";
 
 
 // A long date, the way a letter writes it
@@ -95,7 +96,7 @@ export function InvoicePage() {
               <path d="M34 6a24 24 0 0 1 24 24v30M34 12a18 18 0 0 1 18 18v30M34 18a12 12 0 0 1 12 12v30M34 24a6 6 0 0 1 6 6v30" />
             </svg>
             <div>
-              <b>neon1</b>
+              <b><Wm sans /></b>
               <span>418 Broadway, Ste R, Albany, NY 12207</span>
               <span>hello@neon1.tech · +1 424-326-3661</span>
             </div>

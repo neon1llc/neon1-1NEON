@@ -24,6 +24,7 @@ import { numberProblem, optionalNumber } from "../lib/measures.ts";
 import { problem, useMembers, useProject, useProjects, useRefresh, useSubmit } from "../lib/hooks.ts";
 import { aimBetween, canSlide, lessMotion } from "../lib/motion.ts";
 import type { EditMarker } from "../lib/types.ts";
+import { Wm } from "../components/Wordmark.tsx";
 
 
 // Singular and plural labels for each kind of item
@@ -1440,7 +1441,7 @@ function Options({ items, all, docs, path, project }: { items: Item[]; all: Item
         {/* A first-time client on a quick fix reads and signs the agreement here, above the one name box */}
         {oneScreen && (
           <section className="notice agreement-inline" aria-labelledby="agree-h">
-            <h3 id="agree-h" style={{ margin: "0 0 6px" }}>First, neon1's service agreement</h3>
+            <h3 id="agree-h" style={{ margin: "0 0 6px" }}>First, <Wm sans />'s service agreement</h3>
             <p className="small" style={{ margin: "0 0 6px" }}>You sign it once for {org.name}, and it covers every project. In short:</p>
             <ul className="small" style={{ margin: "0 0 6px", paddingLeft: 18 }}>
               <li>Each approved quote fixes the scope and price of that work.</li>

@@ -17,6 +17,7 @@ import { fade } from "../lib/motion.ts";
 import { CARE, moneyOf, SCENARIO_IDS, SCENARIOS, scenarioOf, summaryOf, type Piece, type Scenario, type ScenarioId } from "../lib/scenarios.ts";
 import { useSiteTheme } from "../lib/sitetheme.ts";
 import { Check } from "lucide-react";
+import { Wm } from "../components/Wordmark.tsx";
 
 
 // One card: a title, its lines, an optional list, and an optional piece of work
@@ -348,7 +349,7 @@ export function Example() {
         <a className="top-brand" href="/1NEON/" title="1NEON" aria-label="1NEON, entry page"><span className="mark-box" aria-hidden="true"><Rings /></span><span className="lbl">1NEON</span></a>
         <div className="crumb"><span className="crumb-tail">Sample project</span></div>
         <span className="top-acts">
-          <a className="btn btn-ghost btn-sm" href="/">neon1.tech</a>
+          <a className="btn btn-ghost btn-sm" href="/"><Wm />.tech</a>
           {/* Short in the bar so it holds one line on a phone; the end card says the length */}
           <a className="btn btn-primary btn-sm" href={`/1NEON/live${q(s.id)}`}>Watch it</a>
           <a className="btn btn-ghost btn-sm" href="/1NEON/demo/"><span className="wide-only">Interactive demo</span><span className="narrow-only">Demo</span></a>
