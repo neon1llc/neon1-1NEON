@@ -2468,3 +2468,30 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
   .shell.mini .side:not(.open):not(.leaving) .nav > li.sep > .lbl.gl, .out-group > .gline { width: calc(var(--rail) + env(safe-area-inset-left) - 1px - var(--padl)); }
   .shell.mini .side:not(.open) :is(a, button) { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 }
+
+
+/* Touch screens: every control has a 44px target. Buttons and fields grow. A small drawn control keeps its size and takes the rest as
+   hit area, as the theme switches do above, so rows of chips and icons do not change shape */
+@media (pointer: coarse) {
+  .btn, .btn.btn-sm { min-height: 44px; }
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"]), select, textarea, .stage textarea, textarea.title-line { min-height: 44px; }
+  .filters input[type="search"], .filters select, .filters .chip, .filters .check { min-height: 44px; }
+  .props label.check { min-height: 44px; }
+  .chip, .icon-act, .row-menu-btn, .theme-sw { position: relative; }
+  .chip::after { content: ""; position: absolute; inset: -9px 0; }
+  .icon-act::after { content: ""; position: absolute; inset: -6px; }
+  .row-menu-btn::after { content: ""; position: absolute; inset: -7px; }
+  .theme-sw::after { content: ""; position: absolute; inset: -8px 0; }
+  .pub-back { min-height: 44px; }
+  .signin .signin-more a, .signin .fine a { display: inline-flex; align-items: center; min-height: 44px; }
+  .signin .signin-more { gap: 0 var(--sp-4); }
+  .pcard .move select { min-height: 44px; }
+  /* The public footer's links are a row of 44px targets */
+  .pub-foot nav { display: flex; flex-wrap: wrap; align-items: center; }
+  .pub-foot nav a { display: inline-flex; align-items: center; min-height: 44px; padding-inline: var(--sp-1); }
+}
+
+/* The Neo launcher floats over the bottom corner, so a public page ends with room under its last line */
+@media (max-width: 640px) {
+  .pub-foot { padding-bottom: calc(var(--sp-7) + var(--sp-7) + env(safe-area-inset-bottom)); }
+}

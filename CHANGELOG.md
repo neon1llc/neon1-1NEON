@@ -6,6 +6,7 @@
 
 ### Fixed
 - Emails wrap a long organization or person name inside the card instead of widening it on a phone, and the invite button reads "Accept the invitation". A notice, the invite, and the free-account check-in and closing emails name the organization once, under the title, not again in a table row or the plain text's first line. Pradeep's chat reply email speaks in the first person. Dark-mode links and buttons use the shared Matrix green (#6cffa8). Inbox previews no longer run into the body's first line. Right-to-left names and messages read correctly in every email.
+- On a touch screen every control has a 44px target: buttons and fields grow, and chips, row menus, icon buttons and the theme switch keep their drawn size and take the rest as hit area. The public footer's links are a row of 44px targets, and a public page ends with room under its last line so the Neo button no longer covers it.
 - The Mini rail's mark sits in the middle of the rail's icons at every width, and on phones the rail's rows end at the rail, so no wide highlight shows over the page while a picker is open. Holding a rail button no longer lifts a wide preview of its row: the rail's lists end at the rail and its links give no iOS link preview.
 
 ## v0.24.0 - 2026-11-21
