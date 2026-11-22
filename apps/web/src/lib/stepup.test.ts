@@ -54,7 +54,7 @@ describe("stepUpMessage", () => {
     const { HttpError, Unconfirmed } = await import("./api.ts");
     expect(stepUpMessage(new DOMException("no", "NotAllowedError"))).toMatch(/wasn't used/);
     expect(stepUpMessage(new HttpError(403, { error: "x", message: "That code didn't match." }))).toBe("That code didn't match.");
-    expect(stepUpMessage(new Unconfirmed())).toMatch(/couldn't confirm/);
+    expect(stepUpMessage(new Unconfirmed("POST", "/auth/step"))).toMatch(/couldn't confirm/);
     expect(stepUpMessage(new TypeError("Failed to fetch"))).toMatch(/Couldn't reach 1NEON/);
     expect(stepUpMessage(new Error("odd"))).toMatch(/didn't work/);
   });
