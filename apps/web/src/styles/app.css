@@ -2455,3 +2455,11 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
   .settings-nav { position: static; display: flex; overflow-x: auto; gap: var(--sp-1); margin: 0 calc(-1 * var(--sp-3)); padding: 0 var(--sp-3); scrollbar-width: none; }
   .settings-nav a { flex: none; white-space: nowrap; border: 1px solid var(--line); }
 }
+
+/* On phones the Mini rail is the 272px drawer clipped to its first 53px. Its rows are cut to the rail's own width as well, so
+   iOS can't show a row's wide highlight past the rail (it did while a native picker was open), and the mark sits in the rail's middle (all widths) */
+.shell.mini .side:not(.open):not(.leaving) .side-head .brand { justify-content: center; padding-left: 0; padding-right: 0; width: 100%; }
+@media (max-width: 640px) {
+  .shell.mini .side:not(.open):not(.leaving) :is(.brand, .org-mini, .nav a, .site-link, .who-link) { width: calc(var(--rail) + env(safe-area-inset-left) - 1px - var(--padl) - var(--padr)); }
+  .shell.mini .side:not(.open):not(.leaving) .side-head .brand { width: calc(var(--rail) + env(safe-area-inset-left) - 1px - var(--padl) - var(--padr)); }
+}

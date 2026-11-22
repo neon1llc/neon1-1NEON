@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+### Fixed
+- The Mini rail's mark sits in the middle of the rail's icons at every width, and on phones the rail's rows end at the rail, so no wide highlight shows over the page while a picker is open.
+
 ## v0.24.0 - 2026-11-21
 
 ### Added
