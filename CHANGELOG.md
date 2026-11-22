@@ -8,6 +8,7 @@
 - Shadows, the dialog dim, ink on a colored chip, and the calendar's office blue come from tokens (--shadow-pop, --shadow-float, --scrim, --on-color, --info) in every look, in place of per-rule colors. Error text uses the red and amber tokens.
 
 ### Fixed
+- The Motion and Menu choices in the profile center their labels in their pills. In Coming up, a long title or detail line scrolls sideways in place, with a fade at the edge where more is hidden, instead of ending in an ellipsis.
 - Insights fits a 320 or 360px screen: the chart grid no longer holds a 300px minimum wider than the screen. A project address that does not exist now has a heading.
 - More controls reach 44px on a touch screen: chips, the List and Timeline switch, project tabs, selects, date fields, summaries, row menus, icon buttons, standalone text buttons and list links. A task's tick box sits in a 44px label. Checkboxes and radios take the 16px field size too.
 - The invitation walkthrough finds the invitation email's button by its new name, so the short walkthrough plays to its end card again.

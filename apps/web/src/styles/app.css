@@ -850,7 +850,7 @@ details.history summary { cursor: pointer; font: var(--fs-xs) var(--mono); color
 .ag-group li:first-child { border-top: 0; }
 .ag-group time { font: var(--fs-xs) var(--mono); color: var(--muted); }
 .ag-group.late time { color: var(--red); }
-.ag-group a { color: inherit; text-decoration-line: underline; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ag-group a { color: inherit; text-decoration-line: underline; }
 .ag-group a:hover { color: var(--accent); }
 .ag-group .s { font: var(--fs-xs) var(--mono); color: var(--muted); white-space: nowrap; }
 @media (max-width: 520px) { .ag-group li { grid-template-columns: 52px minmax(0, 1fr); } .ag-group .s { grid-column: 2; } }
@@ -1346,7 +1346,7 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 .ag-group.fold > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 4px; }
 .ag-group.fold .fold-body { padding-top: var(--sp-0); }
 .ag-group li.done a, .ag-group li.done .t { color: var(--muted); }
-.ag-group li .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ag-group li :is(a, .t, .s, .linkish) { max-width: 100%; }
 .ag-group .linkish { text-align: left; color: inherit; }
 .ag-group .linkish:hover { color: var(--accent); }
 .agenda { gap: var(--sp-1); }
@@ -2525,3 +2525,12 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
   .linkish.small, .linkish.helper, button.link.small { min-height: 44px; display: inline-flex; align-items: center; }
   .linkish.small::after, .linkish.helper::after, button.link.small::after { content: none; }
 }
+
+/* A long line scrolls sideways in place instead of being cut with an ellipsis: the edges fade where more is hidden, as a wide table does.
+   --scroll-bg is the surface behind it, so the fade matches the card */
+.scroll-x, .ag-group li :is(a, .t, .s, .linkish) { --scroll-bg: var(--panel); overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; white-space: nowrap; min-width: 0;
+  background: linear-gradient(to right, var(--scroll-bg) 30%, transparent) left center / 24px 100% no-repeat local, linear-gradient(to left, var(--scroll-bg) 30%, transparent) right center / 24px 100% no-repeat local,
+    linear-gradient(to right, var(--line-strong), transparent) left center / 6px 100% no-repeat scroll, linear-gradient(to left, var(--line-strong), transparent) right center / 6px 100% no-repeat scroll; }
+.scroll-x::-webkit-scrollbar, .ag-group li :is(a, .t, .s, .linkish)::-webkit-scrollbar { display: none; }
+/* A pill sizes to its label and centers it, whatever height it is given */
+.chip { display: inline-flex; align-items: center; justify-content: center; }
