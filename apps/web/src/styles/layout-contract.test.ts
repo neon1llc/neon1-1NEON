@@ -128,3 +128,10 @@ describe("the menu's mark rows", () => {
     expect(css).toMatch(/\.side\.open \.side-head \{ gap: var\(--sp-3\); justify-content: space-between; \}/);
   });
 });
+
+describe("the menu's dividers", () => {
+  it("end at the rail only in the collapsed phone rail, so the line above report a bug spans the open menu like the others", () => {
+    expect(css).toMatch(/\.shell\.mini \.side:not\(\.open\):not\(\.leaving\) :is\(\.nav > li\.sep > \.lbl\.gl, \.out-group > \.gline\) \{/);
+    expect(css).not.toMatch(/, \.out-group > \.gline \{ width/);
+  });
+});

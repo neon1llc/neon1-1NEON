@@ -2474,7 +2474,7 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
   /* The lists and sections around the rows end at the rail too (a held row's iOS preview takes its container's box), and the
      rail's links and buttons give no link preview or callout. The rules between groups still run out under the clip */
   .shell.mini .side:not(.open):not(.leaving) :is(.side-head, .nav, .nav > li, .out-group) { width: calc(var(--rail) + env(safe-area-inset-left) - 1px - var(--padl) - var(--padr)); }
-  .shell.mini .side:not(.open):not(.leaving) .nav > li.sep > .lbl.gl, .out-group > .gline { width: calc(var(--rail) + env(safe-area-inset-left) - 1px - var(--padl)); }
+  .shell.mini .side:not(.open):not(.leaving) :is(.nav > li.sep > .lbl.gl, .out-group > .gline) { width: calc(var(--rail) + env(safe-area-inset-left) - 1px - var(--padl)); }
   .shell.mini .side:not(.open) :is(a, button) { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 }
 
