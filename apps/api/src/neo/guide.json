@@ -1,6 +1,6 @@
 {
- "ref": "docs/modernize-line",
- "commit": "0bd7ce110ceaed3ca6024d87a9d9717a8af14518",
+ "ref": "v0.52.3",
+ "commit": "c3b40f69666df3425204e560cf48fbcdf01173c3",
  "digest": "sha256:1432638becd628f5a146041666adc4d5d8dfc81466787cf8a3752e1dc0642b78",
  "chars": 79869,
  "docs": [

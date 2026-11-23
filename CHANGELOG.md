@@ -2,10 +2,11 @@
 
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
-## Unreleased
+## v0.26.0 - 2026-11-23
 
 ### Changed
-- A new option and a Quick fix quote default to an estimate. A fixed price stays available for a small, well-defined job, and the options list and the agreement (edition 2.1, signed again before the next approval) say the same. The sign-in screen leads with a Watch the walkthrough button for visitors. Neo's guide is rebuilt from the corpus branch that carries the new pricing wording, and is rebuilt from the release before this ships.
+- A new option and a Quick fix quote default to an estimate. A fixed price stays available for a small, well-defined job, and the options list and the agreement (edition 2.1, signed again before the next approval) say the same. The sign-in screen leads with a Watch the walkthrough button for visitors. Neo's guide is rebuilt from neon1-corpus v0.52.3.
+- A test organization is hidden from All clients and Prospects, gets no tip or quiet-prospect emails, and its requests to neon1 carry "[TEST]". Dev accepts an operator's plus-addresses.
 
 ## v0.25.0 - 2026-11-23
 
