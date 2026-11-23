@@ -10,7 +10,9 @@ One shared chat per organization. Every member and neon1's lead write in the sam
 | Routes | `apps/api/src/routes/chat.ts` |
 | Storage | `apps/api/src/store/repo.ts` (`getChat`, `chatMessages`, `chatOps`, `chatSeen`, `chatInbox`) |
 | Delivery | `apps/api/src/outbox.ts` (`chat-owner`, `chat-members`), `apps/api/src/lib/chatmail.ts` |
-| Conversation view | `apps/web/src/components/Talk.tsx` (inside Neo's panel, `apps/web/src/components/Neo.tsx`) |
+| Conversation view | `apps/web/src/components/Talk.tsx`, drawn into either Neo panel below |
+| In the public Neo window | `apps/web/src/components/PublicTalk.tsx` and `apps/web/src/lib/publicNeo.ts`, using the tab hook in neon1-site's `shared/chat.js` |
+| In the signed-in Neo's panel | `apps/web/src/components/Neo.tsx` |
 
 ## Routes
 
@@ -36,7 +38,7 @@ The same rows, with a flag. A member's private message has `privateWith` set to 
 
 ## How it looks, and what it follows
 
-There is no chat page and no menu entry. Chat is a second conversation inside Neo's floating panel, opened from anywhere without leaving the page. The patterns, and what each one is used for:
+There is no chat page and no menu entry. Chat is a second conversation inside Neo's floating panel (the public Neo window by default, with the signed-in Neo's panel where that is on), opened from anywhere without leaving the page. The patterns, and what each one is used for:
 
 - **Neo's own widget (the first model).** The panel, launcher, log, message bubbles, composer, sizes, safe areas and phone behavior are Neo's, unchanged. The conversation with Pradeep is the same shell with a different log, so it needs nothing new to learn.
 - **Intercom Messenger.** One launcher for everything, with a switch between conversations inside the panel and a count on the launcher for what is new. Replies you have not seen are emailed after a short wait (here, two minutes).

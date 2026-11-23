@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+### Changed
+- The chat with Pradeep is a second tab in the public Neo window wherever the signed-in Neo isn't shown: the interactive demo, and any environment without the signed-in Neo. Neo stays the first tab, as it has always been, with Pradeep beside it, a count on the tab and the launcher, and the launcher reading "ask Neo or Pradeep". In the demo the tab says the messages stay in your browser. Where the signed-in Neo is on, its panel still has the two tabs.
+
 ### Added
 - Chat protection against abuse, counted in the table so it costs nothing: a cooldown, a refusal of the same text again and of typing that fills the box, a three-message start for an account under 15 minutes old, per-person and per-network-address allowances, flags on obscenities and a free account's link, reports from members, and mute and ban for neon1 (a mute ends on its own). Five refused messages in an hour mute a person for a day and tell neon1. A free account's message may carry one link. A paused person can still read the chat and is told how long.
 - Message Pradeep is on Home (in Get to know 1NEON and under Next step), in the FAQs, and in the invitation email. The launcher opens its label once a session to say "ask Neo or Pradeep".

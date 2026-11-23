@@ -193,7 +193,7 @@ function Composer({ org, operator, people, block, send }: { org: ChatOrg; operat
 
 
 /** One organization's conversation. `active` is true while the panel shows it: only then is it read, which marks it seen */
-function Thread({ org, me, operator, active, inbox }: { org: ChatOrg; me: string; operator: boolean; active: boolean; inbox: () => void }) {
+function Thread({ org, me, operator, active, inbox, note }: { org: ChatOrg; me: string; operator: boolean; active: boolean; inbox: () => void; note?: string }) {
   const qc = useQueryClient();
   const log = useRef<HTMLDivElement>(null);
   const members = useMembers(org.id);
@@ -225,7 +225,7 @@ function Thread({ org, me, operator, active, inbox }: { org: ChatOrg; me: string
     <>
       {/* One short line above the conversation, which scrolls under it */}
       {operator && <p className="talk-hint"><button type="button" className="n1chat-tool" onClick={inbox}>inbox</button> {org.name}</p>}
-      {h && !operator && <p className="talk-hint">{h.open ? "Pradeep is reading now." : `Pradeep reads ${nextWindow(h.nextAt)}.`}</p>}
+      {h && !operator && <p className="talk-hint">{h.open ? "Pradeep is reading now." : `Pradeep reads ${nextWindow(h.nextAt)}.`}{note ? ` ${note}` : ""}</p>}
       <div ref={log} className="n1chat-log" role="log" aria-live="polite">
         {messages.map((m) => <Bubble key={m.id + (m.editedAt ?? "")} m={m} me={me} operator={operator} who={who} edit={edit} mod={mod} />)}
       </div>
@@ -236,11 +236,25 @@ function Thread({ org, me, operator, active, inbox }: { org: ChatOrg; me: string
 
 
 /** The Pradeep tab: a member's own organization; for neon1, the inbox and any organization chosen from it */
-export function Talk({ org, me, operator, active, pick }: { org: ChatOrg | undefined; me: string; operator: boolean; active: boolean; pick: (o: ChatOrg) => void }) {
+export function Talk({ org, me, operator, active, pick, note }: { org: ChatOrg | undefined; me: string; operator: boolean; active: boolean; pick: (o: ChatOrg) => void; note?: string }) {
   const [inbox, setInbox] = useState(operator && !org);
   // Choosing an organization (from the inbox, or by moving to one) shows its conversation
   useEffect(() => { if (org) setInbox(false); }, [org?.id]);
   if (operator && (inbox || !org)) return <Inbox pick={(o) => { pick(o); setInbox(false); }} />;
   if (!org) return null;
-  return <Thread org={org} me={me} operator={operator} active={active} inbox={() => setInbox(true)} />;
+  return <Thread org={org} me={me} operator={operator} active={active} inbox={() => setInbox(true)} note={note} />;
+}
+
+
+// The launcher's count of what is new from Pradeep (or, for neon1, from everyone): read now and then, never marking anything seen
+export function useUnread(org: ChatOrg | undefined, operator: boolean, watching: boolean) {
+  const q = useQuery({
+    queryKey: ["chat", "unread", org?.id ?? "", operator],
+    queryFn: async () => (operator
+      ? (await api<{ threads: { ownerUnread: number }[] }>("/chat/inbox")).threads.reduce((n, t) => n + t.ownerUnread, 0)
+      : (await api<{ unread: number }>(`/t/${org!.id}/chat/unread`)).unread),
+    enabled: (operator || Boolean(org)) && !watching,
+    refetchInterval: 60_000,
+  });
+  return watching ? 0 : q.data ?? 0;
 }

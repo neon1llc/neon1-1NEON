@@ -14,7 +14,7 @@ import { problem } from "../lib/hooks.ts";
 import { askNeo, blocks, fit, keep, runStep, type Piece, type Turn } from "../lib/neo.ts";
 import { navigate, refreshAll } from "../lib/nav.ts";
 import { api } from "../lib/api.ts";
-import { Talk, type ChatOrg } from "./Talk.tsx";
+import { Talk, useUnread, type ChatOrg } from "./Talk.tsx";
 
 
 // Starting points, shown until the first question
@@ -205,20 +205,6 @@ function Plan({ plan }: { plan: NeoPlan }) {
 
 
 // --- The window -------------------------------------------------------------------------
-
-// The launcher's count of what is new from Pradeep (or, for neon1, from everyone): read now and then, never marking anything seen
-function useUnread(org: ChatOrg | undefined, operator: boolean, watching: boolean) {
-  const q = useQuery({
-    queryKey: ["chat", "unread", org?.id ?? "", operator],
-    queryFn: async () => (operator
-      ? (await api<{ threads: { ownerUnread: number }[] }>("/chat/inbox")).threads.reduce((n, t) => n + t.ownerUnread, 0)
-      : (await api<{ unread: number }>(`/t/${org!.id}/chat/unread`)).unread),
-    enabled: (operator || Boolean(org)) && !watching,
-    refetchInterval: 60_000,
-  });
-  return watching ? 0 : q.data ?? 0;
-}
-
 
 /** Neo's panel, with a second conversation in it: the organization's chat with Pradeep (components/Talk.tsx). Opened from anywhere, so nobody leaves the page */
 export function Neo({ open, setOpen, org, me, neo = true }: { open: boolean; setOpen: (open: boolean) => void; org?: ChatOrg; me: { id: string; operator: boolean }; neo?: boolean }) {

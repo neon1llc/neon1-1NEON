@@ -29,6 +29,7 @@ import { FileText as FileIcon, Folder as FolderIcon, Home as HomeIcon, Kanban as
 import { ConfirmDialog } from "./Confirm.tsx";
 import { HelpProvider, useHelp } from "./Help.tsx";
 import { Neo } from "./Neo.tsx";
+import { PublicTalk } from "./PublicTalk.tsx";
 import { ReportBug } from "./BugReport.tsx";
 import { usePreviewedMenu } from "../lib/preview.ts";
 import { useProspectEverywhere } from "./Prospect.tsx";
@@ -1060,7 +1061,9 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
       <Palette me={me} org={org} prospect={inOrg?.prospect} open={search} setOpen={setSearch} onHelp={help.open} onTour={help.welcomeTour} />
       <ConfirmDialog me={me} />
       {/* Neo for signed-in people, where a model is wired; elsewhere the public Neo stays */}
-      {!IN_DEMO && newAccount !== undefined && (me.neo || me.operator || navOrg) && <Neo open={neoOpen} setOpen={setNeoOpen} neo={me.neo && newAccount === false} org={navOrg ? { id: navOrg.id, name: navOrg.name, slug: navOrg.slug } : undefined} me={{ id: me.user.id, operator: me.operator }} />}
+      {/* The signed-in Neo (two tabs, and plans it can run) where it's on; everywhere else the public Neo, with the chat as a second tab */}
+      {!IN_DEMO && newAccount !== undefined && me.neo && newAccount === false && <Neo open={neoOpen} setOpen={setNeoOpen} org={navOrg ? { id: navOrg.id, name: navOrg.name, slug: navOrg.slug } : undefined} me={{ id: me.user.id, operator: me.operator }} />}
+      {(IN_DEMO || (newAccount !== undefined && !(me.neo && newAccount === false))) && (navOrg || me.operator) && <PublicTalk org={navOrg ? { id: navOrg.id, name: navOrg.name, slug: navOrg.slug } : undefined} me={{ id: me.user.id, operator: me.operator }} demo={IN_DEMO} />}
     </div>
   );
 }

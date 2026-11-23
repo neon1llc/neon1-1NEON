@@ -14,6 +14,7 @@ import { Faqs } from "./pages/Faqs.tsx";
 import { Legal } from "./pages/Legal.tsx";
 import { NotFound } from "./pages/NotFound.tsx";
 import { BASE_PATH, DEMO, devUser, LIVE } from "./lib/api.ts";
+import { setPublicNeo, type PublicNeo } from "./lib/publicNeo.ts";
 import { applyHead, headFor } from "./lib/head.ts";
 import { keepEdgeStill } from "./lib/edge.ts";
 import { keepTypingInView } from "./lib/keyboard.ts";
@@ -195,7 +196,7 @@ keepNeoBelowTopBar();
 // can't load, the portal works without it
 const CHAT = "/shared/chat.js";
 type ChatOptions = { className?: string; light?: () => boolean; watch?: Element[] };
-type ChatWindow = { open: () => void; close: () => void };
+type ChatWindow = PublicNeo;
 // The demo's data never leaves the browser, so Neo (which answers from neon1's public pages only) shows in the demo
 // but not in the walkthrough, which makes no calls at all: bottom left on the picker, bottom right once a person is picked
 if (!LIVE) import(/* @vite-ignore */ CHAT)
@@ -205,6 +206,8 @@ if (!LIVE) import(/* @vite-ignore */ CHAT)
       light: () => (document.querySelector(".signin") ? !!document.querySelector(".signin.awake") : !document.documentElement.classList.contains("n1-dark")),
       watch: [document.documentElement],
     });
+    // Components that add a tab to it (the chat with Pradeep) reach it through lib/publicNeo.ts
+    setPublicNeo(neo);
     // The shared chat is mounted outside React. Close it at the portal boundary when a
     // different app control is used; this covers buttons and controls in React portals too.
     const dismissNeo = (event: Event) => {
