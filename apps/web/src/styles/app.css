@@ -2023,6 +2023,8 @@ html:has(.signin.awake), html:has(.signin.awake) body { background: var(--bg); c
 .signin .word { margin-bottom: 18px; }
 /* The line under the policies sits halfway between them and the link: the space above the link (policies to link) matches the space below it (link to the box's edge) */
 .signin .signin-more { padding-top: 7px; }
+/* The walkthrough button above the sign-in form: full width like the form's own button, with the form's gap below it */
+.signin .walk-lead { width: 100%; margin-bottom: var(--sp-4); }
 .signin .panel:has(> .signin-more:last-child) { padding-bottom: 18px; }
 
 /* ---- Public screens, second pass ---- */
