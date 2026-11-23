@@ -22,13 +22,13 @@ variable "operator_emails" {
 }
 
 
-# Neo is on in dev (capped at $2 a month in main.tf), so the chat panel's two tabs show here the way they will in
-# production once its Neo is on. Sonnet 5.5 is "not available for this account" (2026-11-20), so dev uses Sonnet 4.6;
-# name no model to keep Neo off
+# The signed-in Neo (the one that plans and runs workflows) is off in dev, as in production, until its planning is proven and a model
+# this account can use is available (Sonnet 5.5 is "not available for this account", 2026-11-20). People see the public Neo with the
+# chat with Pradeep as a tab. Name a Bedrock inference profile to turn the signed-in Neo on
 variable "neo_model" {
-  description = "Bedrock inference profile ID for Neo, or empty to keep Neo off."
+  description = "Bedrock inference profile ID for the signed-in Neo, or empty to keep it off."
   type        = string
-  default     = "us.anthropic.claude-sonnet-4-6"
+  default     = ""
 }
 
 
