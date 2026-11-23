@@ -48,7 +48,7 @@ export function orgRoutes(app: App, k: Kit) {
   app.get("/all/projects", async (c) => {
     check(can(who(c).actor, "read", undefined, "all"));
     // Clients only: prospects that signed themselves up are on the Prospects page instead
-    const [tenants, projects] = await Promise.all([repo.listTenants().then((ts) => ts.filter((t) => !isProspect(t))), repo.listAllProjects()]);
+    const [tenants, projects] = await Promise.all([repo.listTenants().then((ts) => ts.filter((t) => !isProspect(t) && !t.test)), repo.listAllProjects()]);
     const byId = new Map(tenants.map((t) => [t.id, t]));
     return c.json({
       orgs: tenants.map((t) => ({ id: t.id, slug: t.slug, name: t.name, clientId: t.clientId, stages: t.stages })),

@@ -11,6 +11,8 @@ describe("dev guard", () => {
   it("counts operators and neon1.tech addresses as neon1, and nobody else", () => {
     expect(neon1Only(dev, "NEON1LLC@gmail.com ")).toBe(true);
     expect(neon1Only(dev, "pradeep@neon1.tech")).toBe(true);
+    expect(neon1Only(dev, "neon1llc+client@gmail.com")).toBe(true);
+    expect(neon1Only(dev, "other+client@gmail.com")).toBe(false);
     expect(neon1Only(dev, "client@example.com")).toBe(false);
     expect(neon1Only(dev, "x@neon1.tech.evil.example")).toBe(false);
   });

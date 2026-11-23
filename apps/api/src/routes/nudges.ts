@@ -88,6 +88,7 @@ export async function sweepOutlineNudges(k: Pick<Kit, "repo" | "d" | "cfg">, at 
   const portal = `${cfg.publicUrl}/1NEON/`;
   for (const t of await repo.listTenants()) {
     const q = t.prospect;
+    if (t.test) continue;
     if (q && (q.deletingAt || q.heldAt || q.suspendedAt)) continue;
     // Something waiting to go to neon1 already: no tips. Projects already sent are left out below
     const req = await repo.table.get(`T#${t.id}`, "REQUEST#assessment");

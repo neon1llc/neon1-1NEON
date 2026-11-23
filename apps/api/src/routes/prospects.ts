@@ -337,7 +337,7 @@ export async function sweepQuietProspects(k: Pick<Kit, "repo" | "d" | "cfg">, at
   }
   let nudged = 0, warned = 0, deleting = 0, failed = 0;
   const ts = at.toISOString();
-  for (let t of (await repo.listTenants()).filter(isProspect)) {
+  for (let t of (await repo.listTenants()).filter((x) => isProspect(x) && !x.test)) {
     const last = await lastActive(k, t);
     const p = t.prospect!;
     // A real change since the last email: the clock and the emails start again
@@ -419,7 +419,7 @@ export function prospectRoutes(app: App, k: Kit) {
   // The review queue: every prospect with when it signed up, when it was last used, and what it holds
   app.get("/prospects", async (c) => {
     check(can(who(c).actor, "read", undefined, "all"));
-    const tenants = (await repo.listTenants()).filter(isProspect);
+    const tenants = (await repo.listTenants()).filter((t) => isProspect(t) && !t.test);
     const rows = await Promise.all(tenants.map(async (t) => {
       const [members, projects] = await Promise.all([repo.listMembers(t.id), repo.listProjects(t.id)]);
       const people = members.filter((m) => !k.cfg.operatorEmails.includes(m.email.toLowerCase())).map((m) => ({ name: m.name, email: m.email }));
