@@ -173,7 +173,7 @@ function Composer({ org, operator, people, block, send }: { org: ChatOrg; operat
   if (block) return <p className="talk-hint talk-paused" role="status">{blockMessage(block)}</p>;
   return (
     <form className="n1chat-form" onSubmit={(e) => { e.preventDefault(); void go(); }}>
-      <textarea ref={field} className="n1chat-input" rows={1} maxLength={CHAT_MAX} value={text} aria-label="Your message" placeholder={operator ? "Reply" : "Message Pradeep"}
+      <textarea ref={field} className="n1chat-input" rows={1} maxLength={CHAT_MAX} value={text} aria-label="Your message" placeholder={operator ? "Reply" : "Write to me"}
         onChange={(e) => change(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void go(); } }} />
       {operator ? (
@@ -184,7 +184,7 @@ function Composer({ org, operator, people, block, send }: { org: ChatOrg; operat
           </select>
         )
       ) : (
-        <button type="button" className={`n1chat-tool talk-priv${priv ? " on" : ""}`} aria-pressed={priv} title="Only Pradeep sees it" onClick={() => setPriv((v) => !v)}>private</button>
+        <button type="button" className={`n1chat-tool talk-priv${priv ? " on" : ""}`} aria-pressed={priv} title="Only I see it" onClick={() => setPriv((v) => !v)}>private</button>
       )}
       <button type="submit" className="n1chat-send" disabled={busy}>send</button>
     </form>
@@ -215,7 +215,7 @@ function Thread({ org, me, operator, active, inbox, note }: { org: ChatOrg; me: 
   const act = async (call: () => Promise<unknown>, done: string) => { try { await call(); toast(done); await refresh(); } catch (e) { toast(problem(e)); } };
   const mod: Moderate = {
     blocks: q.data?.blocks ?? [],
-    report: (id) => act(() => api(`/t/${org.id}/chat/${id}/report`, { method: "POST", body: {} }), "Reported to Pradeep"),
+    report: (id) => act(() => api(`/t/${org.id}/chat/${id}/report`, { method: "POST", body: {} }), "Reported to me"),
     mute: (uid) => act(() => api(`/t/${org.id}/chat/block/${uid}`, { method: "POST", body: { state: "muted", hours: 24 } }), `Muted ${who(uid)} for 24 hours`),
     ban: (uid) => act(() => api(`/t/${org.id}/chat/block/${uid}`, { method: "POST", body: { state: "banned" } }), `Banned ${who(uid)} from chat`),
     lift: (uid) => act(() => api(`/t/${org.id}/chat/block/${uid}`, { method: "DELETE" }), `Chat is back for ${who(uid)}`),
@@ -225,7 +225,7 @@ function Thread({ org, me, operator, active, inbox, note }: { org: ChatOrg; me: 
     <>
       {/* One short line above the conversation, which scrolls under it */}
       {operator && <p className="talk-hint"><button type="button" className="n1chat-tool" onClick={inbox}>inbox</button> {org.name}</p>}
-      {h && !operator && <p className="talk-hint">{h.open ? "Pradeep is reading now." : `Pradeep reads ${nextWindow(h.nextAt)}.`}{note ? ` ${note}` : ""}</p>}
+      {h && !operator && <p className="talk-hint">{h.open ? "I am reading now." : `I read ${nextWindow(h.nextAt)}.`}{note ? ` ${note}` : ""}</p>}
       <div ref={log} className="n1chat-log" role="log" aria-live="polite">
         {messages.map((m) => <Bubble key={m.id + (m.editedAt ?? "")} m={m} me={me} operator={operator} who={who} edit={edit} mod={mod} />)}
       </div>
@@ -235,7 +235,7 @@ function Thread({ org, me, operator, active, inbox, note }: { org: ChatOrg; me: 
 }
 
 
-/** The Pradeep tab: a member's own organization; for neon1, the inbox and any organization chosen from it */
+/** The neon1 tab: a member's own organization; for neon1, the inbox and any organization chosen from it */
 export function Talk({ org, me, operator, active, pick, note }: { org: ChatOrg | undefined; me: string; operator: boolean; active: boolean; pick: (o: ChatOrg) => void; note?: string }) {
   const [inbox, setInbox] = useState(operator && !org);
   // Choosing an organization (from the inbox, or by moving to one) shows its conversation

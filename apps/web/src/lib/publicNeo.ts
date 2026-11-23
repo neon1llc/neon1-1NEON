@@ -21,7 +21,7 @@ export interface PublicTab {
 export interface PublicNeo {
   open: () => void;
   close: () => void;
-  addTab: (spec: { id: string; label: string; launcher?: { label: string; aria: string }; onselect?: (inView: boolean) => void }) => PublicTab;
+  addTab: (spec: { id: string; label: string; hint?: string; launcher?: { label: string; aria: string }; onselect?: (inView: boolean) => void }) => PublicTab;
   show: (id: string) => void;
 }
 

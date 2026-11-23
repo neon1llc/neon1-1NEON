@@ -5,11 +5,11 @@
 ## Unreleased
 
 ### Changed
-- The chat with Pradeep is a second tab in the public Neo window wherever the signed-in Neo isn't shown: the interactive demo, and any environment without the signed-in Neo. Neo stays the first tab, as it has always been, with Pradeep beside it, a count on the tab and the launcher, and the launcher reading "ask Neo or Pradeep". In the demo the tab says the messages stay in your browser. Where the signed-in Neo is on, its panel still has the two tabs. The signed-in Neo stays off in dev and production until its planning is proven and a model is available.
+- The chat with Pradeep is a second tab, named neon1 (a person icon and "Replies by email", where Neo has its mark and "Instant answers") in the public Neo window wherever the signed-in Neo isn't shown: the interactive demo, and any environment without the signed-in Neo. Neo stays the first tab, as it has always been, with Pradeep beside it, a count on the tab and the launcher, and the launcher reading "ask Neo or neon1". In the demo the tab says the messages stay in your browser. Where the signed-in Neo is on, its panel still has the two tabs. The signed-in Neo stays off in dev and production until its planning is proven and a model is available.
 
 ### Added
 - Chat protection against abuse, counted in the table so it costs nothing: a cooldown, a refusal of the same text again and of typing that fills the box, a three-message start for an account under 15 minutes old, per-person and per-network-address allowances, flags on obscenities and a free account's link, reports from members, and mute and ban for neon1 (a mute ends on its own). Five refused messages in an hour mute a person for a day and tell neon1. A free account's message may carry one link. A paused person can still read the chat and is told how long.
-- Message Pradeep is on Home (in Get to know 1NEON and under Next step), in the FAQs, and in the invitation email. The launcher opens its label once a session to say "ask Neo or Pradeep".
+- Message me is on Home (in Get to know 1NEON and under Next step), in the FAQs, and in the invitation email. The launcher opens its label once a session to say "ask Neo or neon1".
 
 ### Changed
 - The name neon1 is set as neon1.tech's wordmark where it is branding only: the public bar's logo, the menu's neon1.tech link, and the proposal and invoice letterheads (a Wm component, the shared .wm rule). Menus, search results, headings, body text, and tags keep plain neon1 at the text's size. Measured at 390 and 1440 in Chromium and WebKit in all four looks: the 1 against n, e and o within 0.5px.
