@@ -160,7 +160,7 @@ export async function runNeo(r: NeoRun): Promise<NeoReply & { rounds: number }> 
     });
     await r.spend(res.usage);
     text = res.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("\n").trim() || text;
-    if (res.stop_reason === "refusal") return { reply: "I can't help with that one. For anything about your work with neon1, email hello@neon1.tech.", rounds: round };
+    if (res.stop_reason === "refusal") return { reply: "That one is for a person. For anything about your work with neon1, email hello@neon1.tech.", rounds: round };
     if (res.stop_reason !== "tool_use") return { reply: clean(text), tour, plan, rounds: round };
 
     // Run every tool call of this turn, then answer them all in one message

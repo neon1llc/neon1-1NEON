@@ -6,6 +6,7 @@
 
 ### Changed
 - The demo's recommended option says its scope is clear enough for a fixed price, instead of saying the price is fixed because the work is well understood.
+- Neo's portal guide reads from the neon1-corpus copy that says what neon1 covers and brings in, not what it refuses. When Neo can't reply, it points to a person.
 
 ## v0.26.0 - 2026-11-23
 

@@ -293,7 +293,7 @@ export function Neo({ open, setOpen, org, me, neo = true }: { open: boolean; set
     try {
       const r = await askNeo(messages, loc.pathname.startsWith("/1NEON") ? loc.pathname : `/1NEON${loc.pathname}`);
       if (gen !== generation.current) return;
-      add({ who: "bot", text: r.reply || "I don't have an answer for that.", tour: r.tour, plan: r.plan });
+      add({ who: "bot", text: r.reply || "That one is for a person. Email hello@neon1.tech.", tour: r.tour, plan: r.plan });
       setHistory([...messages, { role: "assistant", content: keep(r.reply || "No answer.") }]);
     } catch (e) {
       if (gen !== generation.current) return;
