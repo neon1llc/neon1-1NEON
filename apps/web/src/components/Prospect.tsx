@@ -33,7 +33,7 @@ export function useProspectEverywhere(me: Me): boolean | undefined {
 export function ProspectNote() {
   return (
     <p className="notice prospect-note" role="note">
-      <span>You're set up as a free account. Other ways to reach neon1 are on <Link to="/contact">Contact</Link>.</span>
+      <span>You're set up as a free account. <button type="button" className="linkish" onClick={() => dispatchEvent(new Event("1neon:chat"))}>Message me</button> any time, or find other ways to reach neon1 on <Link to="/contact">Contact</Link>.</span>
     </p>
   );
 }

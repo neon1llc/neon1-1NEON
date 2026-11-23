@@ -2545,3 +2545,5 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 .talk-badge-flag { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
 /* The launcher's label is wider here (it names both Neo and Pradeep), and opens on its own once a session */
 @media (min-width: 701px) and (hover: hover) { .n1chat-launch.n1neo:is(:hover, :focus-visible, .n1chat-peek) .n1chat-label { max-width: 170px; } }
+.guide-links .guide-chat { justify-self: start; text-align: left; font-weight: 600; text-decoration: none; color: var(--accent); }
+.guide-links .guide-chat:hover { text-decoration: underline; }
