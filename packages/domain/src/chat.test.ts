@@ -1,6 +1,6 @@
 // packages/domain/src/chat.test.ts - Chat text rules and the reply hours, including daylight saving.
 import { describe, expect, it } from "vitest";
-import { ChatText, CHAT_MAX, chatProblem, chatVisibleTo, linkCount, nextReplyAt, replyExpectation, replyOpen } from "./chat.ts";
+import { blockActive, blockMessage, chatJunk, ChatText, CHAT_MAX, chatProblem, chatVisibleTo, linkCount, nextReplyAt, replyExpectation, replyOpen } from "./chat.ts";
 
 // 2026-11-20 is a Friday; New York is on standard time (UTC-5)
 const ny = (iso: string) => new Date(`${iso}-05:00`);
@@ -44,7 +44,8 @@ describe("message text", () => {
   });
   it("limits a free account's links", () => {
     expect(linkCount("see https://a.com and www.b.com")).toBe(2);
-    expect(chatProblem("a https://a.com b https://b.com c www.c.com", true)).toMatch(/links/);
+    expect(chatProblem("a https://a.com b https://b.com c www.c.com", true)).toMatch(/link/);
+    expect(chatProblem("one link https://a.com", true)).toBeUndefined();
     expect(chatProblem("a https://a.com b https://b.com c www.c.com", false)).toBeUndefined();
     expect(chatProblem("no links here", true)).toBeUndefined();
   });
@@ -59,5 +60,26 @@ describe("private messages", () => {
     expect(chatVisibleTo(withDana, "u_dana", false)).toBe(true);
     expect(chatVisibleTo(withDana, "u_raj", false)).toBe(false);
     expect(chatVisibleTo(withDana, "u_op", true)).toBe(true);
+  });
+});
+
+
+describe("abuse protection rules", () => {
+  it("calls typing to fill the box junk, but lets a short real message through", () => {
+    expect(chatJunk("12345 !!!")).toBe(true);
+    expect(chatJunk("aaaaaaaaaaaa")).toBe(true);
+    for (const ok of ["hi", "test", "ok thanks", "Can you look at this?"]) expect(chatJunk(ok)).toBe(false);
+  });
+  it("ends a mute at its time and never ends a ban", () => {
+    const base = { userId: "u", reason: "r", by: "neon1" as const, at: "2026-11-22T00:00:00.000Z" };
+    const now = new Date("2026-11-22T12:00:00Z");
+    expect(blockActive({ ...base, state: "muted", until: "2026-11-23T00:00:00.000Z" }, now)).toBe(true);
+    expect(blockActive({ ...base, state: "muted", until: "2026-11-22T06:00:00.000Z" }, now)).toBe(false);
+    expect(blockActive({ ...base, state: "banned" }, now)).toBe(true);
+    expect(blockActive(undefined, now)).toBe(false);
+  });
+  it("tells a paused person how long and the way out", () => {
+    expect(blockMessage({ userId: "u", reason: "r", by: "auto", at: "x", state: "muted", until: "2026-11-23T12:00:00.000Z" })).toMatch(/paused for your account until Nov 23\. Email hello@neon1\.tech/);
+    expect(blockMessage({ userId: "u", reason: "r", by: "neon1", at: "x", state: "banned" })).toMatch(/isn't available.*hello@neon1\.tech/);
   });
 });

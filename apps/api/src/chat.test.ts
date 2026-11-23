@@ -2,7 +2,7 @@
 // names, neon1 is alerted once per burst, replies reach members who aren't reading, edits keep the earlier text,
 // organizations never see each other's chat, and a free account is limited.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { CHAT_EDIT_HISTORY, CHAT_LIMITS, type ChatMessage, type ChatThread, type ChatView } from "@1neon/domain";
+import { CHAT_AUTO_MUTE_HOURS, CHAT_EDIT_HISTORY, CHAT_IP_LIMITS, CHAT_LIMITS, type ChatMessage, type ChatThread, type ChatView } from "@1neon/domain";
 import { createApp } from "./app.ts";
 import { seed } from "./seed.ts";
 import { MemoryDirectory, MemoryMailer, MemoryPusher, MemoryStorage } from "./services.ts";
@@ -21,6 +21,7 @@ let pusher: MemoryPusher;
 let s: Awaited<ReturnType<typeof seed>>;
 
 beforeEach(async () => {
+  vi.useFakeTimers({ toFake: ["Date"] });
   repo = new Repo(new MemoryTable());
   mailer = new MemoryMailer();
   pusher = new MemoryPusher();
@@ -32,7 +33,8 @@ afterEach(() => vi.useRealTimers());
 const as = (email: string, path: string, method = "GET", b?: unknown) =>
   app.request(`/1NEON/api${path}`, { method, headers: { "content-type": "application/json", "x-1neon": "1", "x-dev-user": email }, body: b === undefined ? undefined : JSON.stringify(b) });
 const chat = (tid: string) => `/t/${tid}/chat`;
-const say = (email: string, tid: string, text: string) => as(email, chat(tid), "POST", { text });
+// Each message goes three seconds after the last, clear of the cooldown between one person's messages
+const say = (email: string, tid: string, text: string) => { vi.setSystemTime(Date.now() + 3000); return as(email, chat(tid), "POST", { text }); };
 const open = async (email: string, tid: string) => (await (await as(email, chat(tid))).json()) as ChatView;
 const alerts = () => mailer.sent.filter((m) => m.to === OP);
 const mailsTo = (email: string) => mailer.sent.filter((m) => m.to === email);
@@ -95,6 +97,7 @@ describe("the unread count", () => {
     expect(await unread(DANA)).toBe(0);
     expect(await unread(OP)).toBe(2);
     // A private message counts only for the member it is with
+    fwd(3000);
     await as(RAJ, chat(tid), "POST", { text: "just for neon1", private: true });
     expect(await unread(DANA)).toBe(0);
     expect(await unread(OP)).toBe(3);
@@ -132,7 +135,6 @@ describe("alerts to neon1", () => {
 
 describe("replies from neon1", () => {
   it("emails each member who isn't reading, once per burst, and again after they look", async () => {
-    vi.useFakeTimers({ toFake: ["Date"] });
     const tid = s.acme.id;
     await say(RAJ, tid, "Question");
     await open(DANA, tid);
@@ -185,7 +187,6 @@ describe("private messages", () => {
   });
 
   it("lets neon1 answer one member privately: only they see it, and only they are emailed", async () => {
-    vi.useFakeTimers({ toFake: ["Date"] });
     const tid = s.acme.id;
     await open(RAJ, tid);
     await open(DANA, tid);
@@ -281,5 +282,150 @@ describe("a free account", () => {
     const tid = s.acme.id;
     expect((await app.request(`/1NEON/api${chat(tid)}`, { method: "POST", headers: { "content-type": "application/json", "x-1neon": "1" }, body: JSON.stringify({ text: "hi" }) })).status).toBe(401);
     expect((await app.request(`/1NEON/api${chat(tid)}`, { method: "POST", headers: { "content-type": "application/json", "x-dev-user": RAJ }, body: JSON.stringify({ text: "hi" }) })).status).toBe(403);
+  });
+});
+
+
+
+describe("abuse protection", () => {
+  const post = (email: string, tid: string, text: string) => as(email, chat(tid), "POST", { text });
+  const code = async (r: Response) => ((await r.json()) as { error?: string }).error;
+  const flagMails = () => alerts().filter((m) => /Chat flagged/.test(m.subject));
+
+  it("asks for a moment between one person's messages, without counting it against them", async () => {
+    const tid = s.acme.id;
+    vi.setSystemTime(Date.now() + 3000);
+    expect((await post(DANA, tid, "First")).status).toBe(201);
+    const fast = await post(DANA, tid, "Second");
+    expect(fast.status).toBe(429);
+    expect(await code(fast)).toBe("slow_down");
+    fwd(3000);
+    expect((await post(DANA, tid, "Second")).status).toBe(201);
+  });
+
+  it("refuses the same text again within ten minutes", async () => {
+    const tid = s.acme.id;
+    expect((await say(DANA, tid, "Can you check the backup?")).status).toBe(201);
+    const again = await say(DANA, tid, "can  you check the BACKUP?");
+    expect(again.status).toBe(409);
+    expect(await code(again)).toBe("duplicate");
+    fwd(11 * 60 * 1000);
+    expect((await say(DANA, tid, "Can you check the backup?")).status).toBe(201);
+  });
+
+  it("refuses typing that fills the box, and lets short real messages through", async () => {
+    const tid = s.acme.id;
+    expect((await say(DANA, tid, "!!!! 1234")).status).toBe(400);
+    expect((await say(DANA, tid, "aaaaaaaaaaaaaa")).status).toBe(400);
+    for (const ok of ["hi", "test", "ok thanks"]) expect((await say(DANA, tid, ok)).status).toBe(201);
+  });
+
+  it("holds a brand new account to a few messages until neon1 has read them", async () => {
+    const tid = s.acme.id;
+    const id = (await repo.userIdForEmail(DANA))!;
+    const u = (await repo.getUser(id))!;
+    await repo.saveUser({ ...u, createdAt: new Date().toISOString(), version: u.version + 1 }, u.version);
+    for (const t of ["One here", "Two here", "Three here"]) expect((await say(DANA, tid, t)).status).toBe(201);
+    const over = await say(DANA, tid, "Four here");
+    expect(over.status).toBe(429);
+    expect(await code(over)).toBe("new_account");
+  });
+
+  it("caps one network address across accounts, so many sign-ups don't multiply the allowance", async () => {
+    const tid = s.acme.id;
+    let n = 0;
+    for (; n < CHAT_IP_LIMITS.hourly; n++) expect((await say(n % 2 ? RAJ : DANA, tid, `Message number ${n} from here`)).status).toBe(201);
+    const over = await say(RAJ, tid, "One more from the same place");
+    expect(over.status).toBe(429);
+    expect(await code(over)).toBe("busy_network");
+  });
+
+  it("mutes a person for a day after five refused messages, tells neon1, and lets them read; the mute ends", async () => {
+    const tid = s.acme.id;
+    for (let i = 0; i < 5; i++) expect((await say(DANA, tid, "!!!!!!!!")).status).toBe(400);
+    expect(flagMails().some((m) => /Muted automatically/.test(m.text))).toBe(true);
+    const paused = await say(DANA, tid, "A real message now");
+    expect(paused.status).toBe(403);
+    const body = (await paused.json()) as { error: string; message: string };
+    expect(body.error).toBe("chat_paused");
+    expect(body.message).toMatch(/paused for your account until .+hello@neon1\.tech/);
+    // They can still read, and the box can say why
+    const view = await open(DANA, tid);
+    expect(view.block).toMatchObject({ state: "muted", by: "auto" });
+    // Edits and reports are paused too
+    expect((await as(DANA, `${chat(tid)}/nope`, "PATCH", { text: "x" })).status).toBe(403);
+    fwd((CHAT_AUTO_MUTE_HOURS + 1) * 3600_000);
+    expect((await say(DANA, tid, "A real message now")).status).toBe(201);
+  });
+
+  it("lets neon1 mute, ban, and lift, and nobody else", async () => {
+    const tid = s.acme.id;
+    const dana = (await repo.userIdForEmail(DANA))!;
+    expect((await as(RAJ, `${chat(tid)}/block/${dana}`, "POST", { state: "muted" })).status).toBe(404);
+    const muted = await as(OP, `${chat(tid)}/block/${dana}`, "POST", { state: "muted", hours: 2, reason: "Too many pings" });
+    expect(muted.status).toBe(201);
+    expect(await code(await say(DANA, tid, "Hello again"))).toBe("chat_paused");
+    expect((await open(OP, tid)).blocks?.[0]).toMatchObject({ userId: dana, state: "muted", by: "neon1", reason: "Too many pings" });
+    // A mute runs out; lifting it early works too
+    fwd(3 * 3600_000);
+    expect((await say(DANA, tid, "Back after two hours")).status).toBe(201);
+    await as(OP, `${chat(tid)}/block/${dana}`, "POST", { state: "banned" });
+    fwd(400 * 24 * 3600_000);
+    expect(await code(await say(DANA, tid, "A year later"))).toBe("chat_paused");
+    expect(((await (await say(DANA, tid, "Still?")).json()) as { message: string }).message).toMatch(/isn't available/);
+    expect((await as(OP, `${chat(tid)}/block/${dana}`, "DELETE")).status).toBe(200);
+    expect((await say(DANA, tid, "Welcome back")).status).toBe(201);
+    // Someone not in the organization can't be paused here
+    const noor = (await repo.userIdForEmail(NOOR))!;
+    expect((await as(OP, `${chat(tid)}/block/${noor}`, "POST", { state: "muted" })).status).toBe(404);
+  });
+
+  it("takes a report on another member's message and tells neon1 with the message", async () => {
+    const tid = s.acme.id;
+    await say(DANA, tid, "Something out of line");
+    const mid = (await open(OP, tid)).messages[0]!.id;
+    await say(OP, tid, "A reply from neon1");
+    const reply = (await open(OP, tid)).messages.at(-1)!.id;
+    const report = (id: string, who = RAJ) => as(who, `${chat(tid)}/${id}/report`, "POST", {});
+    expect((await report(mid)).status).toBe(200);
+    expect(flagMails().some((m) => /Reported by Raj Patel/.test(m.text) && /Something out of line/.test(m.text))).toBe(true);
+    expect((await open(OP, tid)).messages[0]).toMatchObject({ flags: ["reported"], reports: [expect.any(String)] });
+    // Once each, never your own, never neon1's
+    const before = flagMails().length;
+    expect((await report(mid)).status).toBe(200);
+    expect(flagMails().length).toBe(before);
+    expect((await report(mid, DANA)).status).toBe(400);
+    expect((await report(reply)).status).toBe(400);
+    expect((await report("nope")).status).toBe(404);
+  });
+
+  it("flags an obscenity and a free account's link for neon1, alerts at once, and mutes a repeat", async () => {
+    const tid = s.acme.id;
+    await say(DANA, tid, "Hello, a normal first message");
+    expect(alerts().filter((m) => /Chat:/.test(m.subject))).toHaveLength(1);
+    const rude = await say(DANA, tid, "this is bullshit");
+    expect(rude.status).toBe(201);
+    expect(((await rude.json()) as { message: ChatMessage }).message.flags).toEqual(["offensive"]);
+    // The burst's first alert already went, but the flag is told on its own
+    expect(flagMails().some((m) => /Flagged: offensive/.test(m.text))).toBe(true);
+    expect((await open(OP, tid)).thread).toMatchObject({ ownerFlagged: 1 });
+    // A repeat reaches the limit (an obscenity counts twice) and mutes
+    await say(DANA, tid, "what a load of crap, bullshit again");
+    await say(DANA, tid, "more bullshit from me");
+    expect(await code(await say(DANA, tid, "and a polite one"))).toBe("chat_paused");
+  });
+
+  it("flags a free account's one link and refuses a second", async () => {
+    const tid = s.calder.id;
+    const one = await say(NOOR, tid, "My site is https://calder.example if that helps");
+    expect(one.status).toBe(201);
+    expect(((await one.json()) as { message: ChatMessage }).message.flags).toEqual(["links"]);
+    const two = await say(NOOR, tid, "See https://a.example and https://b.example please");
+    expect(two.status).toBe(400);
+  });
+
+  it("holds neon1's own replies to none of it", async () => {
+    const tid = s.acme.id;
+    for (let i = 0; i < 25; i++) expect((await post(OP, tid, "Same reply")).status).toBe(201);
   });
 });

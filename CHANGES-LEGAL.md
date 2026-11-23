@@ -53,3 +53,8 @@ counters), ten minutes (Neo fingerprints).
 ## Cookie notice (chat draft)
 
 Added one local-storage row to the portal's table: `1neon.chat.draft.<organization>`, a chat message typed and not sent, kept on the device until it is sent or cleared. Matches nothing yet in the corpus copy of the cookie notice, which must add the same row. Privacy policy: chat messages are kept with the organization's records and erased when an organization asks, and members of an organization see each other's chat messages except one marked private, which only the author and neon1 see. Flag for the lawyer list.
+
+
+## Chat conduct and moderation (for the lawyer list)
+
+Chat has rules a client or free account meets without reading the terms: a cooldown, per-person and per-network limits, one link in a free account's message, and neon1 may flag, mute, or ban someone from chat and does so automatically after repeated refused messages. Terms of use (conduct) and the privacy policy should say that chat messages are kept with the organization's records, that a network address is hashed and counted for limits only, and that neon1 may pause a person's chat for spam or abuse. Cookie notice: `1neon.peeked` (session storage, whether the chat launcher already showed its label this tab) is added to the portal's table.

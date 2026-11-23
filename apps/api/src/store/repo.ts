@@ -3,7 +3,7 @@
 // hand.
 
 
-import type { AuditEvent, CalEvent, ChatMessage, ChatSeen, ChatThread, DocumentRecord, Item, Member, Project, Tenant, User } from "@1neon/domain";
+import type { AuditEvent, CalEvent, ChatBlock, ChatMessage, ChatSeen, ChatThread, DocumentRecord, Item, Member, Project, Tenant, User } from "@1neon/domain";
 import { newId, themeOf } from "@1neon/domain";
 import { ConflictError, type Guard, type Row, type TableStore, type WriteOp } from "./types.ts";
 
@@ -63,6 +63,9 @@ export const keys = {
   chat: (tid: string) => ({ PK: `CHAT#${tid}`, SK: "META" }),
   chatMessage: (tid: string, mid: string) => ({ PK: `CHAT#${tid}`, SK: `MSG#${mid}` }),
   chatSeen: (tid: string, uid: string) => ({ PK: `CHAT#${tid}`, SK: `SEEN#${uid}` }),
+  // A person's chat paused (muted or banned), and when they last sent (for the cooldown)
+  chatBlock: (tid: string, uid: string) => ({ PK: `CHAT#${tid}`, SK: `BLOCK#${uid}` }),
+  chatLast: (tid: string, uid: string) => ({ PK: `CHAT#${tid}`, SK: `LAST#${uid}` }),
 };
 
 // Every thread's summary sits in this one index partition, newest first by its sort key, so the inbox is one query
@@ -593,6 +596,34 @@ export class Repo {
   /** The write that records a member opening the chat (or being emailed a reply) */
   chatSeenOp(tid: string, s: ChatSeen): WriteOp {
     return { put: { ...keys.chatSeen(tid, s.userId), type: "chat-seen", ...s }, guard: { always: true } };
+  }
+
+  /** One person's chat pause in an organization, if any (it may have run out: callers ask blockActive) */
+  async getChatBlock(tid: string, uid: string) {
+    return entity<ChatBlock>(await this.table.get(keys.chatBlock(tid, uid).PK, keys.chatBlock(tid, uid).SK));
+  }
+
+  /** Every pause recorded in an organization */
+  async listChatBlocks(tid: string): Promise<ChatBlock[]> {
+    return (await this.table.query(keys.chat(tid).PK, "BLOCK#")).map((r) => entity<ChatBlock>(r)!);
+  }
+
+  /** The write that pauses (or replaces a pause on) one person's chat */
+  chatBlockOp(tid: string, b: ChatBlock): WriteOp {
+    return { put: { ...keys.chatBlock(tid, b.userId), type: "chat-block", ...b }, guard: { always: true } };
+  }
+
+  /** Lift a pause */
+  async deleteChatBlock(tid: string, uid: string) {
+    await this.table.write([{ delete: keys.chatBlock(tid, uid) }]);
+  }
+
+  /** When one person last sent a chat message here, in epoch milliseconds, and the write that records a send now */
+  async chatLastSent(tid: string, uid: string): Promise<number> {
+    return Number((await this.table.get(keys.chatLast(tid, uid).PK, keys.chatLast(tid, uid).SK))?.ms ?? 0);
+  }
+  chatLastOp(tid: string, uid: string, ms: number): WriteOp {
+    return { put: { ...keys.chatLast(tid, uid), type: "chat-last", ms, ttl: Math.floor(ms / 1000) + 3600 }, guard: { always: true } };
   }
 
   /** Every organization's chat, most recent first, for the operator's inbox */

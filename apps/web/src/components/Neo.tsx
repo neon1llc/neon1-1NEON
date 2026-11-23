@@ -232,6 +232,17 @@ export function Neo({ open, setOpen, org, me, neo = true }: { open: boolean; set
   const chatOrg = me.operator ? picked ?? org : org;
   const canTalk = me.operator || Boolean(org);
   const unread = useUnread(chatOrg, me.operator, open && tab === "pradeep");
+  // Once a session, the launcher opens its label for a few seconds so people see there are two to talk to (Neo and Pradeep)
+  const [peek, setPeek] = useState(false);
+  useEffect(() => {
+    if (!canTalk) return;
+    let seen = false;
+    try { seen = sessionStorage.getItem("1neon.peeked") === "1"; sessionStorage.setItem("1neon.peeked", "1"); } catch { /* storage blocked: it opens each time the page loads */ }
+    if (seen) return;
+    const on = setTimeout(() => setPeek(true), 1200);
+    const off = setTimeout(() => setPeek(false), 6500);
+    return () => { clearTimeout(on); clearTimeout(off); };
+  }, [canTalk]);
   // Alert emails open the page with ?chat=1, and other places ask with this event
   useEffect(() => {
     const talk = () => { if (!canTalk) return; setTab("pradeep"); setOpen(true); };
@@ -390,9 +401,9 @@ export function Neo({ open, setOpen, org, me, neo = true }: { open: boolean; set
 
   return (
     <>
-      <button ref={launcher} type="button" className={`n1chat-launch n1chat-right n1neo${look}${open ? " n1chat-hidden" : ""}`} aria-expanded={open} aria-label={unread > 0 ? `Ask Neo or message Pradeep, ${unread} new` : canTalk ? (neo ? "Ask Neo or message Pradeep" : "Message Pradeep") : "Ask Neo, your 1NEON assistant"} onClick={() => setOpen(true)} data-tour="neo">
+      <button ref={launcher} type="button" className={`n1chat-launch n1chat-right n1neo${look}${open ? " n1chat-hidden" : ""}${peek ? " n1chat-peek" : ""}`} aria-expanded={open} aria-label={unread > 0 ? `Ask Neo or message Pradeep, ${unread} new` : canTalk ? (neo ? "Ask Neo or message Pradeep" : "Message Pradeep") : "Ask Neo, your 1NEON assistant"} onClick={() => setOpen(true)} data-tour="neo">
         <Mark />
-        <span className="n1chat-label" aria-hidden="true">{neo || !canTalk ? "ask Neo" : "message Pradeep"}</span>
+        <span className="n1chat-label" aria-hidden="true">{!canTalk ? "ask Neo" : neo ? "ask Neo or Pradeep" : "message Pradeep"}</span>
         {unread > 0 && <b className="talk-badge talk-badge-launch" aria-hidden="true">{unread > 9 ? "9+" : unread}</b>}
       </button>
       {body}

@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+### Added
+- Chat protection against abuse, counted in the table so it costs nothing: a cooldown, a refusal of the same text again and of typing that fills the box, a three-message start for an account under 15 minutes old, per-person and per-network-address allowances, flags on obscenities and a free account's link, reports from members, and mute and ban for neon1 (a mute ends on its own). Five refused messages in an hour mute a person for a day and tell neon1. A free account's message may carry one link. A paused person can still read the chat and is told how long.
+- Message Pradeep is on Home (in Get to know 1NEON and under Next step), in the FAQs, and in the invitation email. The launcher opens its label once a session to say "ask Neo or Pradeep".
+
 ### Changed
 - The name neon1 is set as neon1.tech's wordmark where it is branding only: the public bar's logo, the menu's neon1.tech link, and the proposal and invoice letterheads (a Wm component, the shared .wm rule). Menus, search results, headings, body text, and tags keep plain neon1 at the text's size. Measured at 390 and 1440 in Chromium and WebKit in all four looks: the 1 against n, e and o within 0.5px.
 - Shadows, the dialog dim, ink on a colored chip, and the calendar's office blue come from tokens (--shadow-pop, --shadow-float, --scrim, --on-color, --info) in every look, in place of per-rule colors. Error text uses the red and amber tokens.

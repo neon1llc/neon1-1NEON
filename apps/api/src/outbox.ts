@@ -15,7 +15,7 @@ import { inviteEmail, noticeEmail, prospectFacts } from "./emails.ts";
 import { eventLinks, linkUrl } from "./lib/links.ts";
 import type { Mailer, Notifier, Pusher, Texter } from "./services.ts";
 import { alertNeon1 } from "./lib/alert.ts";
-import { chatAlertMail, chatReplyMail } from "./lib/chatmail.ts";
+import { chatAlertMail, chatFlagMail, chatReplyMail } from "./lib/chatmail.ts";
 import { smsReady, smsSendAllowed, textNotice, welcomeText, confirmedText, isOptOut } from "./sms.ts";
 import type { Repo } from "./store/repo.ts";
 import { ConflictError, type Row, type WriteOp } from "./store/types.ts";
@@ -49,6 +49,7 @@ export type OutboxPayload =
   | { kind: "sms-confirmed"; userId: string; to: string; verifiedAt: string }
   | { kind: "chat-owner"; tenantId: string; at: string }
   | { kind: "chat-members"; tenantId: string; at: string; userIds: string[] }
+  | { kind: "chat-flag"; tenantId: string; at: string; reason: string; name: string; messageId?: string }
   | { kind: "invite"; tenantId: string; userId: string; email: string; orgName: string; inviter: string; url: string };
 
 
@@ -214,6 +215,7 @@ async function deliver(d: OutboxDeps, row: Row, clock: Clock): Promise<{ sent: n
     ? [{ key: payload.email, channel: "email", send: (signal) => sendInvite(d, payload, signal) }]
     : payload.kind === "event" ? await eventTargets(d, payload.event, clock)
     : payload.kind === "chat-owner" || payload.kind === "chat-members" ? await chatTargets(d, payload)
+    : payload.kind === "chat-flag" ? await chatFlagTargets(d, payload)
     : await smsSetupTarget(d, payload);
   let sent = 0;
   let open = 0;
@@ -467,4 +469,24 @@ export function beforeDeadline<T>(p: Promise<T>, deadline: number): Promise<T> {
 // A lost race on bookkeeping is fine; the next pass sees the newer row
 function ignoreConflict(e: unknown) {
   if (!(e instanceof ConflictError)) throw e;
+}
+
+
+
+/** A flagged or reported chat message, or an automatic mute: one alert to neon1, quiet on the phone, with the message in the email */
+async function chatFlagTargets(d: OutboxDeps, p: Extract<OutboxPayload, { kind: "chat-flag" }>): Promise<Target[]> {
+  const { repo, cfg } = d;
+  // A person muted before they ever got a message through has no chat yet, so the organization itself says where
+  const [thread, tenant] = await Promise.all([repo.getChat(p.tenantId), repo.getTenant(p.tenantId)]);
+  const org = thread ? { name: thread.orgName, slug: thread.orgSlug, free: thread.free } : tenant ? { name: tenant.name, slug: tenant.slug, free: isProspect(tenant) } : undefined;
+  if (!org) return [];
+  const message = p.messageId ? await repo.getChatMessage(p.tenantId, p.messageId) : undefined;
+  const url = `${cfg.publicUrl}/1NEON/o/${org.slug}/workspace?chat=1`;
+  const mail = chatFlagMail({ name: p.name, org: org.name, free: org.free, reason: p.reason, body: message?.body, url, at: new Date(p.at) });
+  const notifier = d.notifier;
+  return [{
+    key: "owner",
+    channel: "email",
+    send: (signal) => alertNeon1({ mailer: d.mailer, pusher: d.pusher, notifier }, { severity: "important", title: "1NEON chat flagged", text: p.reason, source: "chat", url, quiet: true, to: cfg.operatorEmails, mail: { subject: mail.subject, text: mail.text, html: mail.html, as: mail.as } }, signal),
+  }];
 }

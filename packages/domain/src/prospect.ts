@@ -190,6 +190,7 @@ const ALLOWED: [method: string, path: RegExp][] = [
   // The organization's chat with neon1: writing, and editing one's own message
   ["POST", /^\/chat$/],
   ["PATCH", /^\/chat\/[^/]+$/],
+  ["POST", /^\/chat\/[^/]+\/report$/],
   // Asking neon1 for an assessment or a call: the point of a free account
   ["POST", /^\/requests$/],
   ["PUT", /^\/requests\/assessment$/],

@@ -28,7 +28,7 @@ export function inviteEmail(opts: { orgName: string; inviter: string; url: strin
     ],
     action: { label: "Accept the invitation", url: opts.url },
     why: `${opts.inviter} invited this address. Ignore this email if you weren't expecting it. Nothing happens until someone signs in.`,
-    reply: "Reply to this email to ask me a question.",
+    reply: "Reply to this email to ask me a question, or message me in the chat once you're in.",
   });
   return { subject: subjectOf("Invitation", `${opts.orgName}, from ${opts.inviter}`, 90), ...mail, as: "portal" as SenderKind, replyTo: HELLO };
 }

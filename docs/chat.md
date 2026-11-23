@@ -57,6 +57,24 @@ A message saves the moment Send is pressed (Enter sends, Shift Enter adds a line
 - A reply from neon1 emails each member it is for who opened the chat more than two minutes ago and has not been emailed since they last looked. The reply is in the mail. Members are not emailed about each other's messages.
 - Delivery uses the existing outbox: durable, retried with backoff, one receipt per recipient and channel.
 
+## Protection against abuse
+
+Everything below is counted in the table, so it costs nothing, and none of it applies to neon1's own lead. A refused message adds a strike (the cooldown doesn't); five strikes in an hour mute the person for 24 hours and neon1 is told.
+
+| Rule | What it does |
+|---|---|
+| Pause | A muted or banned person can read the chat but not write, edit, or report. They are told how long and to email hello@neon1.tech. A mute ends on its own; a ban doesn't. |
+| What it says | No letters at all, or one character repeated eight times or more, is refused. A short real message ("hi") is fine. |
+| Links | A free account's message may carry one link and is flagged for neon1; two are refused. |
+| Same text again | Refused within ten minutes. |
+| Cooldown | Two seconds between one person's messages. |
+| New accounts | An account under 15 minutes old may send three messages. |
+| Per person | The hourly and daily allowances below. |
+| Per network address | Twelve messages an hour and forty a day from one address across every account, hashed, so many sign-ups don't multiply a person's allowance. |
+| Auto-flag | A message with an obscenity or slur is accepted, flagged for neon1 (told on its own, even inside a burst), and counts as two strikes. |
+| Report | A member can report another member's message. neon1 is told with the message, once per reporter. |
+| Mute and ban | neon1 can mute a member for a time or ban them from the message, and lift either. The inbox marks organizations with flags. |
+
 ## Limits
 
 | | Per hour | Per day |
@@ -64,7 +82,7 @@ A message saves the moment Send is pressed (Enter sends, Shift Enter adds a line
 | Free account | 6 | 20 |
 | Client | 20 | 100 |
 
-Per person. A message is 1 to 2,000 characters, a free account's may carry two links, and a message can be edited 20 times.
+Per person. A message is 1 to 2,000 characters, a free account's may carry one link, and a message can be edited 20 times.
 
 ## Not here yet
 

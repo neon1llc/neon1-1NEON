@@ -49,7 +49,7 @@ export const GUIDES: Record<PageKey, Guide> = {
       { at: "needs-you", title: "Needs you", text: "Things waiting on you: approvals, tasks, and files to send. Open one to act on it." },
       { at: "coming-up", title: "Calendar", text: "Work due, milestones, targets, and your events. Choose a day to see or add. Past, Overdue, Upcoming, and Repeated open below." },
       { at: "glance", title: "Projects at a glance", text: "Each project's stage, health, progress, late work, and what's next." },
-      { at: "get-to-know", title: "Get to know 1NEON", text: "A sample project, a walkthrough, the demo, and the FAQs. Hide it when you're done." },
+      { at: "get-to-know", title: "Get to know 1NEON", text: "A way to message me, a sample project, a walkthrough, the demo, and the FAQs. Hide it when you're done." },
       { at: "get-started", title: "Get started", text: "A short setup checklist. It goes away when done." },
       { at: "activity", title: "Recent activity", text: "What people did lately, newest first, with each edit's changes." },
     ],

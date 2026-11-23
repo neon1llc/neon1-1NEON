@@ -4,7 +4,7 @@
 // on this device as a draft. You can edit your own messages. neon1 gets an inbox of every organization that wrote.
 
 
-import { CHAT_MAX, chatVisibleTo, type ChatMessage, type ChatThread, type ChatView } from "@1neon/domain";
+import { blockMessage, CHAT_MAX, chatVisibleTo, type ChatBlock, type ChatMessage, type ChatThread, type ChatView } from "@1neon/domain";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { api } from "../lib/api.ts";
@@ -29,13 +29,39 @@ const keepDraft = (tid: string, text: string) => { try { if (text) localStorage.
 const nextWindow = (iso: string) => new Date(iso).toLocaleString(undefined, { weekday: "long", hour: "numeric", minute: "2-digit", timeZoneName: "short" });
 
 
+/** A small action that asks once more before it acts: the first press turns it into "mute?", the second does it, and it relaxes after three seconds */
+function Sure({ label, onGo }: { label: string; onGo: () => void }) {
+  const [ask, setAsk] = useState(false);
+  useEffect(() => {
+    if (!ask) return;
+    const t = setTimeout(() => setAsk(false), 3000);
+    return () => clearTimeout(t);
+  }, [ask]);
+  return <button type="button" className="n1chat-tool talk-edit-btn" onClick={() => { if (ask) { setAsk(false); onGo(); } else setAsk(true); }}>{ask ? `${label}?` : label}</button>;
+}
+
+
+/** What neon1 and members can do about another member's message */
+interface Moderate {
+  // A member reports another member's message to neon1
+  report: (id: string) => Promise<void>;
+  // neon1 pauses the author's chat, or lifts the pause
+  mute: (uid: string) => Promise<void>;
+  ban: (uid: string) => Promise<void>;
+  lift: (uid: string) => Promise<void>;
+  // The authors whose chat is paused now (neon1 only)
+  blocks: ChatBlock[];
+}
+
+
 /** One message: its author when it isn't yours, the text, and (for yours) edit. neon1 can open earlier versions */
-function Bubble({ m, me, operator, who, edit }: { m: ChatMessage; me: string; operator: boolean; who: (id: string) => string; edit: (id: string, text: string) => Promise<void> }) {
+function Bubble({ m, me, operator, who, edit, mod }: { m: ChatMessage; me: string; operator: boolean; who: (id: string) => string; edit: (id: string, text: string) => Promise<void>; mod: Moderate }) {
   const mine = m.authorId === me;
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(m.body);
   const [busy, setBusy] = useState(false);
   const toast = useToast();
+  const blockOf = mod.blocks.find((b) => b.userId === m.authorId);
   const save = async () => {
     setBusy(true);
     try { await edit(m.id, text.trim()); setEditing(false); } catch (e) { toast(problem(e)); } finally { setBusy(false); }
@@ -60,7 +86,21 @@ function Bubble({ m, me, operator, who, edit }: { m: ChatMessage; me: string; op
       )}
       <small className="talk-meta">
         {ago(m.at)}{m.editedAt ? ", edited" : ""}
+        {operator && m.flags?.length ? <b className="talk-flag"> flagged: {m.flags.join(", ")}</b> : null}
         {mine && !editing && <button type="button" className="n1chat-tool talk-edit-btn" onClick={() => { setText(m.body); setEditing(true); }}>edit</button>}
+        {/* Another member's words: a member can report them; neon1 can pause their chat, or lift a pause */}
+        {!mine && m.from === "member" && !operator && <Sure label="report" onGo={() => void mod.report(m.id)} />}
+        {!mine && m.from === "member" && operator && (blockOf ? (
+          <>
+            <b className="talk-flag"> {blockOf.state === "banned" ? "banned" : "muted"}</b>
+            <button type="button" className="n1chat-tool talk-edit-btn" onClick={() => void mod.lift(m.authorId)}>lift</button>
+          </>
+        ) : (
+          <>
+            <Sure label="mute" onGo={() => void mod.mute(m.authorId)} />
+            <Sure label="ban" onGo={() => void mod.ban(m.authorId)} />
+          </>
+        ))}
       </small>
       {operator && m.history?.length ? (
         <details className="talk-history">
@@ -83,7 +123,7 @@ function Inbox({ pick }: { pick: (o: ChatOrg) => void }) {
       {!q.isPending && !threads.length && <p className="talk-hint">Nobody has written yet.</p>}
       {threads.map((t) => (
         <button key={t.tenantId} type="button" className={`talk-row${t.ownerUnread ? " new" : ""}`} onClick={() => pick({ id: t.tenantId, name: t.orgName, slug: t.orgSlug })}>
-          <span className="talk-row-name">{t.orgName}{t.free ? <small> free</small> : null}{t.ownerUnread ? <b className="talk-badge">{t.ownerUnread}</b> : null}</span>
+          <span className="talk-row-name">{t.orgName}{t.free ? <small> free</small> : null}{t.ownerUnread ? <b className="talk-badge">{t.ownerUnread}</b> : null}{t.ownerFlagged ? <b className="talk-badge talk-badge-flag" title="Flagged or reported">{t.ownerFlagged}!</b> : null}</span>
           <span className="talk-row-text">{t.lastFrom === "neon1" ? "You" : t.lastBy}: {t.preview}</span>
           <small>{ago(t.lastAt)}</small>
         </button>
@@ -94,7 +134,7 @@ function Inbox({ pick }: { pick: (o: ChatOrg) => void }) {
 
 
 /** The box under the conversation. A private toggle for members; for neon1 a recipient, when the organization has more than one person */
-function Composer({ org, operator, people, send }: { org: ChatOrg; operator: boolean; people: { userId: string; name: string }[]; send: (text: string, how: { private?: boolean; to?: string }) => Promise<void> }) {
+function Composer({ org, operator, people, block, send }: { org: ChatOrg; operator: boolean; people: { userId: string; name: string }[]; block: ChatBlock | null | undefined; send: (text: string, how: { private?: boolean; to?: string }) => Promise<void> }) {
   const [text, setText] = useState(() => savedDraft(org.id));
   const [priv, setPriv] = useState(false);
   const [to, setTo] = useState("");
@@ -129,6 +169,8 @@ function Composer({ org, operator, people, send }: { org: ChatOrg; operator: boo
       setBusy(false);
     }
   };
+  // A paused chat says so, once, in place of the box; reading stays open
+  if (block) return <p className="talk-hint talk-paused" role="status">{blockMessage(block)}</p>;
   return (
     <form className="n1chat-form" onSubmit={(e) => { e.preventDefault(); void go(); }}>
       <textarea ref={field} className="n1chat-input" rows={1} maxLength={CHAT_MAX} value={text} aria-label="Your message" placeholder={operator ? "Reply" : "Message Pradeep"}
@@ -169,6 +211,15 @@ function Thread({ org, me, operator, active, inbox }: { org: ChatOrg; me: string
     await refresh();
   };
   const edit = async (id: string, text: string) => { await api(`/t/${org.id}/chat/${id}`, { method: "PATCH", body: { text } }); await refresh(); };
+  const toast = useToast();
+  const act = async (call: () => Promise<unknown>, done: string) => { try { await call(); toast(done); await refresh(); } catch (e) { toast(problem(e)); } };
+  const mod: Moderate = {
+    blocks: q.data?.blocks ?? [],
+    report: (id) => act(() => api(`/t/${org.id}/chat/${id}/report`, { method: "POST", body: {} }), "Reported to Pradeep"),
+    mute: (uid) => act(() => api(`/t/${org.id}/chat/block/${uid}`, { method: "POST", body: { state: "muted", hours: 24 } }), `Muted ${who(uid)} for 24 hours`),
+    ban: (uid) => act(() => api(`/t/${org.id}/chat/block/${uid}`, { method: "POST", body: { state: "banned" } }), `Banned ${who(uid)} from chat`),
+    lift: (uid) => act(() => api(`/t/${org.id}/chat/block/${uid}`, { method: "DELETE" }), `Chat is back for ${who(uid)}`),
+  };
   const h = q.data?.hours;
   return (
     <>
@@ -176,9 +227,9 @@ function Thread({ org, me, operator, active, inbox }: { org: ChatOrg; me: string
       {operator && <p className="talk-hint"><button type="button" className="n1chat-tool" onClick={inbox}>inbox</button> {org.name}</p>}
       {h && !operator && <p className="talk-hint">{h.open ? "Pradeep is reading now." : `Pradeep reads ${nextWindow(h.nextAt)}.`}</p>}
       <div ref={log} className="n1chat-log" role="log" aria-live="polite">
-        {messages.map((m) => <Bubble key={m.id + (m.editedAt ?? "")} m={m} me={me} operator={operator} who={who} edit={edit} />)}
+        {messages.map((m) => <Bubble key={m.id + (m.editedAt ?? "")} m={m} me={me} operator={operator} who={who} edit={edit} mod={mod} />)}
       </div>
-      <Composer org={org} operator={operator} people={people} send={send} />
+      <Composer org={org} operator={operator} people={people} block={q.data?.block} send={send} />
     </>
   );
 }

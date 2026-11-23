@@ -48,3 +48,27 @@ export function chatReplyMail(o: { body: string; url: string; at: Date; zone?: s
     as: "portal" as const,
   };
 }
+
+
+/** To neon1: a message was flagged, reported, or a person was muted automatically */
+export function chatFlagMail(o: { name: string; org: string; free: boolean; reason: string; body?: string; url: string; at: Date; zone?: string }) {
+  return {
+    subject: subjectOf("Chat flagged", `${o.name} (${o.org})`),
+    ...factMail({
+      kicker: "chat moderation",
+      title: o.reason,
+      sub: o.org,
+      intro: [`${o.name} in ${o.org}${o.free ? " (a free account)" : ""}: ${o.reason}.`],
+      preheader: `${o.name}: ${o.reason}`,
+      facts: [
+        { k: "Who", v: o.name },
+        { k: "Organization", v: `${o.org}${o.free ? " (free account)" : ""}` },
+        { k: "When", v: sentAt(o.at, o.zone).replace(/^Sent /, "") },
+      ],
+      ...(o.body ? { blocks: [["Message", o.body] as [string, string]] } : {}),
+      action: { label: "Open the chat", url: o.url },
+      why: "Chat flags messages with an obscenity or a link from a free account, takes reports from members, and mutes anyone who keeps being refused. Open the chat to mute or ban.",
+    }),
+    as: "reach" as const,
+  };
+}

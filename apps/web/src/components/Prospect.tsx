@@ -61,6 +61,7 @@ export function GuideCard({ me, prospect }: { me: Me; prospect: boolean }) {
     <section className="card guide-card" aria-labelledby="guide-h" data-tour="get-to-know">
       <h2 className="section-h" id="guide-h">Get to know 1NEON <button type="button" className="linkish helper" disabled={busy} onClick={() => void hide()}>Hide</button></h2>
       <ul className="guide-links">
+        <li><button type="button" className="linkish guide-chat" onClick={() => dispatchEvent(new Event("1neon:chat"))}>Message Pradeep</button><span className="muted small">Ask anything, right here in the chat</span></li>
         <li><OutLink href={`${BASE_PATH}/example`}>A sample project</OutLink><span className="muted small">Three made-up clients, start to finish</span></li>
         {prospect
           ? <li><OutLink href="/1NEON/live?play=free">From sign-up to client</OutLink><span className="muted small">A six-minute walkthrough</span></li>
@@ -131,11 +132,13 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
   const intro = prospect
     ? "An assessment is my read of what's written here, plausible approaches, and the first questions to settle."
     : "An assessment is my read of what's written here, plausible approaches, and the first questions to settle, before any options or prices.";
+  // The chat with Pradeep opens in Neo's panel, wherever the person is (components/Neo.tsx listens)
+  const chat = <button type="button" className="linkish" onClick={() => dispatchEvent(new Event("1neon:chat"))}>message me</button>;
   const call = !prospect
-    ? <span className="helper next-call">Rather talk it through? <Link to="/contact">Contact neon1</Link></span>
+    ? <span className="helper next-call">Rather talk it through? <button type="button" className="linkish" onClick={() => dispatchEvent(new Event("1neon:chat"))}>Message Pradeep</button> or <Link to="/contact">contact neon1</Link></span>
     : callAsked
-      ? <span className="helper next-call" role="status">Call requested {dateLabel(callAsked.at)}. You can ask again from {dateLabel(callAsked.again)}.</span>
-      : <span className="helper next-call">Rather talk first? <OutLink href={BOOK_A_CALL}>Book a 30-minute call</OutLink> or <button type="button" className="linkish" onClick={() => { setError(""); setCallOpen(true); }}>ask me to reach out</button>.</span>;
+      ? <span className="helper next-call" role="status">Call requested {dateLabel(callAsked.at)}. You can ask again from {dateLabel(callAsked.again)}. Or {chat}.</span>
+      : <span className="helper next-call">Rather talk first? <button type="button" className="linkish" onClick={() => dispatchEvent(new Event("1neon:chat"))}>Message me</button>, <OutLink href={BOOK_A_CALL}>book a 30-minute call</OutLink> or <button type="button" className="linkish" onClick={() => { setError(""); setCallOpen(true); }}>ask me to reach out</button>.</span>;
   const refresh = () => qc.invalidateQueries({ queryKey: ["requests", orgId] });
 
   const startEdit = () => {

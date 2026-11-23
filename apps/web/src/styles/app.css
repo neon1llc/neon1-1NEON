@@ -2519,7 +2519,7 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
   .site-link.site-end { min-width: 44px; }
   :root:root :is(input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"]), select, textarea) { min-height: 44px; }
   :root:root :is(.ag-group.fold, details.history) > summary { padding-block: 11px; min-height: 44px; box-sizing: border-box; }
-  .ag-group li a, .ag-group li button.linkish, .guide-links li > a, .glance li > a { display: inline-flex; align-items: center; min-height: 44px; }
+  .ag-group li a, .ag-group li button.linkish, .guide-links li > a, .guide-links li > button.linkish, .glance li > a { display: inline-flex; align-items: center; min-height: 44px; }
   .row-menu-btn, .icon-act { width: 44px; min-width: 44px; height: 44px; }
   .glance .g-meta a, .updates li > a { display: flex; align-items: center; min-height: 44px; }
   .chip, .linkish.small, .linkish.helper, button.link.small { min-width: 44px; justify-content: center; }
@@ -2540,3 +2540,8 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 .scroll-x::-webkit-scrollbar, .ag-group li :is(a, .t, .s, .linkish)::-webkit-scrollbar { display: none; }
 /* A pill sizes to its label and centers it, whatever height it is given */
 .chip { display: inline-flex; align-items: center; justify-content: center; }
+.talk-flag { font-weight: 600; color: var(--amber, var(--muted)); }
+.talk-paused { padding: var(--sp-3); border-top: 1px solid var(--soft); border-bottom: 0; }
+.talk-badge-flag { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
+/* The launcher's label is wider here (it names both Neo and Pradeep), and opens on its own once a session */
+@media (min-width: 701px) and (hover: hover) { .n1chat-launch.n1neo:is(:hover, :focus-visible, .n1chat-peek) .n1chat-label { max-width: 170px; } }
