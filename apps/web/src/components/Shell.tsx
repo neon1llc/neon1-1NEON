@@ -417,6 +417,10 @@ function SignIn() {
           </div>
         )}
         {PICKER && <p className="fine"><a className="linkish" href="/1NEON/">Back to sign-in</a></p>}
+        {/* Not signed in and not a client yet: the walkthrough leads, ahead of the form. Returning clients still land on the form below */}
+        {!PICKER && !signingUp && at.step === "email" && (
+          <a className="btn btn-ghost walk-lead" href="/1NEON/live">Watch the walkthrough</a>
+        )}
         {/* Step 1: the email */}
         {!PICKER && signingUp && (at.step === "email" || at.step === "failed" || at.step === "not_invited") && (
           <SignUp info={signupInfo} email={email} remember={remember} onStep={signedUp} onBack={() => fade(closeSignUp)} local={pickPerson && !IN_LIVE} />
@@ -477,8 +481,11 @@ function SignIn() {
         {!PICKER && (
           <nav className="signin-more" aria-label="Without an account">
             <a href="/1NEON/demo/">Try it yourself</a>
-            <span className="more-sep" aria-hidden="true">·</span>
-            <a href="/1NEON/live">Or see how it works</a>
+            {/* The walkthrough already leads above the form on the plain sign-in screen */}
+            {(signingUp || at.step !== "email") && (<>
+              <span className="more-sep" aria-hidden="true">·</span>
+              <a href="/1NEON/live">Or see how it works</a>
+            </>)}
           </nav>
         )}
         {/* Local builds also offer the demo people under the real form */}
