@@ -50,6 +50,9 @@ const member = (t: Tenant, userId: string, email: string, name: string, access: 
   tenantId: t.id, userId, email, name, title: "", access, status: "joined", invitedBy: by, invitedAt: ts, joinedAt: ts, version: 1, createdAt: ts, updatedAt: ts, updatedBy: by,
 });
 
+// Every operator needs a user record to sign in (the role itself comes from OPERATOR_EMAILS)
+for (const e of operators) await person(e, e === operators[0] ? "neon1" : "Pradeep");
+
 for (const o of orgs) {
   let t = (await repo.listTenants()).find((x) => x.slug === o.slug);
   const first = o.people[0]!;
