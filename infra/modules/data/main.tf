@@ -62,8 +62,8 @@ resource "aws_dynamodb_table" "main" {
 
   # Restore to any second in the last 35 days
   point_in_time_recovery { enabled = true }
-  # Encrypted with the AWS-owned DynamoDB key
-  server_side_encryption { enabled = true }
+  # AWS-owned key: no KMS requests. enabled = true would use the aws/dynamodb key and count every read against the KMS free tier
+  server_side_encryption { enabled = false }
 }
 
 

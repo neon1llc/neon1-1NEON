@@ -2,9 +2,10 @@
 
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
-## Unreleased
+## v0.25.0 - 2026-11-23
 
 ### Changed
+- Neo's guide is rebuilt from neon1-corpus v0.52.0. The data table uses the AWS-owned encryption key, so reads make no KMS requests.
 - The chat with Pradeep is a second tab, named neon1 (a person icon and "Replies by email", where Neo has its mark and "Instant answers") in the public Neo window wherever the signed-in Neo isn't shown: the interactive demo, and any environment without the signed-in Neo. Neo stays the first tab, as it has always been, with Pradeep beside it, a count on the tab and the launcher, and the launcher reading "ask Neo or neon1". In the demo the tab says the messages stay in your browser. Where the signed-in Neo is on, its panel still has the two tabs. The signed-in Neo stays off in dev and production until its planning is proven and a model is available.
 
 ### Added
