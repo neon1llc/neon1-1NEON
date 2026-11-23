@@ -16,6 +16,7 @@
 - Shadows, the dialog dim, ink on a colored chip, and the calendar's office blue come from tokens (--shadow-pop, --shadow-float, --scrim, --on-color, --info) in every look, in place of per-rule colors. Error text uses the red and amber tokens.
 
 ### Fixed
+- Every rail and menu highlight is one size: the 1NEON mark row and the neon1 row now light a pill as tall as a regular row (40px, 44px on touch; they were 40px on a phone's 44px rows), at the same inset and x as the buttons. Icons center in their pills in every row, collapsed and open, on phone and desktop.
 - The neon1 circle at the foot of the rail is the same 28px as the rail's buttons and centered with them; it was 30px and sat 1px right of the column, which read as larger and off to one side.
 - Tapping the 1NEON mark on the collapsed rail no longer leaves every row at the open menu's width with a cut-off highlight. Closing the menu now does nothing unless the menu is open, so no tap on the rail can start a close that nothing finishes; checked on the mark, rows, profile, Contact, back and forward on phone and desktop.
 - On a phone's collapsed rail, tapping a row no longer leaves its highlight cut off against the rail's right edge. The tap started the open menu's close even though the menu was not open, which kept the rail's rows at the open menu's width until the next open. The highlight is now the same inset, rounded pill after a tap as at rest.

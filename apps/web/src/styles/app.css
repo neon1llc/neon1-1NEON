@@ -2269,11 +2269,11 @@ body:has(.shell.mini) .n1chat.n1chat-right { left: auto; right: max(16px, env(sa
 .side .site-end { color: var(--accent); }
 .side .site-end { font-weight: 700; } /* the 1NEON name's weight */
 
-/* The 1NEON mark row and the neon1 row light as the other rows do: a rounded 40px pill centered in their taller row. Open, each row
+/* The 1NEON mark row and the neon1 row light as the other rows do: a rounded pill as tall as a row (--row: 40px, 44px on touch) centered in their taller row. Open, each row
    hugs its content, so the pill runs as far past the name as it starts before the mark (6px either side) */
 .side :is(.brand, .site-end) { position: relative; isolation: isolate; }
 .side :is(.brand, .site-end):is(:hover, :focus-visible) { background: none; }
-.side :is(.brand, .site-end)::before { content: ""; position: absolute; inset: calc((100% - 40px) / 2) 0; z-index: -1; border-radius: var(--r-sm); pointer-events: none; }
+.side :is(.brand, .site-end)::before { content: ""; position: absolute; inset: calc((100% - var(--row)) / 2) 0; z-index: -1; border-radius: var(--r-sm); pointer-events: none; }
 .side :is(.brand, .site-end):hover::before { background: var(--accent-soft); }
 .side :is(.brand, .site-end):focus-visible { outline: none; }
 .side :is(.brand, .site-end):focus-visible::before { outline: 2px solid var(--focus); outline-offset: -2px; }
