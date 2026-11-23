@@ -76,8 +76,8 @@ function kindFields(i: Item): Record<string, string> {
   if (i.kind === "option") {
     const o = OptionFields.parse(i.fields);
     return { cost: o.cost, timeline: o.timeline, hours: o.hours, outsideCosts: o.outsideCosts, result: o.result, costScore: String(o.costScore), qualityScore: String(o.qualityScore), effortScore: String(o.effortScore), recommended: o.recommended ? "yes" : "", purchases: linesOf(o.purchases),
-      // How it's priced: as written, fixed, or an hourly estimate with its rate and range of hours
-      pricing: o.pricing ?? "", rateCents: o.rateCents === undefined ? "" : String(o.rateCents / 100), hoursLow: o.hoursLow === undefined ? "" : String(o.hoursLow), hoursHigh: o.hoursHigh === undefined ? "" : String(o.hoursHigh), depositPercent: o.depositPercent === undefined ? "" : String(o.depositPercent), basis: basisOf(o.basis), why: o.why };
+      // How it's priced: an hourly estimate with its rate and range of hours (the default for a new option), fixed for a small job, or as written
+      pricing: o.pricing ?? (o.cost ? "" : "estimate"), rateCents: o.rateCents === undefined ? "" : String(o.rateCents / 100), hoursLow: o.hoursLow === undefined ? "" : String(o.hoursLow), hoursHigh: o.hoursHigh === undefined ? "" : String(o.hoursHigh), depositPercent: o.depositPercent === undefined ? "" : String(o.depositPercent), basis: basisOf(o.basis), why: o.why };
   }
   if (i.kind === "purchase") {
     const x = PurchaseFields.parse(i.fields);
@@ -414,9 +414,9 @@ function KindFields({ kind, f, onChange }: { kind: ItemKind; f: Record<string, s
           from the numbers, so they can't disagree with what gets invoiced */}
       <label>Kind of price
         <select value={f.pricing ?? ""} onChange={(e) => set("pricing", e.target.value)}>
-          <option value="">As written below</option>
-          <option value="fixed">Fixed price</option>
           <option value="estimate">Estimate: hours at a rate, with a range</option>
+          <option value="fixed">Fixed price, for a small, well-defined job</option>
+          <option value="">As written below</option>
         </select>
       </label>
       {estimate ? (

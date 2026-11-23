@@ -997,7 +997,7 @@ function AddItem({ kind, path, taken, decided }: { kind: ItemKind; path: string;
       )}
       {numBad.baseline && <p id="add-now-err" className="small late" style={{ margin: 0 }}>Now: {numBad.baseline}</p>}
       {numBad.target && <p id="add-target-err" className="small late" style={{ margin: 0 }}>Target: {numBad.target}</p>}
-      {kind === "option" && <input aria-label="Cost" placeholder="Cost, e.g. $4,800 fixed" value={extra.cost} onChange={(e) => setExtra({ ...extra, cost: e.target.value })} />}
+      {kind === "option" && <input aria-label="Cost" placeholder="Cost, e.g. $3,500 to $4,200 estimate" value={extra.cost} onChange={(e) => setExtra({ ...extra, cost: e.target.value })} />}
       <div style={{ display: "flex", gap: 8 }}>
         <button className="btn btn-primary" type="submit" disabled={!title.trim() || adding}>{adding ? "Adding…" : "Add"}</button>
         <button className="btn btn-ghost" type="button" onClick={() => setOpen(false)}>Cancel</button>
@@ -1572,8 +1572,8 @@ function QuoteForm({ path, cur, option }: { path: string; cur?: ReturnType<typeo
       {/* Hours at a rate (capped at the high end) or one fixed price */}
       <fieldset style={{ border: 0, padding: 0, margin: 0, display: "flex", gap: 16, flexWrap: "wrap" }}>
         <legend className="small" style={{ marginBottom: 6 }}>Price</legend>
-        <label style={{ display: "flex", gap: 6, alignItems: "center" }}><input type="radio" name="q-pricing" checked={pricing === "estimate"} onChange={() => setPricing("estimate")} /> Hours at a rate</label>
-        <label style={{ display: "flex", gap: 6, alignItems: "center" }}><input type="radio" name="q-pricing" checked={pricing === "fixed"} onChange={() => setPricing("fixed")} /> Fixed price</label>
+        <label style={{ display: "flex", gap: 6, alignItems: "center" }}><input type="radio" name="q-pricing" checked={pricing === "estimate"} onChange={() => setPricing("estimate")} /> Estimate: hours at a rate</label>
+        <label style={{ display: "flex", gap: 6, alignItems: "center" }}><input type="radio" name="q-pricing" checked={pricing === "fixed"} onChange={() => setPricing("fixed")} /> Fixed price, for a small, well-defined job</label>
       </fieldset>
       {pricing === "estimate" ? (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 12 }}>
