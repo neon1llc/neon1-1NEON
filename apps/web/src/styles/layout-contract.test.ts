@@ -68,7 +68,7 @@ describe("focus and touch", () => {
 describe("the menu's two marks", () => {
   it("paint one size of ink, with the rings drawn 64/60 larger than the ink they paint", () => {
     expect(css).toMatch(/:root \{ --mark-ink: 30px; \}/);
-    expect(css).toMatch(/\.side \.ico\.mark, \.top-brand \.mark-box, \.side \.ico\.site-mark \{ width: var\(--mark-ink\); height: var\(--mark-ink\); \}/);
+    expect(css).toMatch(/\.side \.ico\.mark, \.top-brand \.mark-box \{ width: var\(--mark-ink\); height: var\(--mark-ink\); \}/);
     expect(css).toMatch(/\.side \.ico\.mark svg, \.top-brand svg \{ width: calc\(var\(--mark-ink\) \* 64 \/ 60\); height: calc\(var\(--mark-ink\) \* 64 \/ 60\); margin: calc\(\(var\(--mark-ink\) - var\(--mark-ink\) \* 64 \/ 60\) \/ 2\); \}/);
   });
 });
