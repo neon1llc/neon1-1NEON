@@ -14,7 +14,7 @@ describe("outlineOf", () => {
 
   it("is outlined once what, today, and done are written, and complete with all six", () => {
     const p = { summary: "Patients email forms to one inbox.", outcome: "Patients upload once, and the desk sees gaps." };
-    const items = [{ kind: "discovery", title: EXAMPLE_TITLE, body: "Every Monday Dana retypes twenty forms." }];
+    const items = [{ kind: "discovery", title: EXAMPLE_TITLE, body: "Every Monday Tomas retypes twenty forms." }];
     expect(outlineOf(p, items).level).toBe("outlined");
     const all = outlineOf({ ...p, targetDate: "2027-01-31" }, [
       ...items,

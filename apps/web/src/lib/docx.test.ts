@@ -21,7 +21,7 @@ describe("markup recognition", () => {
     expect(await proposalRefOf(new File(["x"], "neon1-maple-street-proposal-0039-r2.docx"))).toEqual({ number: 39, rev: 2 });
   });
   it("reads the Word property when the file was renamed", async () => {
-    expect(await proposalRefOf(await word("Raj's edits.docx", { prop: "0039-r3" }))).toEqual({ number: 39, rev: 3 });
+    expect(await proposalRefOf(await word("Priya's edits.docx", { prop: "0039-r3" }))).toEqual({ number: 39, rev: 3 });
   });
   it("falls back to the page header", async () => {
     expect(await proposalRefOf(await word("edits.docx", { header: "neon1 · Proposal 0041-r1" }))).toEqual({ number: 41, rev: 1 });

@@ -43,7 +43,7 @@ describe("emails take the reader's zone", () => {
   it("notice, invite and security emails all show it in text and HTML", async () => {
     const { noticeEmail, passkeyEmail, inviteEmail } = await import("./emails.ts");
     const at = new Date("2026-07-15T13:25:00Z");
-    for (const m of [noticeEmail({ orgName: "Acme", trial: false, by: "Dana", action: "comment.created", summary: "x", url: "https://x", at, zone: "Asia/Tokyo" }), passkeyEmail({ url: "https://x", at, zone: "Asia/Tokyo" })]) {
+    for (const m of [noticeEmail({ orgName: "Harborline", trial: false, by: "Tomas", action: "comment.created", summary: "x", url: "https://x", at, zone: "Asia/Tokyo" }), passkeyEmail({ url: "https://x", at, zone: "Asia/Tokyo" })]) {
       expect(m.text).toMatch(/(Sent|When)\s+Jul 15, 2026, 10:25 PM GMT\+9 \(13:25 UTC\)/);
       expect(m.html).toContain("Jul 15, 2026, 10:25 PM GMT+9 (13:25 UTC)");
     }
@@ -185,10 +185,10 @@ describe("every email", () => {
 
   it("keeps what people typed out of subjects and escapes it in the body", async () => {
     const { contactMail, contactSubject } = await import("./lib/contactmail.ts");
-    const m = { name: "<i>Dana</i>", email: "d@example.com", company: "A & B", about: "Cloud", today: "<script>alert(1)</script> text", better: "", timing: "", found: "", localTime: "", at: new Date(), zone: "America/New_York" };
+    const m = { name: "<i>Tomas</i>", email: "d@example.com", company: "A & B", about: "Cloud", today: "<script>alert(1)</script> text", better: "", timing: "", found: "", localTime: "", at: new Date(), zone: "America/New_York" };
     const mail = contactMail(m);
     expect(mail.html).not.toContain("<script>");
-    expect(mail.html).not.toContain("<i>Dana</i>");
+    expect(mail.html).not.toContain("<i>Tomas</i>");
     expect(mail.html).toContain("&#60;script&#62;");
     expect(contactSubject(m)).not.toContain("alert");
     expect(contactSubject({ ...m, name: "x".repeat(200) }).length).toBeLessThanOrEqual(80);
@@ -207,18 +207,18 @@ describe("every email", () => {
   it("lists a signup's details as facts instead of one long sentence", async () => {
     const { noticeEmail, prospectFacts } = await import("./emails.ts");
     const details = prospectFacts({ place: "Queens, NY", link: "https://kimdental.example", prospect: { kind: "other", kindOther: "A dental practice", found: "other", foundOther: "LinkedIn" } });
-    const m = noticeEmail({ orgName: "Kim Dental", trial: true, ref: "NP-0002", by: "Dana Kim", byEmail: "dana@example.com", action: "prospect.signedup", summary: "Dana Kim (dana@example.com) signed up as Kim Dental (NP-0002), A dental practice, Queens, NY", url: "https://x/ws", operator: true, important: true, details });
+    const m = noticeEmail({ orgName: "Kim Dental", trial: true, ref: "NP-0002", by: "Tomas Greer", byEmail: "tomas@example.com", action: "prospect.signedup", summary: "Tomas Greer (tomas@example.com) signed up as Kim Dental (NP-0002), A dental practice, Queens, NY", url: "https://x/ws", operator: true, important: true, details });
     expect(m.subject).toBe("Free account created: Kim Dental (NP-0002)");
     expect(m.text).toMatch(/Where\s+Queens, NY/);
     expect(m.text).toMatch(/Link\s+https:\/\/kimdental\.example/);
     expect(m.text).toMatch(/Found neon1 via\s+LinkedIn/);
-    expect(m.text).toContain("Dana Kim created a free account.");
+    expect(m.text).toContain("Tomas Greer created a free account.");
     expect(m.text).not.toContain("signed up as");
   });
 
   it("says what changed when an edit recorded its changes", async () => {
     const { noticeEmail } = await import("./emails.ts");
-    const m = noticeEmail({ orgName: "Harborline", trial: false, by: "Dana", action: "project.updated", summary: "FLOW-1: updated the project", url: "https://x", changes: ["health At risk → On track"] });
+    const m = noticeEmail({ orgName: "Harborline", trial: false, by: "Tomas", action: "project.updated", summary: "FLOW-1: updated the project", url: "https://x", changes: ["health At risk → On track"] });
     expect(m.text).toContain("WHAT CHANGED\nhealth At risk → On track");
   });
 });

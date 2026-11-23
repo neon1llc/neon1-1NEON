@@ -9,7 +9,7 @@ import { headFor } from "./head.ts";
 describe("headFor", () => {
   it.each([
     "/1NEON/", "/1NEON", "/1NEON/me", "/1NEON/o/acme/workspace", "/1NEON/o/acme/projects/PRJ-1/needs", "/1NEON/all/workflow",
-    "/1NEON/demo/", "/1NEON/demo/o/acme-dental/projects", "/1NEON/live", "/1NEON/live/o/maple-street/workspace",
+    "/1NEON/demo/", "/1NEON/demo/o/harborline-outfitters/projects", "/1NEON/live", "/1NEON/live/o/maple-street/workspace",
   ])("keeps %s out of search", (path) => {
     expect(headFor(path).noindex).toBe(true);
     expect(headFor(path).canonical).toBeUndefined();

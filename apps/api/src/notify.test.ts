@@ -13,7 +13,7 @@ import { Repo } from "./store/repo.ts";
 
 
 const OP = "pradeep@neon1.tech";
-const RAJ = "raj@acmedental.example";
+const PRIYA = "priya@harborlineoutfitters.example";
 let repo: Repo;
 let mailer: MemoryMailer;
 let pusher: MemoryPusher;
@@ -37,14 +37,14 @@ const as = (email: string, path: string, method = "GET", b?: unknown) =>
 
 describe("chat alerts through the service", () => {
   it("sends one notice with the email, a signed reply thread and a push that names no one", async () => {
-    await as(RAJ, `/t/${s.acme.id}/chat`, "POST", { text: "Can you look at the restore results?" });
+    await as(PRIYA, `/t/${s.acme.id}/chat`, "POST", { text: "Can you look at the restore results?" });
     expect(notifier.sent).toHaveLength(1);
     const n = notifier.sent[0]!;
     expect(n).toMatchObject({ severity: "important", source: "chat", email: { to: [OP], as: "reach", replyThread: { kind: "chat", ref: s.acme.id } } });
     expect(n.email!.text).toContain("restore results");
     expect(n.email!.text).toContain("Reply to this email");
     // What reaches the push provider names no client and quotes no one
-    expect(`${n.title} ${n.text}`).not.toMatch(/Acme|Raj|restore/);
+    expect(`${n.title} ${n.text}`).not.toMatch(/Harborline|Priya|restore/);
     // Nothing is also sent directly
     expect(mailer.sent.filter((m) => m.to === OP)).toHaveLength(0);
     expect(pusher.sent).toHaveLength(0);
@@ -82,7 +82,7 @@ describe("a reply by email", () => {
   const kit = () => ({ repo, d: { cfg, repo } as never, cfg, drainNow: async () => undefined });
 
   it("posts as neon1 in that organization's chat, once", async () => {
-    await as(RAJ, `/t/${s.acme.id}/chat`, "POST", { text: "Question" });
+    await as(PRIYA, `/t/${s.acme.id}/chat`, "POST", { text: "Question" });
     expect(await chatReplyByEmail(kit(), s.acme.id, "Looking now.", OP)).toEqual({ posted: true });
     const v = (await (await as(OP, `/t/${s.acme.id}/chat`)).json()) as ChatView;
     expect(v.messages.map((m) => [m.from, m.body])).toEqual([["member", "Question"], ["neon1", "Looking now."]]);
@@ -97,7 +97,7 @@ describe("a reply by email", () => {
   });
 
   it("refuses a sender who is not an operator, an unknown chat and empty text", async () => {
-    expect(await chatReplyByEmail(kit(), s.acme.id, "hi", RAJ)).toEqual({ posted: false, reason: "not_operator" });
+    expect(await chatReplyByEmail(kit(), s.acme.id, "hi", PRIYA)).toEqual({ posted: false, reason: "not_operator" });
     expect(await chatReplyByEmail(kit(), "nope", "hi", OP)).toEqual({ posted: false, reason: "no_chat" });
     expect(await chatReplyByEmail(kit(), s.acme.id, "", OP)).toMatchObject({ posted: false });
     const v = (await (await as(OP, `/t/${s.acme.id}/chat`)).json()) as ChatView;

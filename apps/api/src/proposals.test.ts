@@ -12,7 +12,7 @@ import { Repo } from "./store/repo.ts";
 
 
 // A signed approval or acceptance: the typed name and the consent box
-const SIGN = { typedName: "Raj Patel", consent: true };
+const SIGN = { typedName: "Priya Raman", consent: true };
 
 
 const OP = "pradeep@neon1.tech";
@@ -49,8 +49,8 @@ describe("proposal revisions", () => {
     const r1 = revisions(items).at(-1)!;
     expect(r1.title).toBe("Proposal 0039-r1");
     expect(r1.p.snapshot.options.map((o) => o.code)).toEqual(["0039-r1-A", "0039-r1-B", "0039-r1-C"]);
-    expect(r1.p.snapshot.constraints[0]!.title).toMatch(/after 6pm/);
-    expect(r1.p.snapshot.preparedFor?.name).toBe("Raj Patel");
+    expect(r1.p.snapshot.constraints[0]!.title).toMatch(/holiday weeks/);
+    expect(r1.p.snapshot.preparedFor?.name).toBe("Priya Raman");
   });
 
   it("lets only neon1 issue, keeps the number, replaces the earlier revision, and never edits or deletes one", async () => {
@@ -95,7 +95,7 @@ describe("proposal revisions", () => {
     expect((await call(s.raj.email, "POST", `${path}/items/${b.id}/approve`, { version: b.version, signature: SIGN })).json.error).toBe("price_check");
     expect((await call(s.dana.email, "POST", `${path}/proposals/${r1.id}/refresh`, {})).status).toBe(403);
     const asked = await call(s.raj.email, "POST", `${path}/proposals/${r1.id}/refresh`, {});
-    expect(asked.json.fields.refreshAsked.name).toBe("Raj Patel");
+    expect(asked.json.fields.refreshAsked.name).toBe("Priya Raman");
     expect((await repo.listAudit(p.tenantId)).some((e) => e.action === "proposal.refresh_asked")).toBe(true);
     await call(OP, "POST", `${path}/proposals`, { note: "Prices rechecked; no changes" });
     expect((await call(s.raj.email, "POST", `${path}/items/${b.id}/approve`, { version: b.version, signature: SIGN })).status).toBe(201);
@@ -108,7 +108,7 @@ describe("purchases", () => {
     const { opt, path } = await flow();
     const b = opt("B");
     const r = await call(s.raj.email, "POST", `${path}/items/${b.id}/approve`, { version: b.version, signature: SIGN });
-    expect(r.json.purchases.map((x: { title: string; fields: { from: string; buyer: string } }) => [x.title, x.fields.from, x.fields.buyer])).toEqual([["Document scanner for the front desk", "0039-r1-B", "client"]]);
+    expect(r.json.purchases.map((x: { title: string; fields: { from: string; buyer: string } }) => [x.title, x.fields.from, x.fields.buyer])).toEqual([["Handheld scanner for the stock room", "0039-r1-B", "client"]]);
     // A receipt is a file on the purchase
     const doc = await call(s.dana.email, "POST", `/t/${s.acme.id}/docs`, { name: "receipt.pdf", contentType: "application/pdf", size: 10, layer: "execution", projectId: r.json.purchases[0].projectId, itemId: r.json.purchases[0].id });
     expect(doc.status).toBe(201);
@@ -124,15 +124,15 @@ describe("purchases", () => {
     expect((await call(s.raj.email, "POST", `${path}/items/${c.id}/approve`, { version: v })).status).toBe(400);
     const r = await call(s.raj.email, "POST", `${path}/items/${c.id}/approve`, { version: v, signature: SIGN });
     expect(r.status).toBe(201);
-    expect(r.json.decision.fields.initials).toBe("RP");
-    expect(r.json.purchases[0].fields.agreed.initials).toBe("RP");
+    expect(r.json.decision.fields.initials).toBe("PR");
+    expect(r.json.purchases[0].fields.agreed.initials).toBe("PR");
     // An item added later for neon1 to buy waits for the client's own initials
     const extra = (await call(OP, "POST", `${path}/items`, { kind: "purchase", title: "Spare cable", fields: { buyer: "neon1", agreed: { by: "x", name: "x", initials: "XX", at: new Date().toISOString() } } })).json;
     expect(extra.fields.agreed).toBeUndefined();
     expect((await call(OP, "PATCH", `${path}/items/${extra.id}`, { version: extra.version, status: "bought" })).json.error).toBe("needs_agreement");
     expect((await call(s.dana.email, "POST", `${path}/items/${extra.id}/agree`, { version: extra.version, initials: "DK" })).status).toBe(403);
-    const agreed = await call(s.raj.email, "POST", `${path}/items/${extra.id}/agree`, { version: extra.version, initials: "RP" });
-    expect(agreed.json.fields.agreed.initials).toBe("RP");
+    const agreed = await call(s.raj.email, "POST", `${path}/items/${extra.id}/agree`, { version: extra.version, initials: "PR" });
+    expect(agreed.json.fields.agreed.initials).toBe("PR");
     expect((await call(OP, "PATCH", `${path}/items/${extra.id}`, { version: agreed.json.version, status: "bought", fields: { actual: "$9.99", vendor: "Micro Center" } })).status).toBe(200);
   });
 });
@@ -145,9 +145,9 @@ describe("handover acceptance", () => {
     expect((await call(s.dana.email, "POST", `${path}/items/${h.id}/accept`, { version: h.version, signature: SIGN })).status).toBe(403);
     const r = await call(s.raj.email, "POST", `${path}/items/${h.id}/accept`, { version: h.version, note: "Checked the logins", signature: SIGN });
     expect(r.json.status).toBe("done");
-    expect(r.json.fields.accepted).toMatchObject({ name: "Raj Patel", note: "Checked the logins" });
+    expect(r.json.fields.accepted).toMatchObject({ name: "Priya Raman", note: "Checked the logins" });
     // An edit can't forge or clear an acceptance
     const e = await call(OP, "PATCH", `${path}/items/${h.id}`, { version: r.json.version, fields: { accepted: { by: "x", name: "Someone", at: new Date().toISOString(), note: "" } } });
-    expect(e.json.fields.accepted.name).toBe("Raj Patel");
+    expect(e.json.fields.accepted.name).toBe("Priya Raman");
   });
 });

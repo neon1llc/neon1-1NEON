@@ -13,7 +13,7 @@ import { Repo } from "./store/repo.ts";
 
 
 // A signed approval or acceptance: the typed name and the consent box
-const SIGN = { typedName: "Raj Patel", consent: true };
+const SIGN = { typedName: "Priya Raman", consent: true };
 
 
 // Each test gets a fresh in-memory store with the demo data, and calls the app as a given person
@@ -56,22 +56,22 @@ describe("identity", () => {
   });
 
   it("refuses writes without the CSRF header", async () => {
-    const r = await app.request("/1NEON/api/me", { method: "PATCH", headers: { "x-dev-user": "dana@acmedental.example" }, body: "{}" });
+    const r = await app.request("/1NEON/api/me", { method: "PATCH", headers: { "x-dev-user": "tomas@harborlineoutfitters.example" }, body: "{}" });
     expect(r.status).toBe(403);
   });
 
   it("lists only my organizations, and the operator sees all", async () => {
-    const dana = await call("dana@acmedental.example", "GET", "/me");
-    expect(dana.json.orgs.map((o: { name: string }) => o.name)).toEqual(["Acme Dental"]);
+    const dana = await call("tomas@harborlineoutfitters.example", "GET", "/me");
+    expect(dana.json.orgs.map((o: { name: string }) => o.name)).toEqual(["Harborline Outfitters"]);
     const op = await call(OP, "GET", "/me");
     expect(op.json.operator).toBe(true);
     expect(op.json.orgs).toHaveLength(4);
   });
 
   it("marks an invited member joined on first visit", async () => {
-    await call("lee@harborauto.example", "GET", "/me");
+    await call("lee@ridgeviewauto.example", "GET", "/me");
     const members = await call(OP, "GET", `/t/${s.harbor.id}/members`);
-    expect(members.json.find((m: { email: string }) => m.email === "lee@harborauto.example").status).toBe("joined");
+    expect(members.json.find((m: { email: string }) => m.email === "lee@ridgeviewauto.example").status).toBe("joined");
   });
 });
 
@@ -79,30 +79,30 @@ describe("identity", () => {
 // Awake is everyone's theme until they choose otherwise
 describe("theme", () => {
   it("reads a stored legacy \"system\" theme as awake", async () => {
-    const uid = (await repo.userIdForEmail("dana@acmedental.example"))!;
+    const uid = (await repo.userIdForEmail("tomas@harborlineoutfitters.example"))!;
     const stored = (await repo.getUser(uid))!;
     await repo.saveUser({ ...stored, theme: "system" as never, version: stored.version + 1 }, stored.version);
-    expect((await call("dana@acmedental.example", "GET", "/me")).json.user.theme).toBe("awake");
+    expect((await call("tomas@harborlineoutfitters.example", "GET", "/me")).json.user.theme).toBe("awake");
   });
 
   it("keeps device matching once chosen, and refuses the old value", async () => {
-    const me = await call("dana@acmedental.example", "GET", "/me");
+    const me = await call("tomas@harborlineoutfitters.example", "GET", "/me");
     expect(me.json.user.theme).toBe("awake");
-    const saved = await call("dana@acmedental.example", "PATCH", "/me", { version: me.json.user.version, theme: "device" });
+    const saved = await call("tomas@harborlineoutfitters.example", "PATCH", "/me", { version: me.json.user.version, theme: "device" });
     expect(saved.json.theme).toBe("device");
-    expect((await call("dana@acmedental.example", "GET", "/me")).json.user.theme).toBe("device");
-    const old = await call("dana@acmedental.example", "PATCH", "/me", { version: saved.json.version, theme: "system" });
+    expect((await call("tomas@harborlineoutfitters.example", "GET", "/me")).json.user.theme).toBe("device");
+    const old = await call("tomas@harborlineoutfitters.example", "PATCH", "/me", { version: saved.json.version, theme: "system" });
     expect(old.status).toBe(400);
   });
 
   it("keeps a person's time zone, refusing a name the engine doesn't know", async () => {
-    const me = await call("dana@acmedental.example", "GET", "/me");
+    const me = await call("tomas@harborlineoutfitters.example", "GET", "/me");
     expect(me.json.user.timeZone).toBeUndefined();
-    const bad = await call("dana@acmedental.example", "PATCH", "/me", { version: me.json.user.version, timeZone: "Mars/Olympus" });
+    const bad = await call("tomas@harborlineoutfitters.example", "PATCH", "/me", { version: me.json.user.version, timeZone: "Mars/Olympus" });
     expect(bad.status).toBe(400);
-    const saved = await call("dana@acmedental.example", "PATCH", "/me", { version: me.json.user.version, timeZone: "America/Denver" });
+    const saved = await call("tomas@harborlineoutfitters.example", "PATCH", "/me", { version: me.json.user.version, timeZone: "America/Denver" });
     expect(saved.json.timeZone).toBe("America/Denver");
-    expect((await call("dana@acmedental.example", "GET", "/me")).json.user.timeZone).toBe("America/Denver");
+    expect((await call("tomas@harborlineoutfitters.example", "GET", "/me")).json.user.timeZone).toBe("America/Denver");
   });
 });
 
@@ -110,12 +110,12 @@ describe("theme", () => {
 // Branded email: the mark once, subtle links, a copyable code, and a sign-off Gmail won't collapse
 describe("email", () => {
   it("sends the invite with the mark, the portal link, and a timed sign-off", async () => {
-    await call("raj@acmedental.example", "POST", `/t/${s.acme.id}/members/invite`, { people: [{ email: "x@y.example" }] });
+    await call("priya@harborlineoutfitters.example", "POST", `/t/${s.acme.id}/members/invite`, { people: [{ email: "x@y.example" }] });
     const mail = mailer.sent.at(-1)!;
     expect(mail.html.match(/neon1-mark-mid\.png/g)).toHaveLength(1);
     expect(mail.html).toContain(" · invitation</span>");
     expect(mail.html).toContain('<html lang="en">');
-    expect(mail.subject).toBe("Invitation: Acme Dental, from Raj Patel");
+    expect(mail.subject).toBe("Invitation: Harborline Outfitters, from Priya Raman");
     expect(mail.as).toBe("portal");
     expect(mail.replyTo).toBe("hello@neon1.tech");
     expect(mail.html).toMatch(/>Sent<\/td><td[^>]*>.+ E[SD]T \(\d\d:\d\d UTC(, [A-Z][a-z]{2} \d+)?\)</);
@@ -152,15 +152,15 @@ describe("email", () => {
 describe("tenant isolation", () => {
   it("hides other organizations entirely", async () => {
     for (const path of [`/t/${s.harbor.id}`, `/t/${s.harbor.id}/projects`, `/t/${s.harbor.id}/members`, `/t/${s.harbor.id}/workspace`]) {
-      expect((await call("dana@acmedental.example", "GET", path)).status).toBe(404);
+      expect((await call("tomas@harborlineoutfitters.example", "GET", path)).status).toBe(404);
     }
-    expect((await call("dana@acmedental.example", "POST", `/t/${s.harbor.id}/projects`, { name: "x" })).status).toBe(404);
+    expect((await call("tomas@harborlineoutfitters.example", "POST", `/t/${s.harbor.id}/projects`, { name: "x" })).status).toBe(404);
   });
 
   it("can't reach another org's project through my own org's URL", async () => {
     const harborProjects = await call(OP, "GET", `/t/${s.harbor.id}/projects`);
     const pid = harborProjects.json[0].id;
-    expect((await call("dana@acmedental.example", "GET", `/t/${s.acme.id}/projects/${pid}`)).status).toBe(404);
+    expect((await call("tomas@harborlineoutfitters.example", "GET", `/t/${s.acme.id}/projects/${pid}`)).status).toBe(404);
   });
 });
 
@@ -168,7 +168,7 @@ describe("tenant isolation", () => {
 // The operator's cross-client view stays read only
 describe("All clients view", () => {
   it("is operator only and read only", async () => {
-    expect((await call("raj@acmedental.example", "GET", "/all/projects")).status).toBe(403);
+    expect((await call("priya@harborlineoutfitters.example", "GET", "/all/projects")).status).toBe(403);
     const all = await call(OP, "GET", "/all/projects");
     expect(all.status).toBe(200);
     expect(new Set(all.json.projects.map((p: { tenantId: string }) => p.tenantId)).size).toBe(3) // clients only; prospects have their own page;
@@ -182,19 +182,19 @@ describe("All clients view", () => {
 // Viewer, editor, and admin limits, and the last-admin rule
 describe("access levels", () => {
   it("lets viewers read and submit requests but not edit", async () => {
-    await call(OP, "POST", `/t/${s.acme.id}/members/invite`, { people: [{ email: "viewer@acmedental.example", access: "viewer" }] });
-    const projects = await call("viewer@acmedental.example", "GET", `/t/${s.acme.id}/projects`);
+    await call(OP, "POST", `/t/${s.acme.id}/members/invite`, { people: [{ email: "viewer@harborlineoutfitters.example", access: "viewer" }] });
+    const projects = await call("viewer@harborlineoutfitters.example", "GET", `/t/${s.acme.id}/projects`);
     const pid = projects.json[0].id;
-    expect((await call("viewer@acmedental.example", "POST", `/t/${s.acme.id}/projects/${pid}/items`, { kind: "request", title: "Can we add text reminders?" })).status).toBe(201);
-    expect((await call("viewer@acmedental.example", "POST", `/t/${s.acme.id}/projects/${pid}/items`, { kind: "task", title: "x" })).status).toBe(403);
-    expect((await call("viewer@acmedental.example", "POST", `/t/${s.acme.id}/projects`, { name: "x" })).status).toBe(403);
+    expect((await call("viewer@harborlineoutfitters.example", "POST", `/t/${s.acme.id}/projects/${pid}/items`, { kind: "request", title: "Can we add text reminders?" })).status).toBe(201);
+    expect((await call("viewer@harborlineoutfitters.example", "POST", `/t/${s.acme.id}/projects/${pid}/items`, { kind: "task", title: "x" })).status).toBe(403);
+    expect((await call("viewer@harborlineoutfitters.example", "POST", `/t/${s.acme.id}/projects`, { name: "x" })).status).toBe(403);
   });
 
   it("requires strong sign-in for people management", async () => {
-    // Raj has strong auth; Dana is an editor
-    expect((await call("dana@acmedental.example", "POST", `/t/${s.acme.id}/members/invite`, { people: [{ email: "x@y.example" }] })).status).toBe(403);
-    expect((await call("raj@acmedental.example", "POST", `/t/${s.acme.id}/members/invite`, { people: [{ email: "x@y.example" }] })).status).toBe(201);
-    expect(mailer.sent.at(-1)?.subject).toBe("Invitation: Acme Dental, from Raj Patel");
+    // Priya has strong auth; Tomas is an editor
+    expect((await call("tomas@harborlineoutfitters.example", "POST", `/t/${s.acme.id}/members/invite`, { people: [{ email: "x@y.example" }] })).status).toBe(403);
+    expect((await call("priya@harborlineoutfitters.example", "POST", `/t/${s.acme.id}/members/invite`, { people: [{ email: "x@y.example" }] })).status).toBe(201);
+    expect(mailer.sent.at(-1)?.subject).toBe("Invitation: Harborline Outfitters, from Priya Raman");
   });
 
   it("keeps at least one admin", async () => {
@@ -209,7 +209,7 @@ describe("access levels", () => {
 // Project lifecycle, version conflicts, stage gates, decisions, and edit markers
 describe("projects and concurrency", () => {
   it("creates a project from a template in the first stage", async () => {
-    const r = await call("dana@acmedental.example", "POST", `/t/${s.acme.id}/projects`, {
+    const r = await call("tomas@harborlineoutfitters.example", "POST", `/t/${s.acme.id}/projects`, {
       name: "Move files to the cloud",
       template: "cloud_migration",
       example: "Files live on the front desk PC.",
@@ -218,20 +218,20 @@ describe("projects and concurrency", () => {
     expect(r.status).toBe(201);
     expect(r.json.key).toBe("MIG-1");
     expect(r.json.stageId).toBe("intake");
-    const full = await call("dana@acmedental.example", "GET", `/t/${s.acme.id}/projects/${r.json.id}`);
+    const full = await call("tomas@harborlineoutfitters.example", "GET", `/t/${s.acme.id}/projects/${r.json.id}`);
     const kinds = full.json.items.map((i: { kind: string }) => i.kind);
     expect(kinds).toContain("metric");
     expect(kinds).toContain("handoff");
   });
 
   it("refuses a stale save with 409 and the current record", async () => {
-    const list = await call("dana@acmedental.example", "GET", `/t/${s.acme.id}/projects`);
+    const list = await call("tomas@harborlineoutfitters.example", "GET", `/t/${s.acme.id}/projects`);
     const p = list.json[0];
-    const first = await call("dana@acmedental.example", "PATCH", `/t/${s.acme.id}/projects/${p.id}`, { version: p.version, name: "Renamed by Dana" });
+    const first = await call("tomas@harborlineoutfitters.example", "PATCH", `/t/${s.acme.id}/projects/${p.id}`, { version: p.version, name: "Renamed by Tomas" });
     expect(first.status).toBe(200);
-    const stale = await call("raj@acmedental.example", "PATCH", `/t/${s.acme.id}/projects/${p.id}`, { version: p.version, name: "Renamed by Raj" });
+    const stale = await call("priya@harborlineoutfitters.example", "PATCH", `/t/${s.acme.id}/projects/${p.id}`, { version: p.version, name: "Renamed by Priya" });
     expect(stale.status).toBe(409);
-    expect(stale.json.current.name).toBe("Renamed by Dana");
+    expect(stale.json.current.name).toBe("Renamed by Tomas");
   });
 
   it("asks for a reason before moving past Decide without a decision", async () => {
@@ -262,8 +262,8 @@ describe("projects and concurrency", () => {
     expect(set.json).toMatchObject({ health: "at_risk", assessedBy: s.pradeep.id });
     expect(set.json.assessedAt).toBeTruthy();
     // So does a status update, by whoever posts it, even when the health stays the same
-    const raj = (await repo.userIdForEmail("raj@acmedental.example"))!;
-    expect((await call("raj@acmedental.example", "POST", `/t/${s.acme.id}/projects/${ai.id}/items`, { kind: "update", title: "Still waiting on access", fields: { health: "at_risk" } })).status).toBe(201);
+    const raj = (await repo.userIdForEmail("priya@harborlineoutfitters.example"))!;
+    expect((await call("priya@harborlineoutfitters.example", "POST", `/t/${s.acme.id}/projects/${ai.id}/items`, { kind: "update", title: "Still waiting on access", fields: { health: "at_risk" } })).status).toBe(201);
     const later = (await call(OP, "GET", `/t/${s.acme.id}/projects`)).json.find((x: { key: string }) => x.key === "AI-1");
     expect(later).toMatchObject({ health: "at_risk", assessedBy: raj });
     // Other edits leave the assessment alone; an existing on_track project keeps its value
@@ -283,11 +283,11 @@ describe("projects and concurrency", () => {
   });
 
   it("records an immutable decision when an option is approved", async () => {
-    const list = await call("raj@acmedental.example", "GET", `/t/${s.acme.id}/projects`);
+    const list = await call("priya@harborlineoutfitters.example", "GET", `/t/${s.acme.id}/projects`);
     const p = list.json.find((x: { key: string }) => x.key === "FLOW-1");
-    const full = await call("raj@acmedental.example", "GET", `/t/${s.acme.id}/projects/${p.id}`);
+    const full = await call("priya@harborlineoutfitters.example", "GET", `/t/${s.acme.id}/projects/${p.id}`);
     const option = full.json.items.find((i: { kind: string; fields: { recommended?: boolean } }) => i.kind === "option" && i.fields.recommended);
-    const r = await call("raj@acmedental.example", "POST", `/t/${s.acme.id}/projects/${p.id}/items/${option.id}/approve`, { version: option.version, signature: SIGN });
+    const r = await call("priya@harborlineoutfitters.example", "POST", `/t/${s.acme.id}/projects/${p.id}/items/${option.id}/approve`, { version: option.version, signature: SIGN });
     expect(r.status).toBe(201);
     expect(r.json.decision.fields.optionVersion).toBe(option.version);
     const edit = await call(OP, "PATCH", `/t/${s.acme.id}/projects/${p.id}/items/${r.json.decision.id}`, { version: 1, title: "changed" });
@@ -295,11 +295,11 @@ describe("projects and concurrency", () => {
   });
 
   it("shows who is editing and lets others know", async () => {
-    const p = (await call("dana@acmedental.example", "GET", `/t/${s.acme.id}/projects`)).json[0];
-    expect((await call("dana@acmedental.example", "POST", `/t/${s.acme.id}/projects/${p.id}/edits`, { recordId: p.id })).json.ok).toBe(true);
-    const raj = await call("raj@acmedental.example", "POST", `/t/${s.acme.id}/projects/${p.id}/edits`, { recordId: p.id });
+    const p = (await call("tomas@harborlineoutfitters.example", "GET", `/t/${s.acme.id}/projects`)).json[0];
+    expect((await call("tomas@harborlineoutfitters.example", "POST", `/t/${s.acme.id}/projects/${p.id}/edits`, { recordId: p.id })).json.ok).toBe(true);
+    const raj = await call("priya@harborlineoutfitters.example", "POST", `/t/${s.acme.id}/projects/${p.id}/edits`, { recordId: p.id });
     expect(raj.json.ok).toBe(false);
-    expect(raj.json.holder.name).toBe("Dana Kim");
+    expect(raj.json.holder.name).toBe("Tomas Greer");
   });
 });
 
@@ -307,7 +307,7 @@ describe("projects and concurrency", () => {
 // Uploads: the record first, then the bytes, then "done", which also checks off a "file needed" item
 describe("documents", () => {
   it("files an upload under its project and layer, and answers the file it was asked for", async () => {
-    const dana = "dana@acmedental.example";
+    const dana = "tomas@harborlineoutfitters.example";
     const p = (await call(dana, "GET", `/t/${s.acme.id}/projects`)).json[0];
     const ask = await call(OP, "POST", `/t/${s.acme.id}/projects/${p.id}/items`, { kind: "file_request", title: "Last 3 months of invoices" });
     const start = await call(dana, "POST", `/t/${s.acme.id}/docs`, { name: "invoices.pdf", contentType: "application/pdf", size: 4, layer: "needs", projectId: p.id, itemId: ask.json.id });
@@ -335,10 +335,10 @@ describe("documents", () => {
 
 // The decision flow: who approves, what can be approved, and statuses only the approve route grants
 describe("approvals", () => {
-  const raj = "raj@acmedental.example";
-  const dana = "dana@acmedental.example";
+  const raj = "priya@harborlineoutfitters.example";
+  const dana = "tomas@harborlineoutfitters.example";
 
-  // FLOW-1 names Raj as its decision maker and has three proposed options
+  // FLOW-1 names Priya as its decision maker and has three proposed options
   async function flow1() {
     const p = (await call(OP, "GET", `/t/${s.acme.id}/projects`)).json.find((x: { key: string }) => x.key === "FLOW-1");
     const full = await call(OP, "GET", `/t/${s.acme.id}/projects/${p.id}`);
@@ -396,7 +396,7 @@ describe("approvals", () => {
 describe("write guards", () => {
   it("refuses assignees and project people outside the organization", async () => {
     const p = (await call(OP, "GET", `/t/${s.acme.id}/projects`)).json[0];
-    const lee = (await call("lee@harborauto.example", "GET", "/me")).json.user.id;
+    const lee = (await call("lee@ridgeviewauto.example", "GET", "/me")).json.user.id;
     expect((await call(OP, "POST", `/t/${s.acme.id}/projects/${p.id}/items`, { kind: "task", title: "x", assigneeId: lee })).json.error).toBe("not_member");
     expect((await call(OP, "POST", `/t/${s.acme.id}/projects`, { name: "x", people: [{ userId: lee, role: "decision_maker" }] })).json.error).toBe("not_member");
   });
@@ -435,7 +435,7 @@ describe("write guards", () => {
 
 // Authenticator app: setup with a QR code, the first code finishes it, then codes confirm it's you
 describe("authenticator app", () => {
-  const dana = "dana@acmedental.example";
+  const dana = "tomas@harborlineoutfitters.example";
   // The code an app would show now for a base32 secret
   const codeFor = async (secret: string, at = Date.now()) => {
     const { TOTP, Secret } = await import("otpauth");
@@ -471,13 +471,13 @@ describe("comments", () => {
     const p = (await call(OP, "GET", `/t/${s.acme.id}/projects`)).json.find((x: { key: string }) => x.key === "FLOW-1");
     const path = `/t/${s.acme.id}/projects/${p.id}`;
     const item = (await call(OP, "GET", path)).json.items[0];
-    const added = await call("dana@acmedental.example", "POST", `${path}/items/${item.id}/comments`, { body: "Can we start Monday?" });
+    const added = await call("tomas@harborlineoutfitters.example", "POST", `${path}/items/${item.id}/comments`, { body: "Can we start Monday?" });
     expect(added.status).toBe(201);
-    const list = await call("raj@acmedental.example", "GET", `${path}/items/${item.id}/comments`);
+    const list = await call("priya@harborlineoutfitters.example", "GET", `${path}/items/${item.id}/comments`);
     expect(list.json.comments.map((x: { body: string }) => x.body)).toEqual(["Can we start Monday?"]);
     expect(list.json.history.some((e: { action: string }) => e.action === "comment.created")).toBe(true);
-    expect((await call("lee@harborauto.example", "GET", `${path}/items/${item.id}/comments`)).status).toBe(404);
-    expect((await call("dana@acmedental.example", "DELETE", `${path}/items/${item.id}/comments/${added.json.id}`)).status).toBe(200);
+    expect((await call("lee@ridgeviewauto.example", "GET", `${path}/items/${item.id}/comments`)).status).toBe(404);
+    expect((await call("tomas@harborlineoutfitters.example", "DELETE", `${path}/items/${item.id}/comments/${added.json.id}`)).status).toBe(200);
   });
 });
 
@@ -501,12 +501,12 @@ describe("upcoming and insights", () => {
     const day = (n: number) => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
     await call(OP, "POST", `/t/${s.acme.id}/projects/${p.id}/items`, { kind: "task", title: "Late one", dueDate: day(-40) });
     await call(OP, "POST", `/t/${s.acme.id}/projects/${p.id}/items`, { kind: "milestone", title: "Go live", dueDate: day(10) });
-    const up = await call("raj@acmedental.example", "GET", `/t/${s.acme.id}/upcoming`);
+    const up = await call("priya@harborlineoutfitters.example", "GET", `/t/${s.acme.id}/upcoming`);
     const titles = up.json.events.map((e: { title: string }) => e.title);
     expect(titles).toContain("Late one");
     expect(titles).toContain("Go live");
     expect(up.json.events.find((e: { title: string }) => e.title === "Late one").overdue).toBe(true);
-    const ins = await call("raj@acmedental.example", "GET", `/t/${s.acme.id}/insights`);
+    const ins = await call("priya@harborlineoutfitters.example", "GET", `/t/${s.acme.id}/insights`);
     expect(ins.json.weeks).toHaveLength(8);
     expect(ins.json.work.overdue).toBeGreaterThan(0);
     expect(Object.values(ins.json.byLayer).reduce((a: number, b) => a + (b as number), 0)).toBe(ins.json.projects);
@@ -555,29 +555,29 @@ describe("session step-up", () => {
 // Notifications: others' changes count as new until opened, and important ones email by default
 describe("notifications", () => {
   it("counts others' changes, clears on open, and emails a project move", async () => {
-    const list = await call("raj@acmedental.example", "GET", `/t/${s.acme.id}/projects`);
+    const list = await call("priya@harborlineoutfitters.example", "GET", `/t/${s.acme.id}/projects`);
     const p = list.json.find((x: { key: string }) => x.key === "FLOW-1");
-    await call("dana@acmedental.example", "POST", `/t/${s.acme.id}/notifications/seen`);
+    await call("tomas@harborlineoutfitters.example", "POST", `/t/${s.acme.id}/notifications/seen`);
     await new Promise((r) => setTimeout(r, 5));
-    await call("raj@acmedental.example", "POST", `/t/${s.acme.id}/projects/${p.id}/items`, { kind: "request", title: "Text reminders" });
-    await call("raj@acmedental.example", "POST", `/t/${s.acme.id}/projects/${p.id}/move`, { version: p.version, stageId: "build", reason: "Starting early" });
-    const n = await call("dana@acmedental.example", "GET", `/t/${s.acme.id}/notifications`);
+    await call("priya@harborlineoutfitters.example", "POST", `/t/${s.acme.id}/projects/${p.id}/items`, { kind: "request", title: "Text reminders" });
+    await call("priya@harborlineoutfitters.example", "POST", `/t/${s.acme.id}/projects/${p.id}/move`, { version: p.version, stageId: "build", reason: "Starting early" });
+    const n = await call("tomas@harborlineoutfitters.example", "GET", `/t/${s.acme.id}/notifications`);
     expect(n.json.unread).toBe(2);
     // Both land in the same instant on a fast machine, so check the set, not the order
     expect(n.json.events.map((e: { group: string }) => e.group)).toEqual(expect.arrayContaining(["workflow", "updates"]));
-    // Moves are critical, so Dana gets an email; the new request isn't, so she doesn't
-    expect(mailer.sent.filter((m) => m.to === "dana@acmedental.example").length).toBe(1);
-    await call("dana@acmedental.example", "POST", `/t/${s.acme.id}/notifications/seen`);
-    expect((await call("dana@acmedental.example", "GET", `/t/${s.acme.id}/notifications`)).json.unread).toBe(0);
+    // Moves are critical, so Tomas gets an email; the new request isn't, so she doesn't
+    expect(mailer.sent.filter((m) => m.to === "tomas@harborlineoutfitters.example").length).toBe(1);
+    await call("tomas@harborlineoutfitters.example", "POST", `/t/${s.acme.id}/notifications/seen`);
+    expect((await call("tomas@harborlineoutfitters.example", "GET", `/t/${s.acme.id}/notifications`)).json.unread).toBe(0);
   });
 
   it("says where each notification leads: the item on its layer, the project, or the page", async () => {
-    const list = await call("raj@acmedental.example", "GET", `/t/${s.acme.id}/projects`);
+    const list = await call("priya@harborlineoutfitters.example", "GET", `/t/${s.acme.id}/projects`);
     const p = list.json.find((x: { key: string }) => x.key === "FLOW-1");
-    const item = (await call("raj@acmedental.example", "POST", `/t/${s.acme.id}/projects/${p.id}/items`, { kind: "task", title: "Set up the form" })).json;
-    await call("raj@acmedental.example", "POST", `/t/${s.acme.id}/projects/${p.id}/items/${item.id}/comments`, { body: "Starting Monday" });
-    await call("raj@acmedental.example", "POST", `/t/${s.acme.id}/projects/${p.id}/move`, { version: p.version, stageId: "build", reason: "Ready" });
-    const events = (await call("dana@acmedental.example", "GET", `/t/${s.acme.id}/notifications`)).json.events as { action: string; link?: object }[];
+    const item = (await call("priya@harborlineoutfitters.example", "POST", `/t/${s.acme.id}/projects/${p.id}/items`, { kind: "task", title: "Set up the form" })).json;
+    await call("priya@harborlineoutfitters.example", "POST", `/t/${s.acme.id}/projects/${p.id}/items/${item.id}/comments`, { body: "Starting Monday" });
+    await call("priya@harborlineoutfitters.example", "POST", `/t/${s.acme.id}/projects/${p.id}/move`, { version: p.version, stageId: "build", reason: "Ready" });
+    const events = (await call("tomas@harborlineoutfitters.example", "GET", `/t/${s.acme.id}/notifications`)).json.events as { action: string; link?: object }[];
     const of = (a: string) => events.find((e) => e.action === a)?.link;
     expect(of("task.created")).toEqual({ project: "FLOW-1", layer: "execution", item: item.id });
     expect(of("comment.created")).toEqual({ project: "FLOW-1", layer: "execution", item: item.id });
@@ -588,11 +588,11 @@ describe("notifications", () => {
 
 // Texts: only with consent, only for the kinds chosen, and only to a number that reads as real
 describe("texts", () => {
-  const dana = "dana@acmedental.example";
-  /** Move FLOW-1 one stage as Raj, which Dana chose to hear about by text */
+  const dana = "tomas@harborlineoutfitters.example";
+  /** Move FLOW-1 one stage as Priya, which Tomas chose to hear about by text */
   const move = async (stageId: string) => {
-    const p = (await call("raj@acmedental.example", "GET", `/t/${s.acme.id}/projects`)).json.find((x: { key: string }) => x.key === "FLOW-1");
-    const r = await call("raj@acmedental.example", "POST", `/t/${s.acme.id}/projects/${p.id}/move`, { version: p.version, stageId, reason: "Testing" });
+    const p = (await call("priya@harborlineoutfitters.example", "GET", `/t/${s.acme.id}/projects`)).json.find((x: { key: string }) => x.key === "FLOW-1");
+    const r = await call("priya@harborlineoutfitters.example", "POST", `/t/${s.acme.id}/projects/${p.id}/move`, { version: p.version, stageId, reason: "Testing" });
     expect(r.status, JSON.stringify(r.json)).toBeLessThan(300);
   };
   /** Save a new number, then agree to texts in a separate save: consent never rides along with a new number */
@@ -637,7 +637,7 @@ describe("texts", () => {
     expect(texter.sent[1]!.to).toBe("+15550102030");
     expect(texter.sent[1]!.body).toMatch(/Reply STOP/);
     // The notice names no organization, project, or person
-    expect(texter.sent[1]!.body).not.toMatch(/Acme|FLOW|Raj/);
+    expect(texter.sent[1]!.body).not.toMatch(/Harborline|FLOW|Priya/);
     // A new number clears consent and verification: zero texts until proven and agreed again
     const cur = (await call(dana, "GET", "/me")).json.user;
     const changed = await call(dana, "PATCH", "/me", { version: cur.version, phone: "(555) 010-9999" });
@@ -731,8 +731,8 @@ describe("texts", () => {
 
 // Owner policy (2026-11-09): only a confirmed client admin names or changes who decides
 describe("naming the decision maker", () => {
-  const raj = "raj@acmedental.example";
-  const dana = "dana@acmedental.example";
+  const raj = "priya@harborlineoutfitters.example";
+  const dana = "tomas@harborlineoutfitters.example";
   const ids = async () => ({
     raj: (await call(raj, "GET", "/me")).json.user.id as string,
     dana: (await call(dana, "GET", "/me")).json.user.id as string,
@@ -783,7 +783,7 @@ describe("naming the decision maker", () => {
     expect(r.status).toBe(200);
     const audit = await repo.listAudit(s.acme.id);
     const row = audit.find((e) => e.action === "project.decider_changed");
-    expect(row?.summary).toBe("FLOW-1 decision maker: Raj Patel → Dana Kim");
+    expect(row?.summary).toBe("FLOW-1 decision maker: Priya Raman → Tomas Greer");
     expect(row?.actorId).toBe(u.raj);
   });
 

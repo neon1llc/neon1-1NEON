@@ -13,7 +13,7 @@ import { Repo } from "./store/repo.ts";
 
 
 // A signed approval or acceptance: the typed name and the consent box
-const SIGN = { typedName: "Raj Patel", consent: true };
+const SIGN = { typedName: "Priya Raman", consent: true };
 const OP = "pradeep@neon1.tech";
 let repo: Repo;
 let app: ReturnType<typeof createApp>;
@@ -67,7 +67,7 @@ async function issuedDeposit() {
 
 describe("the service agreement", () => {
   it("is signed once by a client admin, against the text they were shown, before any approval", async () => {
-    // Start Acme unsigned
+    // Start Harborline unsigned
     const t = (await repo.getTenant(s.acme.id))!;
     await repo.saveTenant({ ...t, agreements: [], version: t.version + 1 }, t.version);
     const { opt, path } = await flow();
@@ -79,7 +79,7 @@ describe("the service agreement", () => {
     expect(got.json.hash).toBe(await sha256Hex(AGREEMENT_TEXT));
     expect(got.json.signed).toBeUndefined();
     const hash = got.json.hash as string;
-    const sign = { typedName: "Raj Patel", consent: true, edition: AGREEMENT_EDITION, hash };
+    const sign = { typedName: "Priya Raman", consent: true, edition: AGREEMENT_EDITION, hash };
     // Editors and neon1 don't sign for the client; the consent box must be ticked; a changed text is refused
     expect((await call(s.dana.email, "POST", `/t/${s.acme.id}/agreement/sign`, sign)).status).toBe(403);
     expect((await call(OP, "POST", `/t/${s.acme.id}/agreement/sign`, sign)).status).toBe(403);
@@ -88,7 +88,7 @@ describe("the service agreement", () => {
 
     const ok = await call(s.raj.email, "POST", `/t/${s.acme.id}/agreement/sign`, sign);
     expect(ok.status).toBe(201);
-    expect(ok.json).toMatchObject({ doc: "agreement", ref: AGREEMENT_EDITION, hash, typedName: "Raj Patel", email: s.raj.email });
+    expect(ok.json).toMatchObject({ doc: "agreement", ref: AGREEMENT_EDITION, hash, typedName: "Priya Raman", email: s.raj.email });
     // Signing again returns the same signature
     expect((await call(s.raj.email, "POST", `/t/${s.acme.id}/agreement/sign`, sign)).json.at).toBe(ok.json.at);
     expect([...records.saved.keys()].some((k) => k.startsWith(`t/${s.acme.id}/agreement/`))).toBe(true);
@@ -100,7 +100,7 @@ describe("the service agreement", () => {
 describe("signed approvals", () => {
   it("records the signature over a hash of the terms, keeps a copy, and drafts the deposit only for neon1", async () => {
     const { decision, draft, path } = await approveB();
-    expect(decision.fields.signature).toMatchObject({ doc: "approval", ref: "0039-r1-B", typedName: "Raj Patel" });
+    expect(decision.fields.signature).toMatchObject({ doc: "approval", ref: "0039-r1-B", typedName: "Priya Raman" });
     expect(decision.fields.signature.hash).toMatch(/^[0-9a-f]{64}$/);
     expect(records.saved.has(`t/${s.acme.id}/p/${decision.projectId}/decisions/${decision.id}.json`)).toBe(true);
     expect(draft).toMatchObject({ status: "draft", fields: { type: "deposit", lines: [{ unitCents: 225_000, ref: decision.id }] } });
@@ -136,7 +136,7 @@ describe("invoices", () => {
     expect((await call(s.raj.email, "POST", `${path}/invoices/${draft.id}/issue`, { version: draft.version })).status).toBe(403);
     const edited = await call(OP, "PATCH", `${path}/invoices/${draft.id}`, { version: draft.version, termsDays: 30 });
     const r = await call(OP, "POST", `${path}/invoices/${draft.id}/issue`, { version: edited.json.version });
-    expect(r.json).toMatchObject({ title: "Invoice INV-0039-01", status: "issued", fields: { number: "INV-0039-01", termsDays: 30, billTo: { org: "Acme Dental", name: "Raj Patel" } } });
+    expect(r.json).toMatchObject({ title: "Invoice INV-0039-01", status: "issued", fields: { number: "INV-0039-01", termsDays: 30, billTo: { org: "Harborline Outfitters", name: "Priya Raman" } } });
     expect(r.json.fields.hash).toMatch(/^[0-9a-f]{64}$/);
     expect(records.saved.has(`t/${s.acme.id}/p/${draft.projectId}/invoices/INV-0039-01.json`)).toBe(true);
     // Issued: no edits, no deletes, through either route; generic routes never make invoices or payments
@@ -198,7 +198,7 @@ describe("invoices", () => {
     const h = (await flow()).items.find((i) => i.kind === "handoff")!;
     expect((await call(s.raj.email, "POST", `${path}/items/${h.id}/accept`, { version: h.version })).status).toBe(400);
     const r = await call(s.raj.email, "POST", `${path}/items/${h.id}/accept`, { version: h.version, signature: SIGN });
-    expect(r.json.fields.accepted.signature).toMatchObject({ doc: "acceptance", typedName: "Raj Patel" });
+    expect(r.json.fields.accepted.signature).toMatchObject({ doc: "acceptance", typedName: "Priya Raman" });
     const final = (await flow()).items.find((i) => i.kind === "invoice" && i.fields.type === "final")!;
     expect(final).toMatchObject({ status: "draft", fields: { lines: [{ unitCents: 225_000 }] } });
     // A signed acceptance is a record: the step stays done
@@ -217,20 +217,20 @@ describe("invoices", () => {
     await call(OP, "PATCH", `${path}/items/${second.id}`, { version: second.version, status: "done" });
     expect((await call(s.dana.email, "POST", `${path}/handover/accept`, { signature: SIGN })).status).toBe(403);
     expect((await flow()).items.some((i) => i.kind === "invoice" && i.fields.type === "final")).toBe(false);
-    // Home lists what waits on Raj: the deposit to pay first, then the handover to accept
+    // Home lists what waits on Priya: the deposit to pay first, then the handover to accept
     const before = (await call(s.raj.email, "GET", `/t/${s.acme.id}/workspace?waiting=all`)).json.waiting as { action: string; title: string; projectKey: string }[];
     expect(before.filter((w) => w.projectKey === "FLOW-1").map((w) => w.action).slice(0, 2)).toEqual(["pay", "accept"]);
     expect(before.find((w) => w.action === "pay" && w.projectKey === "FLOW-1")!.title).toBe("Pay INV-0039-01: $2,250");
     // neon1 is asked for nothing on a client's invoice
     expect(((await call(OP, "GET", `/t/${s.acme.id}/workspace?waiting=all`)).json.waiting as { action: string }[]).some((w) => w.action === "pay" || w.action === "accept")).toBe(false);
-    const r = await call(s.raj.email, "POST", `${path}/handover/accept`, { note: "Dana ran a day on her own", signature: SIGN });
+    const r = await call(s.raj.email, "POST", `${path}/handover/accept`, { note: "Tomas ran a day on her own", signature: SIGN });
     expect(r.status).toBe(200);
     expect(r.json).toMatchObject({ final: true });
     const steps = (await flow()).items.filter((i) => i.kind === "handoff");
     expect(steps).toHaveLength(2);
-    for (const step of steps) expect(step.fields.accepted).toMatchObject({ name: "Raj Patel", note: "Dana ran a day on her own", signature: { doc: "acceptance", ref: step.title, typedName: "Raj Patel" } });
+    for (const step of steps) expect(step.fields.accepted).toMatchObject({ name: "Priya Raman", note: "Tomas ran a day on her own", signature: { doc: "acceptance", ref: step.title, typedName: "Priya Raman" } });
     expect((await flow()).items.filter((i) => i.kind === "invoice" && i.fields.type === "final")).toHaveLength(1);
-    // Home's "Needs you" asked Raj for it while it waited, and no longer does
+    // Home's "Needs you" asked Priya for it while it waited, and no longer does
     const needs = async () => ((await call(s.raj.email, "GET", `/t/${s.acme.id}/workspace?waiting=all`)).json.waiting as { action: string; title: string }[]);
     expect((await needs()).some((w) => w.action === "accept")).toBe(false);
     // Nothing left to accept, and no second final invoice

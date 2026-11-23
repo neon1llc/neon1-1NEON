@@ -471,7 +471,7 @@ export function itemRoutes(app: App, k: Kit) {
 export function editRoutes(app: App, k: Kit) {
   const { repo, project } = k;
 
-  // Edit markers: advisory "Dana is editing" hints that expire on their own
+  // Edit markers: advisory "Tomas is editing" hints that expire on their own
 
   app.post("/t/:tid/projects/:pid/edits", async (c) => {
     need(c, "write");

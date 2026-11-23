@@ -7,7 +7,7 @@ import { changeRecord, dayWords, itemChanges, projectChanges, stageChanges } fro
 import { occurrences, type Item, type Project } from "./model.ts";
 
 
-const nameOf = (id: string) => ({ u1: "Maria", u2: "Raj" })[id] ?? "someone";
+const nameOf = (id: string) => ({ u1: "Maria", u2: "Priya" })[id] ?? "someone";
 
 
 // Dates read the way people write them
@@ -27,7 +27,7 @@ describe("itemChanges()", () => {
     const after = { ...before, status: "done", assigneeId: "u2", dueDate: "2026-11-07", fields: { readings: [1, 2] } } as unknown as Item;
     expect(itemChanges(before, after, nameOf)).toEqual([
       "status To do → Done",
-      "assigned to Raj (was Maria)",
+      "assigned to Priya (was Maria)",
       "due Nov 3, 2026 → Nov 7, 2026",
       "readings: 1 added",
     ]);

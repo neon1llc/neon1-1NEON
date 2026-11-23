@@ -24,8 +24,8 @@ describe("devUser with storage denied", () => {
     const { devUser } = await import("./devuser.ts");
     const persist = await import("./persist.ts");
     expect(devUser.get()).toBe("");
-    devUser.set("dana@acmedental.example");
-    expect(devUser.get()).toBe("dana@acmedental.example");
+    devUser.set("tomas@harborlineoutfitters.example");
+    expect(devUser.get()).toBe("tomas@harborlineoutfitters.example");
     expect(persist.persisting()).toBe(false);
     devUser.set("");
     expect(devUser.get()).toBe("");
@@ -36,8 +36,8 @@ describe("devUser with storage denied", () => {
     vi.stubGlobal("localStorage", { getItem: (k: string) => box.get(k) ?? null, setItem: (k: string, v: string) => box.set(k, v), removeItem: (k: string) => box.delete(k) });
     const { devUser } = await import("./devuser.ts");
     const persist = await import("./persist.ts");
-    devUser.set("raj@acmedental.example");
-    expect(box.get("1neon.devUser")).toBe("raj@acmedental.example");
+    devUser.set("priya@harborlineoutfitters.example");
+    expect(box.get("1neon.devUser")).toBe("priya@harborlineoutfitters.example");
     expect(persist.persisting()).toBe(true);
   });
 
@@ -56,9 +56,9 @@ describe("devUser with storage denied", () => {
     const seen: Headers[] = [];
     vi.stubGlobal("fetch", async (_u: string, init: RequestInit) => { seen.push(new Headers(init.headers)); return new Response("{}", { status: 200 }); });
     const api = await import("./api.ts");
-    api.devUser.set("dana@acmedental.example");
+    api.devUser.set("tomas@harborlineoutfitters.example");
     await api.api("/me");
     // Local development counts as picking a person (import.meta.env.DEV under vitest)
-    expect(seen[0]!.get("x-dev-user")).toBe(api.pickPerson ? "dana@acmedental.example" : null);
+    expect(seen[0]!.get("x-dev-user")).toBe(api.pickPerson ? "tomas@harborlineoutfitters.example" : null);
   });
 });

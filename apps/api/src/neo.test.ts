@@ -70,13 +70,13 @@ describe("neo", () => {
   it("needs a signed-in person and the change header", async () => {
     const anon = await app.request("/1NEON/api/neo", { method: "POST", headers: { "content-type": "application/json", "x-1neon": "1" }, body: "{}" });
     expect(anon.status).toBe(401);
-    const noHeader = await app.request("/1NEON/api/neo", { method: "POST", headers: { "content-type": "application/json", "x-dev-user": "dana@acmedental.example" }, body: "{}" });
+    const noHeader = await app.request("/1NEON/api/neo", { method: "POST", headers: { "content-type": "application/json", "x-dev-user": "tomas@harborlineoutfitters.example" }, body: "{}" });
     expect(noHeader.status).toBe(403);
   });
 
   it("answers with the guide in a cached system prompt and the person's context on the question", async () => {
     script.push(say("N1-0001 is neon1's own client ID."));
-    const r = await ask("dana@acmedental.example", "What is N1-0001?", "/o/acme-dental/workflow");
+    const r = await ask("tomas@harborlineoutfitters.example", "What is N1-0001?", "/o/harborline-outfitters/workflow");
     expect(r.status).toBe(200);
     expect(((await r.json()) as { reply: string }).reply).toContain("N1-0001");
     const sent = calls[0]!;
@@ -84,37 +84,37 @@ describe("neo", () => {
     expect(sys.at(-1)!.cache_control).toEqual({ type: "ephemeral" });
     expect(sys.map((b) => b.text).join()).toContain("1neon-guide-overview");
     const last = sent.messages.at(-1)!.content as Anthropic.TextBlockParam[];
-    expect(last[0]!.text).toContain("Dana Kim");
-    expect(last[0]!.text).toContain("Organization in view: Acme Dental");
+    expect(last[0]!.text).toContain("Tomas Greer");
+    expect(last[0]!.text).toContain("Organization in view: Harborline Outfitters");
     expect(last[0]!.text).toContain("FLOW-1");
     expect(last[1]!.text).toBe("What is N1-0001?");
   });
 
   it("reads as the caller where the API is origin locked (dev and production), so its context holds their organizations", async () => {
     // Behind CloudFront every request carries the edge secret; Neo's own reads must carry it too, or each answers 403
-    // and Neo tells a member of Acme Dental that they belong to no organization
+    // and Neo tells a member of Harborline Outfitters that they belong to no organization
     app = createApp({
       cfg: { env: "local", publicUrl: "https://neon1.tech", operatorEmails: [OP], devAuth: true, originLock: true, originSecret: "edge-secret-value" },
       repo, directory: new MemoryDirectory(), mailer: new MemoryMailer(), storage: new MemoryStorage(),
       neo: { model: fake, modelId: "fake-model", budget: DEFAULT_BUDGET },
     });
-    script.push(say("You're in Acme Dental."));
+    script.push(say("You're in Harborline Outfitters."));
     const r = await app.request("/1NEON/api/neo", {
       method: "POST",
-      headers: { "content-type": "application/json", "x-1neon": "1", "x-dev-user": "dana@acmedental.example", "x-origin-verify": "edge-secret-value" },
-      body: JSON.stringify({ messages: [{ role: "user", content: "What's waiting on me?" }], where: "/o/acme-dental/workspace" }),
+      headers: { "content-type": "application/json", "x-1neon": "1", "x-dev-user": "tomas@harborlineoutfitters.example", "x-origin-verify": "edge-secret-value" },
+      body: JSON.stringify({ messages: [{ role: "user", content: "What's waiting on me?" }], where: "/o/harborline-outfitters/workspace" }),
     });
     expect(r.status).toBe(200);
     const text = (calls[0]!.messages.at(-1)!.content as Anthropic.TextBlockParam[])[0]!.text;
-    expect(text).toContain("Acme Dental");
+    expect(text).toContain("Harborline Outfitters");
     expect(text).not.toMatch(/Organizations \(id \| slug \| client ID \| name \| their access\): none/);
-    expect(text).toContain("Organization in view: Acme Dental");
+    expect(text).toContain("Organization in view: Harborline Outfitters");
   });
 
   it("reads as the caller, so another organization's data stays out of reach", async () => {
-    const harbor = await orgOf(OP, "harbor-auto");
+    const harbor = await orgOf(OP, "ridgeview-auto");
     script.push(use("read", { path: `/t/${harbor.id}/projects` }), say("I can't see that organization."));
-    const r = await ask("dana@acmedental.example", "What's Harbor Auto working on?");
+    const r = await ask("tomas@harborlineoutfitters.example", "What's Ridgeview Auto working on?");
     expect(r.status).toBe(200);
     const result = (calls[1]!.messages.at(-1)!.content as Anthropic.ToolResultBlockParam[])[0]!;
     expect(result.is_error).toBe(true);
@@ -126,25 +126,25 @@ describe("neo", () => {
     expect(readable("/t/abc/projects/def")).toBe(true);
     for (const bad of ["/t/abc/members/invite", "/auth/login", "/contact", "/t/abc/../me", "/t/abc/docs/x/download"]) expect(readable(bad)).toBe(false);
     script.push(use("read", { path: "/t/abc/docs/x/download" }), say("Sorry."));
-    await ask("dana@acmedental.example", "Download it");
+    await ask("tomas@harborlineoutfitters.example", "Download it");
     const result = (calls[1]!.messages.at(-1)!.content as Anthropic.ToolResultBlockParam[])[0]!;
     expect(result.is_error).toBe(true);
   });
 
   it("returns a checked plan and tour, and sends a malformed one back to the model", async () => {
-    const acme = await orgOf("dana@acmedental.example", "acme-dental");
+    const acme = await orgOf("tomas@harborlineoutfitters.example", "harborline-outfitters");
     script.push(
       use("offer_plan", { title: "Bad", steps: [{ say: "x", action: { op: "drop_table" } }] }, "a"),
       use("offer_plan", { title: "Add a task", steps: [{ say: "Add the task to FLOW-1", action: { op: "add_item", tid: acme.id, pid: "p1", kind: "task", title: "Call the vendor" } }] }, "b"),
-      use("offer_tour", { title: "The board", steps: [{ path: "/o/acme-dental/workflow", at: "board-column", title: "Stages", text: "Columns run left to right." }] }, "c"),
-      say("1. Add the task. Want me to do it? [Board](/1NEON/o/acme-dental/workflow) [evil](https://evil.example) <img src=x>"),
+      use("offer_tour", { title: "The board", steps: [{ path: "/o/harborline-outfitters/workflow", at: "board-column", title: "Stages", text: "Columns run left to right." }] }, "c"),
+      say("1. Add the task. Want me to do it? [Board](/1NEON/o/harborline-outfitters/workflow) [evil](https://evil.example) <img src=x>"),
     );
-    const r = await ask("dana@acmedental.example", "Add a task to call the vendor");
+    const r = await ask("tomas@harborlineoutfitters.example", "Add a task to call the vendor");
     const body = (await r.json()) as { reply: string; plan?: { steps: unknown[] }; tour?: { steps: unknown[] } };
     expect((calls[1]!.messages.at(-1)!.content as Anthropic.ToolResultBlockParam[])[0]!.is_error).toBe(true);
     expect(body.plan?.steps).toHaveLength(1);
     expect(body.tour?.steps).toHaveLength(1);
-    expect(body.reply).toContain("[Board](/1NEON/o/acme-dental/workflow)");
+    expect(body.reply).toContain("[Board](/1NEON/o/harborline-outfitters/workflow)");
     expect(body.reply).not.toContain("evil.example");
     expect(body.reply).not.toContain("<img");
   });
@@ -152,9 +152,9 @@ describe("neo", () => {
   it("caps questions per person per day before calling the model", async () => {
     build({ ...DEFAULT_BUDGET, dailyPerPerson: 2 });
     script.push(say("one"), say("two"));
-    expect((await ask("dana@acmedental.example", "one?")).status).toBe(200);
-    expect((await ask("dana@acmedental.example", "two?")).status).toBe(200);
-    expect((await ask("dana@acmedental.example", "three?")).status).toBe(429);
+    expect((await ask("tomas@harborlineoutfitters.example", "one?")).status).toBe(200);
+    expect((await ask("tomas@harborlineoutfitters.example", "two?")).status).toBe(200);
+    expect((await ask("tomas@harborlineoutfitters.example", "three?")).status).toBe(429);
     expect(calls).toHaveLength(2);
   });
 
@@ -162,8 +162,8 @@ describe("neo", () => {
     // 1,000 input and 100 output tokens at $2 and $10 a million cost $0.003, over a $0.002 ceiling
     build({ ...DEFAULT_BUDGET, monthlyUsd: 0.002 });
     script.push(say("first"));
-    expect((await ask("dana@acmedental.example", "first?")).status).toBe(200);
-    const r = await ask("dana@acmedental.example", "second?");
+    expect((await ask("tomas@harborlineoutfitters.example", "first?")).status).toBe(200);
+    const r = await ask("tomas@harborlineoutfitters.example", "second?");
     expect(r.status).toBe(429);
     expect(((await r.json()) as { error: string }).error).toBe("neo_month");
   });
@@ -171,7 +171,7 @@ describe("neo", () => {
   it("refuses a conversation that doesn't alternate", async () => {
     const r = await app.request("/1NEON/api/neo", {
       method: "POST",
-      headers: { "content-type": "application/json", "x-1neon": "1", "x-dev-user": "dana@acmedental.example" },
+      headers: { "content-type": "application/json", "x-1neon": "1", "x-dev-user": "tomas@harborlineoutfitters.example" },
       body: JSON.stringify({ messages: [{ role: "assistant", content: "hi" }] }),
     });
     expect(r.status).toBe(400);
@@ -179,6 +179,6 @@ describe("neo", () => {
 
   it("says it's off where no model is wired", async () => {
     app = createApp({ cfg: { env: "local", publicUrl: "https://neon1.tech", operatorEmails: [OP], devAuth: true }, repo, directory: new MemoryDirectory(), mailer: new MemoryMailer(), storage: new MemoryStorage() });
-    expect((await ask("dana@acmedental.example", "hello?")).status).toBe(503);
+    expect((await ask("tomas@harborlineoutfitters.example", "hello?")).status).toBe(503);
   });
 });

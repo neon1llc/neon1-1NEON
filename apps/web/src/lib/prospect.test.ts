@@ -43,7 +43,7 @@ describe("prospect state", () => {
 });
 
 describe("sign-up form", () => {
-  const ok = { email: " a@b.co ", name: " Ana  Ruiz ", kind: "small", org: " Acme ", city: " Queens ", state: "NY", link: "", terms: true };
+  const ok = { email: " a@b.co ", name: " Ana  Ruiz ", kind: "small", org: " Harborline ", city: " Queens ", state: "NY", link: "", terms: true };
   it("needs every required field and the terms", () => {
     expect(signUpReady(ok)).toBe(true);
     expect(signUpReady({ ...ok, terms: false })).toBe(false);
@@ -77,7 +77,7 @@ describe("sign-up form", () => {
     expect(elapsedSince(5000, 1000)).toBe(0);
   });
   it("sends trimmed values, the place as City, ST, and only the answers that apply", () => {
-    expect(signUpBody(ok, { check: "tok", website: "", elapsed: 5000, remember: true })).toEqual({ email: "a@b.co", name: "Ana Ruiz", kind: "small", org: "Acme", place: "Queens, NY", link: "", terms: true, check: "tok", website: "", elapsed: 5000, remember: true });
+    expect(signUpBody(ok, { check: "tok", website: "", elapsed: 5000, remember: true })).toEqual({ email: "a@b.co", name: "Ana Ruiz", kind: "small", org: "Harborline", place: "Queens, NY", link: "", terms: true, check: "tok", website: "", elapsed: 5000, remember: true });
     expect(signUpBody({ ...ok, kind: "individual" }, { check: "", website: "", elapsed: 1, remember: false })).toMatchObject({ org: "" });
     expect(signUpBody({ ...ok, found: "other", foundOther: " A podcast " }, { check: "", website: "", elapsed: 1, remember: false })).toMatchObject({ found: "other", foundOther: "A podcast" });
     expect(signUpBody(ok, { check: "", website: "", elapsed: 1, remember: false })).not.toHaveProperty("found");

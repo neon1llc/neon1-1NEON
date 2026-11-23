@@ -184,7 +184,7 @@ describe("sign-in method lifecycle", () => {
   });
 
   it("treats a failed passkey lookup as unknown, never as unenrolled", async () => {
-    // Dana has no app authenticator; Cognito can't be asked
+    // Tomas has no app authenticator; Cognito can't be asked
     directory.failLookup = true;
     const dana = await signIn(s.dana.email, "j-dana");
     expect((await call(dana, "POST", "/me/totp/start", {})).status).toBe(503);
@@ -327,7 +327,7 @@ describe("text codes to confirm it's you", () => {
   // Invariants from the SMS atomicity review: one code confirms at most one session, the hourly limit
   // counts sends rather than unused codes, and a code is bound to its session and number
   describe("single use and send budget", () => {
-    /** Dana with a proved number and text codes on, in one email session */
+    /** Tomas with a proved number and text codes on, in one email session */
     async function ready(jti = "j-dana") {
       const dana = await signIn(s.dana.email, jti);
       await verifyNumber(dana);

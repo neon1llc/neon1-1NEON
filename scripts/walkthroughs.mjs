@@ -180,7 +180,7 @@ const SCENARIOS = {
     if (awake !== (mode !== "dark")) throw new Error(`the demo landing shows ${awake ? "awake" : "dark"} while the saved mode is ${mode ?? "unset"}`);
     const side = async () => { const b = await page.locator(".n1chat-launch").first().boundingBox({ timeout: 15_000 }); return b.x + b.width / 2 < width / 2 ? "left" : "right"; };
     if ((await side()) !== "left") throw new Error("Neo isn't bottom left on the demo landing");
-    await page.getByRole("button", { name: /Raj Patel/ }).click();
+    await page.getByRole("button", { name: /Priya Raman/ }).click();
     await page.waitForSelector(".shell", { timeout: 20_000 });
     await page.waitForTimeout(800);
     if ((await side()) !== "right") throw new Error("Neo isn't bottom right inside the demo");

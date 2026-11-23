@@ -162,7 +162,7 @@ export function NewProject() {
             <div><label htmlFor="s">{quick ? "What's wrong, in a sentence or two?" : "In one or two sentences, what is this?"}</label><textarea id="s" value={projectSummary} onChange={(e) => setSummary(e.target.value)} maxLength={500} rows={2} placeholder={quick ? "e.g. since Tuesday's update, jobs sit in the queue and nothing prints" : "e.g. patients email forms to one inbox, and staff retype them into the record"} /></div>
             {/* A quick fix is done when it works, and has no example to collect: those two are for projects */}
             {!quick && <div><label htmlFor="o">What will be true when it's done?</label><textarea id="o" value={outcome} onChange={(e) => setOutcome(e.target.value)} maxLength={500} rows={2} placeholder="e.g. patients upload once, and the front desk sees what's missing at a glance" /></div>}
-            {!quick && <div><label htmlFor="x">One real example of how it works today</label><textarea id="x" value={example} onChange={(e) => setExample(e.target.value)} maxLength={2000} rows={3} placeholder="e.g. every Monday, Dana exports the schedule to a spreadsheet and emails it to the front desk…" /></div>}
+            {!quick && <div><label htmlFor="x">One real example of how it works today</label><textarea id="x" value={example} onChange={(e) => setExample(e.target.value)} maxLength={2000} rows={3} placeholder="e.g. every Monday, Tomas exports the schedule to a spreadsheet and emails it to the front desk…" /></div>}
             <div><label htmlFor="d">Target date (optional)</label><input id="d" type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} style={{ maxWidth: 220 }} /></div>
           </>
         )}

@@ -7,7 +7,7 @@
 import { OptionFields, depositLines, finalLines, hoursLogged, priceOf } from "@1neon/domain";
 import { describe, expect, it } from "vitest";
 import { ACCESS_REVIEW, ASSISTANT_EVAL, canaryTable, CANARY, costTable, EVAL_QUESTIONS, exceptionTable, FILES, FULL_COMPARISON, monthly, reconcile, ROLLBACK_LOG, ROLLBACK_MINUTES, STOCK_SAMPLE } from "./artifacts.ts";
-import { moneyOf, SCENARIO_IDS, SCENARIOS, sum, summaryOf, type Scenario } from "./scenarios.ts";
+import { moneyOf, SCENARIO_IDS, SCENARIOS, sum, summaryOf, targetText, type Scenario } from "./scenarios.ts";
 
 
 const all = SCENARIO_IDS.map((id) => SCENARIOS[id]);
@@ -131,5 +131,22 @@ describe("Fenwick's access review", () => {
   it("reviews every account it counts", () => {
     expect(ACCESS_REVIEW.reviewed).toBe(ACCESS_REVIEW.accounts);
     expect(ACCESS_REVIEW.removed).toBeLessThan(ACCESS_REVIEW.accounts);
+  });
+});
+
+
+describe("target wording", () => {
+  it("says zero for none, and never a bound below zero", () => {
+    expect(targetText({ direction: "down", target: 0 })).toBe("zero");
+    expect(targetText({ direction: "down", target: 5 })).toBe("at most 5");
+    expect(targetText({ direction: "up", target: 90 })).toBe("at least 90");
+    for (const s of all) for (const m of s.measures) expect(m.target).toBeGreaterThanOrEqual(0);
+  });
+
+  it("keeps a proposal's promise inside what its acceptance measures show", () => {
+    for (const s of all) {
+      const said = `${s.project.name} ${s.project.outcome} ${String(s.options[s.chosen]!.fields.result)} ${s.better}`.toLowerCase();
+      expect(said).not.toMatch(/no longer queue|don't queue|counts agree|one stock count/);
+    }
   });
 });

@@ -12,7 +12,7 @@ import type { WriteOp } from "./store/types.ts";
 
 
 // A signed approval or acceptance: the typed name and the consent box
-const SIGN = { typedName: "Raj Patel", consent: true };
+const SIGN = { typedName: "Priya Raman", consent: true };
 
 
 const OP = "pradeep@neon1.tech";
@@ -117,7 +117,7 @@ describe("approved terms", () => {
 });
 
 
-/** Leave exactly two active admins in Acme (Dana promoted, any others demoted one at a time) */
+/** Leave exactly two active admins in Harborline (Tomas promoted, any others demoted one at a time) */
 async function twoAdmins() {
   const dana = (await repo.getMember(s.acme.id, s.dana.id))!;
   if (dana.access !== "admin") expect((await call(OP, "PATCH", `/t/${s.acme.id}/members/${s.dana.id}`, { version: dana.version, access: "admin" })).status).toBe(200);

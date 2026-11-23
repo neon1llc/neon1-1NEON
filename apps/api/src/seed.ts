@@ -21,11 +21,11 @@ export async function seed(repo: Repo, operatorEmail = "pradeep@neon1.tech") {
   const user = (email: string, name: string, title: string, strong = false): User => ({
     id: newId("u"), email, name, title, phone: "", operator: false, strongAuth: strong, theme: "awake", menu: "default", version: 1, createdAt: t0, updatedAt: t0, updatedBy: "seed",
   });
-  // People: the operator, an Acme admin and editor, and a Harbor contact who hasn't joined yet
+  // People: the operator, an Harborline admin and editor, and a Ridgeview contact who hasn't joined yet
   const pradeep = user(operatorEmail, "Pradeep", "Lead engineer", true);
-  const dana = user("dana@acmedental.example", "Dana Kim", "Office manager");
-  const raj = user("raj@acmedental.example", "Raj Patel", "Practice owner", true);
-  const lee = user("lee@harborauto.example", "Lee Moreno", "Operations lead");
+  const dana = user("tomas@harborlineoutfitters.example", "Tomas Greer", "Inventory lead");
+  const raj = user("priya@harborlineoutfitters.example", "Priya Raman", "Operations director", true);
+  const lee = user("lee@ridgeviewauto.example", "Lee Moreno", "Operations lead");
   for (const u of [pradeep, dana, raj, lee]) await repo.createUser(u);
 
   // Organizations: neon1 itself (N1-0001) and two sample clients
@@ -37,8 +37,8 @@ export async function seed(repo: Repo, operatorEmail = "pradeep@neon1.tech") {
     return t;
   };
   const neon1 = await org("neon1", "neon1", { place: "Albany, NY", link: "https://neon1.tech/" });
-  const acme = await org("Acme Dental", "acme-dental", { place: "Bayside, NY" });
-  const harbor = await org("Harbor Auto Group", "harbor-auto", { place: "Long Beach, NY" });
+  const acme = await org("Harborline Outfitters", "harborline-outfitters", { place: "Kingston, NY" });
+  const harbor = await org("Ridgeview Auto Group", "ridgeview-auto", { place: "Long Beach, NY" });
 
   // Memberships, including one still invited
   const member = async (t: Tenant, u: User, access: Member["access"], status: Member["status"] = "joined") => {
@@ -52,7 +52,7 @@ export async function seed(repo: Repo, operatorEmail = "pradeep@neon1.tech") {
   await member(harbor, pradeep, "admin");
   await member(harbor, lee, "admin", "invited");
 
-  // Acme signed neon1's service agreement when it became a client; Harbor hasn't yet
+  // Harborline signed neon1's service agreement when it became a client; Ridgeview hasn't yet
   const signedAcme: Tenant = { ...acme, agreements: [signature("agreement", AGREEMENT_EDITION, await sha256Hex(AGREEMENT_TEXT), { typedName: raj.name, consent: true }, { id: raj.id, name: raj.name, email: raj.email }, day(-21))], version: acme.version + 1 };
   await repo.saveTenant(signedAcme, acme.version);
   Object.assign(acme, signedAcme);
@@ -85,37 +85,37 @@ export async function seed(repo: Repo, operatorEmail = "pradeep@neon1.tech") {
     await item(p, "decision", `Approved: ${o.title}`, { status: "approved", fields: { optionId: o.id, optionVersion: o.version, approvedBy: by.id, approvedAt: day(-ago), conditions: "", terms: { title: o.title, body: o.body }, approverName: by.name, approverEmail: by.email }, createdAt: day(-ago), updatedAt: day(-ago) });
   };
 
-  // Acme: a project at Decide with three options to approve, and measures with baselines
-  const intake = await project(acme, "FLOW-1", "Patient intake out of the shared inbox", "decide", "on_track", "Intake runs through one email inbox. Staff chase missing documents and retype them into the patient record.", [{ userId: pradeep.id, role: "lead_engineer" }, { userId: raj.id, role: "decision_maker" }, { userId: dana.id, role: "tech_contact" }], 4, 4, "A new patient uploads their documents once, the front desk sees at a glance what's missing, and nothing is retyped.");
-  await item(intake, "discovery", "One real example of how it works today", { status: "done", body: "A new patient emails a photo of their insurance card. Dana saves it, types the details into the record, and replies asking for the missing ID." });
-  await item(intake, "discovery", "Who does this work, and which tools does it touch?", { status: "done", body: "Dana handles every intake. It touches the shared front-desk inbox and the patient record system, which Raj's practice has used for years." });
-  await item(intake, "requirement", "Patients upload once. Nothing is retyped", { fields: { priority: "must" } });
-  await item(intake, "requirement", "Staff see at a glance what's complete", { fields: { priority: "should" } });
+  // Harborline: a project at Decide with three options to approve, and measures with baselines
+  const intake = await project(acme, "FLOW-1", "Stock reconciliation and exception monitoring", "decide", "on_track", "Each store's POS, the web store, and the warehouse keep their own count, and they drift. Tomas reconciles them by hand every Monday.", [{ userId: pradeep.id, role: "lead_engineer" }, { userId: raj.id, role: "decision_maker" }, { userId: dana.id, role: "tech_contact" }], 4, 4, "Every morning by 7 am, one short list shows which counts disagree and why, without replacing a system.");
+  await item(intake, "discovery", "One real example of how it works today", { status: "done", body: "Last Saturday the web store sold four Ridgeline shells in large that the Kingston POS had already sold. Tomas found out Monday, from the customers." });
+  await item(intake, "discovery", "Who does this work, and which tools does it touch?", { status: "done", body: "Tomas reconciles the counts by hand. They live in each store's POS, the web store, and the warehouse partner's portal." });
+  await item(intake, "requirement", "A list of differences every morning by 7 am. Nothing is retyped", { fields: { priority: "must" } });
+  await item(intake, "requirement", "Store leads need no new tool for daily work", { fields: { priority: "should" } });
   // Illustrative figures. A is an hourly estimate and B a fixed price, so the demo shows both kinds,
   // each with the hours behind it
-  await item(intake, "option", "A. Tidy the inbox: rules, templates, and a checklist", { status: "proposed", body: "Fastest, cheapest. Keeps email as the system.", fields: alignPrice({ pricing: "estimate" as const, rateCents: RATE_CENTS, hoursLow: 5, hoursHigh: 7, basis: [{ work: "Inbox rules and labels for new intakes", hours: 2 }, { work: "Reply templates that ask for what's missing", hours: 1.5 }, { work: "A one-page intake checklist for the front desk", hours: 1 }, { work: "Walkthrough with Dana, and a week of adjustments", hours: 1.5 }], why: "Pick this for relief this week. Staff still retype every intake into the patient record, so it doesn't meet the first requirement.", costScore: 5, qualityScore: 2, effortScore: 5, timeline: "1 week", recommended: false }) });
-  await item(intake, "option", "B. Small intake portal on AWS", { status: "proposed", body: "Patients upload once. The office sees status at a glance. Runs in your AWS account.", fields: { cost: "$4,500 fixed", hours: "about 36 hours", pricing: "fixed", basis: [{ work: "Upload page that checks each document as it arrives", hours: 9 }, { work: "Status board for the front desk", hours: 7 }, { work: "Your AWS account set up: sign-in, encryption, and backups", hours: 6 }, { work: "Complete intakes sent to the patient record, nothing retyped", hours: 7 }, { work: "Ten real intakes run through with Dana", hours: 4 }, { work: "Runbook and a walkthrough for the front desk", hours: 3 }], why: "It's the only option that meets both requirements, and the scope is clear enough for a fixed price: the price changes only if you approve a change to the work.", outsideCosts: "About $15/mo to AWS, billed to you", result: "A complete intake reaches the patient record without retyping, the same day.", costScore: 3, qualityScore: 5, effortScore: 3, timeline: "4 weeks", recommended: true, purchases: [{ name: "Document scanner for the front desk", why: "Paper forms patients bring in go straight into the portal", example: "Fujitsu ScanSnap iX1600 or similar", estimate: "$400-$500", buyer: "client" }] } });
-  await item(intake, "option", "C. Practice-management add-on", { status: "proposed", body: "Vendor module. Less control, monthly per-seat fee.", fields: { cost: "$750 fixed", hours: "about 6 hours", why: "Pick this if you'd rather have the vendor run it. You pay them each month, and the module decides what you can change.", outsideCosts: "$240/mo to the vendor", costScore: 3, qualityScore: 3, effortScore: 4, timeline: "2 weeks", recommended: false } });
-  await item(intake, "metric", "Intake turnaround", { fields: { category: "performance", unit: "hours", direction: "down", baseline: 62, baselineDate: day(-25).slice(0, 10), target: 4, readings: [] } });
-  await item(intake, "metric", "Staff minutes per intake", { fields: { category: "performance", unit: "min", direction: "down", baseline: 24, baselineDate: day(-25).slice(0, 10), target: 8, readings: [] } });
-  await item(intake, "file_request", "Upload a blank copy of the current intake form", { assigneeId: dana.id, dueDate: day(-2).slice(0, 10) });
+  await item(intake, "option", "A. Tidy the Monday count: a checklist and a shared sheet", { status: "proposed", body: "Fastest, cheapest. Keeps the hand count as the system.", fields: alignPrice({ pricing: "estimate" as const, rateCents: RATE_CENTS, hoursLow: 5, hoursHigh: 7, basis: [{ work: "A shared sheet with one row per item and one column per system", hours: 2 }, { work: "A checklist for the usual causes: returns, transfers, late receiving", hours: 1.5 }, { work: "A one-page Monday routine for the store leads", hours: 1 }, { work: "Walkthrough with Tomas, and a week of adjustments", hours: 1.5 }], why: "Pick this for relief this week. The count is still done by hand, so it doesn't meet the first requirement.", costScore: 5, qualityScore: 2, effortScore: 5, timeline: "1 week", recommended: false }) });
+  await item(intake, "option", "B. Morning exception report on AWS", { status: "proposed", body: "Compares the counts every night and emails a short list by 7 am, each with a likely reason. Runs in your AWS account.", fields: { cost: "$4,500 fixed", hours: "about 36 hours", pricing: "fixed", basis: [{ work: "Item matching across the POS, web store, and warehouse file", hours: 9 }, { work: "Nightly comparison and the exceptions sheet", hours: 7 }, { work: "Your AWS account set up: sign-in, encryption, and backups", hours: 6 }, { work: "Reasons for differences and the 7 am email", hours: 7 }, { work: "A dry run on a week of real exports, beside Tomas's Monday count", hours: 4 }, { work: "Runbook and a walkthrough for the store leads", hours: 3 }], why: "It's the only option that meets both requirements, and the scope is clear enough for a fixed price: the price changes only if you approve a change to the work.", outsideCosts: "About $15/mo to AWS, billed to you", result: "Counts are compared every morning, and unexplained differences fall from about 38 a week to 5 or fewer.", costScore: 3, qualityScore: 5, effortScore: 3, timeline: "4 weeks", recommended: true, purchases: [{ name: "Handheld scanner for the stock room", why: "Items with no UPC on file get one scanned in", example: "Zebra TC22 or similar", estimate: "$400-$500", buyer: "client" }] } });
+  await item(intake, "option", "C. The web store's own stock-sync add-on", { status: "proposed", body: "Vendor module. Less control, monthly fee.", fields: { cost: "$750 fixed", hours: "about 6 hours", why: "Pick this if you'd rather have the vendor run it. You pay them each month, and the module decides what you can change.", outsideCosts: "$240/mo to the vendor", costScore: 3, qualityScore: 3, effortScore: 4, timeline: "2 weeks", recommended: false } });
+  await item(intake, "metric", "Items whose counts disagree, each week", { fields: { category: "performance", unit: "items", direction: "down", baseline: 38, baselineDate: day(-25).slice(0, 10), target: 5, readings: [] } });
+  await item(intake, "metric", "Oversold web orders each month", { fields: { category: "performance", unit: "orders", direction: "down", baseline: 11, baselineDate: day(-25).slice(0, 10), target: 1, readings: [] } });
+  await item(intake, "file_request", "A week of stock exports from each system, item names only", { assigneeId: dana.id, dueDate: day(-2).slice(0, 10) });
   await item(intake, "handoff", "Accounts are in the client's name", { dueDate: day(20).slice(0, 10) });
-  await item(intake, "constraint", "Changes to the patient record system happen after 6pm", { body: "The front desk uses it all day. Any downtime is scheduled after hours." });
+  await item(intake, "constraint", "No changes to checkout in the holiday weeks", { body: "Anything that touches the web store's checkout waits until the holiday weeks are over." });
   // The proposal as neon1 issued it, so its options can be approved (Proposal 0039 r1)
   await issueProposal(repo, acme, intake, { id: pradeep.id, name: pradeep.name }, "", new Date(intake.stageEnteredAt));
 
-  // Acme: work in progress, at risk
-  const backup = await project(acme, "SEC-1", "Backups that restore", "build", "at_risk", "Nightly backups exist but have never been restored.", [{ userId: pradeep.id, role: "lead_engineer" }, { userId: dana.id, role: "tech_contact" }], 9, 0, "Last night's backup restores to a test machine every week, without anyone starting it, and Dana hears when one fails.");
-  await item(backup, "discovery", "One real example of how it works today", { status: "done", body: "Last spring a drive failed. The nightly backup had been running for years, but nobody could say whether it would restore, so the office rebuilt from paper and email for two days." });
-  await item(backup, "discovery", "Who does this work, and which tools does it touch?", { status: "done", body: "Dana checks the backup report each Monday. It touches the office file server, the database export, and the vendor's backup service." });
+  // Harborline: work in progress, at risk
+  const backup = await project(acme, "SEC-1", "Backups that restore", "build", "at_risk", "Nightly backups exist but have never been restored.", [{ userId: pradeep.id, role: "lead_engineer" }, { userId: dana.id, role: "tech_contact" }], 9, 0, "Last night's backup restores to a test machine every week, without anyone starting it, and Tomas hears when one fails.");
+  await item(backup, "discovery", "One real example of how it works today", { status: "done", body: "Last spring a drive failed. The nightly backup had been running for years, but nobody could say whether it would restore, so the stores rebuilt from paper and email for two days." });
+  await item(backup, "discovery", "Who does this work, and which tools does it touch?", { status: "done", body: "Tomas checks the backup report each Monday. It touches the back-office server, the database export, and the vendor's backup service." });
   await item(backup, "task", "Inventory what's backed up today", { status: "done" });
   await item(backup, "task", "Restore last night's backup to a test machine", { status: "doing", assigneeId: pradeep.id, dueDate: day(3).slice(0, 10) });
   await item(backup, "milestone", "Weekly restore test running on its own", { dueDate: day(12).slice(0, 10) });
   await item(backup, "update", "Restore test blocked on vendor login", { body: "The files restored. The database export needs a login only the vendor can issue. I called their support today and expect it this week.", fields: { health: "at_risk" }, createdAt: day(0), updatedAt: day(0) });
   await item(backup, "metric", "Days since last successful restore test", { fields: { category: "reliability", unit: "days", direction: "down", baseline: 900, target: 30, readings: [{ at: day(-2).slice(0, 10), value: 900, note: "" }] } });
 
-  // What Raj approved for it: an hourly estimate, so its hours and invoices can be followed in Execute
-  const restore = await item(backup, "option", "Restore tests that run on their own", { status: "approved", body: "A restore of last night's backup to a test machine every week, with a note to Dana when one fails.", fields: alignPrice({ pricing: "estimate" as const, rateCents: RATE_CENTS, hoursLow: 12, hoursHigh: 16, basis: [{ work: "Inventory of what's backed up, and what isn't", hours: 2.5 }, { work: "Test machine and a first restore by hand", hours: 5 }, { work: "The weekly restore test, running on its own", hours: 4 }, { work: "Failure notes to Dana, and a runbook", hours: 2.5 }], why: "A backup is only proven by restoring it. The hours depend on the vendor's export, so this is an estimate with a ceiling.", timeline: "3 weeks", result: "Last night's backup restores to a test machine every week, without anyone starting it.", costScore: 4, qualityScore: 4, effortScore: 4, recommended: true }), createdAt: day(-11), updatedAt: day(-9) });
+  // What Priya approved for it: an hourly estimate, so its hours and invoices can be followed in Execute
+  const restore = await item(backup, "option", "Restore tests that run on their own", { status: "approved", body: "A restore of last night's backup to a test machine every week, with a note to Tomas when one fails.", fields: alignPrice({ pricing: "estimate" as const, rateCents: RATE_CENTS, hoursLow: 12, hoursHigh: 16, basis: [{ work: "Inventory of what's backed up, and what isn't", hours: 2.5 }, { work: "Test machine and a first restore by hand", hours: 5 }, { work: "The weekly restore test, running on its own", hours: 4 }, { work: "Failure notes to Tomas, and a runbook", hours: 2.5 }], why: "A backup is only proven by restoring it. The hours depend on the vendor's export, so this is an estimate with a ceiling.", timeline: "3 weeks", result: "Last night's backup restores to a test machine every week, without anyone starting it.", costScore: 4, qualityScore: 4, effortScore: 4, recommended: true }), createdAt: day(-11), updatedAt: day(-9) });
   const agreed = await item(backup, "decision", `Approved: ${restore.title}`, { status: "approved", fields: { optionId: restore.id, optionVersion: restore.version, approvedBy: raj.id, approvedAt: day(-9), conditions: "", terms: { title: restore.title, body: restore.body, ...restore.fields }, approverName: raj.name, approverEmail: raj.email }, createdAt: day(-9), updatedAt: day(-9) });
 
   // Its billing so far: the deposit, paid by bank transfer, and a progress invoice that's open
@@ -133,9 +133,9 @@ export async function seed(repo: Repo, operatorEmail = "pradeep@neon1.tech") {
   for (const w of worked) await item(backup, "time", w.what, { status: "done", fields: { date: day(-w.ago).slice(0, 10), hours: w.hours, invoiceId: progress.id }, createdAt: day(-w.ago), updatedAt: day(-1) });
   await item(backup, "time", "Call with the vendor's support about the database login", { status: "done", fields: { date: day(0).slice(0, 10), hours: 1 }, createdAt: day(0), updatedAt: day(0) });
 
-  const ask = await project(acme, "AI-1", "Answers from our own policies", "listen", "not_started", "Staff interrupt Raj for policy questions: time off, insurance billing rules, and what to tell patients about cancellations.", [{ userId: pradeep.id, role: "lead_engineer" }], 2, 2, "Staff find an answer in our own policies without interrupting Raj, and can see which policy it came from.");
+  const ask = await project(acme, "AI-1", "Answers from our own policies", "listen", "not_started", "Staff interrupt Priya for policy questions: time off, returns and exchanges, and what to tell customers about backorders.", [{ userId: pradeep.id, role: "lead_engineer" }], 2, 2, "Staff find an answer in our own policies without interrupting Priya, and can see which policy it came from.");
   // Outlined, not complete: what it is, how it works today, and what done looks like are written; who it touches, a measure, and the limits are still open
-  await item(ask, "discovery", "One real example of how it works today", { status: "done", body: "A new hygienist asked whether she could swap a shift. Raj was with a patient, so she waited an hour and then asked Dana, who wasn't sure either." });
+  await item(ask, "discovery", "One real example of how it works today", { status: "done", body: "A new cashier asked whether she could swap a shift. Priya was with a vendor, so she waited an hour and then asked Tomas, who wasn't sure either." });
   // Harbor: a migration in Verify with real readings, plus a new intake
   const mig = await project(harbor, "MIG-1", "Two offices off local servers", "verify", "on_track", "The application, database, and files lived on two local servers.", [{ userId: pradeep.id, role: "lead_engineer" }, { userId: lee.id, role: "tech_contact" }], 6, 6, "Both offices run from AWS, the local servers are retired, and the monthly infrastructure cost is under $600.");
   await item(mig, "discovery", "One real example of how it works today", { status: "done", body: "In March the Long Beach server's disk filled overnight. The service desk couldn't open the shared drive until Lee drove in at 7 am and cleared it by hand." });
@@ -150,13 +150,13 @@ export async function seed(repo: Repo, operatorEmail = "pradeep@neon1.tech") {
   await item(portal, "metric", "Requests with an unclear scope at estimate time", { fields: { category: "performance", unit: "%", direction: "down", baseline: 40, target: 10, readings: [] } });
   await approve(portal, "Build the portal in the open", "One portal for needs, execution, measures, and handover, built with neon1 as its first client.", pradeep, 20);
 
-  // Acme's own calendar: Dana's days off, an office closure, and the care plan's monthly check-in
+  // Harborline's own calendar: Tomas's days off, an office closure, and the care plan's monthly check-in
   const cal = async (t: Tenant, e: Partial<CalEvent> & Pick<CalEvent, "title" | "kind" | "date">) => {
     const ev = CalEvent.parse({ tenantId: t.id, id: newId("e"), repeat: "none", notes: "", version: 1, createdAt: t0, updatedAt: t0, updatedBy: pradeep.id, ...e });
     await repo.table.write([repo.calEventOp(ev, { create: true })]);
   };
-  await cal(acme, { title: "Dana on vacation", kind: "leave", personId: dana.id, date: day(5).slice(0, 10), endDate: day(8).slice(0, 10) });
-  await cal(acme, { title: "Office closed for staff training", kind: "office", date: day(15).slice(0, 10) });
+  await cal(acme, { title: "Tomas on vacation", kind: "leave", personId: dana.id, date: day(5).slice(0, 10), endDate: day(8).slice(0, 10) });
+  await cal(acme, { title: "Stores closed for inventory day", kind: "office", date: day(15).slice(0, 10) });
   await cal(acme, { title: "Monthly check-in call", kind: "care", date: day(9).slice(0, 10), time: "16:00", repeat: "monthly", projectId: backup.id });
 
   // A prospect that signed itself up from the site (prospect.ts): Noor at a building-supply yard, one project of needs,

@@ -100,16 +100,16 @@ const H_REVISED = [...H_ID,
 const HARBORLINE: Scenario = {
   id: "harborline",
   family: "Business systems integration",
-  blurb: "A three-store retailer wants its stock counts to agree across the POS, the web store, and the warehouse, without replacing a system.",
+  blurb: "A three-store retailer wants to see where its stock counts disagree across the POS, the web store, and the warehouse, and why, without replacing a system.",
   engagement: "Focused integration, with a scope change after a failed test",
   org: { name: "Harborline Outfitters", slug: "harborline", place: "Kingston, NY", about: "an outdoor-gear retailer with three stores and a web store, about thirty people" },
   owner: { name: "Priya Raman", first: "Priya", email: "priya@harborlineoutfitters.example", title: "Operations director", role: "who runs operations at Harborline Outfitters" },
   colleague: { name: "Tomas Greer", first: "Tomas", email: "tomas@harborlineoutfitters.example", title: "Inventory lead", role: "who leads inventory for the stores" },
   template: { id: "workflow_automation", label: "Workflow automation", wrong: "Cloud migration", key: "FLOW-1" },
   project: {
-    name: "One stock count across stores and web",
+    name: "Stock reconciliation and exception monitoring",
     today: "Each store's POS, the web store, and the warehouse keep their own count, and they drift. Tomas reconciles them by hand every Monday, about three hours, and about 11 web orders a month are for stock we don't have.",
-    outcome: "The counts agree, and anything that doesn't is on one short exception list by 7 am, without replacing a system.",
+    outcome: "Every morning by 7 am, one short list shows which counts disagree and why, without replacing a system.",
     example: "Last Saturday the web store sold four Ridgeline shells in large that the Kingston POS had already sold. Tomas found out Monday, from the customers.",
     dueDays: 50,
   },
@@ -122,7 +122,7 @@ const HARBORLINE: Scenario = {
     ["What goes wrong today?", "Tomas reconciles by hand on Mondays, about three hours. Differences come from returns taken at a counter that never reach the web store, transfers between stores in transit, and stock the warehouse received late. About 38 items disagree in a typical week, and about 11 web orders a month are oversold."],
     ["What can't change?", "The stores keep their POS, which is under contract for two more years. The warehouse partner stays. Nobody on the floor learns a new tool for daily work."],
   ],
-  better: "A count we can trust by 7 am, a short list of what to check instead of a spreadsheet to build, and no apologies to customers for stock we don't have.",
+  better: "A short list by 7 am of what to check instead of a spreadsheet to build, and a chance to fix a count before a customer meets it.",
   constraints: [
     ["The POS can be read every night, but writing to it is limited", "The POS exports sales and counts on request. Updating counts through its API is limited to 60 calls a minute, which a busy Saturday would exceed. A live two-way sync would have to queue its writes and could lag by minutes. That is a real cost of option B."],
     ["The warehouse publishes one stock file each morning and has no API", "The file is ready by 6:30 am and reports what is available to sell."],
@@ -248,7 +248,7 @@ const HARBORLINE: Scenario = {
   voice: {
     opens: "Priya, who runs operations at Harborline Outfitters, opens 1NEON for the first time",
     intro: "Priya runs operations at Harborline Outfitters, a fictional outdoor-gear retailer with three stores and a web store. Each store's POS, the web store, and the warehouse keep their own stock count, and Tomas reconciles them by hand every Monday. She doesn't want to replace a system. Pradeep at neon1 has invited her to 1NEON.",
-    recap: "Priya asked for one stock count, compared three options, and approved the exception report. A dry run showed Pradeep had assumed the wrong thing about the warehouse's file, so he revised the terms and she approved them before more hours were worked. Unexplained differences fell from 38 a week to 4, Tomas ran Monday's check from the report alone, and the final invoice matched the logged hours.",
+    recap: "Priya asked for help with stock counts that disagree, compared three options, and approved the exception report. A dry run showed Pradeep had assumed the wrong thing about the warehouse's file, so he revised the terms and she approved them before more hours were worked. Unexplained differences fell from 38 a week to 4, Tomas ran Monday's check from the report alone, and the final invoice matched the logged hours.",
     previewIntro: "Priya runs operations at Harborline Outfitters, a fictional outdoor-gear retailer. Its POS, web store, and warehouse each keep their own stock count, and she has asked Pradeep at neon1 for help without replacing any of them.",
     previewRecap: "Priya asked for help in one sentence, compared options with the hours behind each price, signed for one, saw the work and a failed dry run, and took over the runbook. The full story shows the revised terms and both invoices.",
     previewReason: "The stock counts never agree. Let me sign in and ask Pradeep for help.",
@@ -313,7 +313,7 @@ const QUILLWORK: Scenario = {
     ["What stays as it is?", "The existing Terraform modules, the CI pipeline, and the on-call rota. The queue, the databases, and the report library itself don't change."],
     ["Should the runbooks get an assistant too?", "I tried it before proposing anything: 20 made-up questions over the runbooks and support docs, answered three ways and judged by two people. The helpdesk product's built-in assistant got 17 right and cited its source each time. A custom prototype got 18. One question of difference is inside the judges' disagreement. Recommendation: don't build one. Add the three runbooks it couldn't find, and keep using the product's own."],
   ],
-  better: "Month-end exports don't queue, nobody patches report hosts, and the team can read, change, and roll back the setup without me.",
+  better: "Month-end exports finish within minutes, nobody patches report hosts, and the team can read, change, and roll back the setup without me.",
   constraints: [
     ["No change to report output", "The acceptance test is a byte-for-byte comparison against last month's files, all 9,184 of them."],
     ["Platform capacity is committed to the SSO launch", "I write every change and the platform team reviews and approves each merge. Nobody on the team writes or debugs it."],
@@ -332,7 +332,7 @@ const QUILLWORK: Scenario = {
       ].join("\n\n"),
       fields: {
         ...fixed(9_800), timeline: "6 weeks, with cutover in the first half of next month", outsideCosts: "None to set up. Running costs are in the cost model: about $1,010 a month, down from $2,150",
-        result: "Month-end exports no longer queue, report output is identical, and the platform team can roll back and change it themselves.",
+        result: "The 95th-percentile month-end export wait is within 10 minutes, report output is identical, and the platform team can roll back and change it themselves.",
         why: "It removes the idle cost and the patching, fits the team's own conventions, and leaves the team owning it. Do nothing beyond sizing the hosts if the team would rather not run a new kind of workload.",
         costScore: 3, qualityScore: 5, effortScore: 3, recommended: true,
       },
@@ -633,6 +633,12 @@ export const scenarioOf = (id: string | null | undefined): Scenario => SCENARIOS
 
 
 // --- The money, worked out -----------------------------------------------------------------------------------
+
+/** A measure's target in words: "zero" for none, "at most 5" going down, "at least 90" going up. A target is never "under 0" */
+export function targetText(m: { direction: "down" | "up"; target: number }): string {
+  if (m.direction === "down") return m.target === 0 ? "zero" : `at most ${m.target}`;
+  return `at least ${m.target}`;
+}
 
 /** The numbers of one scenario as its story says them, every one derived from the option and the hours */
 export function moneyOf(s: Scenario) {

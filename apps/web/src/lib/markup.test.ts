@@ -79,7 +79,7 @@ describe("an edited proposal", () => {
 describe("Word mark-up mapping: suggest only, and nothing lost", () => {
   // A real revision's paragraphs: B is a fixed $4,500 option with a 50% deposit
   const snapshot = ProposalSnapshot.parse({
-    orgName: "Acme Dental", project: { key: "FLOW-1", name: "Patient intake", summary: "Intake arrives three ways.", outcome: "One way in." },
+    orgName: "Harborline Outfitters", project: { key: "FLOW-1", name: "Patient intake", summary: "Intake arrives three ways.", outcome: "One way in." },
     options: [{ id: "iB", version: 3, letter: "B", code: "0039-r1-B", title: "Small intake portal", body: "Patients upload once.\n\n- One list\n- A status board", status: "approved", fields: { cost: "$4,500 fixed", pricing: "fixed", timeline: "4 weeks", hours: "about 36 hours", result: "A complete intake reaches the record.", recommended: true, why: "It meets both requirements.", basis: [{ work: "Upload page", hours: 9 }, { work: "Status board", hours: 7 }] } }],
   });
   const rev = { number: 39, rev: 1, issuedAt: "2026-11-01T10:00:00.000Z", checkBy: "2026-12-01", note: "" };

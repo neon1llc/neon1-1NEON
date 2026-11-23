@@ -173,7 +173,7 @@ describe("signing", () => {
   });
 
   it("takes initials from a typed name", () => {
-    expect(initialsOf("Raj  Patel")).toBe("RP");
+    expect(initialsOf("Priya  Patel")).toBe("PP");
   });
 });
 

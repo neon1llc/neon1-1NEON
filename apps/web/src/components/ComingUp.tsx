@@ -305,7 +305,7 @@ function EventForm({ tid, day, ev, done }: { tid: string; day: string; ev?: CalE
           <select id="ce-who" value={f.personId} onChange={set("personId")}><option value="">Nobody in particular</option>{people.map((m) => <option key={m.userId} value={m.userId}>{m.name || m.email}</option>)}</select></div>
       </div>
       <div><label htmlFor="ce-title">Title</label>
-        <input id="ce-title" value={f.title} onChange={set("title")} maxLength={120} placeholder={f.kind === "leave" ? "e.g. Dana on vacation" : f.kind === "care" ? "e.g. Monthly check-in call" : f.kind === "office" ? "e.g. Office closed for the holiday" : "e.g. Quarterly review"} required={!title} /></div>
+        <input id="ce-title" value={f.title} onChange={set("title")} maxLength={120} placeholder={f.kind === "leave" ? "e.g. Tomas on vacation" : f.kind === "care" ? "e.g. Monthly check-in call" : f.kind === "office" ? "e.g. Office closed for the holiday" : "e.g. Quarterly review"} required={!title} /></div>
       <div className="row3">
         <div><label htmlFor="ce-date">First day</label><input id="ce-date" type="date" value={f.date} onChange={set("date")} required /></div>
         <div><label htmlFor="ce-end">Last day <small className="muted">optional</small></label><input id="ce-end" type="date" value={f.endDate} min={f.date} onChange={set("endDate")} /></div>

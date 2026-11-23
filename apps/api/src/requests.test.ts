@@ -30,7 +30,7 @@ beforeEach(async () => {
 });
 afterEach(() => vi.useRealTimers());
 
-const form = { email: "dana@example.com", name: "Dana Kim", kind: "small", org: "Kim Dental", link: "kimdental.com", terms: true, elapsed: 8000 };
+const form = { email: "tomas@example.com", name: "Tomas Greer", kind: "small", org: "Kim Dental", link: "kimdental.com", terms: true, elapsed: 8000 };
 const as = (email: string, path: string, method = "GET", b?: unknown) =>
   app.request(`/1NEON/api${path}`, { method, headers: { "content-type": "application/json", "x-1neon": "1", "x-dev-user": email }, body: b === undefined ? undefined : JSON.stringify(b) });
 

@@ -88,7 +88,7 @@ describe("ids", () => {
     expect(new Set(Array.from({ length: 1000 }, () => newId())).size).toBe(1000);
   });
   it("slugifies and formats client ids", () => {
-    expect(slugify("Acme Dental Group, LLC")).toBe("acme-dental-group-llc");
+    expect(slugify("Harborline Outfitters Group, LLC")).toBe("harborline-outfitters-group-llc");
     expect(formatClientId(7)).toBe("N1-0007");
   });
 });
@@ -272,7 +272,7 @@ describe("organization calendar", () => {
 describe("proposal references", () => {
   it("finds the number and revision in the forms a markup carries", () => {
     expect(findProposalRef("neon1-maple-street-proposal-0039-r2.docx")).toEqual({ number: 39, rev: 2 });
-    expect(findProposalRef("Proposal 0039 r12 (markup from Raj)")).toEqual({ number: 39, rev: 12 });
+    expect(findProposalRef("Proposal 0039 r12 (markup from Priya)")).toEqual({ number: 39, rev: 12 });
     expect(findProposalRef("0040-rev3")).toEqual({ number: 40, rev: 3 });
     expect(findProposalRef("orders-week.zip")).toBeUndefined();
     expect(proposalFileName("maple-street", 39, 2, "pdf")).toBe("neon1-maple-street-proposal-0039-r2.pdf");
@@ -300,9 +300,9 @@ describe("noticeSummary", () => {
     const { noticeSummary } = await import("./notify.ts");
     expect(noticeSummary("FIX-1: issued Proposal 0041-r1", true)).toBe("FIX-1: issued Quote 0041-r1");
     expect(noticeSummary("FIX-1: issued Proposal 0041-r1: prices rechecked", true)).toBe("FIX-1: issued Quote 0041-r1: prices rechecked");
-    expect(noticeSummary("FIX-1: Raj asked neon1 to refresh Proposal 0041-r2", true)).toBe("FIX-1: Raj asked neon1 to refresh Quote 0041-r2");
+    expect(noticeSummary("FIX-1: Priya asked neon1 to refresh Proposal 0041-r2", true)).toBe("FIX-1: Priya asked neon1 to refresh Quote 0041-r2");
     // Other projects, and wording that isn't a numbered reference, are untouched
     expect(noticeSummary("FLOW-1: issued Proposal 0041-r1", false)).toBe("FLOW-1: issued Proposal 0041-r1");
-    expect(noticeSummary("FIX-1: Proposal sent to Raj", true)).toBe("FIX-1: Proposal sent to Raj");
+    expect(noticeSummary("FIX-1: Proposal sent to Priya", true)).toBe("FIX-1: Proposal sent to Priya");
   });
 });

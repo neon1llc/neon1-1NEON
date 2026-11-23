@@ -10,7 +10,7 @@ import { manifest, MEMORY_LIMIT_BYTES, memoryWarning, Paths, plan, readme, reaso
 
 // --- Small records, only the fields the plan reads ----------------------------------------------
 
-const org = { id: "t1", slug: "acme", clientId: "N1-0002", name: "Acme Dental", stages: [] } as unknown as Tenant;
+const org = { id: "t1", slug: "acme", clientId: "N1-0002", name: "Harborline Outfitters", stages: [] } as unknown as Tenant;
 const project = (key: string, deletedAt?: string) => ({ id: `p-${key}`, key, name: key, deletedAt }) as unknown as Project;
 const doc = (name: string, projectId?: string, extra: Partial<DocumentRecord> = {}) => ({ id: `d-${name}-${projectId ?? "org"}-${Math.random()}`, name, projectId, size: 10, uploaded: true, state: "ready", ...extra }) as DocumentRecord;
 const item = (kind: string, status = "open") => ({ id: `i-${Math.random()}`, kind, status }) as unknown as Item;

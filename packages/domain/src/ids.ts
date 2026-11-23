@@ -24,7 +24,7 @@ export function newId(prefix = ""): string {
 }
 
 
-/** "Acme Dental Group" -> "acme-dental-group" */
+/** "Harborline Outfitters Group" -> "harborline-outfitters-group" */
 export function slugify(name: string): string {
   return name
     .toLowerCase()

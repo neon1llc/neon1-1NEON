@@ -19,7 +19,7 @@ const Turn = z.object({ role: z.enum(["user", "assistant"]), content: z.string()
 /** A question: the recent turns, and where the person is in the portal right now */
 export const NeoAsk = z.object({
   messages: z.array(Turn).min(1).max(NEO_LIMITS.turns),
-  // The address in the browser, under /1NEON (for example /o/acme-dental/projects/FLOW-1/needs)
+  // The address in the browser, under /1NEON (for example /o/harborline-outfitters/projects/FLOW-1/needs)
   where: z.string().max(300).regex(/^\/[A-Za-z0-9/_#?=&.-]*$/).default("/"),
 }).superRefine((a, ctx) => {
   a.messages.forEach((m, i) => {

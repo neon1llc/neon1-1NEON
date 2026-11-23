@@ -12,7 +12,7 @@ import { Repo } from "./store/repo.ts";
 
 
 const OP = "pradeep@neon1.tech";
-const RAJ = "raj@acmedental.example";
+const PRIYA = "priya@harborlineoutfitters.example";
 let app: ReturnType<typeof createApp>;
 let repo: Repo;
 let s: Awaited<ReturnType<typeof seed>>;
@@ -34,7 +34,7 @@ async function call(method: string, path: string, body?: unknown, as = OP) {
   return { status: r.status, json: text ? JSON.parse(text) : undefined };
 }
 
-/** A new blank project in Acme */
+/** A new blank project in Harborline */
 async function newProject(extra: Record<string, unknown> = {}) {
   const r = await call("POST", `/t/${s.acme.id}/projects`, { name: "Synthetic metrics review", template: "blank", ...extra });
   expect(r.status).toBe(201);
@@ -104,7 +104,7 @@ describe("request timing", () => {
     vi.setSystemTime(new Date("2026-11-10T15:00:00Z"));
     const p = (await repo.listProjects(s.acme.id)).find((x) => x.key === "FLOW-1")!;
     // What a browser tab from before this change sends: the words' key and no date
-    const r = await call("POST", `${base()}/projects/${p.id}/items`, { kind: "request", title: "Save time for synthetic orders", fields: { due: "soon" } }, RAJ);
+    const r = await call("POST", `${base()}/projects/${p.id}/items`, { kind: "request", title: "Save time for synthetic orders", fields: { due: "soon" } }, PRIYA);
     expect(r.status).toBe(201);
     expect(r.json).toMatchObject({ dueDate: "2026-11-30", requestedTiming: "this month" });
     const up = (await call("GET", `${base()}/upcoming`)).json;
@@ -117,15 +117,15 @@ describe("request timing", () => {
 
   it("keeps the date the form showed, and resolves a quarter at its boundary in the organization's zone", async () => {
     const p = (await repo.listProjects(s.acme.id)).find((x) => x.key === "FLOW-1")!;
-    const shown = await call("POST", `${base()}/projects/${p.id}/items`, { kind: "request", title: "Shown date", dueDate: "2026-12-31", fields: { due: "quarter" } }, RAJ);
+    const shown = await call("POST", `${base()}/projects/${p.id}/items`, { kind: "request", title: "Shown date", dueDate: "2026-12-31", fields: { due: "quarter" } }, PRIYA);
     expect(shown.json).toMatchObject({ dueDate: "2026-12-31", requestedTiming: "this quarter" });
     // 03:00 UTC on Jan 1 is still Dec 31 in New York, so this quarter is the one ending Dec 31
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2027-01-01T03:00:00Z"));
-    const edge = await call("POST", `${base()}/projects/${p.id}/items`, { kind: "request", title: "Edge", fields: { due: "quarter" } }, RAJ);
+    const edge = await call("POST", `${base()}/projects/${p.id}/items`, { kind: "request", title: "Edge", fields: { due: "quarter" } }, PRIYA);
     expect(edge.json.dueDate).toBe("2026-12-31");
     // No rush stays undated
-    const rush = await call("POST", `${base()}/projects/${p.id}/items`, { kind: "request", title: "No rush", fields: { due: "later" } }, RAJ);
+    const rush = await call("POST", `${base()}/projects/${p.id}/items`, { kind: "request", title: "No rush", fields: { due: "later" } }, PRIYA);
     expect(rush.json.dueDate).toBeUndefined();
     expect(rush.json.requestedTiming).toBeUndefined();
   });
@@ -137,13 +137,13 @@ describe("request timing", () => {
 describe("needs you and coming up", () => {
   it("returns the true total beside a preview of ten, and every action behind View all", async () => {
     const p = (await repo.listProjects(s.acme.id)).find((x) => x.key === "FLOW-1")!;
-    const raj = (await repo.userIdForEmail(RAJ))!;
-    const before = (await call("GET", `${base()}/workspace`, undefined, RAJ)).json.waitingTotal as number;
+    const raj = (await repo.userIdForEmail(PRIYA))!;
+    const before = (await call("GET", `${base()}/workspace`, undefined, PRIYA)).json.waitingTotal as number;
     for (let k = 0; k < 12; k++) await call("POST", `${base()}/projects/${p.id}/items`, { kind: "task", title: `Synthetic pending ${k + 1}`, assigneeId: raj, dueDate: `2099-01-${String(28 - k).padStart(2, "0")}` });
-    const ws = (await call("GET", `${base()}/workspace`, undefined, RAJ)).json;
+    const ws = (await call("GET", `${base()}/workspace`, undefined, PRIYA)).json;
     expect(ws.waiting).toHaveLength(10);
     expect(ws.waitingTotal).toBe(before + 12);
-    const all = (await call("GET", `${base()}/workspace?waiting=all`, undefined, RAJ)).json;
+    const all = (await call("GET", `${base()}/workspace?waiting=all`, undefined, PRIYA)).json;
     expect(all.waiting).toHaveLength(all.waitingTotal);
     expect(all.waiting.filter((w: { title: string }) => w.title.startsWith("Synthetic pending"))).toHaveLength(12);
     // Within the same action, earlier due dates come first
@@ -209,7 +209,7 @@ describe("calendar events", () => {
   it("adds leave and a monthly call, shows them by month, and records each change in words", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-11-11T15:00:00Z"));
-    const leave = await call("POST", `${base()}/events`, { title: "Dana out", kind: "leave", personId: s.dana.id, date: "2026-11-30", endDate: "2026-12-02", repeat: "none" });
+    const leave = await call("POST", `${base()}/events`, { title: "Tomas out", kind: "leave", personId: s.dana.id, date: "2026-11-30", endDate: "2026-12-02", repeat: "none" });
     expect(leave.status).toBe(201);
     const monthly = await call("POST", `${base()}/events`, { title: "Care check-in", kind: "care", date: "2026-11-20", time: "16:00", repeat: "monthly" });
     expect(monthly.status).toBe(201);

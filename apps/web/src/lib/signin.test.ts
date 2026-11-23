@@ -22,8 +22,8 @@ function memory() {
 describe("saved sign-in step", () => {
   it("restores the email, step, and methods within five minutes", () => {
     const s = memory();
-    saveStep(s, { email: "dana@acmedental.example", step: "code", methods: ["code", "passkey"] }, 1000);
-    expect(loadStep(s, 1000 + SIGNIN_TTL - 1)).toEqual({ email: "dana@acmedental.example", step: "code", methods: ["code", "passkey"], at: 1000 });
+    saveStep(s, { email: "tomas@harborlineoutfitters.example", step: "code", methods: ["code", "passkey"] }, 1000);
+    expect(loadStep(s, 1000 + SIGNIN_TTL - 1)).toEqual({ email: "tomas@harborlineoutfitters.example", step: "code", methods: ["code", "passkey"], at: 1000 });
   });
 
   it("never stores a code", () => {

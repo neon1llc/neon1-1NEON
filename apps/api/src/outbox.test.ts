@@ -64,7 +64,7 @@ async function call(app: ReturnType<typeof createApp>, method: string, path: str
   return { status: r.status, json: text ? JSON.parse(text) : undefined };
 }
 
-/** Invite the newcomer to Acme as Raj (an Acme admin) */
+/** Invite the newcomer to Harborline as Priya (an Harborline admin) */
 function invite(app: ReturnType<typeof createApp>) {
   return call(app, "POST", `/t/${s.acme.id}/members/invite`, { people: [{ email: NEW, access: "viewer" }] });
 }

@@ -69,7 +69,7 @@ const repo = new Repo(new DynamoTable(TO.table, client));
 const { acme, pradeep } = await seed(repo, operator);
 console.log("dev-sample: sample organizations, people, and projects written");
 
-// 4. One harmless file on Acme's intake project, so downloads and the export have something to carry
+// 4. One harmless file on Harborline's intake project, so downloads and the export have something to carry
 const intake = (await repo.listProjects(acme.id)).find((p) => p.key === "FLOW-1");
 if (intake) {
   const text = "Sample intake form (made up for the dev site).\n\nName: ____\nInsurance: ____\n";

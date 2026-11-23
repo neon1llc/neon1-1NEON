@@ -171,8 +171,8 @@ function App() {
 
 // The demo's people, each with what they can do; the buttons render in a dev build and in /1NEON/demo
 const PEOPLE = [
-  ["raj@acmedental.example", "Raj Patel", "Acme Dental's owner: approves options and manages people"],
-  ["dana@acmedental.example", "Dana Kim", "Acme Dental's office manager: adds requests, answers, and files"],
+  ["priya@harborlineoutfitters.example", "Priya Raman", "Harborline Outfitters' operations director: approves options and manages people"],
+  ["tomas@harborlineoutfitters.example", "Tomas Greer", "Harborline Outfitters' inventory lead: adds requests, answers, and files"],
   ["pradeep@neon1.tech", "Pradeep", "neon1's lead engineer: every client, proposals, and the work"],
 ] as const;
 // The demo signs in by picking a person; the live playback always shows the real sign-in instead

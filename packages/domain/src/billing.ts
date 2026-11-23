@@ -22,7 +22,7 @@ export function signature(doc: Signature["doc"], ref: string, hash: string, inpu
 /**
  * Why a typed signature doesn't read as the signer's name, or undefined when it does. A name has no
  * digits, and when the profile has a name, the signature carries at least one word of it (first or
- * last name, any case), so "Raj Patel" signs for Raj Patel and "anything123" signs for no one
+ * last name, any case), so "Priya Raman" signs for Priya Raman and "anything123" signs for no one
  */
 export function signedNameProblem(typed: string, profileName: string | undefined): string | undefined {
   const t = typed.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -34,7 +34,7 @@ export function signedNameProblem(typed: string, profileName: string | undefined
   return parts.some((w) => typedParts.has(w)) ? undefined : `Type your name as it is on your profile (${profileName}). To sign under another name, change it in your profile first.`;
 }
 
-/** Initials from a typed name: "Raj Patel" → "RP" (kept for purchases neon1 buys) */
+/** Initials from a typed name: "Priya Raman" → "RP" (kept for purchases neon1 buys) */
 export const initialsOf = (name: string) => name.trim().split(/\s+/).map((w) => w[0]?.toUpperCase() ?? "").join("").slice(0, 8) || "?";
 
 /** JSON with keys in a fixed order, so the same content always hashes the same */

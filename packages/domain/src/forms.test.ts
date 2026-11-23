@@ -5,11 +5,11 @@ import { emailShapeOk, joinPlace, looksLikeJunk, messageProblem, MIN_TEXT, nameP
 
 describe("names", () => {
   it("takes real names from anywhere, one name included", () => {
-    for (const n of ["Dana Kim", "Mary-Jane O'Neil", "José Álvarez", "Nguyễn Văn An", "J. R. Smith", "Dick Cheney", "Raj Dikshit"]) expect(nameProblem(n)).toBeUndefined();
+    for (const n of ["Tomas Greer", "Mary-Jane O'Neil", "José Álvarez", "Nguyễn Văn An", "J. R. Smith", "Dick Cheney", "Priya Dikshit"]) expect(nameProblem(n)).toBeUndefined();
     expect(nameProblem("Madonna")).toBeUndefined();
   });
   it("refuses numbers, links, junk, and slurs", () => {
-    expect(nameProblem("Dana 2")).toMatch(/numbers/);
+    expect(nameProblem("Tomas 2")).toMatch(/numbers/);
     expect(nameProblem("www.x.com y")).toMatch(/links/);
     expect(nameProblem("asdf asdf")).toBe("Enter your real name.");
     expect(nameProblem("aaaaaa bbbbb")).toBe("Enter your real name.");
@@ -36,8 +36,8 @@ describe("free text", () => {
 
 describe("email shape", () => {
   it("takes ordinary addresses and refuses broken ones", () => {
-    for (const e of ["dana@example.com", "a.b+tag@sub.example.co.uk", "x@neon1.tech"]) expect(emailShapeOk(e)).toBe(true);
-    for (const e of ["dana", "dana@", "@x.com", "a..b@x.com", "a@x", "a@x.c", "a b@x.com", "a@-x.com", ".a@x.com"]) expect(emailShapeOk(e)).toBe(false);
+    for (const e of ["tomas@example.com", "a.b+tag@sub.example.co.uk", "x@neon1.tech"]) expect(emailShapeOk(e)).toBe(true);
+    for (const e of ["dana", "tomas@", "@x.com", "a..b@x.com", "a@x", "a@x.c", "a b@x.com", "a@-x.com", ".a@x.com"]) expect(emailShapeOk(e)).toBe(false);
   });
 });
 

@@ -16,7 +16,7 @@ import { Repo } from "./store/repo.ts";
 
 
 // A signed approval or acceptance: the typed name and the consent box
-const SIGN = { typedName: "Raj Patel", consent: true };
+const SIGN = { typedName: "Priya Raman", consent: true };
 const OP = "pradeep@neon1.tech";
 let repo: Repo;
 let app: ReturnType<typeof createApp>;
@@ -51,7 +51,7 @@ async function flow() {
 const invoices = async () => (await flow()).items.filter((i) => i.kind === "invoice").sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 const itemNow = async (id: string) => (await flow()).items.find((i) => i.id === id)!;
 
-/** Approve an option of FLOW-1 as Raj and return the decision */
+/** Approve an option of FLOW-1 as Priya and return the decision */
 async function approve(letter: string, extra: Record<string, unknown> = {}) {
   const { opt, path } = await flow();
   const o = opt(letter);
@@ -101,7 +101,7 @@ async function hook(e: unknown) {
   const signed = await payments.sign(e);
   return app.request("/1NEON/api/billing/stripe", { method: "POST", headers: { "stripe-signature": signed.header }, body: signed.body });
 }
-/** Raj opens Checkout on an invoice; the session Stripe now knows */
+/** Priya opens Checkout on an invoice; the session Stripe now knows */
 async function checkout(path: string, inv: Item) {
   expect((await call(s.raj.email, "POST", `${path}/invoices/${inv.id}/pay`)).status).toBe(200);
   return payments.sessions.at(-1)!;
@@ -298,7 +298,7 @@ describe("4. late ACH", () => {
     expect(st.balance).toBe(225_000);
     expect(st.payable).toBe(0);
     expect(st.inv.status).toBe("issued");
-    // Home does not nag Raj with an overdue invoice he can do nothing about
+    // Home does not nag Priya with an overdue invoice he can do nothing about
     const home = await call(s.raj.email, "GET", `/t/${s.acme.id}/workspace?waiting=all`);
     expect((home.json.waiting as { itemId: string }[]).filter((w) => w.itemId === inv.id)).toHaveLength(0);
     // The bank pays: now it is received and the invoice is paid
@@ -676,7 +676,7 @@ describe("10. two tabs editing at once", () => {
 
 // 11. A client leaving
 describe("11. client exit", () => {
-  /** Dana made an admin with a confirmed sign-in, so she can manage people and export when Raj goes */
+  /** Tomas made an admin with a confirmed sign-in, so she can manage people and export when Priya goes */
   async function danaAdmin() {
     const dana = (await repo.getMember(s.acme.id, s.dana.id))!;
     expect((await call(OP, "PATCH", `/t/${s.acme.id}/members/${s.dana.id}`, { version: dana.version, access: "admin" })).status).toBe(200);
@@ -684,7 +684,7 @@ describe("11. client exit", () => {
     await repo.saveUser({ ...u, strongAuth: true, version: u.version + 1 }, u.version);
   }
 
-  /** Raj approves B, the deposit is issued and partly paid, then Dana deactivates Raj */
+  /** Priya approves B, the deposit is issued and partly paid, then Tomas deactivates Priya */
   async function raj_leaves() {
     await danaAdmin();
     const { decision, inv, path } = await issuedDeposit();
@@ -698,7 +698,7 @@ describe("11. client exit", () => {
   it("keeps the decision, invoices, and payments locked and exportable after the approver is deactivated", async () => {
     const { decision, inv, path } = await raj_leaves();
     const p = (await flow()).p;
-    // Raj can no longer read or act
+    // Priya can no longer read or act
     expect((await call(s.raj.email, "GET", path)).status).toBeGreaterThanOrEqual(400);
     expect((await call(s.raj.email, "POST", `${path}/invoices/${inv.id}/pay`)).status).toBeGreaterThanOrEqual(400);
     // What he signed is untouched and can't be edited or removed by anyone
@@ -723,7 +723,7 @@ describe("11. client exit", () => {
     expect(records.saved.has(`t/${s.acme.id}/p/${p.id}/decisions/${decision.id}.json`)).toBe(true);
     expect([...records.saved.keys()].some((k) => k.includes("/invoices/INV-0039-01"))).toBe(true);
     expect([...records.saved.keys()].some((k) => k.includes("/payments/"))).toBe(true);
-    // The balance is still owed: Dana can pay the rest online
+    // The balance is still owed: Tomas can pay the rest online
     expect((await call(s.dana.email, "POST", `${path}/invoices/${inv.id}/pay`)).status).toBe(200);
   });
 
@@ -732,7 +732,7 @@ describe("11. client exit", () => {
     const { inv, path } = await issuedDeposit();
     const session = await checkout(path, inv);
     await hook(event(session, "checkout.session.completed", "unpaid"));
-    // The organization trashes the project and deactivates Raj
+    // The organization trashes the project and deactivates Priya
     const p = (await flow()).p;
     expect((await call(s.dana.email, "DELETE", `/t/${s.acme.id}/projects/${p.id}`, { version: p.version, confirm: p.key })).status).toBe(200);
     const raj = (await repo.getMember(s.acme.id, s.raj.id))!;
@@ -758,7 +758,7 @@ describe("11. client exit", () => {
 describe("12. quick fix commercial path", () => {
   const HOURLY = { title: "Fix the front desk printer", body: "Reinstall the driver.", pricing: "estimate", rateCents: 15_000, hoursLow: 2, hoursHigh: 5, timeline: "This week" };
 
-  /** A quick fix quoted and approved by Raj; its path and its one step */
+  /** A quick fix quoted and approved by Priya; its path and its one step */
   async function quickFix() {
     const made = await call(OP, "POST", `/t/${s.acme.id}/projects`, { name: "Printer won't print", template: "quick_fix" });
     const path = `/t/${s.acme.id}/projects/${made.json.id}`;

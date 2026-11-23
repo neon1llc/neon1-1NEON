@@ -14,7 +14,7 @@ import { LayerBadge, LAYERS, layerHint, layerName, Rings } from "../components/u
 import { VLANS, type Table } from "../lib/artifacts.ts";
 import { useDocumentScroll } from "../lib/edge.ts";
 import { fade } from "../lib/motion.ts";
-import { CARE, moneyOf, SCENARIO_IDS, SCENARIOS, scenarioOf, summaryOf, type Piece, type Scenario, type ScenarioId } from "../lib/scenarios.ts";
+import { CARE, moneyOf, SCENARIO_IDS, SCENARIOS, scenarioOf, summaryOf, targetText, type Piece, type Scenario, type ScenarioId } from "../lib/scenarios.ts";
 import { useSiteTheme } from "../lib/sitetheme.ts";
 import { Check } from "lucide-react";
 
@@ -86,7 +86,7 @@ function storyOf(s: Scenario): Record<Layer, { lead: string; cards: Card[] }> {
       lead: "The same measures before and after, so the result is a number with evidence.",
       cards: [
         { title: "Measures", lines: ["Measured the same way before and after."], list: [
-          ...s.measures.map((m) => ({ text: `${m.title}: ${m.baseline} → ${m.readings[2]} (target ${m.direction === "down" ? "under" : "over"} ${m.target})`, state: "done" as const })),
+          ...s.measures.map((m) => ({ text: `${m.title}: ${m.baseline} → ${m.readings[2]} (target ${targetText(m)})`, state: "done" as const })),
           { text: s.measures.every((m) => m.direction === "down" ? m.readings[2] <= m.target : m.readings[2] >= m.target) ? "Every target met" : "A target not met yet, and the care plan says so" },
         ] },
         ...pieces("observation"),
@@ -168,7 +168,7 @@ function outlineOfScenario(s: Scenario): { id: OutlinePart; wrote: string; went:
     { id: "today", wrote: s.project.example, went: `The starting point Observe measures against: ${lower(m.title)} began at ${m.baseline}.`, layer: "observation" },
     { id: "done", wrote: s.project.outcome, went: `The check in Verify: ${lower(String(chosen.fields.result ?? ""))}`, layer: "execution" },
     { id: "who", wrote: s.needs.answer, went: `The handover in Normalize: ${lower(s.training)}`, layer: "next" },
-    { id: "measure", wrote: `${m.title}: ${m.baseline} now, target ${m.direction === "down" ? "under" : "over"} ${m.target}.`, went: `Read again in Observe: it reached ${m.readings[2]}.`, layer: "observation" },
+    { id: "measure", wrote: `${m.title}: ${m.baseline} now, target ${targetText(m)}.`, went: `Read again in Observe: it reached ${m.readings[2]}.`, layer: "observation" },
     { id: "limits", wrote: `${s.constraints[0]![0]}. Due in about ${Math.round(s.project.dueDays / 7)} weeks.`, went: `The proposal's timeline, ${String(chosen.fields.timeline ?? "").replace(/\.$/, "")}, and what it leaves out.`, layer: "execution" },
   ];
 }

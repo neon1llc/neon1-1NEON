@@ -149,7 +149,7 @@ const TODO: Record<string, string> = {
   "comment.created": "Open the item and reply.",
 };
 
-// First words of a summary that need the actor in front of them ("Added task" becomes "Dana added task")
+// First words of a summary that need the actor in front of them ("Added task" becomes "Tomas added task")
 const ACTOR_VERBS = new Set(["added", "removed", "created", "uploaded", "moved", "asked", "changed", "approved", "quoted", "issued", "drafted", "voided", "invited", "updated", "deleted", "renamed"]);
 
 /** One plain sentence: who did what. The stored summary has the project's key in front, which the Project row carries */

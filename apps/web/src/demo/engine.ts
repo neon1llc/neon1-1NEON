@@ -160,7 +160,7 @@ const ready = (async () => {
     adopt(saved);
   } else {
     // The seed makes fresh ids, so the first tab seeds and saves under the lock, and any other tab
-    // opened meanwhile takes that same copy: two tabs never hold two different Acme Dentals
+    // opened meanwhile takes that same copy: two tabs never hold two different Harborline Outfitterss
     await exclusive(async () => {
       const first = await load();
       if (first?.rows.length) return adopt(first);

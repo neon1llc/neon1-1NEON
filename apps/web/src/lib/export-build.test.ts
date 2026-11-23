@@ -15,7 +15,7 @@ import { MEMORY_LIMIT_BYTES, memoryWarning, sha256, zipName, type Manifest } fro
 
 // --- A fake organization behind a fake API -------------------------------------------------------
 
-const org = { id: "t1", slug: "acme", clientId: "N1-0002", name: "Acme Dental", stages: [{ id: "s1", name: "Decide" }] } as unknown as Tenant;
+const org = { id: "t1", slug: "acme", clientId: "N1-0002", name: "Harborline Outfitters", stages: [{ id: "s1", name: "Decide" }] } as unknown as Tenant;
 const at = "2026-10-01T00:00:00.000Z";
 const project = (key: string, deletedAt?: string) => ({ id: `p-${key}`, key, name: `Project ${key}`, stageId: "s1", health: "on_track", createdAt: at, updatedAt: at, deletedAt }) as unknown as Project;
 const item = (pid: string, kind: string, extra: Partial<Item> = {}) => ({ id: `i-${pid}-${kind}`, projectId: pid, kind, title: kind, body: "", status: "open", fields: {}, createdAt: at, updatedAt: at, ...extra }) as unknown as Item;

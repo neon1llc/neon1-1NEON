@@ -125,7 +125,7 @@ export const PENDING_TOTP_MS = 10 * 60 * 1000;
 export const PENDING_TOTP_TRIES = 5;
 
 
-/** "Dana is editing this": advisory only; saves are still guarded by version */
+/** "Tomas is editing this": advisory only; saves are still guarded by version */
 export interface EditMarker {
   recordId: string;
   userId: string;

@@ -16,7 +16,7 @@ beforeEach(() => {
   app = createApp({ cfg: { env: "local", publicUrl: "https://neon1.tech", operatorEmails: [], devAuth: true }, repo: new Repo(table), directory: new MemoryDirectory(), mailer, storage: new MemoryStorage() });
 });
 
-const good = { name: "Dana Kim", email: "dana@example.com", topic: "business", today: "We retype orders from email every Friday." };
+const good = { name: "Tomas Greer", email: "tomas@example.com", topic: "business", today: "We retype orders from email every Friday." };
 const send = (b: unknown, ip = "203.0.113.7") =>
   app.request("/1NEON/api/contact", { method: "POST", headers: { "content-type": "application/json", "x-1neon": "1", "x-forwarded-for": ip }, body: JSON.stringify(b) });
 
@@ -25,10 +25,10 @@ describe("contact form", () => {
     const r = await send({ ...good, better: "Orders land in the sheet on their own." });
     expect(r.status).toBe(200);
     expect(mailer.sent).toHaveLength(1);
-    expect(mailer.sent[0]).toMatchObject({ to: CONTACT_TO, replyTo: "dana@example.com" });
+    expect(mailer.sent[0]).toMatchObject({ to: CONTACT_TO, replyTo: "tomas@example.com" });
     expect(mailer.sent[0]!.text).toContain("Orders land in the sheet");
     // From "neon1" the website, with one short tag and no sender name repeated in the subject
-    expect(mailer.sent[0]).toMatchObject({ as: "requests", subject: expect.stringMatching(/^Contact message: Dana Kim/) });
+    expect(mailer.sent[0]).toMatchObject({ as: "requests", subject: expect.stringMatching(/^Contact message: Tomas Greer/) });
   });
   it("shows the sender's local time when their browser gave a real zone, and ignores junk", async () => {
     await send({ ...good, timeZone: "America/Chicago" });
@@ -60,7 +60,7 @@ describe("contact form", () => {
     expect((await send({ ...good, found: "billboard" })).status).toBe(400);
   });
   it("answers field by field, with a light name check and their words for Somewhere else", async () => {
-    const r = await send({ ...good, email: "dana@", name: "asdf", found: "other" });
+    const r = await send({ ...good, email: "tomas@", name: "asdf", found: "other" });
     expect(r.status).toBe(400);
     const b = (await r.json()) as { current: { fields: Record<string, string> } };
     expect(Object.keys(b.current.fields).sort()).toEqual(["email", "foundOther", "name"]);
