@@ -141,3 +141,9 @@ describe("tapping a row on the collapsed rail", () => {
     expect(readFileSync(join(__dirname, "../components/Shell.tsx"), "utf8")).toMatch(/if \(!side\.current\?\.classList\.contains\("open"\)\) return;/);
   });
 });
+
+describe("the rail's footer mark", () => {
+  it("is as wide as the rail's buttons, so it centers in the rail with them", () => {
+    expect(css).toMatch(/\.side \.ico\.site-mark \{ width: var\(--box\); height: var\(--box\); \}/);
+  });
+});

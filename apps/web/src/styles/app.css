@@ -2362,7 +2362,9 @@ dialog:has(.ns-quote), dialog:has(#call-note) { max-width: min(560px, calc(100vw
    inside a 64-unit box, so the svg is drawn 64/60 larger than the ink it paints */
 /* 30px: the mark's drawn ink is 60 of its 64 viewBox units, so a 30px ink makes the svg exactly 32px and the bar (64px) centers it on a whole pixel; 29px left every edge on a half pixel */
 :root { --mark-ink: 30px; }
-.side .ico.mark, .top-brand .mark-box, .side .ico.site-mark { width: var(--mark-ink); height: var(--mark-ink); }
+.side .ico.mark, .top-brand .mark-box { width: var(--mark-ink); height: var(--mark-ink); }
+/* The footer's circle is the rail buttons' width, so it centers in the rail as they do (30px, it ran 1px right of the column and read as larger) */
+.side .ico.site-mark { width: var(--box); height: var(--box); }
 .side .ico.mark svg, .top-brand svg { width: calc(var(--mark-ink) * 64 / 60); height: calc(var(--mark-ink) * 64 / 60); margin: calc((var(--mark-ink) - var(--mark-ink) * 64 / 60) / 2); }
 /* The menu's top row stops where the rule starts, so the mark is centered in the room above it, as the top bar's is */
 .side .side-head, .side .side-head .brand, .side .brand, .shell.mini .side:not(.open) .brand, .side.open .brand { height: calc(var(--top-h) - 1px) !important; min-height: calc(var(--top-h) - 1px) !important; }
