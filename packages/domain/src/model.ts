@@ -91,6 +91,9 @@ export const Tenant = z.object({
   link: z.string().trim().max(200).optional(),
   // Every signature of neon1's service agreement, oldest first; the latest at the current edition counts
   agreements: z.array(Signature).max(50).optional(),
+  // A test organization for neon1's own checks: left out of All clients, the Prospects page, neon1's notices
+  // and requests (marked [TEST]), the tip and quiet-prospect emails, and the quiet-prospect deletion
+  test: z.boolean().optional(),
   // Set while this organization is a prospect that signed itself up (prospect.ts has its limits).
   // Promotion to a client removes it; suspension keeps it and shuts its members out
   prospect: z

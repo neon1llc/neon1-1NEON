@@ -145,7 +145,7 @@ async function sendAssessment(k: Pick<Kit, "repo" | "d" | "cfg">, tid: string, a
   }
   const updated = Boolean(row.sentAt);
   const mail = requestEmail({ kind: "assessment", what: REQUEST_KINDS.assessment, updated, note: row.note ?? "", who: user.name, email: user.email, org: t.name, ref: t.clientId, free: isProspect(t), place: t.place, link: t.link, projects: chosen.map(projectLine).join("\n"), url: `${cfg.publicUrl}/1NEON/o/${t.slug}/workspace`, at: new Date(row.editedAt ?? at) });
-  await alertNeon1(d, { severity: "important", title: "Assessment request", text: updated ? "An assessment request was updated." : "Someone asked for an assessment.", source: "request-assessment", to: [CONTACT_TO], mail: { subject: mail.subject, text: mail.text, html: mail.html, replyTo: user.email, as: mail.as } });
+  await alertNeon1(d, { severity: "important", title: "Assessment request", text: updated ? "An assessment request was updated." : "Someone asked for an assessment.", source: "request-assessment", to: [CONTACT_TO], mail: { subject: t.test ? `[TEST] ${mail.subject}` : mail.subject, text: mail.text, html: mail.html, replyTo: user.email, as: mail.as } });
   const iso = at.toISOString();
   for (const p of chosen) history[p.key] = iso;
   const audit = repo.auditOp({ tenantId: tid, actorId: row.by ?? "system", action: "request.assessment", target: tid, summary: `${updated ? "Updated the assessment request" : "Asked neon1 for an assessment"} (${chosen.map((p) => p.key).join(", ")})${row.note ? `: ${row.note.slice(0, 140)}` : ""}` });
@@ -303,7 +303,7 @@ export function requestRoutes(app: App, k: Kit) {
     }
     const mail = requestEmail({ kind: "call", what: REQUEST_KINDS.call, note: input.note, who: user.name, email: user.email, org: t.name, ref: t.clientId, free: isProspect(t), place: t.place, link: t.link, url: `${cfg.publicUrl}/1NEON/o/${t.slug}/workspace`, at });
     try {
-      await alertNeon1(d, { severity: "important", title: "Call request", text: "Someone asked for a call.", source: "request-call", to: [CONTACT_TO], mail: { subject: mail.subject, text: mail.text, html: mail.html, replyTo: user.email, as: mail.as } });
+      await alertNeon1(d, { severity: "important", title: "Call request", text: "Someone asked for a call.", source: "request-call", to: [CONTACT_TO], mail: { subject: t.test ? `[TEST] ${mail.subject}` : mail.subject, text: mail.text, html: mail.html, replyTo: user.email, as: mail.as } });
     } catch (e) {
       // A request that never left doesn't cost the person their week
       await repo.table.write([{ delete: lock }, ...(keyRow ? [{ delete: keyRow }] : [])]).catch(() => undefined);

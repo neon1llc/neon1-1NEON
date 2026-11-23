@@ -15,7 +15,9 @@ export const isDev = (cfg: Pick<Config, "env">) => cfg.env === "dev";
 /** Someone dev may sign in, mail, or create an account for: an operator, or any neon1.tech address */
 export function neon1Only(cfg: Pick<Config, "operatorEmails">, email: string) {
   const e = email.trim().toLowerCase();
-  return cfg.operatorEmails.includes(e) || e.endsWith("@neon1.tech");
+  // An operator's plus-address (neon1llc+free@gmail.com) is theirs too: it lands in the same inbox
+  const bare = e.replace(/\+[^@]*@/, "@");
+  return cfg.operatorEmails.includes(e) || cfg.operatorEmails.includes(bare) || e.endsWith("@neon1.tech");
 }
 
 

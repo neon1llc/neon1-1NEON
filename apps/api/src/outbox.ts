@@ -297,6 +297,8 @@ async function eventTargets(d: OutboxDeps, e: AuditEvent, clock: Clock): Promise
       const operator = cfg.operatorEmails.includes(u.email.toLowerCase());
       // neon1 already got the request itself, with the person as Reply-To (routes/requests.ts)
       if (operator && e.action.startsWith("request.")) continue;
+      // A test organization's notices stay out of neon1's inbox
+      if (operator && tenant?.test) continue;
       const mail = noticeEmail({
         orgName: tenant?.name ?? "1NEON", trial: Boolean(tenant && isProspect(tenant)), ref: tenant?.clientId,
         by: m.userId === e.actorId ? "You" : by, byEmail: e.actorId === "stripe" ? undefined : actor?.email,
