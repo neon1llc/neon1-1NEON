@@ -2,6 +2,11 @@
 
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
+## Unreleased
+
+### Changed
+- A new option and a Quick fix quote default to an estimate. A fixed price stays available for a small, well-defined job, and the options list and the agreement (edition 2.1, signed again before the next approval) say the same. The sign-in screen leads with a Watch the walkthrough button for visitors. Neo's guide is rebuilt from the corpus branch that carries the new pricing wording, and is rebuilt from the release before this ships.
+
 ## v0.25.0 - 2026-11-23
 
 ### Changed
