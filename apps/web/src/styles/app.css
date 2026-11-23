@@ -2278,7 +2278,7 @@ body:has(.shell.mini) .n1chat.n1chat-right { left: auto; right: max(16px, env(sa
 .side :is(.brand, .site-end):focus-visible { outline: none; }
 .side :is(.brand, .site-end):focus-visible::before { outline: 2px solid var(--focus); outline-offset: -2px; }
 .side.open :is(.brand, .site-end), .side.open .side-head .brand { flex: none; width: auto; padding-left: 6px; padding-right: 6px; }
-.side.open .side-head { gap: var(--sp-3); }
+.side.open .side-head { gap: var(--sp-3); justify-content: space-between; } /* the pill hugs the name; the switch stays at the row's end */
 
 /* Report a bug, Feedback, and neon1.tech leave 1NEON, so they are outbound links: the theme's green and never an underline */
 .side :is(.bug-row, .site-end), .side :is(.bug-row, .site-end) .lbl { color: var(--accent); }

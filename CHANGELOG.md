@@ -9,6 +9,7 @@
 - Shadows, the dialog dim, ink on a colored chip, and the calendar's office blue come from tokens (--shadow-pop, --shadow-float, --scrim, --on-color, --info) in every look, in place of per-rule colors. Error text uses the red and amber tokens.
 
 ### Fixed
+- The open menu's light/dark switch is back at the right end of the 1NEON row, level with the layout switch below, while the pill still hugs the logo and name.
 - Requesting an assessment no longer fails with "This record changed since you opened it." on an organization whose request record predates versions (one that had asked for a call in the first weeks): it saves, and the next save carries on from there. If another change really does land at the same moment, it says so in plain words. A call's wait now reads "Call requested Nov 19. You can ask again from Nov 26." on its own line below the buttons, so it no longer looks like the reason Request assessment is stuck, and the page tour no longer says to wait two weeks.
 - In the open menu, the 1NEON mark row and the neon1 row light as rounded pills like the other rows, and each hugs its content with 6px before the mark and 6px after the name, in place of a square band running to the edge or the switch. The Mini rail's two rows light as rounded pills too.
 - The open menu's bottom link reads "neon1" in the wordmark, without ".tech", and the 1's ink sits within 0.75px of the center of the mark and the layout switch (Chromium and WebKit, light and dark, Sentinel and Matrix); the lowercase letters were centered, which put the 1 about 1.5px low.
