@@ -756,6 +756,9 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
   // follows (the whole shell, tens of milliseconds on a phone) waits until the slide is over, so it never holds up a frame of it
   const shutTurn = useRef(0);
   const shut = () => {
+    // Only an open menu closes: on the collapsed rail the mark link and row taps call this too, and the class changes below are not
+    // undone by a render when nothing was open, so they stuck the rail's rows at the open menu's width
+    if (!side.current?.classList.contains("open")) return;
     const turn = ++shutTurn.current;
     side.current?.classList.remove("open");
     side.current?.classList.add("leaving");
@@ -934,7 +937,6 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
       <aside ref={side} onScroll={keepRail} onClickCapture={(event) => {
         const target = event.target;
         const link = target instanceof Element ? target.closest<HTMLAnchorElement>("a[href]") : null;
-        // A tap on the collapsed rail has no menu to close; closing it anyway left the rail's rows at the open menu's width until the next open
         if (open && link && event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && link.target !== "_blank") shut();
       }} onTransitionEnd={(event) => {
         if (!open && event.target === event.currentTarget && ["width", "transform", "clip-path"].includes(event.propertyName)) setScrimVisible(false);

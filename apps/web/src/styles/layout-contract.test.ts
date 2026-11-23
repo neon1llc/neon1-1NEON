@@ -138,6 +138,6 @@ describe("the menu's dividers", () => {
 
 describe("tapping a row on the collapsed rail", () => {
   it("does not start the open menu's close, which left the rail's rows at the open menu's width and flush against its edge", () => {
-    expect(readFileSync(join(__dirname, "../components/Shell.tsx"), "utf8")).toMatch(/if \(open && link && event\.button === 0/);
+    expect(readFileSync(join(__dirname, "../components/Shell.tsx"), "utf8")).toMatch(/if \(!side\.current\?\.classList\.contains\("open"\)\) return;/);
   });
 });
