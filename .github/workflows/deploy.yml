@@ -199,7 +199,8 @@ jobs:
   # on main is the only way in. The called workflows need contents to push dev and an OIDC token for the dev role
   dev:
     needs: [secrets, gate, walkthroughs]
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    # The walkthroughs job ends in always(), so a skipped shard would skip this job too unless the results are read here
+    if: ${{ !cancelled() && needs.secrets.result == 'success' && needs.gate.result == 'success' && needs.walkthroughs.result == 'success' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
     uses: ./.github/workflows/dev-sync.yml
     permissions:
       contents: write
@@ -214,7 +215,8 @@ jobs:
   # lets the job assume the roles
   release:
     needs: [secrets, gate, walkthroughs]
-    if: vars.AWS_DEPLOY_ROLE_ARN != ''
+    # Same reading of the results as the dev job: a skipped shard (proven earlier) must not skip the release
+    if: ${{ !cancelled() && needs.secrets.result == 'success' && needs.gate.result == 'success' && needs.walkthroughs.result == 'success' && vars.AWS_DEPLOY_ROLE_ARN != '' }}
     runs-on: ubuntu-latest
     permissions:
       # write only to push the release tag once the release is verified live
