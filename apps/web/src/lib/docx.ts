@@ -83,7 +83,7 @@ export function proposalBlocks(p: Pick<ProposalFields, "number" | "rev" | "issue
     const price = priceOf(f);
     if (price) {
       sub("How the price adds up", opt);
-      para(priceMeaning(price), { opt, field: "meaning" });
+      para(priceMeaning(price, !opts.fictional), { opt, field: "meaning" });
       const basis = f.basis ?? [];
       if (basis.length) table([["Work", "Expected"], ...basis.map((b) => [b.work, hoursText(b.hours)]), [`Total${price.kind === "estimate" && price.hoursLow !== price.hoursHigh ? `, within a range of ${hoursRange(price)}` : ""}`, hoursText(basis.reduce((n, b) => n + b.hours, 0))]], opt);
       para(`When you pay: ${paymentPlan(price).join("; ")}.`, { opt, field: "pay" });
@@ -93,7 +93,7 @@ export function proposalBlocks(p: Pick<ProposalFields, "number" | "rev" | "issue
 
   bar("Costs");
   table([["Option", "neon1's time", "Timeline", "Price", "Paid directly by you"], ...s.options.map((o) => [`${o.code} ${o.title}`, o.fields.hours || "—", o.fields.timeline || "—", o.fields.cost || "—", o.fields.outsideCosts || "None"])]);
-  para("Prices are for the work described. A fixed price is the whole price for that work. An estimate is billed for the hours worked, at the rate shown, and never above its high end unless you approve a change first. Accounts and subscriptions are in your name and billed to you directly. Items to buy are bought by you unless you agree, with your initials, that neon1 buys them. Those are paid back at cost, with the receipt.", { size: 18 });
+  para("Prices are for the work described. A fixed price is the whole price for that work. An estimate is billed for the hours worked" + (opts.fictional ? "" : ", at the rate shown") + ", and never above its high end unless you approve a change first. Accounts and subscriptions are in your name and billed to you directly. Items to buy are bought by you unless you agree, with your initials, that neon1 buys them. Those are paid back at cost, with the receipt.", { size: 18 });
 
   bar("Comments and agreement");
   bullet(`Prices were checked on ${longDate(p.issuedAt)}. After ${longDate(p.checkBy)}, ask neon1 to refresh them before choosing. Refreshing issues the next revision.`);

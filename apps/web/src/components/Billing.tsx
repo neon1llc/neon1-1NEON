@@ -290,7 +290,7 @@ export function PriceBasis({ terms, open = false }: { terms: Priced; open?: bool
   return (
     <details className="basis" open={open}>
       <summary>How this adds up</summary>
-      <p className="small">{priceMeaning(p)}</p>
+      <p className="small">{priceMeaning(p, !DEMO)}</p>
       {basis.length > 0 && (
         <table className="basis-table small">
           <caption className="sr">The work behind the hours</caption>

@@ -1405,7 +1405,7 @@ function Options({ items, all, docs, path, project }: { items: Item[]; all: Item
           <dl className="terms-list">
             <dt>{quick ? "The fix" : "Option"}</dt><dd><b>{approving.title}</b>{aCode && <span className="opt-code"> · {aCode}</span>}</dd>
             {cur && <><dt>From</dt><dd>{word} {proposalRef(cur.p.number, cur.p.rev)}, issued {dateLabel(cur.p.issuedAt.slice(0, 10))}</dd></>}
-            <dt>Price</dt><dd>{a.cost || "not stated"}<CostSplit cost={a.cost} />{priceOf(a) && <div className="small muted">{priceMeaning(priceOf(a)!)}</div>}</dd>
+            <dt>Price</dt><dd>{a.cost || "not stated"}<CostSplit cost={a.cost} />{priceOf(a) && <div className="small muted">{priceMeaning(priceOf(a)!, !DEMO)}</div>}</dd>
             {/* After a change with money already invoiced, the change box below says what's asked now */}
             {priceOf(a) && !(change && change.invoiced > 0) && <><dt>When you pay</dt><dd>{paymentPlan(priceOf(a)!).map((l) => <div key={l}>{l}</div>)}</dd></>}
             {a.timeline && <><dt>Timeline</dt><dd>{a.timeline}</dd></>}

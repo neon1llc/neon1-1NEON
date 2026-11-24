@@ -276,9 +276,9 @@ export function quoteFields(q: { pricing: "fixed" | "estimate"; priceCents?: num
 }
 
 /** What the kind of price means for the person paying, in a sentence or two */
-export function priceMeaning(p: Price): string {
+export function priceMeaning(p: Price, showRate = true): string {
   if (p.kind === "fixed") return "A fixed price. It changes only if you approve a change to the work.";
-  return `An estimate. You pay for the hours worked at ${dollars(p.rateCents)} an hour, and each hour is listed in the project as it's logged. The total can't pass ${dollars(p.highCents)} unless you approve a change first.`;
+  return `An estimate. You pay for the hours worked${showRate ? ` at ${dollars(p.rateCents)} an hour` : ""}, and each hour is listed in the project as it's logged. The total can't pass ${dollars(p.highCents)} unless you approve a change first.`;
 }
 
 /** When the money is due, as short lines: the deposit at approval, and the rest at handover */

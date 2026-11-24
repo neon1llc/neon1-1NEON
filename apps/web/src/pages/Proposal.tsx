@@ -252,7 +252,7 @@ function Proposal({ snapshot: s, rev, latestRev, decided, inForce, timeZone, slu
               {price && (
                 <div className="pp-basis">
                   <p className="pp-sub">How the price adds up</p>
-                  <p>{priceMeaning(price)}</p>
+                  <p>{priceMeaning(price, !DEMO)}</p>
                   {basis.length > 0 && (
                     <table className="pp-hours">
                       <thead><tr><th>Work</th><th>Expected</th></tr></thead>

@@ -103,6 +103,9 @@ describe("suggested lines", () => {
     expect(p).toEqual({ kind: "estimate", rateCents: 17_500, hoursLow: 20, hoursHigh: 24, lowCents: 350_000, highCents: 420_000, depositPercent: 50 });
     expect(priceLine(p)).toBe("$3,500 to $4,200 estimate");
     expect(priceMeaning(p)).toContain("can't pass $4,200");
+    expect(priceMeaning(p)).toContain("$175 an hour");
+    expect(priceMeaning(p, false)).not.toMatch(/an hour|\$175/);
+    expect(priceMeaning(p, false)).toContain("can't pass $4,200");
     expect(paymentPlan(p)[0]).toBe("$1,750.00 when you approve (50% of the low end, as a deposit)");
     // The written cost and hours follow the numbers, whatever was typed
     expect(alignPrice({ ...est, cost: "about four grand", hours: "a while" })).toMatchObject({ cost: "$3,500 to $4,200 estimate", hours: "20 to 24 hours" });
