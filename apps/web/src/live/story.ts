@@ -731,7 +731,7 @@ export const STORY: Section[] = [
       await s.click({ sel: ".next-step a", text: "See and pay" }, 1000);
       await s.click({ sel: ".invoice-row.is-open a.title, .invoice-row.is-overdue a.title", text: "INV-" }, 1200);
       await s.say(MONEY.fixed ? "The invoice shows the arithmetic: the price agreed, less what was paid" : "The invoice shows the arithmetic, and lists every hour it bills");
-      await s.think(MONEY.fixed ? `${MONEY.high} agreed, less the ${MONEY.deposit} I already paid. Nothing added.` : `${MONEY.logged} at ${MONEY.rate} is ${MONEY.earned}, less the ${MONEY.deposit} I already paid. Inside the ${MONEY.high} the revised terms allow.`);
+      await s.think(MONEY.fixed ? `${MONEY.high} agreed, less the ${MONEY.deposit} I already paid. Nothing added.` : `${MONEY.logged} worked is ${MONEY.earned}, less the ${MONEY.deposit} I already paid. Inside the ${MONEY.high} the revised terms allow.`);
       await s.hover(".inv-lines", 1600);
       if (await s.has(".inv-hours")) {
         await s.think("And each hour, with the date and what it was for. Nothing to take on trust.");

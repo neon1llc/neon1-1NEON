@@ -5,6 +5,7 @@
 ## Unreleased
 
 ### Changed
+- The demo and the sample projects show estimate totals and hours but no hourly rate: the Hours panel, the option summary, the sample project page, the proposal footnote, the live walkthrough, and the rate field and rate-change history in the demo no longer print it.
 - The demo's recommended option says its scope is clear enough for a fixed price, instead of saying the price is fixed because the work is well understood.
 - The sample project for Harborline Outfitters is titled for what its chosen scope delivers, stock reconciliation and exception monitoring, and says the report shows where counts disagree rather than that they agree. Quillwork's proposal promises a month-end export wait within 10 minutes, not that exports no longer queue. A measure target reads "zero", "at most 5", or "at least 90", never "under 0".
 - The interactive demo opens on Harborline Outfitters (Priya Raman and Tomas Greer), with the stock reconciliation project, instead of Acme Dental, so it matches the sample projects. The second sample client is Ridgeview Auto Group.

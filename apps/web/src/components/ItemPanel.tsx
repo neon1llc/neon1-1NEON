@@ -8,7 +8,7 @@ import { numberProblem, optionalNumber } from "../lib/measures.ts";
 import { useQuery } from "@tanstack/react-query";
 import { Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { api, HttpError } from "../lib/api.ts";
+import { api, DEMO, HttpError } from "../lib/api.ts";
 import { problem, useMembers, useRefresh, useSubmit } from "../lib/hooks.ts";
 import { read } from "../lib/reads.ts";
 import { gate } from "./Reads.tsx";
@@ -421,7 +421,7 @@ function KindFields({ kind, f, onChange }: { kind: ItemKind; f: Record<string, s
       </label>
       {estimate ? (
         <>
-          <label>Rate an hour<Money value={f.rateCents ?? ""} onChange={(v) => set("rateCents", v)} placeholder="e.g. 100" /></label>
+          {!DEMO && <label>Rate an hour<Money value={f.rateCents ?? ""} onChange={(v) => set("rateCents", v)} placeholder="e.g. 100" /></label>}
           <label>Hours, low end<input inputMode="decimal" value={f.hoursLow ?? ""} onChange={(e) => set("hoursLow", e.target.value)} placeholder="e.g. 20" /></label>
           <label>Hours, high end<input inputMode="decimal" value={f.hoursHigh ?? ""} onChange={(e) => set("hoursHigh", e.target.value)} placeholder="e.g. 24" /></label>
           <p className="small muted" style={{ gridColumn: "1 / -1", margin: 0 }}>{price ? `Shown as “${priceLine(price)}”, ${hoursRange(price as Extract<Price, { kind: "estimate" }>)}. Billed for the hours logged, never past the high end.` : "Add the rate and the high end of the hours to price this option."}</p>

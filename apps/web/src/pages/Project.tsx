@@ -1358,7 +1358,7 @@ function Options({ items, all, docs, path, project }: { items: Item[]; all: Item
                 return <div className="notice revised-terms"><p className="small" style={{ margin: 0 }}><b>Revised terms for {was ? `${inRev(was)?.code ?? ""} ${was.title}`.trim() : "an approved option"}.</b> {diff.length ? "What changes:" : "Nothing differs yet from the approved terms."}</p>{diff.length > 0 && <ul className="small" style={{ margin: "4px 0 0", paddingLeft: 18 }}>{diff.map((d) => <li key={d}>{d}</li>)}</ul>}</div>;
               })()}
               {f.cost && <p className="mono small" style={{ margin: "0 0 8px" }}>{f.cost}{f.timeline ? ` · ${f.timeline}` : ""}{DEMO && <span className="tag" style={{ marginLeft: 6 }}>illustrative</span>}</p>}
-              {(f.hours || f.outsideCosts) && <p className="small muted" style={{ margin: "0 0 8px" }}>{[f.hours && `neon1's time: ${f.hours}${f.rateCents && f.pricing === "estimate" ? ` at ${wholeDollars(f.rateCents)} an hour` : ""}`, f.outsideCosts && `Paid directly: ${f.outsideCosts}`].filter(Boolean).join(" · ")}</p>}
+              {(f.hours || f.outsideCosts) && <p className="small muted" style={{ margin: "0 0 8px" }}>{[f.hours && `neon1's time: ${f.hours}${f.rateCents && f.pricing === "estimate" && !DEMO ? ` at ${wholeDollars(f.rateCents)} an hour` : ""}`, f.outsideCosts && `Paid directly: ${f.outsideCosts}`].filter(Boolean).join(" · ")}</p>}
               {f.purchases.length > 0 && <p className="small muted" style={{ margin: "0 0 8px" }}>To buy: {f.purchases.map((x) => `${x.name}${x.estimate ? ` (${x.estimate})` : ""}${x.buyer === "neon1" ? ", neon1 buys" : ""}`).join("; ")}</p>}
               <CostSplit cost={f.cost} />
               {/* The reason behind the recommendation, or when a different option is the better pick */}
@@ -1477,7 +1477,7 @@ function termChanges(was: OptionFieldsT, now: OptionFieldsT, wasItem: Item, nowI
   say("Price", was.cost, now.cost);
   say("Timeline", was.timeline, now.timeline);
   say("neon1's time", was.hours, now.hours);
-  if (was.rateCents !== now.rateCents) say("Hourly rate", was.rateCents === undefined ? undefined : wholeDollars(was.rateCents), now.rateCents === undefined ? undefined : wholeDollars(now.rateCents));
+  if (!DEMO && was.rateCents !== now.rateCents) say("Hourly rate", was.rateCents === undefined ? undefined : wholeDollars(was.rateCents), now.rateCents === undefined ? undefined : wholeDollars(now.rateCents));
   say("Paid directly", was.outsideCosts, now.outsideCosts);
   say("Target result", was.result, now.result);
   const buys = (f: OptionFieldsT) => f.purchases.map((x) => `${x.name}${x.estimate ? ` (${x.estimate})` : ""}`).join("; ");

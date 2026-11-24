@@ -46,7 +46,7 @@ function storyOf(s: Scenario): Record<Layer, { lead: string; cards: Card[] }> {
           ...s.learned.map(([q, a]) => ({ text: `${q} ${a}` })),
           ...s.constraints.slice(0, 2).map(([title, body]) => ({ text: `A limit, said before any option was written: ${lower(title)}. ${body}` })),
         ] },
-        { title: "Options", lines: [`Proposal 0039-r1 offers ${s.options.length === 1 ? "one recommendation" : `${["", "", "two", "three"][s.options.length]} choices`}. Each says what's in and out, how the price was worked out, anything to buy, and the result to check.${M.fixed ? " Each price is fixed." : ` Each price is an estimate at ${M.rate} an hour, billed for hours worked and never above its high end unless the client approves a change first.`}`], list: s.options.map((o, n) => ({
+        { title: "Options", lines: [`Proposal 0039-r1 offers ${s.options.length === 1 ? "one recommendation" : `${["", "", "two", "three"][s.options.length]} choices`}. Each says what's in and out, how the price was worked out, anything to buy, and the result to check.${M.fixed ? " Each price is fixed." : ` Each price is an estimate in hours, billed for hours worked and never above its high end unless the client approves a change first.`}`], list: s.options.map((o, n) => ({
           text: `${o.title.replace(/^[A-C]\. /, "")}: ${price(n)}${sums[n]!.hours ? `, ${sums[n]!.hours}` : ""}. ${String(o.fields.result ?? "")}`,
           state: n === s.chosen ? "picked" as const : s.declined.includes(n) ? "set-aside" as const : undefined,
           tag: n === s.chosen ? "chosen" : s.declined.includes(n) ? "set aside" : undefined,
@@ -77,7 +77,7 @@ function storyOf(s: Scenario): Record<Layer, { lead: string; cards: Card[] }> {
         ...(s.purchase ? [{ title: "Purchases", lines: ["From the approved option, bought in the client's own name."], list: [{ text: `${s.purchase.name}: paid ${s.purchase.paid}, receipt attached`, state: "done" as const }] }] : []),
         { title: "Invoices", lines: ["Each invoice says what it's for and how it was worked out. Pay by bank transfer or card from the project."], list: [
           { text: `INV-0039-01, deposit: ${M.deposit}, ${M.fixed ? "half of the fixed price" : `half of the estimate's low end (${M.firstLow})`}. Paid`, state: "done" },
-          { text: `INV-0039-02, final: ${M.fixed ? `the fixed price, ${M.earned}` : `${M.logged} at ${M.rate} is ${M.earned}`}, less the deposit, ${M.final}. It lists ${M.fixed ? "what it bills" : "every hour it bills"}. Paid`, state: "done" },
+          { text: `INV-0039-02, final: ${M.fixed ? `the fixed price, ${M.earned}` : `${M.logged} worked is ${M.earned}`}, less the deposit, ${M.final}. It lists ${M.fixed ? "what it bills" : "every hour it bills"}. Paid`, state: "done" },
           { text: `Total for the work: ${M.earned}${M.fixed ? "" : `, inside the ${M.range} approved`}` },
         ] },
       ],

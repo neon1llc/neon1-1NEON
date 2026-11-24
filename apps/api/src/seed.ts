@@ -7,7 +7,7 @@ import type { Repo } from "./store/repo.ts";
 import { issueProposal } from "./proposals.ts";
 
 
-// The hourly rate the demo's estimates use (illustrative)
+// The hourly rate behind the demo's estimates. Totals are shown; the rate itself is never printed
 const RATE_CENTS = 10_000;
 
 // ISO timestamp `offset` days from now, so demo data always looks recent

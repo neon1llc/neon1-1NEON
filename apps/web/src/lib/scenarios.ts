@@ -76,7 +76,7 @@ export interface Scenario {
 const estimate = (rateCents: number, hoursLow: number, hoursHigh: number, basis: BasisLine[]) => ({ pricing: "estimate" as const, rateCents, hoursLow, hoursHigh, basis });
 const fixed = (total: number, depositPercent?: number) => ({ pricing: "fixed" as const, cost: `$${total.toLocaleString("en-US")} fixed`, ...(depositPercent === undefined ? {} : { depositPercent }) });
 export const sum = (b: BasisLine[]) => b.reduce((n, x) => n + x.hours, 0);
-/** neon1's rate for workflow work, in cents an hour (Knowledge Center, "How pricing works") */
+/** The hourly rate behind the demo's estimate totals, in cents. Totals are shown; the rate is never printed */
 export const RATE_CENTS = 10_000;
 
 
@@ -654,7 +654,6 @@ export function moneyOf(s: Scenario) {
   const e = (p: Price) => p as Extract<Price, { kind: "estimate" }>;
   return {
     fixed: now.kind === "fixed",
-    rate: now.kind === "estimate" ? dollars(now.rateCents) : "",
     range: priceLine(now).replace(" estimate", ""),
     firstRange: priceLine(first).replace(" estimate", ""),
     low: now.kind === "estimate" ? dollars(now.lowCents) : dollars(now.totalCents),

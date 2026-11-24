@@ -349,7 +349,7 @@ export function Hours({ items, path }: { items: Item[]; path: string }) {
       {at ? (
         <div className="hours-at">
           <p className="small" style={{ margin: 0 }}>
-            <b>{hoursText(at.logged)} logged</b>{at.logged > 0 && <> at {dollars(at.price.rateCents)} an hour: <b>{dollars(at.earnedCents)}</b> so far</>}. The estimate is {hoursRange(at.price)} ({dollars(at.price.lowCents)} to {dollars(at.price.highCents)}), and the total can't pass {dollars(at.price.highCents)} unless you approve a change first.
+            <b>{hoursText(at.logged)} logged</b>{at.logged > 0 && <>{DEMO ? "" : <> at {dollars(at.price.rateCents)} an hour</>}: <b>{dollars(at.earnedCents)}</b> so far</>}. The estimate is {hoursRange(at.price)} ({dollars(at.price.lowCents)} to {dollars(at.price.highCents)}), and the total can't pass {dollars(at.price.highCents)} unless you approve a change first.
             {at.over > 0 && <> {hoursText(at.over)} past the high end {at.over === 1 ? "is" : "are"} listed here and not billed.</>}
           </p>
           {/* The bar runs to the high end; the mark is the low end */}
