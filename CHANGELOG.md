@@ -2,6 +2,11 @@
 
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
+## v0.27.2 - 2026-11-24
+
+### Changed
+- Neo's portal guide is rebuilt from neon1-corpus v0.52.9. The call request is "Ask me to email you" in the Next step and its dialog, and in the help. The Networks template is Networks, devices, and connected systems. Form errors say "Reword the note." without "please".
+
 ## v0.27.1 - 2026-11-24
 
 ### Changed
