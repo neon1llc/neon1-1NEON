@@ -108,9 +108,33 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  # Whether these exact inputs already passed the walkthroughs in CI (scripts/walkthroughs-proof.mjs): a release commit that
+  # only moves the changelog, the API, the docs or the release number is the dev commit that passed, so it needn't play them
+  # again. Any other difference, an error, or a changed live site runs the whole suite
+  proof:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      skip: ${{ steps.proof.outputs.skip }}
+      fingerprint: ${{ steps.proof.outputs.fingerprint }}
+      site: ${{ steps.proof.outputs.site }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: proof
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/walkthroughs-proof.mjs | tee -a "$GITHUB_OUTPUT"
+
   # Every guided walkthrough, played in a real browser on a desktop and a phone screen, has to reach
   # its end card before anything ships
   walkthrough-shard:
+    needs: proof
+    if: needs.proof.outputs.skip != 'true'
     name: walkthroughs (shard ${{ matrix.shard }} of 3)
     runs-on: ubuntu-latest
     timeout-minutes: 40
@@ -153,11 +177,20 @@ jobs:
 
   # One result for the three shards, under the name branch rules and the release jobs already wait on
   walkthroughs:
-    needs: walkthrough-shard
+    needs: [proof, walkthrough-shard]
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - run: test "${{ needs.walkthrough-shard.result }}" = success
+      # The shards passed, or were skipped on a proof from an earlier run of the same inputs
+      - run: |
+          test "${{ needs.walkthrough-shard.result }}" = success || { test "${{ needs.walkthrough-shard.result }}" = skipped && test "${{ needs.proof.outputs.skip }}" = true; }
+          printf '{"fingerprint":"%s","site":"%s"}\n' "${{ needs.proof.outputs.fingerprint }}" "${{ needs.proof.outputs.site }}" > walkthrough-proof.json
+      # What a later run reads as proof; written only after the line above passed
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: walkthrough-proof
+          path: walkthrough-proof.json
+          retention-days: 30
 
   # ---- Dev: the same gates, in parallel with the release ----
 
