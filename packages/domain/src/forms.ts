@@ -168,7 +168,7 @@ export function textProblem(text: string, what = "this", min = MIN_ANSWER): stri
   const t = text.trim().replace(/\s+/g, " ");
   if (!t) return undefined;
   if (t.length < min) return `Enter at least ${min} characters for ${what}.`;
-  if (offensive(text)) return `Please reword ${what}.`;
+  if (offensive(text)) return `Reword ${what}.`;
   if (looksLikeJunk(text)) return `Enter a real answer for ${what}.`;
   return undefined;
 }
@@ -192,6 +192,6 @@ export function assessmentNoteProblem(text: string): string | undefined {
   if (!t) return "Add a note for me to keep in mind.";
   if (t.length < MIN_ASSESSMENT_NOTE) return `Too short. Add a little more: at least ${MIN_ASSESSMENT_NOTE} characters.`;
   if (looksLikeJunk(t)) return "Write it in a few real words.";
-  if (offensive(text)) return "Please reword the note.";
+  if (offensive(text)) return "Reword the note.";
   return undefined;
 }

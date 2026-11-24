@@ -138,7 +138,7 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
     ? <span className="helper next-call">Rather talk it through? <button type="button" className="linkish" onClick={() => dispatchEvent(new Event("1neon:chat"))}>Message me</button> or <Link to="/contact">contact neon1</Link></span>
     : callAsked
       ? <span className="helper next-call" role="status">Call requested {dateLabel(callAsked.at)}. You can ask again from {dateLabel(callAsked.again)}. Or {chat}.</span>
-      : <span className="helper next-call">Rather talk first? <button type="button" className="linkish" onClick={() => dispatchEvent(new Event("1neon:chat"))}>Message me</button>, <OutLink href={BOOK_A_CALL}>book a 30-minute call</OutLink> or <button type="button" className="linkish" onClick={() => { setError(""); setCallOpen(true); }}>ask me to reach out</button>.</span>;
+      : <span className="helper next-call">To talk first, <button type="button" className="linkish" onClick={() => dispatchEvent(new Event("1neon:chat"))}>message me</button>, <OutLink href={BOOK_A_CALL}>book a 30-minute call</OutLink>, or <button type="button" className="linkish" onClick={() => { setError(""); setCallOpen(true); }}>ask me to email you</button>.</span>;
   const refresh = () => qc.invalidateQueries({ queryKey: ["requests", orgId] });
 
   const startEdit = () => {
@@ -195,7 +195,7 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
   function callDialog() {
     return (
       <Dialog open={callOpen} onClose={() => setCallOpen(false)} label="Ask for a call" className="ask">
-        <h2>Ask me to reach out</h2>
+        <h2>Ask me to email you</h2>
         <p className="muted small">I'll reply by email to set a time. Once it's sent, you can ask again from {dateLabel(requestAgainAt(new Date().toISOString(), "call"))}.</p>
         <label className="field-label" htmlFor="call-note">Good times, or what you'd like to cover (optional)</label>
         <textarea id="call-note" rows={3} maxLength={NOTE_MAX} value={callNote} onChange={(e) => setCallNote(e.target.value)} />
