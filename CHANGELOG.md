@@ -2,14 +2,14 @@
 
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
-## Unreleased
+## v0.27.0 - 2026-11-23
 
 ### Changed
 - The demo and the sample projects use a made-up hourly rate, not neon1's, so hours and totals together don't reveal a real one. The rate is never printed. They show estimate totals and hours: the Hours panel, the option summary, the sample project page, the proposal footnote, the live walkthrough, and the rate field and rate-change history in the demo no longer print it.
 - The demo's recommended option says its scope is clear enough for a fixed price, instead of saying the price is fixed because the work is well understood.
 - The sample project for Harborline Outfitters is titled for what its chosen scope delivers, stock reconciliation and exception monitoring, and says the report shows where counts disagree rather than that they agree. Quillwork's proposal promises a month-end export wait within 10 minutes, not that exports no longer queue. A measure target reads "zero", "at most 5", or "at least 90", never "under 0".
 - The interactive demo opens on Harborline Outfitters (Priya Raman and Tomas Greer), with the stock reconciliation project, instead of Acme Dental, so it matches the sample projects. The second sample client is Ridgeview Auto Group.
-- Neo's portal guide reads from the neon1-corpus copy that says what neon1 covers and brings in, not what it refuses. When Neo can't reply, it points to a person.
+- Neo's portal guide is rebuilt from neon1-corpus v0.52.5, which says what neon1 covers and brings in, not what it refuses, and states no dollar figures. When Neo can't reply, it points to a person.
 
 ## v0.26.0 - 2026-11-23
 
