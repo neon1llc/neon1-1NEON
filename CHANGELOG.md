@@ -2,6 +2,12 @@
 
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
+## v0.27.1 - 2026-11-24
+
+### Changed
+- Neo's portal guide is rebuilt from neon1-corpus v0.52.7, which renames the AI-use policy to How I work with AI.
+- The release checks run faster: the walkthroughs run in three shards in Playwright's own image, and a release whose inputs match a passing dev run skips them.
+
 ## v0.27.0 - 2026-11-23
 
 ### Changed
