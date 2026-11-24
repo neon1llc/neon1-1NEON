@@ -148,7 +148,7 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: "network_systems",
-    name: "Networks and connected systems",
+    name: "Networks, devices, and connected systems",
     keyPrefix: "NET",
     summary: "Design a network or connected devices that stay reliable, separated, and documented.",
     items: [

@@ -462,7 +462,7 @@ const FENWICK: Scenario = {
   org: { name: "Fenwick & Marsh Architects", slug: "fenwick-marsh", place: "Albany, NY", about: "an architecture firm of 22 people moving to a renovated floor" },
   owner: { name: "Daniel Fenwick", first: "Daniel", email: "daniel@fenwickmarsh.example", title: "Principal", role: "a principal at Fenwick & Marsh Architects" },
   colleague: { name: "Mei Sato", first: "Mei", email: "mei@fenwickmarsh.example", title: "Studio manager", role: "who manages the studio" },
-  template: { id: "network_systems", label: "Networks and connected systems", wrong: "Cloud migration", key: "NET-1" },
+  template: { id: "network_systems", label: "Networks, devices, and connected systems", wrong: "Cloud migration", key: "NET-1" },
   project: {
     name: "A segmented network and security-review evidence",
     today: "We're moving to a renovated floor. Today everything shares one network: design workstations, the file server, guest Wi-Fi, door badge readers, and eight cameras. A municipal client's security questionnaire now asks about segmentation, access reviews, and tested backups.",
