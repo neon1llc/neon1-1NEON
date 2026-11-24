@@ -8,14 +8,21 @@ import { OutLink } from "./OutLink.tsx";
 import { Fragment, type ReactNode } from "react";
 
 
+/** Text with a search's words marked; the pattern has one capture group, so matches land at odd places */
+export function marked(text: string, mark?: RegExp): ReactNode {
+  if (!mark) return text;
+  return text.split(mark).map((part, i) => (i % 2 ? <mark key={i}>{part}</mark> : part));
+}
+
+
 /** Inline formatting inside one line of text */
-function inline(text: string, key = 0): ReactNode[] {
+function inline(text: string, key = 0, mark?: RegExp): ReactNode[] {
   const out: ReactNode[] = [];
   // Order matters: code first (its contents stay literal), then links, bold, italics
   const re = /(`[^`]+`)|\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*|\*([^*]+)\*/g;
   let last = 0;
   for (let m = re.exec(text); m; m = re.exec(text)) {
-    if (m.index > last) out.push(text.slice(last, m.index));
+    if (m.index > last) out.push(<Fragment key={`${key}-t${last}`}>{marked(text.slice(last, m.index), mark)}</Fragment>);
     const k = `${key}-${m.index}`;
     if (m[1]) out.push(<code key={k}>{m[1].slice(1, -1)}</code>);
     // Only plain web, mail, and same-site links; anything else renders as text
@@ -23,19 +30,19 @@ function inline(text: string, key = 0): ReactNode[] {
       // Web, mail, and phone destinations leave 1NEON; same-origin site paths stay in the current tab
       const allowed = /^(https:|mailto:|tel:|\/)/i.test(m[3]);
       if (!allowed) {
-        out.push(m[2]);
+        out.push(<Fragment key={k}>{marked(m[2], mark)}</Fragment>);
         last = m.index + m[0].length;
         continue;
       }
       const href = ownSite(m[3]);
       const leaves = /^(https?:|mailto:|tel:)/i.test(href);
-      out.push(leaves ? <OutLink key={k} href={href}>{m[2]}</OutLink> : <a key={k} href={href}>{m[2]}</a>);
+      out.push(leaves ? <OutLink key={k} href={href}>{marked(m[2], mark)}</OutLink> : <a key={k} href={href}>{marked(m[2], mark)}</a>);
     }
-    else if (m[4]) out.push(<b key={k}>{inline(m[4], key + 1)}</b>);
-    else if (m[5]) out.push(<em key={k}>{inline(m[5], key + 1)}</em>);
+    else if (m[4]) out.push(<b key={k}>{inline(m[4], key + 1, mark)}</b>);
+    else if (m[5]) out.push(<em key={k}>{inline(m[5], key + 1, mark)}</em>);
     last = m.index + m[0].length;
   }
-  if (last < text.length) out.push(text.slice(last));
+  if (last < text.length) out.push(<Fragment key={`${key}-t${last}`}>{marked(text.slice(last), mark)}</Fragment>);
   return out;
 }
 
@@ -107,30 +114,30 @@ export function parseBlocks(source: string): Block[] {
 
 
 /** Render a Markdown document as blocks; level one headings use the page title style */
-export function Markdown({ source }: { source: string }) {
+export function Markdown({ source, mark }: { source: string; mark?: RegExp }) {
   return (
     <>
       {parseBlocks(source).map((b) => {
         const i = b.at;
         if (b.kind === "heading") {
           const Tag = b.level === 1 ? "h1" : b.level === 2 ? "h2" : "h3";
-          return <Tag key={i} className={b.level === 1 ? "page-title" : "section-h"}>{inline(b.text, i)}</Tag>;
+          return <Tag key={i} className={b.level === 1 ? "page-title" : "section-h"}>{inline(b.text, i, mark)}</Tag>;
         }
         if (b.kind === "list") {
-          const items = b.items.map((t, j) => <li key={j}>{inline(t, i * 100 + j)}</li>);
+          const items = b.items.map((t, j) => <li key={j}>{inline(t, i * 100 + j, mark)}</li>);
           return b.ordered ? <ol key={`l${i}`}>{items}</ol> : <ul key={`l${i}`}>{items}</ul>;
         }
         if (b.kind === "table") {
           return (
             <div key={`t${i}`} style={{ overflowX: "auto", position: "relative" }}>
               <table className="people">
-                <thead><tr>{b.head.map((c, j) => <th key={j}>{inline(c, j)}</th>)}</tr></thead>
-                <tbody>{b.rows.map((r, ri) => <tr key={ri}>{r.map((c, j) => <td key={j}>{inline(c, ri * 100 + j)}</td>)}</tr>)}</tbody>
+                <thead><tr>{b.head.map((c, j) => <th key={j}>{inline(c, j, mark)}</th>)}</tr></thead>
+                <tbody>{b.rows.map((r, ri) => <tr key={ri}>{r.map((c, j) => <td key={j}>{inline(c, ri * 100 + j, mark)}</td>)}</tr>)}</tbody>
               </table>
             </div>
           );
         }
-        return <p key={`p${i}`}>{b.lines.map((p, j) => <Fragment key={j}>{j > 0 && <br />}{inline(p, i * 10 + j)}</Fragment>)}</p>;
+        return <p key={`p${i}`}>{b.lines.map((p, j) => <Fragment key={j}>{j > 0 && <br />}{inline(p, i * 10 + j, mark)}</Fragment>)}</p>;
       })}
     </>
   );

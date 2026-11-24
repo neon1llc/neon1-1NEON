@@ -85,3 +85,12 @@ export function matches(item: Question, query: string) {
   const hay = [item.q, item.a, ...aliasesOf(item.id)].join(" ").toLowerCase();
   return words.every((w) => hay.includes(w));
 }
+
+
+/** The pattern that marks a search's words in the text, as the Knowledge Center's search does: each
+ * word of two characters or more, longest first, so "lost" never splits a longer typed word */
+export function marker(query: string): RegExp | undefined {
+  const words = [...new Set(query.toLowerCase().split(/\s+/).filter((w) => w.length > 1))].sort((a, b) => b.length - a.length);
+  if (!words.length) return undefined;
+  return new RegExp(`(${words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "gi");
+}

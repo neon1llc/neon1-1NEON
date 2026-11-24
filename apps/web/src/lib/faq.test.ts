@@ -6,7 +6,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { PROSPECT_LIMITS } from "@1neon/domain";
-import { ALIAS_IDS, aliasesOf, matches, parse, slug } from "./faq.ts";
+import { ALIAS_IDS, aliasesOf, marker, matches, parse, slug } from "./faq.ts";
 import { fileLimitsLine } from "./prospect.ts";
 
 
@@ -80,3 +80,12 @@ describe("faq search", () => {
     expect(hits("zebra quantum")).toEqual([]);
   });
 });
+
+
+describe("faq search marks", () => {
+  const split = (text: string, q: string) => text.split(marker(q)!).filter((_, i) => i % 2);
+  it("marks each typed word, whatever its case", () => expect(split("Lost phone? A lost one.", "lost PHONE")).toEqual(["Lost", "phone", "lost"]));
+  it("takes punctuation literally", () => expect(split("Costs $15 (about).", "$15 (about)")).toEqual(["$15", "(about)"]));
+  it("marks nothing for an empty search or single letters", () => expect(marker("  a ")).toBeUndefined());
+});
+

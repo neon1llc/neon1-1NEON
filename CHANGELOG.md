@@ -5,6 +5,7 @@
 ## Unreleased
 
 ### Changed
+- The FAQ search marks your words in each matching question and answer, as the Knowledge Center search does.
 - 1NEON help links outline examples to the What to write section of How 1NEON accounts work.
 - Removed a one-time note about syncing legal wording that didn't belong in the repository.
 

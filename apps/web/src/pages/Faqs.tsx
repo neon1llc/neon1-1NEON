@@ -5,14 +5,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router";
-import { Markdown } from "../components/Markdown.tsx";
+import { Markdown, marked } from "../components/Markdown.tsx";
 import { OutLink } from "../components/OutLink.tsx";
 import { PublicBar } from "../components/PublicBar.tsx";
 import { PublicFooter } from "../components/PublicFooter.tsx";
 import { useDocumentScroll } from "../lib/edge.ts";
 import { useSiteTheme } from "../lib/sitetheme.ts";
 import source from "../help/faqs.md?raw";
-import { matches, parse, type Question } from "../lib/faq.ts";
+import { marker, matches, parse, type Question } from "../lib/faq.ts";
 
 
 const FAQ = parse(source);
@@ -58,6 +58,8 @@ export function Faqs() {
     if (!q.trim()) return FAQ.topics;
     return FAQ.topics.map((x) => ({ ...x, items: x.items.filter((i) => matches(i, q)) })).filter((x) => x.items.length);
   }, [q]);
+  // The typed words are marked in each shown question and answer
+  const mark = useMemo(() => marker(q), [q]);
   const [said, setSaid] = useState("");
   useEffect(() => {
     if (!q.trim()) { setSaid(""); return; }
@@ -80,8 +82,8 @@ export function Faqs() {
           <h2 className="section-h">{t.name}</h2>
           {t.items.map((i) => (
             <details key={i.id} id={i.id} className="faq" open={Boolean(q.trim()) || i.id === target}>
-              <summary>{i.q}</summary>
-              <Markdown source={i.a} />
+              <summary><span>{marked(i.q, mark)}</span></summary>
+              <Markdown source={i.a} mark={mark} />
               <CopyLink item={i} />
             </details>
           ))}
