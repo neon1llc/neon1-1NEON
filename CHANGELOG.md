@@ -2,6 +2,12 @@
 
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
+## Unreleased
+
+### Changed
+- 1NEON help links outline examples to the What to write section of How 1NEON accounts work.
+- Removed a one-time note about syncing legal wording that didn't belong in the repository.
+
 ## v0.27.2 - 2026-11-24
 
 ### Changed
