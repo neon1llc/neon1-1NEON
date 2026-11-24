@@ -114,6 +114,11 @@ jobs:
     name: walkthroughs (shard ${{ matrix.shard }} of 3)
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    # Playwright's own image carries Chromium and its system libraries, so no step installs them from the
+    # Ubuntu mirror, which has stalled other jobs for 30 minutes. Its tag is the version in package-lock.json; change both together
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --init --ipc=host
     # Each shard plays a third of the walkthroughs on its own machine, so the slowest third sets the time
     strategy:
       fail-fast: false
@@ -130,15 +135,9 @@ jobs:
           node-version: 22
           cache: npm
 
-      # The web build, then Chromium for the Playwright version in the lockfile
+      # The web build; Chromium comes with the container image
       - run: npm ci
       - run: npm run build --workspace @1neon/web
-      # The browser build Playwright downloads is kept between runs, so a run installs only the system libraries
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-chromium-${{ hashFiles('package-lock.json') }}
-      - run: npx playwright install --with-deps chromium
       - run: npm run walkthroughs
         env:
           SHARD: ${{ matrix.shard }}/3
