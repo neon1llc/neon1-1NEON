@@ -7,8 +7,8 @@ import type { Repo } from "./store/repo.ts";
 import { issueProposal } from "./proposals.ts";
 
 
-// The hourly rate behind the demo's estimates. Totals are shown; the rate itself is never printed
-const RATE_CENTS = 10_000;
+// A made-up hourly rate for the demo's estimates. It is not neon1's rate, and the pages never print it
+const RATE_CENTS = 12_000;
 
 // ISO timestamp `offset` days from now, so demo data always looks recent
 const day = (offset: number) => new Date(Date.now() + offset * 86_400_000).toISOString();

@@ -76,8 +76,8 @@ export interface Scenario {
 const estimate = (rateCents: number, hoursLow: number, hoursHigh: number, basis: BasisLine[]) => ({ pricing: "estimate" as const, rateCents, hoursLow, hoursHigh, basis });
 const fixed = (total: number, depositPercent?: number) => ({ pricing: "fixed" as const, cost: `$${total.toLocaleString("en-US")} fixed`, ...(depositPercent === undefined ? {} : { depositPercent }) });
 export const sum = (b: BasisLine[]) => b.reduce((n, x) => n + x.hours, 0);
-/** The hourly rate behind the demo's estimate totals, in cents. Totals are shown; the rate is never printed */
-export const RATE_CENTS = 10_000;
+/** A made-up hourly rate for the demo's estimates, in cents. It is not neon1's rate, and the pages never print it */
+export const RATE_CENTS = 12_000;
 
 
 // --- 1. Harborline Outfitters: business systems integration --------------------------------------------------
@@ -672,7 +672,7 @@ export function moneyOf(s: Scenario) {
   };
 }
 
-/** Each option's price line and hours, for pages that list them ("$2,600 to $3,400 estimate") */
+/** Each option's price line and hours, for pages that list them ("$3,120 to $4,080 estimate") */
 export function summaryOf(s: Scenario) {
   return s.options.map((o) => {
     const p = priceOf(o.fields)!;
