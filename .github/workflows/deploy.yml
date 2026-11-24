@@ -110,9 +110,15 @@ jobs:
 
   # Every guided walkthrough, played in a real browser on a desktop and a phone screen, has to reach
   # its end card before anything ships
-  walkthroughs:
+  walkthrough-shard:
+    name: walkthroughs (shard ${{ matrix.shard }} of 3)
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    # Each shard plays a third of the walkthroughs on its own machine, so the slowest third sets the time
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     steps:
       # Actions are pinned to commit SHAs; the checkout keeps no token
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -127,17 +133,32 @@ jobs:
       # The web build, then Chromium for the Playwright version in the lockfile
       - run: npm ci
       - run: npm run build --workspace @1neon/web
+      # The browser build Playwright downloads is kept between runs, so a run installs only the system libraries
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-chromium-${{ hashFiles('package-lock.json') }}
       - run: npx playwright install --with-deps chromium
       - run: npm run walkthroughs
+        env:
+          SHARD: ${{ matrix.shard }}/3
 
       # A failed run leaves a screenshot of where it stopped
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: walkthrough-failures
+          name: walkthrough-failures-${{ matrix.shard }}
           path: walkthrough-failure-*.png
           if-no-files-found: ignore
           retention-days: 14
+
+  # One result for the three shards, under the name branch rules and the release jobs already wait on
+  walkthroughs:
+    needs: walkthrough-shard
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: test "${{ needs.walkthrough-shard.result }}" = success
 
   # ---- Dev: the same gates, in parallel with the release ----
 

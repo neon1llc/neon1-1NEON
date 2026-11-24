@@ -329,6 +329,14 @@ const demoJobs = (sizes) => sizes.flatMap((size) => ["awake", "matrix"].map((the
 // With no --shows given, the demo's landing is checked too, in both themes, at each size
 if (!process.argv.some((a) => a === "--shows" || a.startsWith("--shows="))) jobs.push(...demoJobs(sizes));
 else if (shows.includes("demo")) jobs.splice(0, jobs.length, ...demoJobs(sizes));
+// "--shard 2/3" plays every third run, so CI can split the list across machines; each run lands in exactly one shard
+const shard = arg("shard", process.env.SHARD ?? "").match(/^(\d+)\/(\d+)$/);
+if (shard) {
+  const [index, total] = [Number(shard[1]), Number(shard[2])];
+  if (index < 1 || index > total) throw new Error(`--shard ${index}/${total}: the shard must be between 1 and ${total}`);
+  const mine = jobs.filter((_, i) => i % total === index - 1);
+  jobs.splice(0, jobs.length, ...mine);
+}
 const failures = [];
 let done = 0;
 
