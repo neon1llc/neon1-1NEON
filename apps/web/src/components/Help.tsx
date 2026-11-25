@@ -35,7 +35,7 @@ interface Guide {
 
 
 // The pages that have guidance; every signed-in route maps to one
-export type PageKey = "home" | "board" | "projects" | "project" | "newproject" | "layer" | "people" | "files" | "insights" | "settings" | "me" | "contact" | "all";
+export type PageKey = "home" | "board" | "projects" | "project" | "newproject" | "layer" | "people" | "files" | "insights" | "settings" | "me" | "contact" | "all" | "proposal" | "invoice" | "agreement" | "prospects";
 
 
 // Plain words, one idea per line. The tours point at data-tour names that pages put on their elements
@@ -43,9 +43,9 @@ export const GUIDES: Record<PageKey, Guide> = {
   home: {
     title: "Home",
     purpose: "Your starting point: what needs you, and what changed lately.",
-    howto: ["Under Next step, outline a project, then ask for an assessment.", "Work through Needs you, top to bottom.", "Use the calendar arrows to change month. Choose a day to see it or add leave, an office event, a meeting, or a care plan date.", "Insights in the menu has charts of how work is going."],
+    howto: ["Needs you lists what's waiting on you, most pressing first.", "With projects waiting for an assessment, ask for one under Next step.", "On the calendar, choose a day to see it. Editors can add leave, closures, meetings, and care plan dates."],
     tour: [
-      { at: "next-step-ask", title: "Next step", text: "Outline a project, then ask for an assessment of up to three. The note is required, and you can edit it until it's sent. A call can be asked once a week." },
+      { at: "next-step-ask", title: "Next step", text: "Outline a project, then ask for an assessment of up to three. Add a note, then send. You can edit or withdraw it until it goes." },
       { at: "needs-you", title: "Needs you", text: "Things waiting on you: approvals, tasks, and files to send. Open one to act on it." },
       { at: "coming-up", title: "Calendar", text: "Work due, milestones, targets, and your events. Choose a day to see or add. Past, Overdue, Upcoming, and Repeated open below." },
       { at: "glance", title: "Projects at a glance", text: "Each project's stage, health, progress, late work, and what's next." },
@@ -57,7 +57,7 @@ export const GUIDES: Record<PageKey, Guide> = {
   board: {
     title: "Board",
     purpose: "Every project as a card, in the stage it's in right now.",
-    howto: ["Drag a card to move it to another stage.", "On a phone, use the card's Move button.", "Each column says what has to be true to move on."],
+    howto: ["Editors and admins drag a card or use its Move to menu.", "Moving past Decide without an approved option asks for a reason."],
     tour: [
       { at: "board-column", title: "Stages", text: "Columns run left to right, from the first call to care after handover." },
       { at: "board-card", title: "Projects", text: "Drag a card to the next stage, or open it to see the work." },
@@ -65,8 +65,8 @@ export const GUIDES: Record<PageKey, Guide> = {
   },
   projects: {
     title: "Projects",
-    purpose: "All projects in one list.",
-    howto: ["Switch between List and Timeline at the top.", "Filter by layer, or sort by stage, target date, or recent changes.", "Start one with New project."],
+    purpose: "Every project, as a list or a timeline.",
+    howto: ["Switch between List and Timeline.", "Search, filter by layer, or sort the list.", "Editors and admins start a New project, and archive or restore one from its row menu."],
     tour: [
       { at: "new-project", title: "New project", text: "Answer a few questions to start with the right checklist." },
       { at: "project-list", title: "Your projects", text: "Each row shows the stage, health, and target date." },
@@ -75,7 +75,7 @@ export const GUIDES: Record<PageKey, Guide> = {
   project: {
     title: "Project",
     purpose: "One project: what's next, and its work in four layers.",
-    howto: ["Start with Next step: it says what to do now.", "Tap any item to open it: change its status, owner, or due date, and comment.", "Ready for Execute on the Overview shows how far the outline has come. Write a part and the percent moves.", "The onion beside the name fills as each layer's work gets done.", "Post an update to say how it's going."],
+    howto: ["Start with Next step.", "Tap an item's title for its status, owner, due date, details, and comments.", "Add requests and compare options on Needs. Each layer tab also takes files.", "To approve an option, type your name as your signature. That's for the decision maker, or an admin if none is named, once your organization signs the service agreement.", "When every handover step is ticked, the decision maker signs once to accept them all. How did it go? is optional, and neon1 quotes it only if you tick the box, without names."],
     tour: [
       { at: "next-step", title: "Next step", text: "What has to happen now, and who it's waiting on." },
       { at: "readiness", title: "Ready for Execute", text: "0 to 100% before work starts: six outline parts, the assessment, options, and a decision." },
@@ -86,19 +86,19 @@ export const GUIDES: Record<PageKey, Guide> = {
   newproject: {
     title: "New project",
     purpose: "Start a project with a few questions.",
-    howto: ["Pick the kind of project that fits best.", "Name it in plain words.", "Add how you'll measure success, if you know."],
+    howto: ["Pick the closest template. You can edit everything it adds.", "Only the name is required.", "Add a measure, with where it is now and where it should be, to show the before and after."],
     tour: [{ at: "wizard", title: "A few questions", text: "You can change everything later." }],
   },
   layer: {
     title: "Layer",
     purpose: "One layer of the work, across every project.",
-    howto: ["Open a project to add or change its items."],
-    tour: [{ at: "layer-list", title: "Across projects", text: "Every project's items for this layer, in one place." }],
+    howto: ["Projects are grouped by their stage in this layer, with the rest below.", "Open a project to change its items."],
+    tour: [{ at: "layer-list", title: "Across projects", text: "What this layer covers. Below, projects by stage." }],
   },
   people: {
     title: "People",
     purpose: "Who's in this organization, and what each person can do.",
-    howto: ["Invite people by email.", "Viewers read and comment. Editors also change work. Admins also manage people and settings."],
+    howto: ["Admins invite by email, resend an invitation, change access, and deactivate or reactivate people.", "Inviting and access changes ask you to confirm it's you."],
     tour: [
       { at: "invite", title: "Invite people", text: "Type their email. They get a link and sign in with a code." },
       { at: "people-list", title: "Access", text: "Change what someone can do, or deactivate them." },
@@ -107,13 +107,13 @@ export const GUIDES: Record<PageKey, Guide> = {
   files: {
     title: "Files",
     purpose: "Every file shared in this organization.",
-    howto: ["Upload a file at Organization level, or pick a project and file it in a layer or at Project level.", "Choose Move on a file to file it somewhere else.", "Files are checked for viruses before anyone can download them."],
+    howto: ["Choose where to file before you upload: the organization, a project, or one of its layers.", "Up to 100 MB each. A free account holds 10 files, 10 MB each and 50 MB in all.", "Move refiles a file. Whoever uploaded it, or an admin, can delete it.", "To mark up a proposal, upload your edited Word copy here."],
     tour: [{ at: "upload", title: "Upload", text: "Drop a file here, or choose one." }],
   },
   insights: {
     title: "Insights",
     purpose: "How work is going, in charts made from your own data.",
-    howto: ["The numbers on top update as work gets done.", "Finished per week shows the pace.", "Projects by layer shows where things sit across N E O N."],
+    howto: ["How these are counted, at the bottom, explains the numbers."],
     tour: [
       { at: "kpis", title: "At a glance", text: "Open work, on-time rate, days to a decision, and measures at target." },
       { at: "weekly", title: "Pace", text: "Items finished each week for the last eight weeks." },
@@ -122,27 +122,51 @@ export const GUIDES: Record<PageKey, Guide> = {
   },
   settings: {
     title: "Settings",
-    purpose: "How this organization works: the stages on the board.",
-    howto: ["Rename a stage or say when it's done.", "Hide stages you don't use.", "Saving asks you to confirm it's you."],
+    purpose: "Your organization: its details, agreement, data, and board stages.",
+    howto: ["See your organization's details. Admins can change where it's based and its website.", "Read the service agreement and see your case study and client list choices.", "Admins download a copy of everything under Your data.", "Admins rename, reorder, limit, and hide board stages, then Save workflow."],
     tour: [{ at: "stages", title: "Stages", text: "Each row is a column on the board, in order." }],
   },
   me: {
     title: "Your profile",
-    purpose: "Your name, look, notifications, two-step verification, and the tutorial.",
-    howto: ["Choose what reaches you by email or text under Notifications.", "Add a passkey, authenticator app, or text codes to confirm admin actions.", "Replay the tutorial whenever you like, or bring back Get to know 1NEON on Home."],
+    purpose: "Your details, preferences, notifications, security, and sign out.",
+    howto: ["Most changes save by themselves. Phone and text settings have their own Save.", "Choose what reaches you by email or text under Notifications.", "Add a passkey, authenticator app, or text codes under Security. Admin actions need one.", "Under Help, replay the tour or bring back Get to know 1NEON. Sign out is below."],
     tour: [{ at: "passkey", title: "Two-step verification", text: "Add a passkey, authenticator app, or text codes. Admins need one to manage people and settings." }],
   },
   contact: {
     title: "Contact",
-    purpose: "Email, call or text, or book a call.",
-    howto: ["Tap the email or number to open your mail or phone app.", "For anything about a project, write in that project so it stays together."],
+    purpose: "Chat, email, call or text, send a message, or book a call.",
+    howto: ["Chat is shared with everyone in your organization. Turn on private to keep a message between you and me.", "Write about a project in that project, so it stays together."],
     tour: [],
   },
   all: {
     title: "All clients",
     purpose: "Every client's projects on one read-only board.",
-    howto: ["Open a client to make changes."],
+    howto: ["Switch between By organization and One board.", "Open a client to make changes. Archived projects are left out."],
     tour: [{ at: "board-column", title: "Read only", text: "Look across clients here. Changes happen inside each client." }],
+  },
+  proposal: {
+    title: "Proposal",
+    purpose: "The options and their terms as one document.",
+    howto: ["You can read a draft. Approval opens once neon1 issues it, and earlier revisions stay readable.", "Print or save as PDF, or download an issued proposal as Word.", "To suggest changes, comment on an option or upload a marked-up Word copy to Files.", "Approve under Options on the project's Needs tab."],
+    tour: [],
+  },
+  invoice: {
+    title: "Invoice",
+    purpose: "What's billed, what's paid, and what's left.",
+    howto: ["Pay online by bank transfer or card. 1NEON never sees your card or bank details.", "For check, Zelle, or wire, put the invoice number in the memo.", "If a line looks wrong, email hello@neon1.tech before you pay.", "Print or save it as a PDF. Once it's paid in full, it's your receipt."],
+    tour: [],
+  },
+  agreement: {
+    title: "Service agreement",
+    purpose: "neon1's terms for all work with your organization.",
+    howto: ["An admin signs at the bottom with a typed name, before the first approval.", "While signing, choose about anonymous case studies and neon1's client list.", "An admin can change either choice later on this page.", "Signatures lists each signature and its edition."],
+    tour: [],
+  },
+  prospects: {
+    title: "Potentials",
+    purpose: "Free accounts that aren't clients yet.",
+    howto: ["Promote makes one a client. You can also suspend, keep, or delete an account, and pause sign-up."],
+    tour: [],
   },
 };
 
@@ -151,11 +175,15 @@ export const GUIDES: Record<PageKey, Guide> = {
 export function pageKey(path: string): PageKey {
   if (path.startsWith("/all/me")) return "me";
   if (path.startsWith("/all/contact")) return "contact";
+  if (path.startsWith("/all/prospects")) return "prospects";
   if (path.startsWith("/all")) return "all";
   if (path.startsWith("/me")) return "me";
   if (path.startsWith("/contact")) return "contact";
   if (/\/projects\/new$/.test(path)) return "newproject";
+  if (/\/projects\/[^/]+\/proposal$/.test(path)) return "proposal";
+  if (/\/projects\/[^/]+\/invoices\//.test(path)) return "invoice";
   if (/\/projects\/[^/]+/.test(path)) return "project";
+  if (path.endsWith("/agreement")) return "agreement";
   if (path.endsWith("/projects")) return "projects";
   if (path.includes("/workflow")) return "board";
   if (path.includes("/layer/")) return "layer";
@@ -307,7 +335,7 @@ export function HelpProvider({ me, children }: { me: Me; children: ReactNode }) 
           {g.tour.length > 0 && <button className="btn btn-primary" onClick={() => { setSheet(false); setTimeout(() => runTour(g.tour), 250); }}>Tour this page</button>}
           <button className="btn btn-ghost" onClick={welcomeTour}>Full tour</button>
         </div>
-        <p className="small muted">More answers in the <Link to="/faqs" onClick={() => setSheet(false)}>FAQs</Link>, or <Link to={loc.pathname.startsWith("/all/") ? "/all/contact" : "/contact"} onClick={() => setSheet(false)}>contact neon1</Link>. To see a whole project first, open <Link to="/example" onClick={() => setSheet(false)}>a sample project</Link> or <a href="/1NEON/live">the guided walkthrough</a>.</p>
+        <p className="small muted"><Link to="/faqs" onClick={() => setSheet(false)}>FAQs</Link> · <Link to={loc.pathname.startsWith("/all/") ? "/all/contact" : "/contact"} onClick={() => setSheet(false)}>Contact neon1</Link> · <Link to="/example" onClick={() => setSheet(false)}>Sample project</Link> · <a href="/1NEON/live">Walkthrough</a></p>
       </Dialog>
       {/* First sign-in: offer the tour, with remind-me and skip */}
       <Dialog open={welcome} onClose={() => setWelcome(false)} label="Welcome to 1NEON">

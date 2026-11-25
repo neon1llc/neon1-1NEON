@@ -165,7 +165,7 @@ A sign-in with your face, fingerprint, or device PIN instead of a code. It's phi
 ## Your account
 
 ### How do I change my name or the look?
-Open your profile from the menu and change your name, title, theme, menu, or notifications. Most changes save by themselves. [Watch it](/1NEON/live?play=profile).
+Open your profile from the menu to change your name, title, time zone, menu, or notifications. Most changes save by themselves. The theme and dark mode switches are at the bottom of the menu. [Watch it](/1NEON/live?play=profile).
 
 ### How do I sign out?
 Open your profile and choose **Sign out**.
