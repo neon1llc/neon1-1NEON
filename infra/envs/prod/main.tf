@@ -119,9 +119,10 @@ import {
   id = "phone-a146035facd5411888e8b680bcc4f08d"
 }
 module "sms" {
-  source          = "../../modules/sms"
-  name            = local.name
-  two_way_enabled = var.texts_live
+  source = "../../modules/sms"
+  name   = local.name
+  # Stays on with texts off: AWS refuses to turn it off on this number, and STOP and HELP keep working
+  two_way_enabled = true
 }
 
 
