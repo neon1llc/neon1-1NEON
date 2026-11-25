@@ -143,6 +143,15 @@ describe("decision reminders", () => {
     expect(toNeon1().filter((m) => m.subject.startsWith("Follow up"))).toHaveLength(1);
   });
 
+  it("sends the follow-up under a sender neon1-notify accepts", async () => {
+    await finishHandover(at(1, 14));
+    const sent: { email?: { as?: string } }[] = [];
+    const notifier = { notify: async (n: never) => { sent.push(n); return { delivered: { email: "sent" } }; } };
+    for (const day of [1, 4, 10]) await sweepDecisionReminders({ repo, d: { mailer, notifier } as never, cfg }, at(day));
+    // neon1-notify refuses any other sender name (its parseNotice)
+    expect(sent.map((n) => n.email!.as)).toEqual(["alerts"]);
+  });
+
   it("sends one email per person however many decisions wait, and one pass an hour", async () => {
     await finishHandover(at(1, 14));
     await pass(at(1));

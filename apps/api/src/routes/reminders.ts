@@ -184,7 +184,7 @@ export async function sweepDecisionReminders(k: Pick<Kit, "repo" | "d" | "cfg">,
       try {
         await alertNeon1(d, {
           severity: "important", title: "A client decision is waiting", text: "Both reminders are done. Follow up personally.", source: "decision-reminders",
-          url: `${portal}o/${t.slug}/workspace`, to: cfg.operatorEmails, mail: { subject: subjectOf("Follow up", t.name), text: mail.text, html: mail.html, as: "portal" },
+          url: `${portal}o/${t.slug}/workspace`, to: cfg.operatorEmails, mail: { subject: subjectOf("Follow up", t.name), text: mail.text, html: mail.html, as: "alerts" },
         });
         for (const x of stuck) next[x.key] = { ...next[x.key]!, alerted: true };
         alerted++;
