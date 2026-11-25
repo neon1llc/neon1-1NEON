@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+## v0.29.0 - 2026-11-25
+
 ### Added
 - When a proposal is issued, whoever decides gets one email listing the options added, edited, and removed: every named decision maker, or with none named, the client's first admin, who is asked to name one or decide. Reminders go to the same people, and someone named later hears too. Clients no longer get an email for each option edit.
 - While a decision waits on a client (choosing an option, accepting a handover, agreeing to a purchase, or signing the agreement), those asked to decide get an email when it's ready, then reminders on business days 3 and 7, with everything pending in one message. Reminders stop once it's answered, and neon1 is told after the second. Work is accepted only when someone records it.
