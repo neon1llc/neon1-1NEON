@@ -235,7 +235,7 @@ export function readme(m: Manifest): string {
   const omitted = m.files.filter((f) => f.status === "omitted");
   const lines = [
     "- manifest.json: the list of everything here. It says whether the export is complete, counts every kind\n  of record, and lists every file with its path, size in bytes, and SHA-256 checksum, so you can check\n  nothing was lost or changed. A file that couldn't be included is listed too, with the reason.",
-    "- organization.json: the organization, its board stages, and its signed service agreements.",
+    "- organization.json: the organization, its board stages, its signed service agreements, and your choices about them.",
     "- members.csv: everyone with access, their role, and whether they've joined.",
     "- projects.csv: one row per project, with its stage, health, dates, folder, and whether it's in Trash.",
     "- decisions.csv: every approved option, who signed, the typed name, and the reason.",

@@ -66,6 +66,33 @@ async function issuedDeposit() {
 
 
 describe("the service agreement", () => {
+  it("records the choices made with it, never assuming yes, and lets only a client admin change them", async () => {
+    const t = (await repo.getTenant(s.acme.id))!;
+    await repo.saveTenant({ ...t, agreements: [], choices: [], version: t.version + 1 }, t.version);
+    const path = `/t/${s.acme.id}/agreement`;
+    const no = { caseStudies: "no", naming: "no" };
+    expect((await call(s.raj.email, "PUT", `${path}/choices`, no)).json.error).toBe("agreement_needed");
+    const got = (await call(s.raj.email, "GET", path)).json;
+    await call(s.raj.email, "POST", `${path}/sign`, { edition: got.edition, hash: got.hash, typedName: "Priya Raman", consent: true });
+    expect((await call(s.raj.email, "GET", path)).json.choices.at(-1)).toMatchObject({ caseStudies: "later", naming: "ask" });
+    expect((await call(s.dana.email, "PUT", `${path}/choices`, no)).status).toBe(403);
+    expect((await call(OP, "PUT", `${path}/choices`, no)).status).toBe(403);
+    expect((await call(s.raj.email, "PUT", `${path}/choices`, no)).json).toMatchObject(no);
+    await call(s.raj.email, "PUT", `${path}/choices`, no);
+    expect((await repo.getTenant(s.acme.id))!.choices).toHaveLength(2);
+  });
+
+  it("keeps a 2.1 signature in force, with no case studies allowed by it", async () => {
+    const t = (await repo.getTenant(s.acme.id))!;
+    const old = { ...t.agreements![0]!, ref: "2.1" };
+    await repo.saveTenant({ ...t, agreements: [old], choices: undefined, version: t.version + 1 }, t.version);
+    const got = (await call(s.raj.email, "GET", `/t/${s.acme.id}/agreement`)).json;
+    expect(got.signed.ref).toBe("2.1");
+    expect(got.choices).toEqual([]);
+    const again = await call(s.raj.email, "POST", `/t/${s.acme.id}/agreement/sign`, { edition: got.edition, hash: got.hash, typedName: "Priya Raman", consent: true });
+    expect(again.json.ref).toBe("2.1");
+  });
+
   it("is signed once by a client admin, against the text they were shown, before any approval", async () => {
     // Start Harborline unsigned
     const t = (await repo.getTenant(s.acme.id))!;

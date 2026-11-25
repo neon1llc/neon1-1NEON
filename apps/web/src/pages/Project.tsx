@@ -2,7 +2,7 @@
 // Execute, Observe, Normalize).
 
 
-import { isQuickFix, QUICK_FIX_HOURS, QUICK_FIX_MAX_HOURS, quoteFields, priceLine, type QuoteInput, balanceOf, billedOn, depositLines, hoursLogged, hoursText, lineage, lineCents, dollars as wholeDollars, failedOn, invoiceState, InvoiceFields, money as dollars, payableOn, paymentPlan, priceMeaning, priceOf, betterWhen, canApprove, changedSince, currentDecision, todayIn, isClosed, isOwnOrg, KIND_LAYER, metricProgress, MetricFields, OptionFields, priceCheckDue, ProjectRole, proposalRef, PurchaseFields, HandoffFields, optionHistory, revisions, type DocumentRecord, type Item, type ItemKind, type Layer, type Project, type Stage } from "@1neon/domain";
+import { STARTING_CHOICES, type ChoiceValues, isQuickFix, QUICK_FIX_HOURS, QUICK_FIX_MAX_HOURS, quoteFields, priceLine, type QuoteInput, balanceOf, billedOn, depositLines, hoursLogged, hoursText, lineage, lineCents, dollars as wholeDollars, failedOn, invoiceState, InvoiceFields, money as dollars, payableOn, paymentPlan, priceMeaning, priceOf, betterWhen, canApprove, changedSince, currentDecision, todayIn, isClosed, isOwnOrg, KIND_LAYER, metricProgress, MetricFields, OptionFields, priceCheckDue, ProjectRole, proposalRef, PurchaseFields, HandoffFields, optionHistory, revisions, type DocumentRecord, type Item, type ItemKind, type Layer, type Project, type Stage } from "@1neon/domain";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, ExternalLink, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
@@ -17,7 +17,7 @@ import { Readiness } from "../components/Readiness.tsx";
 import { useOrg, useSession, useTopBar } from "../components/Shell.tsx";
 import { Avatar, ConflictDialog, Dialog, Empty, Health, HEALTH_LABEL, Standing, LayerBadge, LAYERS, layerHint, layerName, layerProgress, OnionProgress, Trend, ago, dateLabel, daysSince, inStageFor, layerFromSlug, layerSlug, useAsk, useToast } from "../components/ui.tsx";
 import { api, BASE_PATH, DEMO, HttpError, NEW_TAB } from "../lib/api.ts";
-import { AgreementNeeded, Hours, Invoices, PriceBasis, SignBox, signReady, useAgreementSigned, type Priced, type SignValue } from "../components/Billing.tsx";
+import { AgreementNeeded, ChoiceFields, QuoteFields, quoteInput, type QuoteValue, Hours, Invoices, PriceBasis, SignBox, signReady, useAgreementSigned, type Priced, type SignValue } from "../components/Billing.tsx";
 import { firstYear, money, parseCost, type Recurring } from "../lib/cost.ts";
 import { handoverSummary } from "../lib/handover.ts";
 import { numberProblem, optionalNumber } from "../lib/measures.ts";
@@ -788,7 +788,7 @@ function LayerTab({ layer, project, items, docs, edits }: { layer: Layer; projec
               ))}</div>
             )}
             {/* Once every handover step is done, the decision maker accepts them all with one signature */}
-            {kind === "handoff" && <AcceptHandover steps={list} path={path} project={project} />}
+            {kind === "handoff" && <AcceptHandover steps={list} measures={items.filter((i) => i.kind === "metric")} path={path} project={project} />}
             {/* Anyone may add a request; options come from neon1; everything else from editors */}
             {/* A quick fix has one quote, written in its own form, so it has no Add option */}
             {(kind === "request" || (canWrite && (kind !== "option" || (me.operator && !quick)))) && <AddItem kind={kind} path={path} taken={list.map((i) => i.title)} decided={Boolean(currentDecision(items).option)} />}
@@ -1210,6 +1210,7 @@ function Options({ items, all, docs, path, project }: { items: Item[]; all: Item
   // the agreement (the API says so too); anyone else keeps the usual link to read it
   const oneScreen = isQuickFix(project) && !signed && !me.operator && access === "admin";
   const [agreeRead, setAgreeRead] = useState(false);
+  const [choices, setChoices] = useState<ChoiceValues>(STARTING_CHOICES);
   // Why the agreement step failed, shown in the dialog (nothing is approved when it fails)
   const [agreeError, setAgreeError] = useState<string>();
   const agreement = useQuery({ queryKey: ["agreement", org.id], enabled: oneScreen && !currentDecision(all).decision, queryFn: () => api<{ edition: string; hash: string }>(`/t/${org.id}/agreement`) });
@@ -1269,7 +1270,7 @@ function Options({ items, all, docs, path, project }: { items: Item[]; all: Item
     // that fails, nothing is approved and the dialog stays open with the reason
     if (oneScreen && agreement.data) {
       try {
-        await api(`/t/${org.id}/agreement/sign`, { method: "POST", body: { edition: agreement.data.edition, hash: agreement.data.hash, typedName: sign.typedName.trim(), consent: agreeRead } });
+        await api(`/t/${org.id}/agreement/sign`, { method: "POST", body: { edition: agreement.data.edition, hash: agreement.data.hash, typedName: sign.typedName.trim(), consent: agreeRead, choices } });
         setAgreeError(undefined);
         // The organization's record carries the signature, which the approval checks
         await qc.invalidateQueries({ queryKey: ["org", org.id] });
@@ -1448,6 +1449,7 @@ function Options({ items, all, docs, path, project }: { items: Item[]; all: Item
               <li>Either of us can end the agreement with 14 days' written notice.</li>
             </ul>
             <p className="small" style={{ margin: "0 0 6px" }}><a href={`${BASE_PATH}/o/${org.slug}/agreement`} target="_blank" rel="noopener noreferrer">Read the full agreement (opens in a new tab)</a></p>
+            <ChoiceFields id="approve-choice" value={choices} onChange={setChoices} />
             <label className="sign-consent">
               <input type="checkbox" checked={agreeRead} onChange={(e) => setAgreeRead(e.target.checked)} /> I have read neon1's service agreement{agreement.data ? `, edition ${agreement.data.edition},` : ""} and agree to it for {org.name}.
             </label>
@@ -1672,7 +1674,7 @@ function Accept({ item, path, project }: { item: Item; path: string; project: Pr
   const [sign, setSign] = useState<SignValue>({ typedName: "", consent: false });
   const f = HandoffFields.safeParse(item.fields);
   const accepted = f.success ? f.data.accepted : undefined;
-  if (accepted) return <p className="accepted-note">Accepted by {accepted.name}, {dateLabel(accepted.at.slice(0, 10))}{accepted.note ? `: ${accepted.note}` : ""}{accepted.signature ? `, signed "${accepted.signature.typedName}"` : ""}</p>;
+  if (accepted) return <p className="accepted-note">Accepted by {accepted.name}, {dateLabel(accepted.at.slice(0, 10))}{accepted.note ? `: ${accepted.note}` : ""}{accepted.signature ? `, signed "${accepted.signature.typedName}"` : ""}{accepted.quote && <span className="accepted-quote">“{accepted.quote.text}” {accepted.quote.mayQuote ? "neon1 may quote this, without names." : "Not for publishing."}</span>}</p>;
   const decider = !prospect && canApprove({ userId: me.user.id, operator: me.operator, strongSession: false }, access, project.people, isOwnOrg(org.slug)).ok;
   // A step already ticked waits for the one signature under the list; this accepts a step that isn't
   // done yet, on its own, which also marks it done
@@ -1704,7 +1706,7 @@ function Accept({ item, path, project }: { item: Item; path: string; project: Pr
  * Under the handover steps, for the decision maker: once every step is done, one signature accepts
  * them all (each step keeps its own signed record). Until then it says how many steps are left
  */
-function AcceptHandover({ steps, path, project }: { steps: Item[]; path: string; project: Project }) {
+function AcceptHandover({ steps, measures, path, project }: { steps: Item[]; measures: Item[]; path: string; project: Project }) {
   const { org, access, prospect } = useOrg();
   const me = useSession();
   const toast = useToast();
@@ -1712,11 +1714,15 @@ function AcceptHandover({ steps, path, project }: { steps: Item[]; path: string;
   const [note, setNote] = useState("");
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [quote, setQuote] = useState<QuoteValue>({ text: "", mayQuote: false });
   const [sign, setSign] = useState<SignValue>({ typedName: "", consent: false });
   const waiting = steps.filter((i) => !i.fields.accepted);
   const left = steps.filter((i) => i.status !== "done").length;
   const decider = !prospect && canApprove({ userId: me.user.id, operator: me.operator, strongSession: false }, access, project.people, isOwnOrg(org.slug)).ok;
   if (!steps.length || !waiting.length) return steps.length ? <p className="accepted-note handover-all">The handover is accepted: every step is signed for.</p> : null;
+  // A measure with a starting number is taken again before the handover, so the result is a before and after
+  const again = me.operator ? measures.filter((m) => { const f = MetricFields.safeParse(m.fields); return f.success && f.data.baseline !== undefined && !f.data.readings.length; }) : [];
+  if (again.length) return <p className="small muted handover-all">Measure again before handover: {again.map((m) => m.title).join(", ")}. <Link to={`/o/${org.slug}/projects/${project.key}/observation`}>Add the reading</Link></p>;
   if (!decider) return null;
   // A quick fix's one step is the fix itself, and accepting it says so in those words
   const quick = isQuickFix(project);
@@ -1724,7 +1730,7 @@ function AcceptHandover({ steps, path, project }: { steps: Item[]; path: string;
   const accept = async () => {
     setBusy(true);
     try {
-      await api(`${path}/handover/accept`, { method: "POST", body: { note, signature: { typedName: sign.typedName.trim(), consent: sign.consent } } });
+      await api(`${path}/handover/accept`, { method: "POST", body: { note, quote: quoteInput(quote), signature: { typedName: sign.typedName.trim(), consent: sign.consent } } });
       toast("Handover accepted");
       setOpen(false);
     } catch (e) {
@@ -1741,6 +1747,7 @@ function AcceptHandover({ steps, path, project }: { steps: Item[]; path: string;
       {open ? (
         <form className="accept-form" onSubmit={(e) => { e.preventDefault(); if (signReady(sign) && !busy) void accept(); }}>
           <input aria-label="What you checked (optional)" placeholder="What you checked (optional)" value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} />
+          <QuoteFields id="accept-handover" value={quote} onChange={setQuote} />
           <SignBox id="accept-handover" value={sign} onChange={setSign} />
           <div className="line">
             <button className="btn btn-primary btn-sm" disabled={!signReady(sign) || busy}>{quick ? "Sign and accept the fix" : "Sign and accept the handover"}</button>

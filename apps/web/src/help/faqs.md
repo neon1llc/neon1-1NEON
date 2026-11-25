@@ -215,7 +215,7 @@ As your option's **When you pay** says. A deposit, half a fixed price or half an
 Not once issued. A mistake is fixed with a credit, or by voiding it with a reason, both on record. An invoice with a payment, or one clearing, can't be voided.
 
 ### What is the service agreement?
-neon1's terms for all work with your organization: how work is agreed, paying, ownership, confidentiality, and ending it. An admin signs it once in 1NEON, from **Settings**, before the first approval. Read it any time at [/1NEON/agreement](/1NEON/agreement). [Watch it](/1NEON/live?play=decide).
+neon1's terms for all work with your organization: how work is agreed, paying, ownership, confidentiality, and ending it. An admin signs it once in 1NEON, from **Settings**, before the first approval. As they sign, they choose whether neon1 may write anonymous case studies and list your name, and can change either later on the same page. Read it any time at [/1NEON/agreement](/1NEON/agreement). [Watch it](/1NEON/live?play=decide).
 
 ## Support and your data
 

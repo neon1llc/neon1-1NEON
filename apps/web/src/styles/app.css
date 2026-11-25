@@ -1492,6 +1492,18 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 .sign-box .sign-consent { display: flex; gap: var(--sp-2); align-items: flex-start; font-size: var(--fs-sm); line-height: 1.4; }
 .sign-box .sign-consent input { margin-top: var(--sp-0); flex: none; }
 .sign-card { margin-top: var(--sp-5); display: grid; gap: var(--sp-2); }
+/* The agreement's choices: one group per question, every option the same weight, each row a full target */
+.agree-choices { display: grid; gap: var(--sp-3); margin: var(--sp-2) 0; }
+.agree-choices fieldset { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; }
+.agree-choices legend { padding: 0; margin-bottom: var(--sp-1); font: 600 var(--fs-sm) / 1.4 var(--sans); color: var(--text); }
+:root .agree-choices label { display: flex; gap: var(--sp-2); align-items: flex-start; margin: 0; padding: var(--sp-1) 0; font: 400 var(--fs-sm) / 1.4 var(--sans); color: var(--text); text-transform: none; letter-spacing: normal; cursor: pointer; }
+:root .agree-choices label b { font-weight: 500; }
+.agree-choices input { flex: none; margin: 0; }
+@media (pointer: coarse) { :root .agree-choices label { min-height: 44px; align-items: center; } }
+.sign-card .section-h { margin: 0; }
+.quote-fields { display: grid; gap: var(--sp-1); }
+.quote-fields textarea { min-height: 72px; }
+.accepted-quote { display: block; color: var(--muted); }
 .accept-form { display: grid; gap: var(--sp-2); margin-top: var(--sp-1); max-width: 520px; }
 /* Under the handover steps: how many are left, or the one signature that accepts them all */
 .handover-all { margin: var(--sp-2) 0 0; }

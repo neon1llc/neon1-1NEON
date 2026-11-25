@@ -5,7 +5,7 @@
 
 
 import {
-  AGREEMENT_EDITION, AGREEMENT_TEXT, CreateInvoiceInput, IssueInvoiceInput, Item, InvoiceFields, PaymentFields, RecordPaymentInput, SignAgreementInput, UpdateInvoiceInput, VoidInvoiceInput,
+  AGREEMENT_ACCEPTED, AGREEMENT_EDITION, AGREEMENT_TEXT, AgreementChoicesInput, UNCHOSEN, agreementCovers, choiceLabel, CreateInvoiceInput, IssueInvoiceInput, Item, InvoiceFields, PaymentFields, RecordPaymentInput, SignAgreementInput, UpdateInvoiceInput, VoidInvoiceInput,
   balanceOf, canonical, creditRoomOn, signedNameProblem, clearingOn, depositLines, finalLines, priceOf, type PriceTerms, invoiceNumber, invoiceTotal, isOwnOrg, money, payableOn, plusDays, proposalNumber, reimbursementLines, revisions, sha256Hex, signature, todayIn,
   type Project, type Tenant,
 } from "@1neon/domain";
@@ -105,6 +105,10 @@ async function keep(k: Kit, key: string, record: unknown) {
 }
 
 
+/** The choices in words, for the activity log */
+const chosen = (v: { caseStudies: string; naming: string }) => `Case studies: ${choiceLabel("caseStudies", v.caseStudies)}. Client list: ${choiceLabel("naming", v.naming)}.`;
+
+
 /** Tenant routes: the agreement, and a project's invoices and payments */
 export function billingRoutes(app: App, k: Kit, pay: ReturnType<typeof stripeWebhook>) {
   const { repo, project, cfg } = k;
@@ -115,8 +119,9 @@ export function billingRoutes(app: App, k: Kit, pay: ReturnType<typeof stripeWeb
   app.get("/t/:tid/agreement", async (c) => {
     need(c, "read");
     const t = c.get("tenant");
-    const signed = (t.agreements ?? []).filter((a) => a.ref === AGREEMENT_EDITION).at(-1);
-    return c.json({ edition: AGREEMENT_EDITION, text: AGREEMENT_TEXT, hash: await currentHash(), signed, history: t.agreements ?? [], required: !isOwnOrg(t.slug) });
+    // The latest signature that still covers approvals, which may be of an earlier accepted edition
+    const signed = (t.agreements ?? []).filter((a) => AGREEMENT_ACCEPTED.includes(a.ref)).at(-1);
+    return c.json({ edition: AGREEMENT_EDITION, text: AGREEMENT_TEXT, hash: await currentHash(), signed, history: t.agreements ?? [], choices: t.choices ?? [], required: !isOwnOrg(t.slug) });
   });
 
   /** A client admin signs the current edition for the organization, once */
@@ -126,20 +131,43 @@ export function billingRoutes(app: App, k: Kit, pay: ReturnType<typeof stripeWeb
     if (actor.operator || c.get("access") !== "admin") fail(403, "admin_only", "An admin of your organization signs the service agreement for it.");
     const input = await body(c, SignAgreementInput);
     if (input.edition !== AGREEMENT_EDITION || input.hash !== (await currentHash())) fail(409, "agreement_changed", "The agreement changed since you opened it. Read the current edition, then sign.");
-    const had = (t.agreements ?? []).find((a) => a.ref === AGREEMENT_EDITION);
+    // An organization already covered by an accepted edition isn't asked to sign again
+    const had = (t.agreements ?? []).filter((a) => AGREEMENT_ACCEPTED.includes(a.ref)).at(-1);
     if (had) return c.json(had);
     const u = who(c).user;
     const ts = now();
     const misnamed = signedNameProblem(input.typedName, u.name);
     if (misnamed) fail(400, "signature_name", misnamed);
     const signed = signature("agreement", AGREEMENT_EDITION, input.hash, input, { id: u.id, name: u.name || u.email, email: u.email }, ts, from(c));
-    const next: Tenant = { ...t, agreements: [...(t.agreements ?? []), signed], version: t.version + 1, updatedAt: ts, updatedBy: u.id };
+    const choice = { ...(input.choices ?? UNCHOSEN), by: u.id, name: u.name || u.email, email: u.email, at: ts, edition: AGREEMENT_EDITION };
+    const next: Tenant = { ...t, agreements: [...(t.agreements ?? []), signed], choices: [...(t.choices ?? []), choice].slice(-100), version: t.version + 1, updatedAt: ts, updatedBy: u.id };
     await repo.table.write([
       repo.tenantOp(next, { version: t.version }),
-      repo.auditOp({ tenantId: t.id, actorId: u.id, action: "agreement.signed", target: t.id, summary: `${input.typedName} signed neon1's service agreement, edition ${AGREEMENT_EDITION}` }),
+      repo.auditOp({ tenantId: t.id, actorId: u.id, action: "agreement.signed", target: t.id, summary: `${input.typedName} signed neon1's service agreement, edition ${AGREEMENT_EDITION}. ${chosen(choice)}` }),
     ]);
-    await keep(k, `t/${t.id}/agreement/${AGREEMENT_EDITION}-${ts}.json`, { ...signed, text: AGREEMENT_TEXT });
+    await keep(k, `t/${t.id}/agreement/${AGREEMENT_EDITION}-${ts}.json`, { ...signed, choices: choice, text: AGREEMENT_TEXT });
     return c.json(signed, 201);
+  });
+
+  /** A client admin changes the case-study and naming choices, from then on */
+  app.put("/t/:tid/agreement/choices", async (c) => {
+    const t = c.get("tenant");
+    const { actor } = who(c);
+    if (actor.operator || c.get("access") !== "admin") fail(403, "admin_only", "An admin of your organization makes these choices for it.");
+    const input = await body(c, AgreementChoicesInput);
+    if (!agreementCovers(t.agreements)) fail(409, "agreement_needed", "Sign the service agreement first. You make these choices as you sign.");
+    const was = t.choices?.at(-1);
+    if (was && was.caseStudies === input.caseStudies && was.naming === input.naming) return c.json(was);
+    const u = who(c).user;
+    const ts = now();
+    const choice = { ...input, by: u.id, name: u.name || u.email, email: u.email, at: ts, edition: AGREEMENT_EDITION };
+    const next: Tenant = { ...t, choices: [...(t.choices ?? []), choice].slice(-100), version: t.version + 1, updatedAt: ts, updatedBy: u.id };
+    await repo.table.write([
+      repo.tenantOp(next, { version: t.version }),
+      repo.auditOp({ tenantId: t.id, actorId: u.id, action: "agreement.choices", target: t.id, summary: `${u.name || u.email} changed the agreement choices. ${chosen(choice)}` }),
+    ]);
+    await keep(k, `t/${t.id}/agreement/choices-${ts}.json`, choice);
+    return c.json(choice);
   });
 
 

@@ -3,8 +3,17 @@
 // text, so a later edition never changes what an earlier signer agreed to.
 
 
-/** The edition clients sign now; a new edition is signed again before the next approval */
-export const AGREEMENT_EDITION = "2.1";
+/** The edition new signers sign */
+export const AGREEMENT_EDITION = "2.3";
+
+
+/** Editions whose signature still covers approvals. 2.3 added only the two choices below, so a 2.1
+ * signature stands; its organization hasn't allowed case studies until an admin chooses */
+export const AGREEMENT_ACCEPTED = ["2.1", AGREEMENT_EDITION];
+
+
+/** Has one of these signatures signed an edition that still covers approvals? */
+export const agreementCovers = (signatures: { ref: string }[] | undefined) => (signatures ?? []).some((a) => AGREEMENT_ACCEPTED.includes(a.ref));
 
 
 /** The agreement's text (Markdown). Changing a word here means a new edition above */
@@ -36,7 +45,23 @@ Once you have paid for a project, what I made for you in it is yours. I keep my 
 
 ## Confidentiality
 
-We each keep what we learn about the other's business private, and use it only for the work. This doesn't cover what is already public or what the law requires us to disclose.
+We each keep what we learn about the other's business private, and use it only for the work. This doesn't cover what is already public, what the law requires us to disclose, or what your choices below allow.
+
+## Case studies
+
+Good work is worth showing. If you're fine with it, I may use what I did and measured on your projects in case studies, blog posts, and other examples of my work. They're anonymous: nothing that names or points to you or your people, and none of your data or confidential details. A quote or logo always takes a separate yes.
+
+You choose when you sign:
+
+- **Yes, anonymized is fine.**
+- **Decide later.** I ask you about a project before I write about it.
+- **No.** I don't write about your projects.
+
+## Using your name
+
+You also choose whether I may list your organization's name as a client: **ask me first**, **yes**, or **no**. A name on a list doesn't link you to an anonymized case study.
+
+An admin can change either choice in 1NEON at any time, and the change applies from then on. Ask me to take down something I published about your work, and I remove it from the places I control.
 
 ## Regulated data
 
@@ -66,3 +91,40 @@ We agree to sign and keep these records electronically, and a name typed in 1NEO
 
 /** What a signer agrees to before their typed name counts as a signature (ESIGN and New York ESRA) */
 export const SIGN_CONSENT = "I agree to sign electronically. My typed name is my signature, and I can ask neon1 for a paper copy at any time.";
+
+
+/** The choices an organization makes with the agreement, in the order shown. Every option is shown
+ * with the same weight; `start` is what the form has selected before anyone picks */
+export const AGREEMENT_CHOICES = [
+  {
+    id: "caseStudies", question: "Anonymous case studies of our projects", start: "yes",
+    options: [
+      { value: "yes", label: "Yes, that's fine", hint: "Nothing names or points to you" },
+      { value: "later", label: "Decide later", hint: "Ask us about a project first" },
+      { value: "no", label: "No", hint: "Don't write about our projects" },
+    ],
+  },
+  {
+    id: "naming", question: "Our organization's name on neon1's client list", start: "ask",
+    options: [
+      { value: "ask", label: "Ask us first", hint: "" },
+      { value: "yes", label: "Yes, list us", hint: "" },
+      { value: "no", label: "No", hint: "" },
+    ],
+  },
+] as const;
+
+
+/** What an organization allows before anyone has chosen: nothing without asking */
+export const UNCHOSEN: ChoiceValues = { caseStudies: "later", naming: "ask" };
+
+
+/** What the signing form has selected to start */
+export const STARTING_CHOICES: ChoiceValues = { caseStudies: "yes", naming: "ask" };
+
+
+export type ChoiceValues = { caseStudies: "yes" | "later" | "no"; naming: "ask" | "yes" | "no" };
+
+
+/** The label shown for one chosen value */
+export const choiceLabel = (id: keyof ChoiceValues, value: string) => AGREEMENT_CHOICES.find((c) => c.id === id)?.options.find((o) => o.value === value)?.label ?? value;

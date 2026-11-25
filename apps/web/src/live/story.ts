@@ -4,6 +4,7 @@
 // notification bell. Three made-up engagements share these chapters, and each brings its own friction.
 
 
+import { STARTING_CHOICES } from "@1neon/domain";
 import { demoPaymentEvent } from "../components/Billing.tsx";
 import { liveEngine } from "../lib/api.ts";
 import { CARE, fileText, sum } from "../lib/scenarios.ts";
@@ -122,7 +123,7 @@ export async function signAgreementAsOwner() {
   const t = await tid();
   const e = await engine();
   const a = await e.actAs<{ edition: string; hash: string; signed?: unknown }>(OWNER, `/t/${t}/agreement`);
-  if (!a.signed) await e.actAs(OWNER, `/t/${t}/agreement/sign`, "POST", { edition: a.edition, hash: a.hash, typedName: S.owner.name, consent: true });
+  if (!a.signed) await e.actAs(OWNER, `/t/${t}/agreement/sign`, "POST", { edition: a.edition, hash: a.hash, typedName: S.owner.name, consent: true, choices: STARTING_CHOICES });
 }
 
 /** The plan: a milestone, the tasks, the first hours, and a first update */
@@ -513,6 +514,8 @@ export const STORY: Section[] = [
       await s.scroll(900, 1400);
       await s.think(S.voice.agreementThink);
       await s.scroll(1600, 1200);
+      await s.think("Anonymous write-ups are fine. Our name, ask us first.");
+      await s.hover(".sign-card .agree-choices", 1400);
       await s.type("#agreement-sign-name", S.owner.name);
       await s.click("#agreement-sign-name ~ .sign-consent input", 400);
       await s.click({ sel: ".sign-card button", text: /^Sign for/ }, 1400);

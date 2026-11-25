@@ -2,6 +2,13 @@
 
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
+## Unreleased
+
+### Added
+- Service agreement edition 2.3: as a client admin signs, they choose about anonymous case studies (yes, decide later, no) and the client list (ask first, yes, no), and can change either on the agreement page. A 2.1 signature still covers approvals, with case studies at decide later until an admin chooses.
+- A handover acceptance can carry a few words about the work, quoted only if the client ticks it.
+- Before a handover, neon1 is reminded to take each starting number again.
+
 ## v0.27.3 - 2026-11-24
 
 ### Changed

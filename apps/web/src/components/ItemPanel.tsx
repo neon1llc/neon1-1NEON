@@ -448,7 +448,7 @@ function KindFields({ kind, f, onChange }: { kind: ItemKind; f: Record<string, s
       </label>
       {/* What the client pays vendors directly, and the checkable result */}
       <label>Outside costs<input value={f.outsideCosts ?? ""} onChange={(e) => set("outsideCosts", e.target.value)} placeholder="e.g. none. Runs in your existing AWS account" maxLength={160} /></label>
-      <label>Result<input value={f.result ?? ""} onChange={(e) => set("result", e.target.value)} placeholder="e.g. the exception list is in your inbox by 7 am" maxLength={300} /></label>
+      <label>Result<input value={f.result ?? ""} onChange={(e) => set("result", e.target.value)} placeholder="e.g. exception list by 7 am (today: 2 hours by hand)" maxLength={300} /></label>
       {/* What the option expects to be bought; the client buys unless a line says neon1 */}
       <label style={{ gridColumn: "1 / -1" }}>Expected purchases
         <textarea rows={3} value={f.purchases ?? ""} onChange={(e) => set("purchases", e.target.value)} placeholder="One per line: name | estimate | client or neon1 | why | example" />

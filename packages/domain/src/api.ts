@@ -4,7 +4,7 @@
 import { NotifyPrefs } from "./notify.ts";
 import { InvoiceLine, InvoiceType, PaymentMethod, SignInput } from "./billing.ts";
 import { z } from "zod";
-import { AccessLevel, CalEventKind, CalRepeat, Health, ItemKind, Layer, Pricing, ProjectRole, Theme, Tour, email, id } from "./model.ts";
+import { AccessLevel, CalEventKind, CalRepeat, Health, ItemKind, Layer, Pricing, ProjectRole, Theme, Tour, email, id, ChoiceFields, Quote } from "./model.ts";
 import { QUICK_FIX_MAX_HOURS } from "./defaults.ts";
 import { isTimeZone } from "./timing.ts";
 
@@ -186,13 +186,16 @@ export type QuoteInput = z.infer<typeof QuoteInput>;
 export const AgreeInput = z.object({ version: z.number().int(), initials: z.string().trim().min(1).max(8) });
 
 // The client accepts a handover step, with an optional note
-export const AcceptInput = z.object({ version: z.number().int(), note: z.string().trim().max(500).default(""), signature: SignInput });
+export const AcceptInput = z.object({ version: z.number().int(), note: z.string().trim().max(500).default(""), quote: Quote.optional(), signature: SignInput });
 
 
 // --- Billing: the service agreement, invoices, and payments ---------------------------
 
 // Signing the service agreement names the edition and hash the signer was shown, so a newer text can't be signed blind
-export const SignAgreementInput = SignInput.extend({ edition: z.string().max(16), hash: z.string().regex(/^[0-9a-f]{64}$/) });
+// Choices left out are recorded as not allowed without asking, never as yes
+export const SignAgreementInput = SignInput.extend({ edition: z.string().max(16), hash: z.string().regex(/^[0-9a-f]{64}$/), choices: ChoiceFields.optional() });
+// An admin changes the choices any time after signing
+export const AgreementChoicesInput = ChoiceFields;
 
 // neon1 drafts an invoice; without lines, 1NEON suggests them from the decision or the purchases
 export const CreateInvoiceInput = z.object({

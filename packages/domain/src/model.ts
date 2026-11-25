@@ -75,6 +75,11 @@ export type Stage = z.infer<typeof Stage>;
 
 
 /** An organization (tenant). Slug and client ID are its public handles; its ID scopes every key */
+/** What an organization allows (agreement.ts), who chose it, and when */
+export const ChoiceFields = z.object({ caseStudies: z.enum(["yes", "later", "no"]), naming: z.enum(["ask", "yes", "no"]) });
+export const AgreementChoice = ChoiceFields.extend({ by: id, name: z.string().max(80), email: z.string().max(200), at: isoDate, edition: z.string().max(16) });
+
+
 export const Tenant = z.object({
   id: id,
   slug: z.string().regex(/^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/),
@@ -91,6 +96,8 @@ export const Tenant = z.object({
   link: z.string().trim().max(200).optional(),
   // Every signature of neon1's service agreement, oldest first; the latest at the current edition counts
   agreements: z.array(Signature).max(50).optional(),
+  // Every choice made about case studies and naming, oldest first; the latest is in force
+  choices: z.array(AgreementChoice).max(100).optional(),
   // A test organization for neon1's own checks: left out of All clients, the Prospects page, neon1's notices
   // and requests (marked [TEST]), the tip and quiet-prospect emails, and the quiet-prospect deletion
   test: z.boolean().optional(),
@@ -562,9 +569,14 @@ export const TimeFields = z.object({
 export type TimeFields = z.infer<typeof TimeFields>;
 
 
+/** A client's own words about the work, given with a handover acceptance */
+export const Quote = z.object({ text: z.string().trim().min(1).max(500), mayQuote: z.boolean() });
+
+
 // A handover step the client accepted, with who, when, and a note
 export const HandoffFields = z.object({
-  accepted: z.object({ by: id, name: z.string().max(80), at: isoDate, note: z.string().max(500).default(""), signature: Signature.optional() }).optional(),
+  // quote: words the client chose to leave, and whether neon1 may publish them (no names)
+  accepted: z.object({ by: id, name: z.string().max(80), at: isoDate, note: z.string().max(500).default(""), quote: Quote.optional(), signature: Signature.optional() }).optional(),
 });
 
 

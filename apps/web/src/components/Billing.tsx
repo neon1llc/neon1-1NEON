@@ -4,7 +4,7 @@
 // client and draft, issue, void, credit, and record payment for neon1.
 
 
-import { AGREEMENT_EDITION, InvoiceFields, PaymentFields, SIGN_CONSENT, balanceOf, currentDecision, depositLines, dollars, failedOn, finalLines, reimbursementLines, hoursRange, hoursStanding, hoursText, invoiceState, invoiceTotal, isOwnOrg, lineCents, money, payableOn, paymentPlan, priceMeaning, priceOf, received, signedNameProblem, todayIn, type BasisLine, type InvoiceLine, type InvoiceType, type Item, type PaymentMethod, type PriceTerms, type Project } from "@1neon/domain";
+import { AGREEMENT_CHOICES, AGREEMENT_EDITION, agreementCovers, type ChoiceValues, InvoiceFields, PaymentFields, SIGN_CONSENT, balanceOf, currentDecision, depositLines, dollars, failedOn, finalLines, reimbursementLines, hoursRange, hoursStanding, hoursText, invoiceState, invoiceTotal, isOwnOrg, lineCents, money, payableOn, paymentPlan, priceMeaning, priceOf, received, signedNameProblem, todayIn, type BasisLine, type InvoiceLine, type InvoiceType, type Item, type PaymentMethod, type PriceTerms, type Project } from "@1neon/domain";
 import { Trash2 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useHref, useLocation, useSearchParams } from "react-router";
@@ -228,6 +228,41 @@ export function DemoBank({ payment, onDone }: { payment: Item; onDone: () => voi
 
 /** A signature as the API takes it */
 export type SignValue = { typedName: string; consent: boolean };
+/** The agreement's choices (case studies, client list), every option shown with the same weight */
+export function ChoiceFields({ value, onChange, id }: { value: ChoiceValues; onChange: (v: ChoiceValues) => void; id: string }) {
+  return (
+    <div className="agree-choices">
+      {AGREEMENT_CHOICES.map((c) => (
+        <fieldset key={c.id}>
+          <legend>{c.question}</legend>
+          {c.options.map((o) => (
+            <label key={o.value}>
+              <input type="radio" name={`${id}-${c.id}`} value={o.value} checked={value[c.id] === o.value} onChange={() => onChange({ ...value, [c.id]: o.value } as ChoiceValues)} />
+              <span><b>{o.label}</b>{o.hint && <span className="muted">. {o.hint}</span>}</span>
+            </label>
+          ))}
+        </fieldset>
+      ))}
+    </div>
+  );
+}
+
+
+/** Optional words about the work, left with a handover acceptance; published only if ticked */
+export function QuoteFields({ value, onChange, id }: { value: QuoteValue; onChange: (v: QuoteValue) => void; id: string }) {
+  return (
+    <div className="quote-fields">
+      <label htmlFor={`${id}-quote`}>How did it go? (optional)</label>
+      <textarea id={`${id}-quote`} value={value.text} onChange={(e) => onChange({ ...value, text: e.target.value })} maxLength={500} />
+      {value.text.trim() && <label className="sign-consent"><input type="checkbox" checked={value.mayQuote} onChange={(e) => onChange({ ...value, mayQuote: e.target.checked })} /> neon1 may quote this, without our names</label>}
+    </div>
+  );
+}
+export type QuoteValue = { text: string; mayQuote: boolean };
+/** The quote to send, or nothing when the box is empty */
+export const quoteInput = (v: QuoteValue) => (v.text.trim() ? { text: v.text.trim(), mayQuote: v.mayQuote } : undefined);
+
+
 // The signed-in person's profile name, kept where signReady can read it without a hook; SignBox sets it
 let signerName: string | undefined;
 /** Ready to send: the consent box ticked and a name that reads as the signer's (see signedNameProblem) */
@@ -253,7 +288,7 @@ export function SignBox({ value, onChange, id = "sign" }: { value: SignValue; on
 /** Has this organization signed the current edition of the service agreement? neon1's own never needs to */
 export function useAgreementSigned() {
   const { org } = useOrg();
-  return isOwnOrg(org.slug) || (org.agreements ?? []).some((a) => a.ref === AGREEMENT_EDITION);
+  return isOwnOrg(org.slug) || agreementCovers(org.agreements);
 }
 
 /** Before an approval: the agreement still needs signing, by an admin of the organization. The link

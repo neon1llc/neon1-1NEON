@@ -4,10 +4,10 @@
 
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { Signature } from "@1neon/domain";
+import { STARTING_CHOICES, UNCHOSEN, choiceLabel, type ChoiceValues, type Signature } from "@1neon/domain";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router";
-import { SignBox, signReady, type SignValue } from "../components/Billing.tsx";
+import { ChoiceFields, SignBox, signReady, type SignValue } from "../components/Billing.tsx";
 import { Markdown } from "../components/Markdown.tsx";
 import { gate } from "../components/Reads.tsx";
 import { useOrg, useSession, useTopBar } from "../components/Shell.tsx";
@@ -16,7 +16,7 @@ import { api } from "../lib/api.ts";
 import { problem, useRefresh } from "../lib/hooks.ts";
 
 
-type AgreementResponse = { edition: string; text: string; hash: string; signed?: Signature; history: Signature[]; required: boolean };
+type AgreementResponse = { edition: string; text: string; hash: string; signed?: Signature; history: Signature[]; choices: (ChoiceValues & { name: string; at: string })[]; required: boolean };
 
 
 /** The agreement, its signature, and Sign for a client admin */
@@ -30,6 +30,9 @@ export function AgreementPage() {
   const q = useQuery({ queryKey: ["agreement", org.id], queryFn: () => api<AgreementResponse>(`/t/${org.id}/agreement`) });
   const [sign, setSign] = useState<SignValue>({ typedName: "", consent: false });
   const [busy, setBusy] = useState(false);
+  const [picked, setPicked] = useState<ChoiceValues>(STARTING_CHOICES);
+  // After signing, an admin's edit waits here until it's saved
+  const [edit, setEdit] = useState<ChoiceValues>();
   // Where the reader came from (an approval waiting on this signature), so the page can lead back
   // there. Only a path inside this organization counts; anything else is ignored
   const [params] = useSearchParams();
@@ -43,7 +46,7 @@ export function AgreementPage() {
   const submit = async () => {
     setBusy(true);
     try {
-      await api(`/t/${org.id}/agreement/sign`, { method: "POST", body: { edition: a.edition, hash: a.hash, typedName: sign.typedName.trim(), consent: sign.consent } });
+      await api(`/t/${org.id}/agreement/sign`, { method: "POST", body: { edition: a.edition, hash: a.hash, typedName: sign.typedName.trim(), consent: sign.consent, choices: picked } });
       toast("Signed. Thank you. A copy is kept with your organization's records.");
     } catch (e) {
       toast(problem(e));
@@ -53,11 +56,28 @@ export function AgreementPage() {
     await Promise.all([q.refetch(), qc.invalidateQueries({ queryKey: ["org", org.id] })]);
     refresh();
   };
+  const last = a.choices.at(-1);
+  const inForce: ChoiceValues = last ? { caseStudies: last.caseStudies, naming: last.naming } : UNCHOSEN;
+  const mayChoose = access === "admin" && !prospect && !me.operator && a.required && Boolean(a.signed);
+  const changed = edit && (edit.caseStudies !== inForce.caseStudies || edit.naming !== inForce.naming);
+  const save = async () => {
+    setBusy(true);
+    try {
+      await api(`/t/${org.id}/agreement/choices`, { method: "PUT", body: edit });
+      toast("Saved");
+      await Promise.all([q.refetch(), qc.invalidateQueries({ queryKey: ["org", org.id] })]);
+      setEdit(undefined);
+    } catch (e) {
+      toast(problem(e));
+    }
+    setBusy(false);
+    refresh();
+  };
   return (
     <div className="content agreement" style={{ maxWidth: 760 }}>
       {/* Where it stands: signed (by whom, when), waiting on an admin, or not needed */}
       {a.signed ? (
-        <p className="notice ok small" role="status">Signed for {org.name} by {a.signed.typedName} ({a.signed.email}) on {dateLabel(a.signed.at.slice(0, 10))}, edition {a.edition}.{back && <> You can approve an option now. <Link className="btn btn-primary btn-sm agreement-back" to={back}>{backLabel}</Link></>}</p>
+        <p className="notice ok small" role="status">Signed for {org.name} by {a.signed.typedName} ({a.signed.email}) on {dateLabel(a.signed.at.slice(0, 10))}, edition {a.signed.ref}.{a.signed.ref !== a.edition && <> It still covers your work. Edition {a.edition} below adds two choices.</>}{back && <> You can approve an option now. <Link className="btn btn-primary btn-sm agreement-back" to={back}>{backLabel}</Link></>}</p>
       ) : !a.required ? (
         <p className="notice small" role="status">neon1's own organization doesn't sign its own agreement.</p>
       ) : maySign ? (
@@ -68,11 +88,28 @@ export function AgreementPage() {
       <Markdown source={a.text} />
       {maySign && (
         <form className="card sign-card" onSubmit={(e) => { e.preventDefault(); if (signReady(sign)) void submit(); }}>
+          <ChoiceFields id="agreement-choice" value={picked} onChange={setPicked} />
           <SignBox id="agreement-sign" value={sign} onChange={setSign} />
           <p className="small muted">Signing records your typed name, the time, and a fingerprint of this exact text (edition {a.edition}). It can't be edited afterwards.</p>
           <button className="btn btn-primary" disabled={busy || !signReady(sign)}>Sign for {org.name}</button>
         </form>
       )}
+      {/* The choices in force: an admin changes them here; everyone else reads them */}
+      {a.signed && (mayChoose ? (
+        <form className="card sign-card" id="choices" aria-labelledby="choices-h" onSubmit={(e) => { e.preventDefault(); if (changed && !busy) void save(); }}>
+          <h2 id="choices-h" className="section-h">Your choices</h2>
+          <ChoiceFields id="agreement-choice" value={edit ?? inForce} onChange={setEdit} />
+          {changed ? <button className="btn btn-primary" disabled={busy}>Save choices</button> : last && <p className="small muted">Chosen by {last.name}, {dateLabel(last.at.slice(0, 10))}</p>}
+        </form>
+      ) : (
+        <section className="kind-group" id="choices">
+          <h2 className="section-h">Choices</h2>
+          <ul className="small">
+            <li>Anonymous case studies: {choiceLabel("caseStudies", inForce.caseStudies)}</li>
+            <li>Client list: {choiceLabel("naming", inForce.naming)}</li>
+          </ul>
+        </section>
+      ))}
       {a.history.length > 0 && (
         <section className="kind-group">
           <h2 className="section-h">Signatures</h2>

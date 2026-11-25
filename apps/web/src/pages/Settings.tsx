@@ -2,7 +2,7 @@
 
 
 import { plural } from "../lib/plural.ts";
-import type { Layer, Stage, Tenant } from "@1neon/domain";
+import { UNCHOSEN, choiceLabel, type Layer, type Stage, type Tenant } from "@1neon/domain";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { FaceFacts, FaceForm } from "../components/OrgFace.tsx";
@@ -81,7 +81,7 @@ export function Settings() {
             <div><dt>Where</dt><dd><FaceFacts place={org.place} link={org.link} />{admin && !editFace && <> <button className="linkish helper" onClick={() => setEditFace(true)}>Change</button></>}{editFace && <FaceForm onDone={() => setEditFace(false)} />}</dd></div>
             <div><dt>Your access</dt><dd><span className="tag">{access}</span></dd></div>
             {/* neon1's service agreement: who signed it, or a way to read and sign it */}
-            <div hidden={prospect}><dt>Service agreement</dt><dd>{org.agreements?.length ? <>Signed by {org.agreements.at(-1)!.typedName}, edition {org.agreements.at(-1)!.ref}. </> : "Not signed yet. "}<Link to={`/o/${summary.slug}/agreement`}>{org.agreements?.length ? "Read it" : "Read and sign"}</Link></dd></div>
+            <div hidden={prospect}><dt>Service agreement</dt><dd>{org.agreements?.length ? <>Signed by {org.agreements.at(-1)!.typedName}, edition {org.agreements.at(-1)!.ref}. Case studies: {choiceLabel("caseStudies", (org.choices?.at(-1) ?? UNCHOSEN).caseStudies)}. Client list: {choiceLabel("naming", (org.choices?.at(-1) ?? UNCHOSEN).naming)}. </> : "Not signed yet. "}<Link to={`/o/${summary.slug}/agreement`}>{org.agreements?.length ? "Read it" : "Read and sign"}</Link></dd></div>
           </dl>
         </div>
         <div className="stack">

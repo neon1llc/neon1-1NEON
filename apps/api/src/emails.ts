@@ -119,7 +119,7 @@ const LABELS: Record<string, string> = {
   "doc.uploaded": "File uploaded", "doc.moved": "File moved", "doc.deleted": "File removed",
   "decision.approved": "Decision approved", "decision.changed": "Decision changed", "option.quoted": "Quote issued",
   "proposal.issued": "Proposal issued", "proposal.refresh_asked": "Refresh asked", "purchase.agreed": "Purchase agreed", "handoff.accepted": "Handover accepted",
-  "agreement.signed": "Agreement signed", "invoice.issued": "Invoice issued", "invoice.voided": "Invoice voided", "invoice.drafted": "Invoice drafted",
+  "agreement.signed": "Agreement signed", "agreement.choices": "Agreement choices changed", "invoice.issued": "Invoice issued", "invoice.voided": "Invoice voided", "invoice.drafted": "Invoice drafted",
   "payment.started": "Payment started", "payment.received": "Payment received", "payment.failed": "Payment failed",
   "project.moved": "Project moved", "project.created": "Project created", "project.trashed": "Project moved to Trash", "project.updated": "Project updated",
   "project.decider_changed": "Decision maker changed", "org.stages": "Stages changed", "org.profile": "Profile changed", "org.created": "Organization created",

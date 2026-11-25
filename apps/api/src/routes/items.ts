@@ -2,7 +2,7 @@
 // approving an option into an immutable decision, and the advisory edit markers.
 
 
-import { AGREEMENT_EDITION, AcceptInput, signedNameProblem, AgreeInput, ApproveInput, canonical, finalLines, lineage, refundCredit, priceOf, initialsOf, sha256Hex, signature, depositLines, InvoiceFields, CreateItemInput, IssueInput, QuoteInput, isQuickFix, quoteFields, changeRecord, itemChanges, assessed, completionAfter, priceCheckDue, proposalRef, resolveTiming, revisions, DecisionFields, Item, OptionFields, PRICE_CHECK_DAYS, PurchaseFields, UpdateItemInput, canApprove, isOwnOrg, newId, rankBetween, settableStatus, todayIn, type Project, type Tenant } from "@1neon/domain";
+import { AGREEMENT_EDITION, agreementCovers, AcceptInput, signedNameProblem, AgreeInput, ApproveInput, canonical, finalLines, lineage, refundCredit, priceOf, initialsOf, sha256Hex, signature, depositLines, InvoiceFields, CreateItemInput, IssueInput, QuoteInput, isQuickFix, quoteFields, changeRecord, itemChanges, assessed, completionAfter, priceCheckDue, proposalRef, resolveTiming, revisions, DecisionFields, Item, OptionFields, PRICE_CHECK_DAYS, PurchaseFields, UpdateItemInput, canApprove, isOwnOrg, newId, rankBetween, settableStatus, todayIn, type Project, type Tenant } from "@1neon/domain";
 import type { Context } from "hono";
 import { z } from "zod";
 import { actorId, body, byRank, check, defined, fail, label, need, now, validateFields, who, type Env } from "../lib/http.ts";
@@ -230,7 +230,7 @@ export function itemRoutes(app: App, k: Kit) {
     if (priceCheckDue(rev.p, todayIn(c.get("tenant").timeZone))) fail(409, "price_check", `The prices in Proposal ${proposalRef(rev.p.number, rev.p.rev)} were checked over ${PRICE_CHECK_DAYS} days ago. Ask neon1 to refresh it, then approve.`);
     // A client signs neon1's service agreement (the current edition) before approving paid work
     const tenant = c.get("tenant");
-    if (!isOwnOrg(tenant.slug) && !(tenant.agreements ?? []).some((a) => a.ref === AGREEMENT_EDITION)) fail(409, "agreement_needed", `Sign neon1's service agreement (edition ${AGREEMENT_EDITION}) first. It covers every project, and you sign it once.`);
+    if (!isOwnOrg(tenant.slug) && !agreementCovers(tenant.agreements)) fail(409, "agreement_needed", `Sign neon1's service agreement (edition ${AGREEMENT_EDITION}) first. It covers every project, and you sign it once.`);
     const of = OptionFields.parse(option.fields);
     const neon1Buys = of.purchases.filter((x) => x.buyer === "neon1");
     const ts = now();
@@ -410,7 +410,7 @@ export function itemRoutes(app: App, k: Kit) {
     const misnamed = signedNameProblem(input.signature.typedName, u.name);
     if (misnamed) fail(400, "signature_name", misnamed);
     const signed = signature("acceptance", it.title, await sha256Hex(canonical({ id: it.id, version: it.version, title: it.title, body: it.body, note: input.note })), input.signature, { id: by, name: u.name || u.email, email: u.email }, ts, from(c));
-    const next: Item = { ...it, status: "done", completedAt: completionAfter(it, "done", ts), fields: { ...it.fields, accepted: { by, name: u.name || u.email, at: ts, note: input.note, signature: signed } }, version: it.version + 1, updatedAt: ts, updatedBy: by };
+    const next: Item = { ...it, status: "done", completedAt: completionAfter(it, "done", ts), fields: { ...it.fields, accepted: { by, name: u.name || u.email, at: ts, note: input.note, quote: input.quote, signature: signed } }, version: it.version + 1, updatedAt: ts, updatedBy: by };
     // The last handover step accepted: neon1 gets a draft of the final invoice for what's left on the price
     const items = await repo.listItems(p.tenantId, p.id);
     const steps = items.filter((i) => i.kind === "handoff").map((i) => (i.id === it.id ? next : i));
@@ -447,7 +447,7 @@ export function itemRoutes(app: App, k: Kit) {
     const accepted: Item[] = [];
     for (const it of waiting) {
       const signed = signature("acceptance", it.title, await sha256Hex(canonical({ id: it.id, version: it.version, title: it.title, body: it.body, note: input.note })), input.signature, { id: by, name, email: u.email }, ts, from(c));
-      accepted.push({ ...it, fields: { ...it.fields, accepted: { by, name, at: ts, note: input.note, signature: signed } }, version: it.version + 1, updatedAt: ts, updatedBy: by });
+      accepted.push({ ...it, fields: { ...it.fields, accepted: { by, name, at: ts, note: input.note, quote: accepted.length === 0 ? input.quote : undefined, signature: signed } }, version: it.version + 1, updatedAt: ts, updatedBy: by });
     }
     // With the handover accepted, neon1 gets a draft of the final invoice for what's left on the price
     const decision = currentDecision(items);
