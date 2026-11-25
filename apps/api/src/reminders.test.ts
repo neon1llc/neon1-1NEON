@@ -1,10 +1,11 @@
 // apps/api/src/reminders.test.ts - Reminders while a client's decision waits: when they go, to whom,
 // when they stop, and when neon1 is told.
 
-import { businessDaysBetween, projectDecisions, signatureDecision } from "@1neon/domain";
+import { askedToDecide, businessDaysBetween, projectDecisions, signatureDecision } from "@1neon/domain";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "./app.ts";
-import { sweepDecisionReminders } from "./routes/reminders.ts";
+import { NAME_ONE, optionsEmail, sweepDecisionReminders } from "./routes/reminders.ts";
+import { drainOutbox } from "./outbox.ts";
 import { seed } from "./seed.ts";
 import { MemoryDirectory, MemoryMailer, MemoryStorage } from "./services.ts";
 import { MemoryTable } from "./store/memory.ts";
@@ -15,13 +16,14 @@ const OP = "pradeep@neon1.tech";
 const cfg: Config = { env: "local", publicUrl: "https://example.invalid", operatorEmails: [OP], devAuth: true };
 let repo: Repo;
 let mailer: MemoryMailer;
+let app: ReturnType<typeof createApp>;
 let s: Awaited<ReturnType<typeof seed>>;
 
 beforeEach(async () => {
   repo = new Repo(new MemoryTable());
   mailer = new MemoryMailer();
   s = await seed(repo, OP);
-  createApp({ cfg, repo, directory: new MemoryDirectory(), mailer, storage: new MemoryStorage() });
+  app = createApp({ cfg, repo, directory: new MemoryDirectory(), mailer, storage: new MemoryStorage() });
 });
 
 // Weekday mornings in New York, in a week with no gap: Monday March 1, 2027 onward
@@ -66,7 +68,58 @@ describe("a proposal waiting on a choice", () => {
   });
 });
 
+describe("who is asked to decide", () => {
+  const m = (userId: string, access: string, joinedAt: string, status = "joined") => ({ userId, access, status, joinedAt, invitedAt: joinedAt });
+  const team = [m("late", "admin", "2027-02-01"), m("first", "admin", "2027-01-01"), m("a", "viewer", "2027-01-02"), m("b", "editor", "2027-01-03"), m("c", "viewer", "2027-01-04", "invited")];
+  const dm = (userId: string) => ({ userId, role: "decision_maker" });
+
+  it("asks every named decision maker who has joined", () => {
+    expect(askedToDecide(team, [dm("a"), dm("b"), dm("c")])).toEqual({ named: true, ids: ["a", "b"] });
+  });
+
+  it("asks the first admin while nobody is named", () => {
+    expect(askedToDecide(team, [])).toEqual({ named: false, ids: ["first"] });
+  });
+});
+
+describe("the options email", () => {
+  const o = (id: string, version: number) => ({ id, version, title: `Option ${id}` }) as never;
+  const base = { org: "Harborline", projectKey: "FLOW-1", proposal: "Proposal 0039-r2", quick: false, url: "https://example.invalid/x", settingsUrl: "https://example.invalid/me" };
+
+  it("lists what was added, edited, and removed, and asks for a decision maker only while none is named", () => {
+    const m = optionsEmail({ ...base, before: [o("A", 1), o("B", 1), o("C", 1)], after: [o("A", 1), o("B", 2), o("D", 1)], named: false });
+    expect(m.text).toContain("1 option added, 1 option edited, 1 option removed.");
+    expect(m.text).toContain(NAME_ONE);
+    expect(m.text).not.toContain("Option A");
+    expect(optionsEmail({ ...base, before: [o("A", 1)], after: [o("A", 2)], named: true }).text).not.toContain(NAME_ONE);
+  });
+
+  it("goes to the decision maker when a proposal is issued, and the others get the usual notice", async () => {
+    const p = (await repo.listProjects(s.acme.id)).find((x) => x.key === "FLOW-1")!;
+    const decider = p.people.find((x) => x.role === "decision_maker")!.userId;
+    const send = (path: string) => app.request(`/1NEON/api/t/${s.acme.id}/projects/${p.id}/${path}`, { method: "POST", headers: { "content-type": "application/json", "x-1neon": "1", "x-dev-user": OP }, body: "{}" });
+    expect((await send("proposals")).status).toBe(201);
+    await drainOutbox({ repo, mailer, cfg } as never, { deadline: Date.now() + 5_000 });
+    const asked = mailer.sent.filter((m) => m.subject.startsWith("Options to review"));
+    expect(asked.map((m) => m.to)).toEqual([(await repo.getUser(decider))!.email]);
+    expect(mailer.sent.length).toBeGreaterThan(asked.length);
+  });
+});
+
 describe("decision reminders", () => {
+  it("tells someone named after the decision started waiting", async () => {
+    const { p } = await finishHandover(at(1, 14));
+    await pass(at(1));
+    const members = (await repo.listMembers(s.acme.id)).filter((m) => m.email !== OP);
+    const had = new Set(mailer.sent.map((m) => m.to));
+    const later = members.find((m) => !had.has(m.email))!;
+    const project = (await repo.listProjects(s.acme.id)).find((x) => x.id === p.id)!;
+    await repo.saveProject({ ...project, people: [...project.people, { userId: later.userId, role: "decision_maker" }], version: project.version + 1 }, { version: project.version });
+    mailer.sent.length = 0;
+    await pass(at(1, 16));
+    expect(mailer.sent.map((m) => m.to)).toEqual([later.email]);
+  });
+
   /** The seed's own waiting decisions are first seen well before the test's handover */
   const mine = () => toClients().filter((m) => m.text.includes("Accept the handover"));
 

@@ -52,6 +52,20 @@ export function signatureDecision(t: Pick<Tenant, "agreements">, waiting: Client
   return { key: `sign:${AGREEMENT_EDITION}`, kind: "sign", title: `Sign the service agreement, edition ${AGREEMENT_EDITION}`, since: choice.since };
 }
 
+interface Person { userId: string; access?: string; status: string; joinedAt?: string; invitedAt: string }
+
+/**
+ * Who is asked to decide: every named decision maker who has joined. With none named, the client's first
+ * admin, who can decide or name someone. `members` are the client's own people, never neon1
+ */
+export function askedToDecide(members: Person[], people: readonly { userId: string; role: string }[]) {
+  const named = new Set(people.filter((p) => p.role === "decision_maker").map((p) => p.userId));
+  const joined = members.filter((m) => m.status === "joined");
+  if (named.size) return { named: true, ids: joined.filter((m) => named.has(m.userId)).map((m) => m.userId) };
+  const first = joined.filter((m) => m.access === "admin").sort((a, b) => (a.joinedAt ?? a.invitedAt).localeCompare(b.joinedAt ?? b.invitedAt))[0];
+  return { named: false, ids: first ? [first.userId] : [] };
+}
+
 /** Weekdays after `from` up to and including `to` (calendar dates). Holidays count as weekdays */
 export function businessDaysBetween(from: string, to: string): number {
   let n = 0;

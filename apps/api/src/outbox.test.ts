@@ -156,7 +156,7 @@ describe("event notices", () => {
     const app = appWith("worker");
     const { p } = await flow();
     const before = mailer.sent.length;
-    const r = await call(app, "POST", `/t/${p.tenantId}/projects/${p.id}/items`, { kind: "option", title: "Replay check" }, OP);
+    const r = await call(app, "POST", `/t/${p.tenantId}/projects/${p.id}/proposals`, {}, OP);
     expect(r.status).toBe(201);
     const rows = (await repo.table.query("OUTBOX")).filter((x) => String(x.SK).startsWith("E#"));
     expect(rows).toHaveLength(1);

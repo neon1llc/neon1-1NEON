@@ -9,7 +9,7 @@
 // "Accepted" means the provider took the message; it is not proof that it was delivered.
 
 
-import { replyOpen, actorHears, groupOf, isOwnOrg, isProspect, isQuickFix, neon1Only, noticeSummary, wants, type AuditEvent, type Member, type User } from "@1neon/domain";
+import { replyOpen, actorHears, groupOf, isOwnOrg, isProspect, isQuickFix, neon1Only, noticeSummary, wants, type AuditEvent, type Member, type User, askedToDecide, revisions } from "@1neon/domain";
 import type { Config } from "./config.ts";
 import { inviteEmail, noticeEmail, prospectFacts } from "./emails.ts";
 import { eventLinks, linkUrl } from "./lib/links.ts";
@@ -19,6 +19,7 @@ import { chatAlertMail, chatFlagMail, chatReplyMail } from "./lib/chatmail.ts";
 import { smsReady, smsSendAllowed, textNotice, welcomeText, confirmedText, isOptOut } from "./sms.ts";
 import type { Repo } from "./store/repo.ts";
 import { ConflictError, type Row, type WriteOp } from "./store/types.ts";
+import { optionsEmail } from "./routes/reminders.ts";
 
 
 // --- Storage --------------------------------------------------------------
@@ -287,19 +288,32 @@ async function eventTargets(d: OutboxDeps, e: AuditEvent, clock: Clock): Promise
   // The one who acted hears only of what they signed (a copy for their records), or, in neon1's own
   // organization, the billing a client would hear of
   const selfToo = actorHears(e.action, isOwnOrg(tenant?.slug ?? ""));
+  // An issued proposal asks whoever decides, with what changed; everyone else gets the usual notice
+  let review: { ids: string[]; named: boolean; mail: Omit<Parameters<typeof optionsEmail>[0], "named"> } | undefined;
+  if (e.action === "proposal.issued" && key) {
+    const project = (await io(repo.listProjects(e.tenantId))).find((p) => p.key === key);
+    const all = project ? revisions(await io(repo.listItems(e.tenantId, project.id))) : [];
+    const issued = all.find((r) => r.id === e.target);
+    if (project && issued) {
+      const asked = askedToDecide(members.filter((m) => !cfg.operatorEmails.includes(m.email.toLowerCase())), project.people);
+      review = { ...asked, mail: { org: tenant?.name ?? "1NEON", projectKey: key, proposal: quick ? issued.title.replace("Proposal", "Quote") : issued.title, before: all.find((r) => r.p.rev === issued.p.rev - 1)?.p.snapshot.options, after: issued.p.snapshot.options, quick, url: opens, settingsUrl: `${cfg.publicUrl}/1NEON/me` } };
+    }
+  }
   for (const m of members) {
     if (m.status !== "joined" || (m.userId === e.actorId && !selfToo)) continue;
     const u = await io(repo.getUser(m.userId));
     if (!u) continue;
     // neon1's working drafts reach neon1 only
     if (neon1Only(e.action) && !cfg.operatorEmails.includes(u.email)) continue;
+    // Options reach the client when the proposal is issued, in one email, not one per edit
+    if (/^option\.(created|updated|deleted|quoted)$/.test(e.action) && !cfg.operatorEmails.includes(u.email.toLowerCase())) continue;
     if (wants(u.notify, e.action, "email")) {
       const operator = cfg.operatorEmails.includes(u.email.toLowerCase());
       // neon1 already got the request itself, with the person as Reply-To (routes/requests.ts)
       if (operator && e.action.startsWith("request.")) continue;
       // A test organization's notices stay out of neon1's inbox
       if (operator && tenant?.test) continue;
-      const mail = noticeEmail({
+      const mail = review?.ids.includes(u.id) ? optionsEmail({ ...review.mail, named: review.named }) : noticeEmail({
         orgName: tenant?.name ?? "1NEON", trial: Boolean(tenant && isProspect(tenant)), ref: tenant?.clientId,
         by: m.userId === e.actorId ? "You" : by, byEmail: e.actorId === "stripe" ? undefined : actor?.email,
         action: e.action, summary, projectKey: key, projectUrl: key ? `${home}/projects/${key}` : undefined,

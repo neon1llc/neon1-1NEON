@@ -145,7 +145,7 @@ const TODO: Record<string, string> = {
   "prospect.signedup": "Nothing yet. Their first project and any request arrive as separate emails.",
   "invoice.issued": "Open the invoice, then pay it or ask a question.",
   "payment.failed": "Open the invoice and try another way to pay.",
-  "proposal.issued": "Open it, then decide or ask a question.",
+  "proposal.issued": "Open it to read it or ask a question.",
   "option.quoted": "Open it, then decide or ask a question.",
   "proposal.refresh_asked": "Update the proposal and issue it again.",
   "comment.created": "Open the item and reply.",

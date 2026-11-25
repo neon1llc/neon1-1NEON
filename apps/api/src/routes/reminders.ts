@@ -3,8 +3,8 @@
 // decisions in one message, at most one an hour. neon1 is told with the second reminder, to follow up.
 
 import {
-  REMIND_BUSINESS_DAYS, businessDaysBetween, canApprove, dateIn, isOwnOrg, isProspect, projectDecisions, signatureDecision, todayIn, wants,
-  type ClientDecision, type Tenant,
+  REMIND_BUSINESS_DAYS, askedToDecide, businessDaysBetween, dateIn, isOwnOrg, isProspect, projectDecisions, signatureDecision, todayIn, wants,
+  type ClientDecision, type ProposalFields, type Tenant,
 } from "@1neon/domain";
 import type { Kit } from "../lib/kit.ts";
 import { alertNeon1 } from "../lib/alert.ts";
@@ -17,7 +17,8 @@ const FRESH_MS = 24 * 60 * 60 * 1000;
 // Reminders arrive on weekdays from 9am to 5pm in the organization's time zone
 const HOURS = { from: 9, to: 17 };
 
-interface State { since: string; announced: boolean; sent: number; alerted?: boolean }
+// `told` holds who has heard that it's waiting, so someone named later hears too
+interface State { since: string; told: string[]; sent: number; alerted?: boolean }
 interface Waiting extends ClientDecision { people?: { userId: string; role: string }[] }
 
 /** Is it a weekday within sending hours where the organization is? */
@@ -37,8 +38,46 @@ async function waitingIn(repo: Kit["repo"], t: Tenant, today: string): Promise<W
   return sign ? [sign, ...out] : out;
 }
 
+/** Asked of the first admin while a project has no decision maker */
+export const NAME_ONE = "No decision maker is named yet. Name one on the project, or decide yourself.";
+
+type Option = ProposalFields["snapshot"]["options"][number];
+
+/** What an issued revision changed in the options, against the one before it */
+export function optionChanges(before: Option[] | undefined, after: Option[]) {
+  const was = new Map((before ?? []).map((o) => [o.id, o.version]));
+  return {
+    added: after.filter((o) => !was.has(o.id)),
+    edited: after.filter((o) => was.has(o.id) && was.get(o.id) !== o.version),
+    removed: (before ?? []).filter((o) => !after.some((x) => x.id === o.id)),
+  };
+}
+
+/** The email to whoever decides when a proposal is issued: what changed, and what to do */
+export function optionsEmail(o: { org: string; projectKey: string; proposal: string; before?: Option[]; after: Option[]; named: boolean; quick: boolean; url: string; settingsUrl: string }) {
+  const { added, edited, removed } = optionChanges(o.before, o.after);
+  const count = (n: number, what: string) => `${n} ${n === 1 ? "option" : "options"} ${what}`;
+  const changed = [added.length ? count(added.length, "added") : "", edited.length ? count(edited.length, "edited") : "", removed.length ? count(removed.length, "removed") : ""].filter(Boolean).join(", ");
+  const summary = o.quick ? "A quote is ready" : changed || "The proposal was issued again with the same options";
+  const title = o.quick ? "Quote to review" : "Options to review";
+  const rows = (k: string, list: Option[]) => list.map((x) => ({ k, v: x.title }));
+  const mail = factMail({
+    kicker: "decision",
+    title,
+    sub: o.org,
+    preheader: `${o.projectKey}: ${summary}.`,
+    intro: [`${summary}.`, ...(o.named ? [] : [NAME_ONE])],
+    facts: [{ k: "Project", v: o.projectKey, mono: true }, { k: o.quick ? "Quote" : "Proposal", v: o.proposal }, ...(o.quick ? rows("For", o.after) : [...rows("Added", added), ...rows("Edited", edited), ...rows("Removed", removed)])],
+    action: { label: o.quick ? "Review the quote" : "Review the options", url: o.url },
+    why: o.named ? `You're a decision maker for ${o.projectKey} on 1NEON.` : `You're an admin of ${o.org} on 1NEON.`,
+    settings: { text: "Choose your emails in your 1NEON profile, under Notifications.", url: o.settingsUrl, label: "Notification settings" },
+    reply: "Reply to this email to reach me.",
+  });
+  return { subject: subjectOf(title, `${o.projectKey}, ${summary}`, 90), ...mail, as: "portal" as SenderKind, replyTo: "hello@neon1.tech" };
+}
+
 /** The one email a person gets: every decision waiting on them */
-export function decisionEmail(t: Tenant, list: ClientDecision[], reminder: boolean, portal: string) {
+export function decisionEmail(t: Tenant, list: ClientDecision[], reminder: boolean, portal: string, unnamed = false) {
   const one = list.length === 1 ? list[0]! : undefined;
   const home = `${portal}o/${t.slug}`;
   const url = (d: ClientDecision) => (d.projectKey ? `${home}/projects/${d.projectKey}` : `${home}/agreement`);
@@ -48,10 +87,10 @@ export function decisionEmail(t: Tenant, list: ClientDecision[], reminder: boole
     title,
     sub: t.name,
     preheader: one ? `${one.title}${one.projectKey ? `, ${one.projectKey}` : ""}.` : `${list.length} decisions are waiting.`,
-    intro: [one ? "The work waits for this." : "The work waits for these."],
+    intro: [one ? "The work waits for this." : "The work waits for these.", ...(unnamed ? [NAME_ONE] : [])],
     facts: list.map((d) => ({ k: d.projectKey ?? "Agreement", v: d.title, href: url(d) })),
     action: { label: one ? "Open it in 1NEON" : "See what needs you", url: one ? url(one) : `${home}/workspace` },
-    why: `You decide for ${t.name} on 1NEON.`,
+    why: unnamed ? `You're an admin of ${t.name} on 1NEON.` : `You decide for ${t.name} on 1NEON.`,
     settings: { text: "Choose your emails in your 1NEON profile, under Notifications.", url: `${portal}me#notifications` },
     reply: "Reply to this email to reach me.",
   });
@@ -79,12 +118,20 @@ export async function sweepDecisionReminders(k: Pick<Kit, "repo" | "d" | "cfg">,
       if (row) await repo.table.write([{ delete: { PK: `T#${t.id}`, SK: ROW } }]);
       continue;
     }
+    const members = (await repo.listMembers(t.id)).filter((m) => !cfg.operatorEmails.includes(m.email.toLowerCase()));
+    // Who is asked about each decision. The signature goes to a named decision maker who is an admin, else the first admin
+    const admins = members.filter((m) => m.access === "admin");
+    const asked = new Map(list.map((x) => {
+      if (x.kind !== "sign") return [x.key, askedToDecide(members, x.people ?? [])] as const;
+      const who = askedToDecide(admins, list.flatMap((y) => y.people ?? []));
+      return [x.key, { named: true, ids: who.ids.length ? who.ids : askedToDecide(admins, []).ids }] as const;
+    }));
     const before = (row?.items ?? {}) as Record<string, State>;
     const next: Record<string, State> = {};
     for (const x of list) {
       const fresh = at.getTime() - Date.parse(x.since) < FRESH_MS;
-      // A proposal's own notice announces its choice
-      next[x.key] = before[x.key] ?? { since: fresh ? x.since : at.toISOString(), announced: x.kind === "choose" || !fresh, sent: 0 };
+      // A proposal's own notice tells whoever is asked when it's issued
+      next[x.key] = before[x.key] ?? { since: fresh ? x.since : at.toISOString(), told: x.kind === "choose" || !fresh ? asked.get(x.key)!.ids : [], sent: 0 };
     }
     const open = inSendingHours(at, t.timeZone);
     // The reminder each decision is due now, if any; a late pass sends one, never two together
@@ -95,25 +142,24 @@ export async function sweepDecisionReminders(k: Pick<Kit, "repo" | "d" | "cfg">,
       const step = REMIND_BUSINESS_DAYS.filter((n) => age >= n).length;
       if (open && step > s.sent) due.set(x.key, step);
     }
-    const fresh = new Set(list.filter((x) => !next[x.key]!.announced).map((x) => x.key));
     const tried = new Set<string>(), reached = new Set<string>();
-    if (due.size || fresh.size) {
-      for (const m of await repo.listMembers(t.id)) {
-        if (m.status !== "joined" || cfg.operatorEmails.includes(m.email.toLowerCase())) continue;
-        const u = await repo.getUser(m.userId);
-        if (!u || !wants(u.notify, "decision.approved", "email")) continue;
-        const mine = list.filter((x) => x.kind === "sign" ? m.access === "admin" : canApprove({ userId: m.userId, operator: false, strongSession: false }, m.access, x.people ?? []).ok);
-        const now = mine.filter((x) => due.has(x.key) || fresh.has(x.key));
-        if (!now.length) continue;
-        for (const x of now) tried.add(x.key);
-        const mail = decisionEmail(t, mine, now.some((x) => due.has(x.key)), portal);
-        try {
-          await d.mailer.send(m.email, mail.subject, mail.text, mail.html, mail.replyTo, undefined, undefined, mail.as);
-          sent++;
-          for (const x of now) reached.add(x.key);
-        } catch (e) {
-          console.error(JSON.stringify({ level: "error", message: "decision email refused", tenant: t.id, error: String(e).slice(0, 200) }));
-        }
+    for (const m of members) {
+      const mine = list.filter((x) => asked.get(x.key)!.ids.includes(m.userId));
+      const now = mine.filter((x) => due.has(x.key) || !next[x.key]!.told.includes(m.userId));
+      if (!now.length) continue;
+      const u = await repo.getUser(m.userId);
+      const told = () => { for (const x of now) next[x.key] = { ...next[x.key]!, told: [...new Set([...next[x.key]!.told, m.userId])] }; };
+      // Someone who turned these emails off isn't asked again; neon1 still hears if it stays open
+      if (!u || !wants(u.notify, "decision.approved", "email")) { told(); continue; }
+      for (const x of now) tried.add(x.key);
+      const mail = decisionEmail(t, mine, now.some((x) => due.has(x.key)), portal, mine.some((x) => !asked.get(x.key)!.named));
+      try {
+        await d.mailer.send(m.email, mail.subject, mail.text, mail.html, mail.replyTo, undefined, undefined, mail.as);
+        sent++;
+        told();
+        for (const x of now) reached.add(x.key);
+      } catch (e) {
+        console.error(JSON.stringify({ level: "error", message: "decision email refused", tenant: t.id, error: String(e).slice(0, 200) }));
       }
     }
     const stuck: ClientDecision[] = [];
@@ -122,9 +168,8 @@ export async function sweepDecisionReminders(k: Pick<Kit, "repo" | "d" | "cfg">,
       // The mail service took none of them: the same email is tried on the next pass
       if (tried.has(x.key) && !reached.has(x.key)) continue;
       // Counted even when nobody wanted the email, so neon1 still hears about a decision that stays open
-      if (fresh.has(x.key)) next[x.key] = { ...s, announced: true };
       const step = due.get(x.key);
-      if (step !== undefined) next[x.key] = { ...next[x.key]!, sent: step };
+      if (step !== undefined) next[x.key] = { ...s, sent: step };
       if (next[x.key]!.sent >= REMIND_BUSINESS_DAYS.length && !s.alerted) stuck.push(x);
     }
     if (stuck.length && !t.test) {
