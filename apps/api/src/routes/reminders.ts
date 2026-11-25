@@ -107,16 +107,14 @@ export async function sweepDecisionReminders(k: Pick<Kit, "repo" | "d" | "cfg">,
   }
   let sent = 0, alerted = 0;
   const portal = `${cfg.publicUrl}/1NEON/`;
-  for (const t of await repo.listTenants()) {
-    // neon1 is its own client, and a free account has nothing to approve
-    if (isOwnOrg(t.slug) || isProspect(t) || t.status === "archived") continue;
+  const one = async (t: Tenant) => {
     const today = todayIn(t.timeZone, at);
     const list = await waitingIn(repo, t, today);
     const row = await repo.table.get(`T#${t.id}`, ROW);
     if (!list.length) {
       // Everything is answered: the reminders stop, and a later decision starts its own clock
       if (row) await repo.table.write([{ delete: { PK: `T#${t.id}`, SK: ROW } }]);
-      continue;
+      return;
     }
     const members = (await repo.listMembers(t.id)).filter((m) => !cfg.operatorEmails.includes(m.email.toLowerCase()));
     // Who is asked about each decision. The signature goes to a named decision maker who is an admin, else the first admin
@@ -131,7 +129,9 @@ export async function sweepDecisionReminders(k: Pick<Kit, "repo" | "d" | "cfg">,
     for (const x of list) {
       const fresh = at.getTime() - Date.parse(x.since) < FRESH_MS;
       // A proposal's own notice tells whoever is asked when it's issued
-      next[x.key] = before[x.key] ?? { since: fresh ? x.since : at.toISOString(), told: x.kind === "choose" || !fresh ? asked.get(x.key)!.ids : [], sent: 0 };
+      const kept = before[x.key];
+      // A record without `told` counts as told, so nobody hears the same news twice
+      next[x.key] = kept ? { ...kept, told: kept.told ?? asked.get(x.key)!.ids } : { since: fresh ? x.since : at.toISOString(), told: x.kind === "choose" || !fresh ? asked.get(x.key)!.ids : [], sent: 0 };
     }
     const open = inSendingHours(at, t.timeZone);
     // The reminder each decision is due now, if any; a late pass sends one, never two together
@@ -193,6 +193,12 @@ export async function sweepDecisionReminders(k: Pick<Kit, "repo" | "d" | "cfg">,
       }
     }
     await repo.table.write([{ put: { PK: `T#${t.id}`, SK: ROW, items: next, at: at.toISOString() }, guard: { always: true as const } }]);
+  };
+  for (const t of await repo.listTenants()) {
+    // neon1 is its own client, and a free account has nothing to approve
+    if (isOwnOrg(t.slug) || isProspect(t) || t.status === "archived") continue;
+    // One organization's failure never holds up the others
+    await one(t).catch((e) => console.error(JSON.stringify({ level: "error", message: "decision reminders failed", tenant: t.id, error: String(e).slice(0, 200) })));
   }
   return { sent, alerted };
 }

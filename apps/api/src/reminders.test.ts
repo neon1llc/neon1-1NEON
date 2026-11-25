@@ -175,6 +175,15 @@ describe("decision reminders", () => {
     expect(mine().length).toBeGreaterThan(0);
   });
 
+  it("reads a record that has no list of who was told, without repeating the news", async () => {
+    const { p } = await finishHandover(at(1, 14));
+    await repo.table.write([{ put: { PK: `T#${p.tenantId}`, SK: "REMIND#decisions", items: { [`accept:${p.id}`]: { since: at(1, 14).toISOString(), announced: true, sent: 0 } } }, guard: { always: true } }]);
+    await pass(at(1));
+    expect(mine()).toHaveLength(0);
+    await pass(at(4));
+    expect(mine().length).toBeGreaterThan(0);
+  });
+
   it("tries again when the mail service refuses", async () => {
     await finishHandover(at(1, 14));
     const send = mailer.send.bind(mailer);
