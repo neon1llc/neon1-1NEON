@@ -17,9 +17,12 @@ export function PageIndex({ within }: { within: string }) {
     void import(/* @vite-ignore */ SHARED).then((m: Shared) => {
       const doc = document.querySelector(within);
       if (gone || !doc) return;
+      const barFoot = () => document.querySelector("header.top, header.n1-bar")?.getBoundingClientRect().bottom ?? 0;
       const items = [...doc.querySelectorAll("h2")].map((el) => ({ el, name: el.textContent?.trim() ?? "" })).filter((i) => i.name);
-      // Only a document at least two screens long is worth an index; the line sits at the foot of whichever bar is showing
-      remove = m.pageIndex(items, { end: doc, screens: 2, top: () => document.querySelector("header.top, header.n1-bar")?.getBoundingClientRect().bottom ?? 0 });
+      // A section picked from the index lands clear of the bar
+      for (const { el } of items) (el as HTMLElement).style.scrollMarginTop = `${Math.round(barFoot()) + 16}px`;
+      // A document shorter than a screen and a half needs no index; the line sits at the foot of whichever bar is showing
+      remove = m.pageIndex(items, { end: doc, screens: 1.5, top: barFoot });
     }).catch(() => undefined);
     return () => { gone = true; remove?.(); };
   }, [within]);

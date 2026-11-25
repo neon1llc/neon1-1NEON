@@ -18,4 +18,4 @@ A component here overrides a step only where it must, with a comment saying why.
 
 The wordmark (`Wm`, neon1.tech's `.wm` rule) is for branding only: the public bar's logo, the menu's neon1.tech link, and letterheads. Everywhere else "neon1" is plain text at the text's size.
 
-Long documents (the legal pages, the service agreement, a proposal) take the site's section index through `components/PageIndex.tsx`, which loads `shared/page-index.js`. It shows only on three or more sections over two screens. Working screens such as Home and Board don't take it.
+Long documents (the legal pages, the service agreement, a proposal) take the site's section index through `components/PageIndex.tsx`, which loads `shared/page-index.js`. It shows only on three or more sections over a screen and a half. Working screens such as Home and Board don't take it.
