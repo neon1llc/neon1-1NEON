@@ -10,8 +10,6 @@ import { createBrowserRouter, Navigate, RouterProvider } from "react-router";
 import { RouteError } from "./components/Reads.tsx";
 import { AskProvider, ToastProvider } from "./components/ui.tsx";
 import { AllLayout, OrgLayout, PlainLayout, Root } from "./components/Shell.tsx";
-import { Faqs } from "./pages/Faqs.tsx";
-import { Legal } from "./pages/Legal.tsx";
 import { NotFound } from "./pages/NotFound.tsx";
 import { BASE_PATH, DEMO, devUser, LIVE } from "./lib/api.ts";
 import { setPublicNeo, type PublicNeo } from "./lib/publicNeo.ts";
@@ -22,7 +20,6 @@ import { aimDropdowns, applyMotion, keepPageWithAddress, quietSkippedTransitions
 import { setCache, setNavigate } from "./lib/nav.ts";
 import { keyFirstEntry } from "./lib/scrollmemory.ts";
 import { offline } from "./lib/reads.ts";
-import { Example } from "./pages/Example.tsx";
 import "./styles/app.css";
 import "./styles/sentinel.css";
 
@@ -52,17 +49,21 @@ if (LIVE) {
 }
 
 
-// Signed-in pages load on first visit, so the sign-in screen and the public pages don't download the
-// whole app first. Each module is fetched once; while it loads, the page in view stays put
-const page = <K extends string>(load: () => Promise<Record<K, () => React.ReactNode>>, name: K) => () =>
-  load().then((m) => ({ Component: m[name] }));
-
-
 // Data stays fresh for 10 seconds. Only a dropped connection retries on its own (twice); an HTTP answer
 // or a malformed reply is shown at once, with the page's own Try again
 const queries = new QueryClient({
   defaultOptions: { queries: { staleTime: 10_000, retry: (n, e) => n < 2 && offline(e) } },
 });
+
+
+// Pages load on first visit, so the sign-in screen doesn't download the whole app, the sample project,
+// or the legal texts first. Each module is fetched once; while it loads, the page in view stays put
+const page = <K extends string>(load: () => Promise<Record<K, () => React.ReactNode>>, name: K) => () =>
+  load().then((m) => ({ Component: m[name] }));
+
+// One page serves the four legal documents
+const legal = (doc: "privacy" | "terms" | "cookies" | "agreement") => () =>
+  import("./pages/Legal.tsx").then(({ Legal }) => ({ Component: () => <Legal doc={doc} /> }));
 
 
 // Routes. /o/:slug is one organization, /all is the operator's read-only view, /me is the profile.
@@ -71,12 +72,12 @@ const queries = new QueryClient({
 const router = createBrowserRouter(
   [
     // Public pages: no sign-in needed, so they sit outside Root's gate
-    { path: "privacy", element: <Legal doc="privacy" />, errorElement: <RouteError /> },
-    { path: "terms", element: <Legal doc="terms" />, errorElement: <RouteError /> },
-    { path: "cookies", element: <Legal doc="cookies" />, errorElement: <RouteError /> },
-    { path: "agreement", element: <Legal doc="agreement" />, errorElement: <RouteError /> },
-    { path: "faqs", element: <Faqs />, errorElement: <RouteError /> },
-    { path: "example", element: <Example />, errorElement: <RouteError /> },
+    { path: "privacy", lazy: legal("privacy"), errorElement: <RouteError /> },
+    { path: "terms", lazy: legal("terms"), errorElement: <RouteError /> },
+    { path: "cookies", lazy: legal("cookies"), errorElement: <RouteError /> },
+    { path: "agreement", lazy: legal("agreement"), errorElement: <RouteError /> },
+    { path: "faqs", lazy: page(() => import("./pages/Faqs.tsx"), "Faqs"), errorElement: <RouteError /> },
+    { path: "example", lazy: page(() => import("./pages/Example.tsx"), "Example"), errorElement: <RouteError /> },
     { path: "faq", element: <Navigate to="/faqs" replace /> },
     { path: "help", element: <Navigate to="/faqs" replace /> },
     {
