@@ -13,6 +13,12 @@ const deviceDark = () => matchMedia("(prefers-color-scheme: dark)").matches;
 const still = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 
+// The tab-size 1NEON rings in one color, so one drawing serves both modes without a file for each
+const tabIcon = (color: string) => `data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="${color}" stroke-width="6">` +
+  [5, 16.5, 28].map((r) => `<circle cx="32" cy="32" r="${r}"/>`).join("") + "</svg>")}`;
+
+
 /** Apply a theme to the page; with no attribute the styles show awake */
 export function applyTheme(theme: string) {
   // Named looks map to the existing light/dark CSS values; data-look retains the public name
@@ -34,9 +40,9 @@ export function isDark() {
 function syncDark() {
   const dark = isDark();
   document.documentElement.classList.toggle("n1-dark", dark);
-  // The tab icon follows the app's theme, not just the device's: matrix green on dark, brand green on awake
+  // The tab icon follows the app's mode, not just the device's: matrix green on dark, brand green on light
   const icon = document.getElementById("favicon") as HTMLLinkElement | null;
-  if (icon) icon.href = dark ? "/favicon-matrix.svg" : "/favicon-awake.svg";
+  if (icon) icon.href = tabIcon(dark ? "#6CFFA8" : "#327641");
 }
 
 
