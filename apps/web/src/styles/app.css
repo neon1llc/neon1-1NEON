@@ -1125,7 +1125,11 @@ body:has(.shell.example) { scroll-behavior: smooth; }
 .profile-section { display: grid; gap: var(--sp-3); }
 .profile-section .card-h { margin: 0 0 var(--sp-0); }
 /* On a phone the labels wrap, so both switches stay on screen */
-@media (max-width: 640px) { .notify-table td, .notify-table thead th + th { width: 52px; } }
+@media (max-width: 640px) {
+  .notify-table td, .notify-table thead th + th { width: 52px; }
+  .notify-table th { overflow-wrap: anywhere; }
+  .notify-table td, .notify-table thead th + th { overflow-wrap: normal; }
+}
 @media (pointer: coarse) {
   .notify-table .notify-hit { min-width: 44px; min-height: 44px; }
   .notify-table .notify-hit input { width: 31.5px; height: 31.5px; }
