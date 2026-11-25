@@ -4,6 +4,7 @@
 import { agreementCovers, AGREEMENT_EDITION } from "./agreement.ts";
 import { revisions, priceCheckDue } from "./proposal.ts";
 import { PurchaseFields, type Item, type Project, type Tenant } from "./model.ts";
+import { isQuickFix } from "./defaults.ts";
 
 /** One decision only the client can make. `since` is when it became ready to decide */
 export interface ClientDecision {
@@ -21,7 +22,7 @@ export const REMIND_BUSINESS_DAYS = [3, 7] as const;
 const latest = (list: { updatedAt: string }[]) => list.map((i) => i.updatedAt).sort().at(-1)!;
 
 /** The decisions waiting in one project; `today` is a date in the organization's time zone */
-export function projectDecisions(p: Pick<Project, "id" | "key">, items: Item[], today: string): ClientDecision[] {
+export function projectDecisions(p: Pick<Project, "id" | "key" | "template">, items: Item[], today: string): ClientDecision[] {
   const base = { projectId: p.id, projectKey: p.key };
   const out: ClientDecision[] = [];
   // An issued proposal with an option that can be approved as issued. A lapsed price check is neon1's turn
@@ -29,7 +30,7 @@ export function projectDecisions(p: Pick<Project, "id" | "key">, items: Item[], 
   if (rev && !priceCheckDue(rev.p, today) && !items.some((i) => i.kind === "option" && i.status === "approved")) {
     const issued = new Map(rev.p.snapshot.options.map((o) => [o.id, o.version]));
     if (items.some((i) => i.kind === "option" && i.status === "proposed" && issued.get(i.id) === i.version)) {
-      out.push({ ...base, key: `choose:${rev.id}`, kind: "choose", title: `Choose an option in ${rev.title}`, since: rev.createdAt });
+      out.push({ ...base, key: `choose:${rev.id}`, kind: "choose", title: isQuickFix(p) ? `Approve ${rev.title.replace("Proposal", "Quote")}` : `Choose an option in ${rev.title}`, since: rev.createdAt });
     }
   }
   // A finished handover waits for a recorded acceptance; silence never accepts it

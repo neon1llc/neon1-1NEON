@@ -61,6 +61,13 @@ describe("a proposal waiting on a choice", () => {
     expect(projectDecisions(p, items, "2099-01-01").map((x) => x.kind)).not.toContain("choose");
   });
 
+  it("calls a quick fix's proposal a quote", async () => {
+    const p = (await repo.listProjects(s.acme.id)).find((x) => x.key === "FLOW-1")!;
+    const items = await repo.listItems(p.tenantId, p.id);
+    const today = new Date().toISOString().slice(0, 10);
+    expect(projectDecisions({ ...p, template: "quick_fix" }, items, today).find((x) => x.kind === "choose")!.title).toMatch(/^Approve Quote \d{4}-r1$/);
+  });
+
   it("also waits on the agreement signature until one covers the work", () => {
     const choice = [{ key: "choose:r", kind: "choose" as const, title: "Choose", since: "2027-03-01T00:00:00Z" }];
     expect(signatureDecision({ agreements: [] }, choice)?.kind).toBe("sign");
