@@ -16,6 +16,7 @@
 - Names follow one rule on sign-up, your profile, and invitations: any language, with spaces, apostrophes, hyphens, and periods. Hidden characters, mixed alphabets in one word, and names that pass for neon1 or its staff are refused, with the reason under the field. A name saved earlier stays until you change it.
 
 ### Fixed
+- On a project, People stays open until the change saves, so confirming it's you no longer loses who you picked.
 - In Outlook's dark mode, the quiet text in 1NEON's emails is readable.
 - On a phone, the profile's email and text notification switches stay on screen.
 - Deleting a free account also removes its chat with neon1.

@@ -412,11 +412,16 @@ function Overview({ project: p, items, docs }: { project: Project; items: Item[]
       if ("summary" in patch || "outcome" in patch || "name" in patch) setEditing(false);
       setConflict(undefined);
       toast("Saved");
+      refresh();
+      return true;
     } catch (e) {
-      if (e instanceof HttpError && e.status === 409 && e.body.current) setConflict({ current: e.body.current as Project, patch });
+      const newer = e instanceof HttpError && e.status === 409 && Boolean(e.body.current);
+      if (newer) setConflict({ current: (e as HttpError).body.current as Project, patch });
       else toast(problem(e));
+      refresh();
+      // True once the choice is saved or handed to the "which to keep" dialog
+      return newer;
     }
-    refresh();
   };
   // Archive after a yes; restore at once
   const ask = useAsk();
@@ -556,7 +561,8 @@ function Overview({ project: p, items, docs }: { project: Project; items: Item[]
         </form>
       </Dialog>
       {/* Who's on the project and in what role; the decision maker approves options */}
-      <PeopleDialog open={peopleOpen} onClose={() => setPeopleOpen(false)} people={p.people} version={p.version} onSave={(list, version) => { setPeopleOpen(false); void save(version, { people: list }); }} />
+      {/* Stays open until it saves, so a "Confirm it's you" check in the way never loses the choice */}
+      <PeopleDialog open={peopleOpen} onClose={() => setPeopleOpen(false)} people={p.people} version={p.version} onSave={(list, version) => void save(version, { people: list }).then((done) => { if (done) setPeopleOpen(false); })} />
       {/* Keep mine saves the same change over their version; Take theirs drops it */}
       <ConflictDialog
         open={Boolean(conflict)}
