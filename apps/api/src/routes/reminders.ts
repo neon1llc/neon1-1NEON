@@ -67,7 +67,7 @@ export function optionsEmail(o: { org: string; projectKey: string; proposal: str
     sub: o.org,
     preheader: `${o.projectKey}: ${summary}.`,
     intro: [`${summary}.`, ...(o.named ? [] : [NAME_ONE])],
-    facts: [{ k: "Project", v: o.projectKey, mono: true }, { k: o.quick ? "Quote" : "Proposal", v: o.proposal }, ...(o.quick ? rows("For", o.after) : [...rows("Added", added), ...rows("Edited", edited), ...rows("Removed", removed)])],
+    facts: [{ k: "Project", v: o.projectKey, mono: true }, { k: o.quick ? "Quote" : "Proposal", v: o.proposal.replace(/^(Proposal|Quote) /, "") }, ...(o.quick ? rows("For", o.after) : [...rows("Added", added), ...rows("Edited", edited), ...rows("Removed", removed)])],
     action: { label: o.quick ? "Review the quote" : "Review the options", url: o.url },
     why: o.named ? `You're a decision maker for ${o.projectKey} on 1NEON.` : `You're an admin of ${o.org} on 1NEON.`,
     settings: { text: "Choose your emails in your 1NEON profile, under Notifications.", url: o.settingsUrl, label: "Notification settings" },
