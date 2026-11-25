@@ -9,9 +9,10 @@ import "driver.js/dist/driver.css";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router";
 import { api } from "../lib/api.ts";
-import type { Me } from "../lib/types.ts";
+import type { Me, OrgResponse } from "../lib/types.ts";
 import { Dialog } from "./ui.tsx";
 import { lessMotion } from "../lib/motion.ts";
+import { limitedProspect } from "../lib/prospect.ts";
 
 
 // --- What each page is for --------------------------------------------------------
@@ -86,7 +87,7 @@ export const GUIDES: Record<PageKey, Guide> = {
   needs: {
     title: "Needs",
     purpose: "What's wanted, the options, and the decision.",
-    howto: ["Anyone here can add a request and comment.", "Send a file neon1 asked for with Upload beside it.", "Compare options, then Read the proposal for the full terms.", "To approve, type your name as your signature. That's for the decision maker, or a client admin if none is named, once your organization signs the service agreement."],
+    howto: ["Anyone here can add a request and comment.", "Send a file neon1 asked for with Upload beside it.", "Compare options, then Read the proposal for the full terms. A quick fix has one quote instead.", "To approve, type your name as your signature. That's for the decision maker, or a client admin if none is named, once your organization signs the service agreement."],
     tour: [{ at: "next-step", title: "Next step", text: "What has to happen now, and who it's waiting on." }, { at: "layers", title: "The four layers", text: "Needs, Execute, Observe, and Normalize. Overview sums them up." }],
   },
   execute: {
@@ -131,7 +132,7 @@ export const GUIDES: Record<PageKey, Guide> = {
   files: {
     title: "Files",
     purpose: "Every file shared in this organization.",
-    howto: ["Choose where to file before you upload: the organization, a project, or one of its layers.", "Up to 100 MB each. A free account holds 10 files, 10 MB each and 50 MB in all.", "Move refiles a file. Whoever uploaded it, or an admin, can delete it.", "To mark up a proposal, upload your edited Word copy here."],
+    howto: ["Choose where to file before you upload: the organization, a project, or one of its layers.", "Up to 100 MB each.", "Move refiles a file. Whoever uploaded it, or an admin, can delete it.", "To mark up a proposal, upload your edited Word copy here."],
     tour: [{ at: "upload", title: "Upload", text: "Drop a file here, or choose one." }],
   },
   insights: {
@@ -170,8 +171,8 @@ export const GUIDES: Record<PageKey, Guide> = {
   },
   proposal: {
     title: "Proposal",
-    purpose: "The options and their terms as one document.",
-    howto: ["You can read a draft. Approval opens once neon1 issues it, and earlier revisions stay readable.", "Print or save as PDF, or download an issued proposal as Word.", "To suggest changes, comment on an option or upload a marked-up Word copy to Files.", "Approve under Options on the project's Needs tab."],
+    purpose: "The proposal or quote as one document.",
+    howto: ["You can read a draft. Approval opens once neon1 issues it, and earlier revisions stay readable.", "Print or save as PDF. An issued proposal also downloads as Word.", "To suggest changes, comment on the option or quote.", "Approve on the project's Needs tab."],
     tour: [],
   },
   invoice: {
@@ -192,6 +193,19 @@ export const GUIDES: Record<PageKey, Guide> = {
     howto: ["Promote makes one a client. You can also suspend, keep, or delete an account, and pause sign-up."],
     tour: [],
   },
+};
+
+
+// A free account's own people see less on these pages, so their help differs
+export const FREE: Partial<Record<PageKey, { purpose?: string; howto: string[] }>> = {
+  home: { howto: ["Outline up to three projects, then ask for an assessment under Next step.", "On the calendar, choose a day to see it or add to it.", "Your account shows how long it's kept, with Keep it 30 more days and Download a copy."] },
+  project: { howto: ["Start with Next step.", "Each layer tab has its own help. Tap an item's title for its status, owner, due date, details, and comments.", "Ready for Execute shows what's left to outline. Everything in it is optional.", "Set health and post updates under How is it going?"] },
+  needs: { purpose: "What's wanted.", howto: ["Add requests and the details behind them. Tap an item's title to comment.", "Options and approvals start once we're working together."] },
+  execute: { purpose: "The work: tasks, milestones, and changes.", howto: ["Tap an item's title for its owner, due date, details, and comments."] },
+  normalize: { howto: ["Tick handover steps as they're done."] },
+  people: { howto: ["Inviting people starts once we're working together."] },
+  files: { howto: ["Choose where to file before you upload: the organization, a project, or one of its layers.", "10 files, 10 MB each and 50 MB in all.", "Whoever uploaded a file, or an admin, can delete it."] },
+  settings: { purpose: "Your organization: its details, data, and board stages.", howto: ["Admins can change where it's based and its website.", "Admins download a copy of everything under Your data.", "Board stages open up once we're working together."] },
 };
 
 
@@ -346,7 +360,10 @@ export function HelpProvider({ me, children }: { me: Me; children: ReactNode }) 
   }, [me.user.tour]);
 
   const value = useMemo(() => ({ open: () => setSheet(true), welcomeTour }), [welcomeTour]);
-  const g = GUIDES[key];
+  // The organization in the address, once loaded, says whether this person sees the free-account page
+  const orgId = me.orgs.find((o) => o.slug === /^\/o\/([^/]+)/.exec(loc.pathname)?.[1])?.id;
+  const free = limitedProspect(orgId ? qc.getQueryData<OrgResponse>(["org", orgId])?.org : undefined, me.operator);
+  const g = { ...GUIDES[key], ...(free ? FREE[key] : undefined) };
   return (
     <HelpCtx.Provider value={value}>
       {children}
