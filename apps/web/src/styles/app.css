@@ -2217,6 +2217,11 @@ select:not(:disabled), select:not(:disabled)::picker-icon, select:not(:disabled)
 @media (max-width: 640px) {
   .side .menu-footer { height: calc(var(--top-h) + env(safe-area-inset-bottom)); min-height: calc(var(--top-h) + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); }
 }
+/* A touch screen's 44px rows can be taller than the screen (below about 875px), so the open menu's footer stays at the
+   screen's bottom while the rows scroll under it. A sticky edge stops inside the menu's padding, so it clears --under */
+@media (pointer: coarse) {
+  .side.open .menu-footer { position: sticky; bottom: 0; z-index: 2; background: var(--frame); }
+}
 /* The profile's avatar is already a circle: the current page's green fill must not box it */
 .side .nav a.active .ico.av-box { background: none; border-color: transparent; }
 /* Lowercase monospace sits a hair low beside bug and feedback icons (open menu only; the rail's labels are hidden) */

@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+### Fixed
+- On a touch screen the open menu's footer (neon1.tech and the style switch) stays in view while the rows scroll.
+
 ### Changed
 - Production sign-in codes come from "1NEON Security" (security@notify.neon1.tech), the same sender as the sign-in method notices; applies with the next infra apply.
 

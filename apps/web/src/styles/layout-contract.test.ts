@@ -147,3 +147,9 @@ describe("the rail's footer mark", () => {
     expect(css).toMatch(/\.side \.ico\.site-mark \{ width: var\(--box\); height: var\(--box\); \}/);
   });
 });
+
+describe("the open menu on a short touch screen", () => {
+  it("keeps its footer in view while the rows scroll", () => {
+    expect(css).toMatch(/\.side\.open \.menu-footer \{ position: sticky; bottom: 0; z-index: 2; background: var\(--frame\); \}/);
+  });
+});
