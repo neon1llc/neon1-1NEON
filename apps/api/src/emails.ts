@@ -38,9 +38,9 @@ export function inviteEmail(opts: { orgName: string; inviter: string; url: strin
  * {####} placeholder; the browser demo passes a real one */
 export function signInCodeEmail(opts: { code: string; portal: string; at?: Date; zone?: string }) {
   // Mail apps that offer to copy a code (Gmail's "Code requested") look for a plain sentence naming the
-  // code; the preheader and the first line both say it that way. Cognito fills in the code in the body
-  // only, so the subject can't carry it
-  return codeEmail({ kind: "sign-in code", title: "Your sign-in code", says: "Your 1NEON sign-in code is", lead: "Use it to sign in to 1NEON.", subject: "Your 1NEON sign-in code", code: opts.code, portal: opts.portal, at: opts.at, zone: opts.zone, action: "Sign in with this code" });
+  // code; the preheader and the first line both say it that way. The subject carries the code too, so
+  // mail apps don't stack every code into one conversation, where an old one is easy to grab
+  return codeEmail({ kind: "sign-in code", title: "Your sign-in code", says: "Your 1NEON sign-in code is", lead: "Use it to sign in to 1NEON.", subject: `Your 1NEON sign-in code is ${opts.code}`, code: opts.code, portal: opts.portal, at: opts.at, zone: opts.zone, action: "Sign in with this code" });
 }
 
 

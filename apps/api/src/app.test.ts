@@ -123,10 +123,10 @@ describe("email", () => {
     expect(mail.text).toContain("Why you got this:");
   });
 
-  it("puts the sign-in code in one selectable piece under a plain subject", () => {
+  it("puts the sign-in code in one selectable piece with the code in the subject", () => {
     const event = { triggerSource: "CustomMessage_Authentication", request: { codeParameter: "{####}", userAttributes: {} }, response: {} } as unknown as CustomMessageTriggerEvent;
     const out = message(event, new Date("2026-11-06T20:22:00Z"));
-    expect(out.response.emailSubject).toBe("Your 1NEON sign-in code");
+    expect(out.response.emailSubject).toBe("Your 1NEON sign-in code is {####}");
     expect(out.response.emailMessage).toMatch(/user-select:all">\{####\}<\/span>/);
     expect(out.response.emailMessage).toContain("Your 1NEON sign-in code is {####}. Use it to sign in to 1NEON.");
     expect(out.response.emailMessage).toContain("Nov 6, 2026, 3:22 PM EST (20:22 UTC)");
