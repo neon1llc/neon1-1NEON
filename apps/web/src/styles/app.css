@@ -500,7 +500,7 @@ html:has(.signin), html:has(.signin) body { background: var(--void); color-schem
 }
 
 /* Plain labels in forms and dialogs */
-form label:not(.card):not(.chip):not(.field):not(.remember):not(.sms-consent):not(.field-label):not(.notify-kind), dialog label { display: block; font: var(--fs-xs) var(--mono); color: var(--muted); margin-bottom: var(--sp-1); }
+form label:not(.card):not(.chip):not(.field):not(.remember):not(.sms-consent):not(.field-label):not(.notify-kind):not(.agree-opt), dialog label:not(.agree-opt) { display: block; font: var(--fs-xs) var(--mono); color: var(--muted); margin-bottom: var(--sp-1); }
 fieldset legend { font: var(--fs-xs) var(--mono); color: var(--muted); }
 .chip.on { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 

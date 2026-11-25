@@ -236,7 +236,7 @@ export function ChoiceFields({ value, onChange, id }: { value: ChoiceValues; onC
         <fieldset key={c.id}>
           <legend>{c.question}</legend>
           {c.options.map((o) => (
-            <label key={o.value}>
+            <label key={o.value} className="agree-opt">
               <input type="radio" name={`${id}-${c.id}`} value={o.value} checked={value[c.id] === o.value} onChange={() => onChange({ ...value, [c.id]: o.value } as ChoiceValues)} />
               <span><b>{o.label}</b>{o.hint && <span className="muted">. {o.hint}</span>}</span>
             </label>
