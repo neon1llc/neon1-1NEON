@@ -197,3 +197,11 @@ describe("Neo's launcher in the portal", () => {
     expect(css).toMatch(/\.n1chat-launch:not\(\.n1chat-light\):hover \{ background: linear-gradient\(var\(--accent-soft\), var\(--accent-soft\)\), var\(--neo-fill\); \}/);
   });
 });
+
+describe("the end of a portal page", () => {
+  it("leaves Neo's button its own room, one gap above it, on a phone and a desktop", () => {
+    expect(css).toContain("--neo-clear: calc(var(--n1chat-bottom, max(var(--neo-gap), env(safe-area-inset-bottom))) + var(--neo-size) + var(--neo-gap)); padding-bottom: var(--neo-clear); }");
+    expect(css).toContain(":root:has(.tabbar) { --n1chat-bottom: calc(var(--top-h) + env(safe-area-inset-bottom) + var(--neo-gap)); }");
+    expect(css).not.toMatch(/\.content \{ padding-bottom: calc\(84px/);
+  });
+});

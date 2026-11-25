@@ -547,7 +547,6 @@ fieldset legend { font: var(--fs-xs) var(--mono); color: var(--muted); }
   /* Phones keep the compact rail, and the tab bar starts where it ends */
   .shell.mini .side:not(.open) { --padl: calc(6px + env(safe-area-inset-left)); --padr: 6px; }
   .shell.mini .tabbar { left: calc(var(--rail) + env(safe-area-inset-left)); }
-  .content { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
   .tabbar { box-sizing: border-box; display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; inset: auto 0 calc(-1 * var(--under)) 0; z-index: 30; height: calc(var(--top-h) + env(safe-area-inset-bottom) + var(--under)); background: var(--frame); border-top: 1px solid var(--frame-line); padding: 0 4px calc(env(safe-area-inset-bottom) + var(--under)); }
   /* The bar's own box runs --under past the screen's bottom edge. Some phone browsers (DuckDuckGo on
      iPhone) pin bottom:0 above their floating toolbar yet draw the page below it, and a painted overhang
@@ -1264,7 +1263,7 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 .option:has(input[type="radio"]:focus-visible) { outline: 2px solid var(--focus); outline-offset: 3px; }
 /* 1NEON's phone tab bar: Neo's launcher and window sit above it, safe area included (AUTH-UI01) */
 /* Only where that bar is on screen: the sign-in page has none, so Neo stays on the rain controls' line */
-@media (max-width: 640px) { :root:has(.tabbar) { --n1chat-bottom: calc(72px + env(safe-area-inset-bottom)); } }
+@media (max-width: 640px) { :root:has(.tabbar) { --n1chat-bottom: calc(var(--top-h) + env(safe-area-inset-bottom) + var(--neo-gap)); } }
 
 
 /* --- 1NEON's mark leads Home (2026-11-11) ---
@@ -2597,3 +2596,10 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
    board's text never shows through it. Hover tints that ground instead of replacing it */
 :root body:has(.shell) .n1chat-launch:not(.n1chat-light) { background: var(--neo-fill); }
 :root body:has(.shell) .n1chat-launch:not(.n1chat-light):hover { background: linear-gradient(var(--accent-soft), var(--accent-soft)), var(--neo-fill); }
+
+/* Every portal page ends with room for Neo's button: scrolled to the bottom, the content stops one gap above it, the same
+   gap the button keeps from the screen's side and from the edge or the tab bar under it */
+:root { --neo-gap: 16px; --neo-size: 48px; }
+.shell:not(.example) .content { --neo-clear: calc(var(--n1chat-bottom, max(var(--neo-gap), env(safe-area-inset-bottom))) + var(--neo-size) + var(--neo-gap)); padding-bottom: var(--neo-clear); }
+/* The last thing on a page keeps no space of its own under it, so the gap above the button stays that one gap */
+.shell:not(.example) .content :is(.page-in > :last-child, .page-in > :last-child > :last-child, .page-in > :last-child > :last-child > :last-child) { margin-bottom: 0; }
