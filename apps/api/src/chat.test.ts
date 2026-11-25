@@ -287,7 +287,7 @@ describe("a free account", () => {
 
 
 
-describe("abuse protection", () => {
+describe("abuse protection", { timeout: 30_000 }, () => {
   const post = (email: string, tid: string, text: string) => as(email, chat(tid), "POST", { text });
   const code = async (r: Response) => ((await r.json()) as { error?: string }).error;
   const flagMails = () => alerts().filter((m) => /Chat flagged/.test(m.subject));

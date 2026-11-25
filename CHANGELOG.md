@@ -2,16 +2,22 @@
 
 1NEON releases use `v0.MINOR.PATCH` until the first complete release, v1.0.0 (see neon1's [versioning standard](https://neon1.tech/knowledge/standards/versioning/)). Each release is tagged on the commit that shipped it, once it's live.
 
-## Unreleased
+## v0.28.0 - 2026-11-24
 
 ### Added
 - The service agreement, a proposal, and the legal pages show where you are: a section index at the right edge, or a thin line under the bar on a phone.
+- The open menu's profile row ends in a Sign out button.
+- A test holds the API's role to both plain and raw mail permissions, so a report with screenshots can't silently stop sending again.
+- Service agreement edition 2.3: as a client admin signs, they choose about anonymous case studies (yes, decide later, no) and the client list (ask first, yes, no), and can change either on the agreement page. A 2.1 signature still covers approvals, with case studies at decide later until an admin chooses.
+- A handover acceptance can carry a few words about the work, quoted only if the client ticks it.
+- Before a handover, neon1 is reminded to take each starting number again.
 
 ### Changed
 - Every portal page ends with room for Neo's button, so scrolled to the bottom it covers nothing.
 - In dark looks, Neo's button in the portal has the same opaque ground as on neon1.tech, so page text no longer shows through it.
 - The menu's Sign out takes two taps: the icon opens into a labeled button, which closes again after four seconds, on Escape, or on a tap elsewhere. The profile row's highlight now holds both.
 - On a desktop (1200px and wider, with a mouse), reading text is 16px instead of 15px, and the rest of the type, controls, and spacing grow with it. Phones and tablets are unchanged.
+- Production sign-in codes come from "1NEON Security" (security@notify.neon1.tech), the same sender as the sign-in method notices.
 
 ### Fixed
 - Page help (?) matches each page again. The proposal, invoice, service agreement, and Potentials pages have their own, where the agreement used to show Home's. Free accounts see help for what they have, and quick-fix quotes are covered. Its closing links are shorter.
@@ -19,16 +25,6 @@
 - On a phone, the mini rail's group rules stop inside the rail, inset the same on both sides as in the open menu.
 - The menu's edge and rules, the top bar's line, and the tab bar's line share one color, `--frame-line`, in every look.
 - On a touch screen the open menu's footer (neon1.tech and the style switch) stays in view while the rows scroll.
-
-### Changed
-- Production sign-in codes come from "1NEON Security" (security@notify.neon1.tech), the same sender as the sign-in method notices; applies with the next infra apply.
-
-### Added
-- The open menu's profile row ends in a Sign out button.
-- A test holds the API's role to both plain and raw mail permissions, so a report with screenshots can't silently stop sending again.
-- Service agreement edition 2.3: as a client admin signs, they choose about anonymous case studies (yes, decide later, no) and the client list (ask first, yes, no), and can change either on the agreement page. A 2.1 signature still covers approvals, with case studies at decide later until an admin chooses.
-- A handover acceptance can carry a few words about the work, quoted only if the client ticks it.
-- Before a handover, neon1 is reminded to take each starting number again.
 
 ## v0.27.3 - 2026-11-24
 
