@@ -8,6 +8,7 @@
 - Production sign-in codes come from "1NEON Security" (security@notify.neon1.tech), the same sender as the sign-in method notices; applies with the next infra apply.
 
 ### Added
+- A test holds the API's role to both plain and raw mail permissions, so a report with screenshots can't silently stop sending again.
 - Service agreement edition 2.3: as a client admin signs, they choose about anonymous case studies (yes, decide later, no) and the client list (ask first, yes, no), and can change either on the agreement page. A 2.1 signature still covers approvals, with case studies at decide later until an admin chooses.
 - A handover acceptance can carry a few words about the work, quoted only if the client ticks it.
 - Before a handover, neon1 is reminded to take each starting number again.
