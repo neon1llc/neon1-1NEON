@@ -129,7 +129,7 @@ export function Markdown({ source, mark }: { source: string; mark?: RegExp }) {
         }
         if (b.kind === "table") {
           return (
-            <div key={`t${i}`} style={{ overflowX: "auto", position: "relative" }}>
+            <div key={`t${i}`} tabIndex={0} style={{ overflowX: "auto", position: "relative" }}>
               <table className="people">
                 <thead><tr>{b.head.map((c, j) => <th key={j}>{inline(c, j, mark)}</th>)}</tr></thead>
                 <tbody>{b.rows.map((r, ri) => <tr key={ri}>{r.map((c, j) => <td key={j}>{inline(c, ri * 100 + j, mark)}</td>)}</tr>)}</tbody>

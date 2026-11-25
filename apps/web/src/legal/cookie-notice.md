@@ -12,6 +12,8 @@ The website sets no cookies. Your browser keeps preferences on your device only.
 |---|---|---|
 | `neon1.rain` (local storage) | The rain settings you pick: grid or free, the characters, and pause | Until you clear it |
 | `n1.entries` (session storage) | How far down you had scrolled on each page in this tab's history, so Back, Forward, and reload land where you were | Until the tab closes |
+| `neon1.theme.shared` (local storage) | That you picked a look in this browser, so neon1.tech and 1NEON both follow it | Until you clear it |
+| `neon1.reload:` and a page's path (session storage) | That a page whose styles failed to load was already reloaded once, so it can't loop | Until the page loads cleanly or the tab closes |
 
 ## The 1NEON portal
 

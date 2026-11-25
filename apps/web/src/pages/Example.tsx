@@ -112,7 +112,7 @@ function storyOf(s: Scenario): Record<Layer, { lead: string; cards: Card[] }> {
 /** A table the work produced, drawn in the portal's own table style */
 function PieceTable({ t }: { t: Table }) {
   return (
-    <div className="piece-scroll">
+    <div className="piece-scroll" tabIndex={0}>
       <table className="piece-table">
         <thead><tr>{t.head.map((h) => <th key={h}>{h}</th>)}</tr></thead>
         <tbody>{t.rows.map((r, i) => <tr key={i}>{r.map((c, j) => <td key={j} className={typeof c === "number" ? "num" : undefined}>{c}</td>)}</tr>)}</tbody>

@@ -5,6 +5,8 @@
 ## Unreleased
 
 ### Fixed
+- Wide tables on the People page, the legal pages, and the sample project can be scrolled from the keyboard.
+- The cookie notice lists every item the site and portal save.
 - The menu's profile row shows your first name. A long one is cut with an ellipsis, so Sign out always stays inside the menu.
 
 ## v0.28.0 - 2026-11-24
