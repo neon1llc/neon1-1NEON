@@ -12,6 +12,7 @@ import { AwsTexter, CognitoDirectory, LambdaNotifier, PushoverPusher, S3Records,
 import { sweepSignups } from "../routes/signup.ts";
 import { finishPurges, sweepQuietProspects } from "../routes/prospects.ts";
 import { sweepOutlineNudges } from "../routes/nudges.ts";
+import { sweepDecisionReminders } from "../routes/reminders.ts";
 import { sweepRequests } from "../routes/requests.ts";
 import { StripePayments } from "../payments.ts";
 import { beforeDeadline, drainOutbox } from "../outbox.ts";
@@ -199,8 +200,10 @@ export const handler = async (event: Parameters<typeof http>[0] | { source?: str
     // One line per pass in CloudWatch's embedded metric format: counts and queue age only, never
     // addresses or bodies. Written to stdout directly, because the JSON log wrapper would hide the
     // metric directive inside its message field
-    process.stdout.write(`${JSON.stringify({ ...outboxMetrics(result, cfg.env), files, bugs, requests, signups, quiet, nudges, purges })}\n`);
-    return { ...result, files, bugs, requests, signups, quiet, nudges, purges };
+    // Decisions waiting on a client get their reminders once an hour
+    const reminders = Date.now() < end - 1_000 ? await beforeDeadline(sweepDecisionReminders({ repo, d: deps, cfg }), end).catch((e) => ({ error: (e as Error).name })) : undefined;
+    process.stdout.write(`${JSON.stringify({ ...outboxMetrics(result, cfg.env), files, bugs, requests, signups, quiet, nudges, purges, reminders })}\n`);
+    return { ...result, files, bugs, requests, signups, quiet, nudges, purges, reminders };
   }
   return http(event as Parameters<typeof http>[0], context);
 };

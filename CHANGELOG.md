@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+### Added
+- While a decision waits on a client (choosing an option, accepting a handover, agreeing to a purchase, or signing the agreement), the people who decide get an email when it's ready, then reminders on business days 3 and 7, with everything pending in one message. Reminders stop once it's answered, and neon1 is told after the second. Work is accepted only when someone records it.
+
 ### Changed
 - Text notices and text sign-in confirmation are off while consent and STOP handling are fixed and tested. Email notices, passkeys, and authenticator apps work as before.
 - The browser tab and home screen show the 1NEON rings. The tab icon follows the browser's light or dark.

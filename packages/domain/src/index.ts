@@ -21,3 +21,4 @@ export * from "./forms.ts";
 export * from "./outline.ts";
 export * from "./requests.ts";
 export * from "./chat.ts";
+export * from "./decisions.ts";

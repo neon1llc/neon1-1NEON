@@ -44,7 +44,7 @@ export const GUIDES: Record<PageKey, Guide> = {
   home: {
     title: "Home",
     purpose: "Your starting point: what needs you, and what changed lately.",
-    howto: ["Needs you lists what's waiting on you, most pressing first.", "With projects waiting for an assessment, ask for one under Next step.", "On the calendar, choose a day to see it. Editors can add leave, closures, meetings, and care plan dates."],
+    howto: ["Needs you lists what's waiting on you, most pressing first.", "While a decision waits on you, email reminds you after 3 and 7 business days.", "With projects waiting for an assessment, ask for one under Next step.", "On the calendar, choose a day to see it. Editors can add leave, closures, meetings, and care plan dates."],
     tour: [
       { at: "next-step-ask", title: "Next step", text: "Outline a project, then ask for an assessment of up to three. Add a note, then send. You can edit or withdraw it until it goes." },
       { at: "needs-you", title: "Needs you", text: "Things waiting on you: approvals, tasks, and files to send. Open one to act on it." },
