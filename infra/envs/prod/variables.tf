@@ -57,9 +57,9 @@ variable "malware_scan" {
 # On (Pradeep, 2026-11-09). Carriers deliver only once the toll-free registration is approved; turning
 # it off again hides texts in the profile and sends nothing
 variable "texts_live" {
-  description = "Offer text notices in the portal."
+  description = "Offer text notices in the portal. Off until consent and STOP handling are fixed and tested."
   type        = bool
-  default     = true
+  default     = false
 }
 
 

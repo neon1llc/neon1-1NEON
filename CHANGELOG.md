@@ -5,6 +5,7 @@
 ## Unreleased
 
 ### Changed
+- Text notices and text sign-in confirmation are off while consent and STOP handling are fixed and tested. Email notices, passkeys, and authenticator apps work as before.
 - The browser tab and home screen show the 1NEON rings. The tab icon follows the browser's light or dark.
 - Each sign-in email's subject says when it was sent, so mail apps keep codes apart and the newest is clear.
 - Sign-in downloads about a quarter less script: the FAQs, legal pages, and sample project load when opened.

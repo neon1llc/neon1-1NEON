@@ -90,7 +90,8 @@ module "api" {
   user_pool_id          = module.auth.user_pool_id
   user_pool_arn         = module.auth.user_pool_arn
   client_id             = module.auth.client_id
-  sms_number_arn        = module.sms.number_arn
+  # No sender, and so no permission to send, while texts are off
+  sms_number_arn        = var.texts_live ? module.sms.number_arn : ""
   sms_number            = module.sms.number
   sms_inbound_topic_arn = var.texts_live ? module.sms.inbound_topic_arn : ""
   texts_live            = var.texts_live
