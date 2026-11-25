@@ -1179,10 +1179,11 @@ body:has(.shell.example) { scroll-behavior: smooth; }
 .side .who-link { margin-top: 0; padding-top: 0; }
 /* The profile row is one highlight around the name and, in the open menu, its way out. Sign out rests as an icon and
    opens leftward into a labeled button, the icon fading out as the words fade in; its hit area is 44px either way */
-.who-row { display: flex; align-items: center; border-radius: var(--r-sm); }
+/* The row never grows past the menu: a long name gives up the room, cut with an ellipsis, so the way out stays in view */
+.who-row { display: flex; align-items: center; min-width: 0; border-radius: var(--r-sm); }
 .who-row:hover, .who-row:has(> .who-link.active) { background: var(--accent-soft); }
 .side .nav .who-row > a.who-link, .side .nav .who-row > a.who-link:is(:hover, .active) { flex: 1; min-width: 0; background: none; }
-.who-link .lbl { overflow: hidden; text-overflow: ellipsis; }
+.who-link .lbl { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .sign-out { position: relative; flex: none; width: 44px; height: calc(var(--row) - 8px); margin-right: var(--sp-1); padding: 0; border: 0; border-radius: var(--r-sm); background: none; color: var(--muted); cursor: pointer;
   transition: width var(--t-base) var(--ease), background-color var(--t-base) var(--ease), color var(--t-base) var(--ease); }
 .sign-out::after { content: ""; position: absolute; inset: min(0px, (var(--row) - 52px) / 2) 0; }

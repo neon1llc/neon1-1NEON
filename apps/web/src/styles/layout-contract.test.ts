@@ -187,6 +187,9 @@ describe("the menu's sign out", () => {
     expect(button).toContain("onMouseDown={(e) => e.preventDefault()}");
     expect(button).toMatch(/e\.timeStamp - armedAt >= SETTLE_MS/);
     expect(css).toMatch(/\.sign-out\.armed \{ width: 104px;/);
+    // A long name truncates; without these the menu's grid grows the row and pushes the button out of sight
+    expect(css).toMatch(/\.who-row \{[^}]*min-width: 0;/);
+    expect(css).toContain(".who-link .lbl { min-width: 0; overflow: hidden; text-overflow: ellipsis; }");
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\) \{ \.sign-out, \.sign-out > \* \{ transition: none; \} \}/);
   });
 });
