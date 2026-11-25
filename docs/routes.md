@@ -19,3 +19,5 @@ Notes:
 - Code sets the tags after the app loads, so search engines that render JavaScript see them. Every route serves the same `index.html`, whose raw HTML has only the generic title and description. Route-specific tags in the raw HTML need a pre-rendered page or an edge rewrite for `/1NEON/example` and `/1NEON/faqs`, which belongs in neon1-site's hosting setup.
 - Keep `apps/web/src/help/faqs.md` and `neon1-corpus/corpus/faq/1neon-help.md` word for word (links aside), since the knowledge page is canonical. Anchors use the same rule in both (`lib/faq.ts` `slug`).
 - The policy pages match their knowledge-center copies, which are canonical.
+
+`/1NEON/lab/workflows` is a clickable design prototype of project workflows. It exists only in local and dev builds (`VITE_LAB`), keeps made-up data in memory, and calls no API.

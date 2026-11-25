@@ -78,6 +78,8 @@ const router = createBrowserRouter(
     { path: "agreement", lazy: legal("agreement"), errorElement: <RouteError /> },
     { path: "faqs", lazy: page(() => import("./pages/Faqs.tsx"), "Faqs"), errorElement: <RouteError /> },
     { path: "example", lazy: page(() => import("./pages/Example.tsx"), "Example"), errorElement: <RouteError /> },
+    // Clickable design prototypes: local and dev builds only, left out of a production build
+    ...(import.meta.env.DEV || import.meta.env.VITE_LAB ? [{ path: "lab/workflows", lazy: page(() => import("./lab/WorkflowLab.tsx"), "WorkflowLab"), errorElement: <RouteError /> }] : []),
     { path: "faq", element: <Navigate to="/faqs" replace /> },
     { path: "help", element: <Navigate to="/faqs" replace /> },
     {
