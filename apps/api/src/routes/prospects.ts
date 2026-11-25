@@ -13,6 +13,7 @@ import { body, check, fail, need, now, who, type Env } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
 import { sentAt, type SenderKind } from "../mail.ts";
 import { factMail, subjectOf } from "../lib/factmail.ts";
+import { keys } from "../store/repo.ts";
 import type { WriteOp } from "../store/types.ts";
 import { SIGNUP_PK, SIGNUP_SWITCH, signupOpen } from "./signup.ts";
 
@@ -133,7 +134,7 @@ async function take(k: PurgeKit, t: Tenant): Promise<Inventory> {
   const { repo, cfg } = k;
   const tid = t.id;
   const projects = await repo.listProjectsWithTrash(tid);
-  const pks = [`T#${tid}`, `T#${tid}#AUDIT`, `T#${tid}#P#_`, ...projects.map((p) => `T#${tid}#P#${p.id}`)];
+  const pks = [`T#${tid}`, `T#${tid}#AUDIT`, `T#${tid}#P#_`, ...projects.map((p) => `T#${tid}#P#${p.id}`), keys.chat(tid).PK];
   const files: string[] = [];
   for (const pid of [undefined, ...projects.map((p) => p.id)]) files.push(...(await repo.listDocs(tid, pid)).map((x) => x.key));
   const accounts: Inventory["accounts"] = [];

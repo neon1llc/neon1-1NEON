@@ -370,6 +370,18 @@ describe("deleting a free account", () => {
     expect(await repo.table.get(PURGE_PK, tid)).toBeUndefined();
   });
 
+  it("removes the chat with neon1 and leaves other chats alone", async () => {
+    const { tid } = await withTrashedFile();
+    const chat = `CHAT#${tid}`;
+    for (const sk of ["META", "MSG#1", "SEEN#u", "BLOCK#u", "LAST#u"]) await repo.table.write([{ put: { PK: chat, SK: sk }, guard: { always: true } }]);
+    await repo.table.write([{ put: { PK: "CHAT#another", SK: "META" }, guard: { always: true } }]);
+    await purgeProspect(kit(), tid);
+    await finishPurge(kit(), tid, afterDrain());
+    expect(await repo.table.get("DELETED", tid)).toBeDefined();
+    expect(await repo.table.query(chat)).toEqual([]);
+    expect(await repo.table.query("CHAT#another")).toHaveLength(1);
+  });
+
   it("counts a trashed project's files toward the storage limit", async () => {
     const { tid } = await withTrashedFile();
     for (let i = 2; i < PROSPECT_LIMITS.files; i++) expect((await as(form.email, `/t/${tid}/docs`, "POST", { name: `f${i}.png`, contentType: "image/png", size: 1000, layer: "needs" })).status).toBe(201);
