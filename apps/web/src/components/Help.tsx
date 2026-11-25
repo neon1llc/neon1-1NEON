@@ -35,7 +35,7 @@ interface Guide {
 
 
 // The pages that have guidance; every signed-in route maps to one
-export type PageKey = "home" | "board" | "projects" | "project" | "newproject" | "layer" | "people" | "files" | "insights" | "settings" | "me" | "contact" | "all" | "proposal" | "invoice" | "agreement" | "prospects";
+export type PageKey = "home" | "board" | "projects" | "project" | "newproject" | "layer" | "people" | "files" | "insights" | "settings" | "me" | "contact" | "all" | "proposal" | "invoice" | "agreement" | "prospects" | "needs" | "execute" | "observe" | "normalize";
 
 
 // Plain words, one idea per line. The tours point at data-tour names that pages put on their elements
@@ -75,13 +75,37 @@ export const GUIDES: Record<PageKey, Guide> = {
   project: {
     title: "Project",
     purpose: "One project: what's next, and its work in four layers.",
-    howto: ["Start with Next step.", "Tap an item's title for its status, owner, due date, details, and comments.", "Add requests and compare options on Needs. Each layer tab also takes files.", "To approve an option, type your name as your signature. That's for the decision maker, or an admin if none is named, once your organization signs the service agreement.", "When every handover step is ticked, the decision maker signs once to accept them all. How did it go? is optional, and neon1 quotes it only if you tick the box, without names."],
+    howto: ["Start with Next step.", "Each layer tab has its own help. Tap an item's title for its status, owner, due date, details, and comments.", "Until a decision, Ready for Execute shows what's left to outline. Everything in it is optional.", "Editors and admins set health and post updates under How is it going?", "A client admin names the decision maker under People."],
     tour: [
       { at: "next-step", title: "Next step", text: "What has to happen now, and who it's waiting on." },
       { at: "readiness", title: "Ready for Execute", text: "0 to 100% before work starts: six outline parts, the assessment, options, and a decision." },
       { at: "stage", title: "Stage", text: "Where the project is. It moves on when this stage's work is done." },
       { at: "layers", title: "The four layers", text: "Needs: what's wanted. Execute: the work. Observe: the results. Normalize: making it last." },
     ],
+  },
+  needs: {
+    title: "Needs",
+    purpose: "What's wanted, the options, and the decision.",
+    howto: ["Anyone here can add a request and comment.", "Send a file neon1 asked for with Upload beside it.", "Compare options, then Read the proposal for the full terms.", "To approve, type your name as your signature. That's for the decision maker, or a client admin if none is named, once your organization signs the service agreement."],
+    tour: [{ at: "next-step", title: "Next step", text: "What has to happen now, and who it's waiting on." }, { at: "layers", title: "The four layers", text: "Needs, Execute, Observe, and Normalize. Overview sums them up." }],
+  },
+  execute: {
+    title: "Execute",
+    purpose: "The work: tasks, purchases, hours, and invoices.",
+    howto: ["Tap an item's title for its owner, due date, details, and comments.", "You buy listed purchases in your organization's name and attach the receipt. neon1 buys one only after the decision maker initials it, and bills it at cost.", "neon1 logs hours. On an estimate, they're shown against its range.", "Open an invoice to read, print, or pay it."],
+    tour: [{ at: "next-step", title: "Next step", text: "What has to happen now, and who it's waiting on." }, { at: "layers", title: "The four layers", text: "Needs, Execute, Observe, and Normalize. Overview sums them up." }],
+  },
+  observe: {
+    title: "Observe",
+    purpose: "Whether it worked: measures, checks, and incidents.",
+    howto: ["Editors and admins add a dated reading to a measure, shown against its starting number and target.", "Tick a check once it's tested."],
+    tour: [{ at: "next-step", title: "Next step", text: "What has to happen now, and who it's waiting on." }, { at: "layers", title: "The four layers", text: "Needs, Execute, Observe, and Normalize. Overview sums them up." }],
+  },
+  normalize: {
+    title: "Normalize",
+    purpose: "Handover, training, and care.",
+    howto: ["Tick handover steps as they're done.", "When all are ticked, the decision maker signs once to accept them. Check it and accept takes one early.", "How did it go? is optional. neon1 quotes it only if you tick the box, without names."],
+    tour: [{ at: "next-step", title: "Next step", text: "What has to happen now, and who it's waiting on." }, { at: "layers", title: "The four layers", text: "Needs, Execute, Observe, and Normalize. Overview sums them up." }],
   },
   newproject: {
     title: "New project",
@@ -182,6 +206,8 @@ export function pageKey(path: string): PageKey {
   if (/\/projects\/new$/.test(path)) return "newproject";
   if (/\/projects\/[^/]+\/proposal$/.test(path)) return "proposal";
   if (/\/projects\/[^/]+\/invoices\//.test(path)) return "invoice";
+  const tab = /\/projects\/[^/]+\/(needs|execute|execution|observe|observation|normalize|next)$/.exec(path)?.[1];
+  if (tab) return tab === "execution" ? "execute" : tab === "observation" ? "observe" : tab === "next" ? "normalize" : (tab as PageKey);
   if (/\/projects\/[^/]+/.test(path)) return "project";
   if (path.endsWith("/agreement")) return "agreement";
   if (path.endsWith("/projects")) return "projects";
