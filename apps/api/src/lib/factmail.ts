@@ -81,6 +81,9 @@ const STYLES = `
 .mk{border-color:#6cffa8 !important}
 }
 [data-ogsc] .mk{border-color:#6cffa8 !important}
+/* Outlook's dark mode repaints the card a pale gray-green; the quiet text has to stay readable on it */
+[data-ogsc] .muted{color:#d5e0d8 !important}
+[data-ogsc] .brand,[data-ogsc] .lk{color:#8df78d !important}
 @media (max-width:480px){
 .pad{padding:18px 16px 16px !important}
 .k{display:block !important;padding:10px 0 0 !important;border-bottom:0 !important}

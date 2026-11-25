@@ -161,6 +161,7 @@ describe("every email", () => {
       // The wordmark as the site sets it: "neon" at 1.3x and weight 450, the "1" bold
       expect(m.html, at).toContain('font-size:1.3em;font-weight:450">neon</span><span style="font-weight:700">1</span>');
       expect(m.html, at).toMatch(/\[data-ogsc\] \.mk\{border-color/);
+      expect(m.html, at).toMatch(/\[data-ogsc\] \.muted\{color/);
       expect(m.html, at).toContain('<!--[if mso]><img src="https://neon1.tech/shared/mail/neon1-mark-mid.png"');
       expect(m.html, at).not.toContain("invert(1)");
       // One primary action: a single button, and its address is in the text too
