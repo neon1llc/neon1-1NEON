@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+### Changed
+- On a desktop (1200px and wider, with a mouse), reading text is 16px instead of 15px, and the rest of the type, controls, and spacing grow with it. Phones and tablets are unchanged.
+
 ### Fixed
 - Page help (?) matches each page again. The proposal, invoice, service agreement, and Potentials pages have their own, where the agreement used to show Home's. Its closing links are shorter.
 - On an iPhone, a tap on the status bar scrolls the portal to the top.

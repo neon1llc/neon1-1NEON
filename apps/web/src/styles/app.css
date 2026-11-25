@@ -13,6 +13,10 @@
 }
 /* A touch screen's text fields stay at 16px or larger so iOS never zooms the page on focus */
 @media (pointer: coarse) { :root { --fs-input: 1rem; } }
+/* A modest step up on a desktop: the root grows by 16/15, so the portal's reading text (--fs-md) is 16px and every step, control,
+   and rem space grows with it. Only a wide screen with a mouse; phones and tablets, and screens under 1200px, keep the 16px root.
+   It stays a percentage, so a person's own text-size setting still scales everything */
+@media (min-width: 1200px) and (hover: hover) and (pointer: fine) { :root { font-size: 106.6667%; } }
 
 :root {
   --r: 14px; --r-sm: 10px;

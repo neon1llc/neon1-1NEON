@@ -172,3 +172,10 @@ describe("the still page on an iPhone", () => {
     expect(readFileSync(join(__dirname, "../lib/edge.ts"), "utf8")).toMatch(/window\.scrollTo\(0, 1\)/);
   });
 });
+
+describe("the desktop root size", () => {
+  it("steps up once, on the root, only for a wide screen with a mouse", () => {
+    expect(css).toMatch(/@media \(min-width: 1200px\) and \(hover: hover\) and \(pointer: fine\) \{ :root \{ font-size: 106\.6667%; \} \}/);
+    expect(css.match(/:root \{ font-size:/g)).toHaveLength(1);
+  });
+});
