@@ -131,8 +131,8 @@ describe("the menu's mark rows", () => {
 
 describe("the menu's dividers", () => {
   it("end at the rail only in the collapsed phone rail, so the line above report a bug spans the open menu like the others", () => {
-    expect(css).toMatch(/\.shell\.mini \.side:not\(\.open\):not\(\.leaving\) :is\(\.nav > li\.sep > \.lbl\.gl, \.out-group > \.gline\) \{/);
-    expect(css).not.toMatch(/, \.out-group > \.gline \{ width/);
+    expect(css).toMatch(/\.shell\.mini \.side:not\(\.open\):not\(\.leaving\) :is\([^)]*\.nav > li\.sep > \.lbl\.gl, \.out-group > \.gline\) \{/);
+    expect(css).not.toMatch(/\.side(\.open)? \.gline \{ width/);
   });
 });
 
@@ -151,5 +151,24 @@ describe("the rail's footer mark", () => {
 describe("the open menu on a short touch screen", () => {
   it("keeps its footer in view while the rows scroll", () => {
     expect(css).toMatch(/\.side\.open \.menu-footer \{ position: sticky; bottom: 0; z-index: 2; background: var\(--frame\); \}/);
+  });
+});
+
+describe("the frame's lines", () => {
+  it("draws the menu's edge and rules, the top bar's line, and the tab bar's line in one color", () => {
+    expect(css).toContain(":root { --frame-line: var(--line-strong); }");
+    expect(css.match(/var\(--frame-line\)/g)).toHaveLength(7);
+    expect(css).toMatch(/\.side \.gline::before \{[^}]*background: var\(--frame-line\)/);
+    expect(css).toMatch(/\.tabbar \{ box-sizing[^}]*border-top: 1px solid var\(--frame-line\)/);
+  });
+  it("ends the phone rail's group rules inside the rail, inset like its rows", () => {
+    expect(css).toMatch(/\.out-group, \.nav > li\.sep > \.lbl\.gl, \.out-group > \.gline\) \{ width: calc\(var\(--rail\) \+ env\(safe-area-inset-left\) - 1px - var\(--padl\) - var\(--padr\)\); \}/);
+  });
+});
+
+describe("the still page on an iPhone", () => {
+  it("is one pixel taller than the screen, so a tap on the status bar has a document to scroll to its top", () => {
+    expect(css).toMatch(/html\.body-scrolls \{ height: calc\(100% \+ 1px\); overflow-x: hidden; overscroll-behavior: none;/);
+    expect(readFileSync(join(__dirname, "../lib/edge.ts"), "utf8")).toMatch(/window\.scrollTo\(0, 1\)/);
   });
 });

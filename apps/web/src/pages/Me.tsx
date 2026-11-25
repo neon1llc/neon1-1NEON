@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useSession, useTopBar } from "../components/Shell.tsx";
 import { Avatar, useAsk, useToast } from "../components/ui.tsx";
-import { api, BASE_PATH, devUser, LIVE, pickPerson } from "../lib/api.ts";
+import { api } from "../lib/api.ts";
 import { emailDefault, menuOf, NOTIFY_GROUPS } from "@1neon/domain";
 import { problem } from "../lib/hooks.ts";
 import { passkeyCreation } from "../lib/passkey.ts";
@@ -20,7 +20,7 @@ import { previewMenu } from "../lib/preview.ts";
 import { ReportBug } from "../components/BugReport.tsx";
 import { askToConfirm, TotpSetup } from "../components/Confirm.tsx";
 import { chosenLessMotion, deviceLessMotion, setLessMotion } from "../lib/motion.ts";
-import { forgetScroll } from "../lib/scrollmemory.ts";
+import { useSignOut } from "../lib/signout.ts";
 
 
 // What the profile says under the text consent for each state
@@ -42,6 +42,7 @@ const zoneChoices = (current: string) => [...new Set(["UTC", ...(typeof Intl.sup
 
 export function MePage() {
   const me = useSession();
+  const signOut = useSignOut();
   const qc = useQueryClient();
   const navigate = useNavigate();
   // A link to a part of the profile (#security, #notifications) lands on it
@@ -223,24 +224,6 @@ export function MePage() {
     } catch (e) {
       toast(problem(e));
     }
-  };
-  // Dev and demo: forget who you picked. Production: the API revokes tokens and returns Cognito's logout URL
-  const signOut = async () => {
-    forgetScroll();
-    // The live playback's story lives in this page, so signing out stays in it, at the sign-in
-    if (LIVE) {
-      devUser.set("");
-      qc.clear();
-      navigate("/");
-      return;
-    }
-    if (pickPerson) {
-      devUser.set("");
-      location.href = `${BASE_PATH}/`;
-      return;
-    }
-    const r = await api<{ redirect: string }>("/auth/logout", { method: "POST" }).catch(() => ({ redirect: "/1NEON/" }));
-    location.href = r.redirect;
   };
   return (
     <div>
