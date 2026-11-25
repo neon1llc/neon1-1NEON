@@ -5,7 +5,7 @@
 ## Unreleased
 
 ### Fixed
-- A long name in the menu's profile row is cut with an ellipsis, so Sign out always stays inside the menu.
+- The menu's profile row shows your first name. A long one is cut with an ellipsis, so Sign out always stays inside the menu.
 
 ## v0.28.0 - 2026-11-24
 

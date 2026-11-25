@@ -1001,7 +1001,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
           <li className="who-row">
             <NavLink to={all ? "/all/me" : "/me"} className="who-link" title="Your profile" data-tour="nav-me">
               <span className="ico av-box"><Avatar id={me.user.id} name={me.user.name || me.user.email} size={24} /></span>
-              <span className="lbl">{me.user.name || me.user.email}</span>
+              <span className="lbl">{me.user.name.trim().split(/\s+/)[0] || me.user.email}</span>
             </NavLink>
             {open && <SignOutButton />}
           </li>

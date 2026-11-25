@@ -190,6 +190,8 @@ describe("the menu's sign out", () => {
     // A long name truncates; without these the menu's grid grows the row and pushes the button out of sight
     expect(css).toMatch(/\.who-row \{[^}]*min-width: 0;/);
     expect(css).toContain(".who-link .lbl { min-width: 0; overflow: hidden; text-overflow: ellipsis; }");
+    // The row shows the first name only
+    expect(readFileSync(join(__dirname, "../components/Shell.tsx"), "utf8")).toContain('<span className="lbl">{me.user.name.trim().split(/\\s+/)[0] || me.user.email}</span>');
     expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\) \{ \.sign-out, \.sign-out > \* \{ transition: none; \} \}/);
   });
 });
