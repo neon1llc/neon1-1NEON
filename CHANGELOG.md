@@ -6,7 +6,7 @@
 
 ### Changed
 - The browser tab and home screen show the 1NEON rings. The tab icon follows the light or dark mode you pick.
-- Each sign-in email names its code in the subject, so mail apps keep them apart.
+- Each sign-in email's subject says when it was sent, so mail apps keep codes apart and the newest is clear.
 - Sign-in downloads about a quarter less script: the FAQs, legal pages, and sample project load when opened.
 - Names follow one rule on sign-up, your profile, and invitations: any language, with spaces, apostrophes, hyphens, and periods. Hidden characters, mixed alphabets in one word, and names that pass for neon1 or its staff are refused, with the reason under the field. A name saved earlier stays until you change it.
 
