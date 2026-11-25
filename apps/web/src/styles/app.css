@@ -1178,14 +1178,23 @@ body:has(.shell.example) { scroll-behavior: smooth; }
 .side .org-full .org { margin: 0; height: var(--row); padding: 0 10px; align-content: center; gap: 0; line-height: 1.15; }
 .side .org-full .org small { font-size: var(--fs-xs); }
 .side .who-link { margin-top: 0; padding-top: 0; }
-/* The open menu's profile row ends in Sign out: the name takes the rest of the row, and the button's hit area is 44px on a short row too */
-.who-row { display: flex; align-items: center; gap: var(--sp-1); }
-.side .who-row .who-link { flex: 1; min-width: 0; }
+/* The profile row is one highlight around the name and, in the open menu, its way out. Sign out rests as an icon and
+   opens leftward into a labeled button, the icon fading out as the words fade in; its hit area is 44px either way */
+.who-row { display: flex; align-items: center; border-radius: var(--r-sm); }
+.who-row:hover, .who-row:has(> .who-link.active) { background: var(--accent-soft); }
+.side .nav .who-row > a.who-link, .side .nav .who-row > a.who-link:is(:hover, .active) { flex: 1; min-width: 0; background: none; }
 .who-link .lbl { overflow: hidden; text-overflow: ellipsis; }
-.sign-out { position: relative; flex: none; display: inline-grid; place-items: center; width: 44px; height: var(--row); padding: 0; border: 0; border-radius: var(--r-sm); background: none; color: var(--muted); cursor: pointer; }
-.sign-out::after { content: ""; position: absolute; inset: min(0px, (var(--row) - 44px) / 2) 0; }
+.sign-out { position: relative; flex: none; width: 44px; height: calc(var(--row) - 8px); margin-right: var(--sp-1); padding: 0; border: 0; border-radius: var(--r-sm); background: none; color: var(--muted); cursor: pointer;
+  transition: width var(--t-base) var(--ease), background-color var(--t-base) var(--ease), color var(--t-base) var(--ease); }
+.sign-out::after { content: ""; position: absolute; inset: min(0px, (var(--row) - 52px) / 2) 0; }
+.sign-out > * { position: absolute; pointer-events: none; top: 50%; left: 50%; translate: -50% -50%; transition: opacity var(--t-base) var(--ease); }
+.sign-out > span { opacity: 0; white-space: nowrap; font: 600 var(--fs-ui) var(--sans); }
 .sign-out:hover { background: var(--accent-soft); color: var(--accent); }
-.sign-out:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+.sign-out.armed { width: 104px; background: var(--accent); color: var(--accent-ink); }
+.sign-out.armed > svg { opacity: 0; }
+.sign-out.armed > span { opacity: 1; }
+.sign-out:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+@media (prefers-reduced-motion: reduce) { .sign-out, .sign-out > * { transition: none; } }
 /* Icons and layer letters shrink with short rows so they never touch */
 .side { --box: min(28px, calc(var(--row) - 4px)); }
 .side .ico svg { width: min(16px, calc(var(--box) - 8px)); height: min(16px, calc(var(--box) - 8px)); }
@@ -1946,7 +1955,7 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
 :root[data-theme="matrix"] .pub-bar .n1-logo { color: #6CFFA8; text-shadow: 0 0 2px #8CFFBE, 0 0 7px rgba(108, 255, 168, .95), 0 0 16px rgba(108, 255, 168, .8), 0 0 34px rgba(108, 255, 168, .6); }
 :root[data-theme="matrix"] .pub-bar .n1-logo svg { filter: drop-shadow(0 0 2px #8CFFBE) drop-shadow(0 0 7px rgba(108, 255, 168, .95)) drop-shadow(0 0 16px rgba(108, 255, 168, .7)); }
 /* Neo's launcher glows the same way over matrix on these screens (the portal itself is untouched) */
-:root[data-theme="matrix"] body:has(.pub-bar) .n1chat-launch:not(.n1chat-light) { border-color: #6CFFA8; color: #6CFFA8; background: rgb(15 10 13 / .94);
+:root[data-theme="matrix"] body:has(.pub-bar) .n1chat-launch:not(.n1chat-light) { border-color: #6CFFA8; color: #6CFFA8; background: var(--neo-fill);
   box-shadow: 0 0 3px rgba(140, 255, 190, .9), 0 0 11px rgba(108, 255, 168, .85), 0 0 26px rgba(108, 255, 168, .55), inset 0 0 9px rgba(108, 255, 168, .4); }
 :root[data-theme="matrix"] body:has(.pub-bar) .n1chat-launch:not(.n1chat-light) svg { filter: drop-shadow(0 0 2px #8CFFBE) drop-shadow(0 0 7px rgba(108, 255, 168, .95)) drop-shadow(0 0 14px rgba(108, 255, 168, .6)); }
 .pub-bar a, .pub-bar button { -webkit-tap-highlight-color: transparent; }
@@ -2264,8 +2273,8 @@ body:has(.shell.mini) .n1chat.n1chat-right { left: auto; right: max(16px, env(sa
   body:has(.shell.mini) .n1chat.n1chat-right { left: calc(var(--neo-rail) + env(safe-area-inset-left, 0px) + var(--neo-inline-gap)); right: var(--neo-inline-gap); width: auto; }
 }
 /* In matrix the chosen row's halo needs more than awake's tint to show on the dark ground, so the layer letters N E O N read apart */
-:root[data-theme="matrix"] :is(.nav a.active, .who-link.active) { background: color-mix(in srgb, var(--neon) 16%, transparent); }
-@media (prefers-color-scheme: dark) { :root[data-theme="device"] :is(.nav a.active, .who-link.active) { background: color-mix(in srgb, var(--neon) 16%, transparent); } }
+:root[data-theme="matrix"] :is(.nav a.active, .who-link.active, .who-row:has(> .who-link.active)) { background: color-mix(in srgb, var(--neon) 16%, transparent); }
+@media (prefers-color-scheme: dark) { :root[data-theme="device"] :is(.nav a.active, .who-link.active, .who-row:has(> .who-link.active)) { background: color-mix(in srgb, var(--neon) 16%, transparent); } }
 
 /* --- The read-only banner is the top bar's height (2026-11-17) ---
    All clients' amber banner sits above the top bar, so its bottom edge lands on the menu's line under the
@@ -2583,3 +2592,8 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 @media (min-width: 701px) and (hover: hover) { .n1chat-launch.n1neo:is(:hover, :focus-visible, .n1chat-peek) .n1chat-label { max-width: 170px; } }
 .guide-links .guide-chat { justify-self: start; text-align: left; font-weight: 600; text-decoration: none; color: var(--accent); }
 .guide-links .guide-chat:hover { text-decoration: underline; }
+
+/* Neo's dark launcher is opaque over the portal in both families, as on neon1.tech (--neo-fill, shared/chat.css), so a
+   board's text never shows through it. Hover tints that ground instead of replacing it */
+:root body:has(.shell) .n1chat-launch:not(.n1chat-light) { background: var(--neo-fill); }
+:root body:has(.shell) .n1chat-launch:not(.n1chat-light):hover { background: linear-gradient(var(--accent-soft), var(--accent-soft)), var(--neo-fill); }

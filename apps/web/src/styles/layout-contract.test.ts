@@ -179,3 +179,21 @@ describe("the desktop root size", () => {
     expect(css.match(/:root \{ font-size:/g)).toHaveLength(1);
   });
 });
+
+describe("the menu's sign out", () => {
+  it("takes a second press, after the button has opened to say what it does", () => {
+    const button = readFileSync(join(__dirname, "../components/SignOutButton.tsx"), "utf8");
+    expect(button).toContain("if (armedAt === null) { e.currentTarget.focus({ preventScroll: true }); setArmedAt(e.timeStamp); return; }");
+    expect(button).toContain("onMouseDown={(e) => e.preventDefault()}");
+    expect(button).toMatch(/e\.timeStamp - armedAt >= SETTLE_MS/);
+    expect(css).toMatch(/\.sign-out\.armed \{ width: 104px;/);
+    expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\) \{ \.sign-out, \.sign-out > \* \{ transition: none; \} \}/);
+  });
+});
+
+describe("Neo's launcher in the portal", () => {
+  it("sits on neon1.tech's opaque ground, hovered too", () => {
+    expect(css).toContain(":root body:has(.shell) .n1chat-launch:not(.n1chat-light) { background: var(--neo-fill); }");
+    expect(css).toMatch(/\.n1chat-launch:not\(\.n1chat-light\):hover \{ background: linear-gradient\(var\(--accent-soft\), var\(--accent-soft\)\), var\(--neo-fill\); \}/);
+  });
+});

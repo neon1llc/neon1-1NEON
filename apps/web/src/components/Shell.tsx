@@ -13,7 +13,6 @@ import { SIGN_IN_METHODS } from "../lib/methods.ts";
 import { drew, fade, lessMotion } from "../lib/motion.ts";
 import { REWIND } from "../lib/nav.ts";
 import { useEntryScroll } from "../lib/scrollmemory.ts";
-import { useSignOut } from "../lib/signout.ts";
 import { usePersisting } from "../lib/persist.ts";
 import { cleanCode, clearStep, loadStep, saveStep, session } from "../lib/signin.ts";
 import type { Me, OrgResponse, OrgSummary } from "../lib/types.ts";
@@ -26,7 +25,7 @@ import { PublicFooter } from "./PublicFooter.tsx";
 import { useSiteTheme } from "../lib/sitetheme.ts";
 import { paintTheme, setAccountTheme, watchTheme } from "../lib/themepaint.ts";
 import { isSentinel, isDarkLook, lookFor, normalizeLook, onLookChange, resolveTheme, saveLook, sharedThemeChoice, styleChoice } from "../lib/style.ts";
-import { FileText as FileIcon, Folder as FolderIcon, Home as HomeIcon, Kanban as KanbanIcon, LogOut, Menu as MenuIcon, Moon, Search as SearchIcon, Sun } from "lucide-react";
+import { FileText as FileIcon, Folder as FolderIcon, Home as HomeIcon, Kanban as KanbanIcon, Menu as MenuIcon, Moon, Search as SearchIcon, Sun } from "lucide-react";
 import { ConfirmDialog } from "./Confirm.tsx";
 import { HelpProvider, useHelp } from "./Help.tsx";
 import { Neo } from "./Neo.tsx";
@@ -35,6 +34,7 @@ import { ReportBug } from "./BugReport.tsx";
 import { usePreviewedMenu } from "../lib/preview.ts";
 import { useProspectEverywhere } from "./Prospect.tsx";
 import { Palette } from "./Palette.tsx";
+import { SignOutButton } from "./SignOutButton.tsx";
 import { SignUp } from "./SignUp.tsx";
 import { gate, Stale, type Read } from "./Reads.tsx";
 import { Avatar, Icon, initials, LayerBadge, LAYERS, layerHint, layerName, layerSlug, Rings, useAsk } from "./ui.tsx";
@@ -749,7 +749,6 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
   // The session query itself, for marking the frame when a background check of it fails
   const meRead = useMe();
   const help = useHelp();
-  const signOut = useSignOut();
   // The person's choice: default opens the full menu from a button; mini also keeps the icon rail
   // on screen at every size. Either way the full menu opens over the page from the menu buttons
   // (the profile previews its pick here before it is saved: lib/preview.ts)
@@ -1004,7 +1003,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
               <span className="ico av-box"><Avatar id={me.user.id} name={me.user.name || me.user.email} size={24} /></span>
               <span className="lbl">{me.user.name || me.user.email}</span>
             </NavLink>
-            {open && <button className="sign-out" type="button" onClick={() => void signOut()} aria-label="Sign out" title="Sign out"><LogOut size={16} aria-hidden="true" /></button>}
+            {open && <SignOutButton />}
           </li>
         </ul>
         {/* Links out of 1NEON read as one untitled group: the neon1 way to say something is broken, the way to

@@ -39,7 +39,7 @@
 
 /* ---- Public screens: sign-in, FAQs, legal pages ---- */
 :root[data-style="sentinel"] .pub-bar .n1-logo, :root[data-style="sentinel"][data-theme] .pub-bar .n1-logo { color: var(--accent); }
-:root[data-style="sentinel"][data-theme="matrix"] body:has(.pub-bar) .n1chat-launch:not(.n1chat-light) { border-color: var(--accent); color: var(--accent); background: rgb(15 10 13 / .96); box-shadow: none; }
+:root[data-style="sentinel"][data-theme="matrix"] body:has(.pub-bar) .n1chat-launch:not(.n1chat-light) { border-color: var(--accent); color: var(--accent); background: var(--neo-fill); box-shadow: none; }
 :root[data-style="sentinel"][data-theme="matrix"] body:has(.pub-bar) .n1chat-launch:not(.n1chat-light) svg { filter: none; }
 /* The sign-in: a plain panel on the page color, in both themes (the matrix awake one has green washes and rings, the dark one glass) */
 :root[data-style="sentinel"] .signin, :root[data-style="sentinel"] .signin.awake { background: var(--bg); color: var(--text); --focus: var(--accent); --req-color: var(--red); }
