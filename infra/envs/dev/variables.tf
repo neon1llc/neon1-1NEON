@@ -32,9 +32,10 @@ variable "neo_model" {
 }
 
 
-# Explicit opt-in only after the TFN registration is approved and the sandbox destination is verified
+# On now that dev's toll-free number is approved and the sandbox destination is verified; texts still go
+# only to the destinations in the SMS allow-list parameter, so an apply never turns dev texting off by accident
 variable "texts_live" {
-  description = "Enable dev SMS only after its TFN is approved and the sandbox destination is verified."
+  description = "Enable dev SMS (its toll-free number is approved; the allow-list limits recipients)."
   type        = bool
-  default     = false
+  default     = true
 }

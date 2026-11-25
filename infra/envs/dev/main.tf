@@ -1,6 +1,6 @@
 # infra/envs/dev/main.tf - 1NEON dev: dev.neon1.tech/1NEON, a separate backend for trying changes with no
 # client data in reach. Same modules as production with dev names (1neon-dev, neon1-1neon-*-dev), its own
-# Cognito pool on auth-dev.neon1.tech, SMS off until its TFN is approved, no malware scanning, and a one-day lock on test records.
+# Cognito pool on auth-dev.neon1.tech, texts to the allow-listed test number only, no malware scanning, and a one-day lock on test records.
 # Mail goes out from production's notify.neon1.tech identity through a dev configuration set.
 #
 # Apply order (by hand, AWS_PROFILE=neon1): neon1-aws-infrastructure site-dev (portal=false), github
