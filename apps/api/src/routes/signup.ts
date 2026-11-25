@@ -6,7 +6,7 @@
 // The answer never says whether an email already has an account.
 
 
-import { DEFAULT_STAGES, DESCRIBES, DESCRIBES_KEYS, FOUND_KEYS, FOUND_VIA, PORTAL_TERMS_EDITION, PublicFace, describesLabel, foundLabel, formatProspectId, MIN_TEXT, newId, slugify, type Member, type Tenant, type User } from "@1neon/domain";
+import { cleanName, orgNameProblem, DEFAULT_STAGES, DESCRIBES, DESCRIBES_KEYS, FOUND_KEYS, FOUND_VIA, PORTAL_TERMS_EDITION, PublicFace, describesLabel, foundLabel, formatProspectId, MIN_TEXT, newId, slugify, type Member, type Tenant, type User } from "@1neon/domain";
 import { emailProblem, failFields, linkProblem, nameProblem, placeCheck, textProblem, type FieldProblems } from "../lib/vet.ts";
 import type { Vetting } from "../vetting/types.ts";
 import type { Context } from "hono";
@@ -75,17 +75,17 @@ const SignUpBody = z.object({
 
 /** Every field's own check, run together: the person sees each problem beside its field at once.
  * Returns the place in its proper spelling */
-async function checkSignUp(v: Vetting | undefined, b: z.infer<typeof SignUpBody>): Promise<{ place: string }> {
+async function checkSignUp(v: Vetting | undefined, b: z.infer<typeof SignUpBody>, ours: boolean): Promise<{ place: string }> {
   const problems: FieldProblems = {};
   const [email, link, place] = await Promise.all([emailProblem(v, b.email), linkProblem(v, b.link), placeCheck(v, b.place)]);
   if (email) problems.email = email;
-  const name = nameProblem(b.name);
+  const name = nameProblem(b.name, { neon1: ours });
   if (name) problems.name = name;
   if (b.kind === "other" && !b.kindOther) problems.kindOther = "Say what describes you.";
   else if (b.kind === "other") { const t = textProblem(b.kindOther, "what describes you"); if (t) problems.kindOther = t; }
   if (b.kind !== "individual") {
     if (!b.org) { if (b.kind !== "other") problems.org = "Enter your organization's name."; }
-    else { const t = textProblem(b.org, "your organization's name", MIN_TEXT); if (t) problems.org = t; }
+    else { const t = ours ? textProblem(b.org, "your organization's name", MIN_TEXT) : orgNameProblem(b.org); if (t) problems.org = t; }
   }
   if (link) problems.link = link;
   if ("problem" in place) problems.place = place.problem;
@@ -138,7 +138,9 @@ export function signupRoutes(app: App, k: Kit) {
 
     // The fields, each checked on its own (a real mail domain, a website that answers, a real place),
     // before any counter moves, so fixing a typo never uses up a try
-    const { place } = await checkSignUp(d.vetting, b);
+    const { place } = await checkSignUp(d.vetting, b, cfg.operatorEmails.includes(b.email));
+    // Stored in one spelling, whatever was typed (forms.ts)
+    b.name = cleanName(b.name);
     // An individual's account is named for them, and so is "Something else" without an organization's name
     const org = b.kind === "individual" || !b.org ? b.name : b.org;
 

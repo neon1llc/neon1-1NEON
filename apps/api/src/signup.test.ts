@@ -865,3 +865,14 @@ describe("outline tips by email", () => {
     expect(tips("w@example.com")).toHaveLength(0);
   });
 });
+
+
+describe("names at sign-up", () => {
+  it("refuses neon1's names and hidden characters, for the person and the organization", async () => {
+    for (const [field, b] of [["name", { ...form, name: "Pradeep" }], ["name", { ...form, name: "Dana​Kim" }], ["org", { ...form, org: "neon1 Support" }]] as const) {
+      const r = await signup(b);
+      expect(r.status).toBe(400);
+      expect(((await r.json()) as { current: { fields: Record<string, string> } }).current.fields[field]).toBeTruthy();
+    }
+  });
+});

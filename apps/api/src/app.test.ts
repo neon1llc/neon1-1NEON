@@ -794,3 +794,43 @@ describe("naming the decision maker", () => {
     expect((await call(raj, "POST", `/t/${s.acme.id}/projects`, { name: "z", people: [{ userId: u.raj, role: "decision_maker" }] })).status).toBe(201);
   });
 });
+
+
+// One name rule on every path that sets a person's name (packages/domain/src/forms.ts)
+describe("people's names", () => {
+  const TOMAS = "tomas@harborlineoutfitters.example";
+  const me = async (as: string) => (await call(as, "GET", "/me")).json.user;
+
+  it("refuses a bad new name on the profile and stores a good one clean", async () => {
+    for (const name of ["[TEST] Tomas", "Tom‮as", "Admin", "Pradeep", ""]) {
+      const r = await call(TOMAS, "PATCH", "/me", { version: (await me(TOMAS)).version, name });
+      expect(r.status, name).toBe(400);
+      expect(r.json.current.fields.name, name).toBeTruthy();
+    }
+    const r = await call(TOMAS, "PATCH", "/me", { version: (await me(TOMAS)).version, name: "  Ｔｏｍａｓ   Greer " });
+    expect(r.json.name).toBe("Tomas Greer");
+  });
+
+  it("lets a name saved before the rule stay while other fields change", async () => {
+    const u = (await repo.getUser((await me(TOMAS)).id))!;
+    await repo.saveUser({ ...u, name: "[TEST] Tomas", version: u.version + 1 }, u.version);
+    const r = await call(TOMAS, "PATCH", "/me", { version: u.version + 1, name: "[TEST] Tomas", title: "Owner" });
+    expect(r.status).toBe(200);
+    expect(r.json).toMatchObject({ name: "[TEST] Tomas", title: "Owner" });
+  });
+
+  it("keeps neon1's names for neon1", async () => {
+    expect((await call(OP, "PATCH", "/me", { version: (await me(OP)).version, name: "neon1 Support" })).status).toBe(200);
+  });
+
+  it("holds invited names to the same rule", async () => {
+    const invite = (as: string, name: string) => call(as, "POST", `/t/${s.acme.id}/members/invite`, { people: [{ email: "new@harborlineoutfitters.example", name, access: "viewer" }] });
+    // A client admin, so neon1's exemption doesn't apply
+    const admin = "priya@harborlineoutfitters.example";
+    expect((await invite(admin, "neon1 Support")).status).toBe(400);
+    expect((await invite(admin, "Sam [Lee]")).status).toBe(400);
+    const ok = await invite(admin, " Sam  Lee ");
+    expect(ok.status).toBe(201);
+    expect(ok.json[0].name).toBe("Sam Lee");
+  });
+});

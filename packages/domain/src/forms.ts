@@ -100,17 +100,114 @@ export function looksLikeJunk(text: string): boolean {
 }
 
 
+// --- People's names ---------------------------------------------------------
+// One rule for every place a person's name is set: sign-up, the profile, invitations, and the contact
+// form. After RFC 8266 (nicknames: NFKC, plain spaces, trimmed) and Unicode UTS #39 (one alphabet to a
+// word, a limit on stacked marks, and a look-alike "skeleton" compared with reserved names)
+
+export const NAME_MAX = 80;
+
+
+/** A name as it's stored: NFKC (fullwidth and styled letters become plain ones), every space and hyphen
+ * the ordinary one, runs of spaces collapsed, ends trimmed */
+export function cleanName(name: string): string {
+  return name.normalize("NFKC").replace(/[\p{Zs}\t\n\r]+/gu, " ").replace(/‐/g, "-").trim();
+}
+
+
+// Characters that draw nothing or reorder text: controls, zero-width and direction marks, invisible fillers
+const HIDDEN = /[\p{Cc}\p{Cf}\p{Co}\p{Cs}\p{Zl}\p{Zp}\p{Default_Ignorable_Code_Point}]/u;
+const hasHidden = (text: string) => HIDDEN.test(text.replace(/[\t\n\r]/g, " "));
+
+// The alphabets a letter can belong to. One not listed counts as "other"; letters shared by all count for none
+const SCRIPTS = ["Latin", "Cyrillic", "Greek", "Armenian", "Hebrew", "Arabic", "Devanagari", "Bengali", "Gurmukhi", "Gujarati", "Oriya", "Tamil", "Telugu", "Kannada", "Malayalam", "Sinhala", "Thai", "Lao", "Tibetan", "Myanmar", "Georgian", "Hangul", "Ethiopic", "Khmer", "Mongolian", "Hiragana", "Katakana", "Bopomofo", "Han", "Cherokee", "Canadian_Aboriginal", "Thaana", "Syriac", "Nko", "Tifinagh", "Vai", "Lisu", "Coptic"]
+  .map((s) => [s, new RegExp(`\\p{Script=${s}}`, "u")] as const);
+const COMMON = /[\p{Script=Common}\p{Script=Inherited}]/u;
+// Written together every day, as UTS #39's "highly restrictive" level allows
+const TOGETHER = [["Han", "Hiragana", "Katakana"], ["Han", "Bopomofo"], ["Han", "Hangul"]];
+
+function mixedWord(word: string): boolean {
+  const used = new Set<string>();
+  for (const ch of word.match(/\p{L}/gu) ?? []) if (!COMMON.test(ch)) used.add(SCRIPTS.find(([, re]) => re.test(ch))?.[0] ?? "other");
+  return used.size > 1 && !TOGETHER.some((set) => [...used].every((s) => set.includes(s)));
+}
+
+
+// Letters that pass for Latin ones, after accents are removed and case is folded: the part of UTS #39's
+// confusables that matters for the reserved names below
+const LOOKALIKE: Record<string, string> = {
+  а: "a", в: "b", с: "c", ԁ: "d", е: "e", һ: "h", і: "l", ј: "j", к: "k", ӏ: "l", м: "m", н: "h", о: "o", р: "p", ԛ: "q", г: "r", ѕ: "s", т: "t", у: "y", ѵ: "v", ԝ: "w", х: "x",
+  α: "a", β: "b", ε: "e", η: "n", ι: "l", κ: "k", ν: "v", ο: "o", ρ: "p", τ: "t", υ: "u", χ: "x", γ: "y",
+  ɑ: "a", ɡ: "g", ı: "l", ɩ: "l", ǀ: "l", ո: "n", օ: "o", ս: "u", հ: "h",
+  // Look-alikes within Latin and digits: i, l, and 1 read alike, as do o and 0
+  i: "l", "1": "l", "0": "o",
+};
+
+/** What a word looks like: two words with one skeleton can pass for each other */
+export function skeleton(text: string): string {
+  const plain = text.normalize("NFKD").replace(/\p{M}/gu, "").toLowerCase();
+  return [...plain].map((ch) => LOOKALIKE[ch] ?? ch).join("").replace(/rn/g, "m").replace(/[^\p{L}\p{N}]/gu, "");
+}
+
+
+const skeletons = (words: string[]) => new Set(words.map(skeleton));
+// neon1, wherever it appears
+const BRANDS = ["neon1", "1neon", "neonone", "oneneon"].map(skeleton);
+// Titles that say who runs this place: refused anywhere in a name
+const TITLES = skeletons(["admin", "administrator", "moderator", "helpdesk", "sysadmin", "webmaster", "postmaster", "noreply"]);
+// Words some people are really named (Root, Staff, Neo): refused only when a name is made of nothing else
+const ROLES = skeletons(["support", "security", "system", "staff", "team", "official", "billing", "service", "help", "desk", "root", "owner", "operator", "abuse", "info", "customer", "care", "account", "neon", "neo", "ai", "assistant", "bot", "the"]);
+// neon1's owner, by the first name alone or the full name. Pradeep with another last name is someone else
+const PRADEEP = skeleton("pradeep");
+const OWNER = skeletons(["pradeep", "pradeeptathineni", "pradeept", "tathineni", "tathinenipradeep"]);
+const OWNER_PARTS = skeletons(["pradeep", "tathineni", "t"]);
+// Single words that are real first names, though they're on the list above
+const FIRST_NAMES = skeletons(["neo", "neon"]);
+
+
+/** Does this name pass for neon1, its staff, or its owner? */
+export function claimsToBeNeon1(name: string): boolean {
+  const words = cleanName(name).split(/[\s.’'·_-]+/u).map(skeleton).filter(Boolean);
+  const all = words.join("");
+  if (!all) return false;
+  if (BRANDS.some((b) => all.includes(b)) || TITLES.has(all) || words.some((w) => TITLES.has(w))) return true;
+  if (words.length === 1 && FIRST_NAMES.has(all)) return false;
+  if (ROLES.has(all) || OWNER.has(all)) return true;
+  // Nothing but roles, with or without the owner's name: "Support Team", "Pradeep Support"
+  return words.some((w) => ROLES.has(w)) && words.every((w) => ROLES.has(w) || OWNER_PARTS.has(w));
+}
+
+
 /** A person's name: letters (any language), spaces, apostrophes, hyphens, and periods; a first and last
- * one name is fine, since many people go by one. Returns what to tell them, or undefined when it's fine */
-export function nameProblem(name: string): string | undefined {
-  const t = name.trim().replace(/\s+/g, " ");
+ * one name is fine, since many people go by one. `neon1` is for neon1's own people, the only ones who may
+ * use the reserved names. Returns what to tell them, or undefined when it's fine */
+export function nameProblem(name: string, opts: { neon1?: boolean } = {}): string | undefined {
+  if (hasHidden(name)) return "Remove the hidden characters from your name. Typing it again usually works.";
+  const t = cleanName(name);
   if (!t) return "Enter your name.";
-  if (/[@/\\:]|https?|www\./i.test(t) || /\d/.test(t)) return "Enter your name without numbers, links, or email addresses.";
-  if (!/^[\p{L}\p{M}][\p{L}\p{M}' .’-]*$/u.test(t)) return "Use letters, spaces, apostrophes, hyphens, or periods.";
+  if ([...t].length > NAME_MAX) return `Use ${NAME_MAX} characters or fewer.`;
+  if (!opts.neon1 && claimsToBeNeon1(t)) return skeleton(t) === PRADEEP ? "Add your last name." : "That name is reserved. Use your own name.";
+  // neon1's own people may write the company's name, digit and all
+  const typed = opts.neon1 ? t.replace(/neon1|1neon/gi, "neon") : t;
+  if (/[@/\\:]|https?|www\./i.test(t) || /\d/.test(typed)) return "Enter your name without numbers, links, or email addresses.";
+  if (!/^\p{L}[\p{L}\p{M}' .’·-]*$/u.test(typed) || /[' .’·-]\p{M}/u.test(t)) return "Use letters, spaces, apostrophes, hyphens, or periods.";
+  // Marks piled on a letter spill over the lines around it
+  const marks = t.normalize("NFD");
+  if (/[\p{Mn}\p{Me}]{5}/u.test(marks) || /([\p{Mn}\p{Me}])\1/u.test(marks)) return "Remove the extra accent marks.";
+  if (t.split(/[ .’'·-]+/u).some(mixedWord)) return "Use one alphabet in each part of your name.";
   if ((t.match(/\p{L}/gu) ?? []).length < MIN_TEXT) return `Enter at least ${MIN_TEXT} letters of your name.`;
   if (looksLikeJunk(t) || offensive(t)) return "Enter your real name.";
   // One name is a real name too (many people go by one), so a last name is never required
   return undefined;
+}
+
+
+/** An organization's name typed at sign-up: free text (digits and symbols are fine) with no hidden
+ * characters, and not passing for neon1 or its staff */
+export function orgNameProblem(name: string): string | undefined {
+  if (hasHidden(name)) return "Remove the hidden characters from the name. Typing it again usually works.";
+  if (claimsToBeNeon1(name)) return "That name is reserved. Use your organization's name.";
+  return textProblem(name, "your organization's name", MIN_TEXT);
 }
 
 

@@ -2,8 +2,9 @@
 // profile edits, and proving the mobile number that text notices go to.
 
 
-import { UpdateMeInput, type Member, type Tenant, type User } from "@1neon/domain";
+import { cleanName, nameProblem, UpdateMeInput, type Member, type Tenant, type User } from "@1neon/domain";
 import { z } from "zod";
+import { failFields } from "../lib/vet.ts";
 import { assurance } from "../lib/assurance.ts";
 import { body, defined, fail, now, who } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
@@ -75,6 +76,12 @@ export function meRoutes(app: App, k: Kit) {
     if (consent === true && !smsDestinationAllowedByConfig(consentPhone, d.cfg.smsAllowedDestinations)) fail(403, "texts_dev_limited", "Texts in this environment are limited to configured test numbers.");
     const sms = smsAfterSave(user, patch.phone, consent);
     const next: User = { ...user, ...defined(patch), ...sms, version: user.version + 1, updatedAt: now(), updatedBy: user.id };
+    // A new name meets the same rule as sign-up. One saved before the rule stays until it's changed
+    if (input.name !== undefined && input.name !== user.name) {
+      const wrong = nameProblem(input.name, { neon1: actor.operator });
+      if (wrong) failFields({ name: wrong });
+      next.name = cleanName(input.name);
+    }
     const ops = [repo.userOp(next, version)];
     const oldPhone = e164(user.smsPendingPhone ?? user.smsPhone);
     const newPhone = e164(next.smsPendingPhone ?? next.smsPhone);

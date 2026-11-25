@@ -2,7 +2,7 @@
 // sheet on every page, and the short spotlight tours both start. Tours use driver.js (MIT).
 
 
-import type { User } from "@1neon/domain";
+import { nameProblem, type User } from "@1neon/domain";
 import { useQueryClient } from "@tanstack/react-query";
 import { driver, type DriveStep } from "driver.js";
 import "driver.js/dist/driver.css";
@@ -324,10 +324,11 @@ export function HelpProvider({ me, children }: { me: Me; children: ReactNode }) 
 
   // The person's tour choice is kept with their account, so it follows them to every device
   const [name, setName] = useState("");
+  const [nameLeft, setNameLeft] = useState(false);
   const saveTour = useCallback(async (tour: NonNullable<User["tour"]>) => {
     const cur = qc.getQueryData<Me>(["me"]) ?? me;
     // A name typed in the welcome dialog is saved with the choice, so people show by name to others
-    const named = !cur.user.name && name.trim() ? { name: name.trim() } : {};
+    const named = !cur.user.name && name.trim() && !nameProblem(name, { neon1: cur.operator }) ? { name: name.trim() } : {};
     try {
       const user = await api<User>("/me", { method: "PATCH", body: { version: cur.user.version, tour, ...named } });
       qc.setQueryData(["me"], { ...cur, user });
@@ -362,6 +363,7 @@ export function HelpProvider({ me, children }: { me: Me; children: ReactNode }) 
   const value = useMemo(() => ({ open: () => setSheet(true), welcomeTour }), [welcomeTour]);
   // The organization in the address, once loaded, says whether this person sees the free-account page
   const orgId = me.orgs.find((o) => o.slug === /^\/o\/([^/]+)/.exec(loc.pathname)?.[1])?.id;
+  const nameError = name.trim() ? nameProblem(name, { neon1: me.operator }) : undefined;
   const free = limitedProspect(orgId ? qc.getQueryData<OrgResponse>(["org", orgId])?.org : undefined, me.operator);
   const g = { ...GUIDES[key], ...(free ? FREE[key] : undefined) };
   return (
@@ -387,11 +389,12 @@ export function HelpProvider({ me, children }: { me: Me; children: ReactNode }) 
         {!me.user.name && (
           <div style={{ margin: "12px 0" }}>
             <label htmlFor="welcome-name">Your name</label>
-            <input id="welcome-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} autoComplete="name" placeholder="First and last name" />
+            <input id="welcome-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={80} autoComplete="name" placeholder="First and last name" onBlur={() => setNameLeft(true)} onFocus={() => setNameLeft(false)} aria-invalid={nameLeft && nameError ? true : undefined} aria-describedby={nameLeft && nameError ? "welcome-name-error" : undefined} />
+            {nameLeft && nameError && <p className="small field-error" id="welcome-name-error" role="status">{nameError}</p>}
           </div>
         )}
         <div className="actions stack-sm">
-          <button className="btn btn-primary" onClick={welcomeTour}>Start the tour</button>
+          <button className="btn btn-primary" onClick={() => (nameError ? setNameLeft(true) : welcomeTour())}>Start the tour</button>
           <button className="btn btn-ghost" onClick={() => { setWelcome(false); void saveTour("later"); }}>Remind me next time</button>
           <button className="btn btn-ghost" onClick={() => { setWelcome(false); void saveTour("done"); }}>Skip</button>
         </div>

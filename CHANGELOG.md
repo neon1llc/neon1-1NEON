@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+### Changed
+- Names follow one rule on sign-up, your profile, and invitations: any language, with spaces, apostrophes, hyphens, and periods. Hidden characters, mixed alphabets in one word, and names that pass for neon1 or its staff are refused, with the reason under the field. A name saved earlier stays until you change it.
+
 ### Fixed
 - Wide tables on the People page, the legal pages, and the sample project can be scrolled from the keyboard.
 - The cookie notice lists every item the site and portal save.

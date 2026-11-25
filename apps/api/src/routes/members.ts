@@ -2,8 +2,8 @@
 // through the outbox with the membership), resends, and access changes.
 
 
-import { emailProblem, textProblem } from "../lib/vet.ts";
-import { InviteInput, UpdateMemberInput, changeRecord, MIN_TEXT, newId, type Member, type Tenant, type User } from "@1neon/domain";
+import { emailProblem } from "../lib/vet.ts";
+import { InviteInput, UpdateMemberInput, changeRecord, cleanName, nameProblem, newId, type Member, type Tenant, type User } from "@1neon/domain";
 import { actorId, body, defined, fail, need, now, who } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
 import { outboxOp } from "../outbox.ts";
@@ -49,11 +49,15 @@ export function memberRoutes(app: App, k: Kit) {
       const x = await emailProblem(d.vetting, p.email);
       return x ? `${p.email}: ${x}` : undefined;
     }));
-    const named = people.map((p) => (p.name ? textProblem(p.name, `${p.email}'s name`, MIN_TEXT) : undefined));
+    // A name typed for someone else meets the same rule as their own; only neon1 may use neon1's names
+    const named = people.map((p) => {
+      const x = p.name ? nameProblem(p.name, { neon1: who(c).actor.operator || cfg.operatorEmails.includes(p.email.toLowerCase()) }) : undefined;
+      return x ? `${p.email}: ${x}` : undefined;
+    });
     const first = [...problems, ...named].find(Boolean);
     if (first) fail(400, "check_fields", first);
     const out: Member[] = [];
-    for (const p of people) {
+    for (const p of people.map((x) => ({ ...x, name: cleanName(x.name) }))) {
       let uid = await repo.userIdForEmail(p.email);
       const ts = now();
       if (!uid) {

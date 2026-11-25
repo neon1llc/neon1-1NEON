@@ -1,7 +1,7 @@
 // packages/domain/src/forms.test.ts - The shared form rules: names, junk, offensive words, email shape, minimum lengths,
 // and how a place is written and split.
 import { describe, expect, it } from "vitest";
-import { emailShapeOk, joinPlace, looksLikeJunk, messageProblem, MIN_TEXT, nameProblem, offensive, placeShapeProblem, splitPlace, stateCode, textProblem } from "./forms.ts";
+import { claimsToBeNeon1, cleanName, orgNameProblem, emailShapeOk, joinPlace, looksLikeJunk, messageProblem, MIN_TEXT, nameProblem, offensive, placeShapeProblem, splitPlace, stateCode, textProblem } from "./forms.ts";
 
 describe("names", () => {
   it("takes real names from anywhere, one name included", () => {
@@ -15,6 +15,41 @@ describe("names", () => {
     expect(nameProblem("aaaaaa bbbbb")).toBe("Enter your real name.");
     expect(nameProblem("Fuck Off")).toBe("Enter your real name.");
     expect(nameProblem("")).toBe("Enter your name.");
+  });
+});
+
+describe("the name rule", () => {
+  it("takes names in many alphabets, with their punctuation", () => {
+    for (const n of ["Zoë D’Angelo", "Jean-Luc O'Brien Jr.", "Gal·la Puig", "Дмитрий Иванов", "Ελένη Παπαδοπούλου", "محمد علي", "प्रिया शर्मा", "ปิยะ สุขใจ", "王伟", "山田 たろう", "タナカ ケン", "김민준", "John Smith 王伟", "Pradeep Kumar", "Anil Pradeep", "Priya Tathineni", "Neo Mokoena", "Neo", "Joe Root", "Sam Staff", "TEST-Client-Account"]) expect(nameProblem(n), n).toBeUndefined();
+  });
+  it("stores one spelling", () => {
+    expect(cleanName("  Ｄａｎａ \u00a0 Kim ")).toBe("Dana Kim");
+    expect(cleanName("𝐏𝐫𝐢𝐲𝐚")).toBe("Priya");
+    expect(cleanName("Mary\u2011Jane")).toBe("Mary-Jane");
+    expect(cleanName("Zoe\u0308")).toBe("Zoë");
+  });
+  it("refuses invisible and direction characters", () => {
+    for (const ch of ["\u0000", "\u200b", "\u200c", "\u200d", "\u200e", "\u202e", "\u2066", "\ufeff", "\u00ad", "\u034f", "\u3164", "\ufe0f", "\u{e0041}"]) expect(nameProblem(`Da${ch}na Kim`), JSON.stringify(ch)).toMatch(/hidden/);
+    expect(orgNameProblem("Ac\u202eme")).toMatch(/hidden/);
+  });
+  it("refuses brackets, symbols, and emoji", () => {
+    for (const n of ["[TEST] Dana", "Dana (Kim)", "Dana <b>", "Dana_Kim", "Dana, Kim", "Dana ✔", "Dana 😀", "'Dana", "Dana \u0301Kim"]) expect(nameProblem(n), n).toBeDefined();
+  });
+  it("refuses mixed alphabets in a word and piled-up marks", () => {
+    expect(nameProblem("D\u0430na Kim")).toMatch(/one alphabet/);
+    expect(nameProblem("Dana Kim\u0300\u0301\u0302\u0303\u0304\u0305")).toMatch(/accent/);
+    expect(nameProblem("Dana Kiq\u0301\u0301")).toMatch(/accent/);
+    expect(nameProblem("A".repeat(40) + " " + "Bo".repeat(21))).toMatch(/80/);
+  });
+  it("keeps neon1's names for neon1, look-alikes included", () => {
+    for (const n of ["neon1", "NEON1", "1NEON", "1 N E O N", "ne0n1 Support", "Neon One", "Dana from neon1", "Admin", "adm1n", "Site Admin", "Administrator", "Moderator", "Support", "Support Team", "Security", "Neon Support", "Neo AI", "Official", "Pradeep", "PRADEEP.", "Pra deep", "Pradeep Tathineni", "Tathineni Pradeep", "Pradeep T.", "Pradeep Support", "Рrаdеер", "Ｐｒａｄｅｅｐ", "Prádeep", "ѕуѕтем", "P.r.a.d.e.e.p"]) expect(claimsToBeNeon1(n), n).toBe(true);
+    for (const n of ["Pradeep Kumar", "Pradeep T Rao", "Neo", "Neon", "Teamsworth", "Admiral Jones", "Supriya Das", "Tamara Root"]) expect(claimsToBeNeon1(n), n).toBe(false);
+    expect(nameProblem("Pradeep")).toBe("Add your last name.");
+    expect(nameProblem("Support Team")).toMatch(/reserved/);
+    expect(nameProblem("Pradeep Tathineni", { neon1: true })).toBeUndefined();
+    expect(orgNameProblem("neon1 Billing")).toMatch(/reserved/);
+    expect(orgNameProblem("Studio 54")).toBeUndefined();
+    expect(orgNameProblem("Pradeep Consulting")).toBeUndefined();
   });
 });
 

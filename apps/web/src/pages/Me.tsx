@@ -11,7 +11,7 @@ import { Link, useLocation, useNavigate } from "react-router";
 import { useSession, useTopBar } from "../components/Shell.tsx";
 import { Avatar, useAsk, useToast } from "../components/ui.tsx";
 import { api } from "../lib/api.ts";
-import { emailDefault, menuOf, NOTIFY_GROUPS } from "@1neon/domain";
+import { emailDefault, menuOf, nameProblem, NOTIFY_GROUPS } from "@1neon/domain";
 import { problem } from "../lib/hooks.ts";
 import { passkeyCreation } from "../lib/passkey.ts";
 import { useProspectEverywhere } from "../components/Prospect.tsx";
@@ -58,6 +58,10 @@ export function MePage() {
   // Edits show at once and save by themselves (below); only the phone and text consent wait for their own Save
   const [draft, setDraft] = useState({ name: me.user.name, title: me.user.title, phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) });
   const [busy, setBusy] = useState(false);
+  // A name the rule refuses (the API's own, forms.ts) is explained under its field and held back, so
+  // the other fields still save. One saved before the rule is left as it is
+  const nameWrong = (name: string, was: string) => (name === was ? undefined : nameProblem(name, { neon1: me.operator }));
+  const [nameLeft, setNameLeft] = useState(false);
   // Motion is this browser's choice, not the account's, so it changes at once and isn't part of Save
   const deviceLess = deviceLessMotion();
   const [less, setLess] = useState(() => deviceLess || chosenLessMotion());
@@ -89,6 +93,7 @@ export function MePage() {
     clearTimeout(timer.current);
     if (inflight.current) { again.current = true; return; }
     const d = autoPatch(latest.current.draft);
+    if (nameWrong(d.name, latest.current.me.user.name)) d.name = savedAuto.current.name;
     if (same(d, savedAuto.current)) return;
     inflight.current = true;
     pendingQuick.current = false;
@@ -128,7 +133,8 @@ export function MePage() {
     return () => { removeEventListener("pagehide", out); document.removeEventListener("visibilitychange", hidden); out(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const waiting = !same(autoPatch(draft), savedAuto.current);
+  const nameError = nameWrong(draft.name, me.user.name);
+  const waiting = !same(autoPatch({ ...draft, name: nameError ? savedAuto.current.name : draft.name }), savedAuto.current);
   // Leaving the profile unsaved puts the menu preview back to its saved style
   useEffect(() => () => { previewMenu(undefined); }, []);
   // The phone check: a code is texted, then typed here
@@ -174,10 +180,10 @@ export function MePage() {
     try {
       const changingPhone = draft.phone !== me.user.phone;
       const startingTexts = draft.smsConsent && !me.user.smsConsentAt && draft.phone === me.user.phone;
-      const user = await api<User>("/me", { method: "PATCH", body: { version: version.current, ...draft } });
+      const user = await api<User>("/me", { method: "PATCH", body: { version: version.current, ...draft, ...(nameError ? { name: savedAuto.current.name } : {}) } });
       // This save carried the other fields too, so they are saved as well
       version.current = user.version;
-      savedAuto.current = autoPatch(draft);
+      savedAuto.current = autoPatch({ ...draft, ...(nameError ? { name: savedAuto.current.name } : {}) });
       qc.setQueryData(["me"], { ...me, user });
       setDraft((current) => ({ ...current, phone: user.phone, smsConsent: Boolean(user.smsConsentAt) }));
       // The text state depends on what was saved; read it back fresh
@@ -251,7 +257,7 @@ export function MePage() {
       <form id="profile" className="form profile-form" onSubmit={(e) => { e.preventDefault(); if (smsDirty) void save(); else void flush(); }}>
         <section className="card profile-section">
           <h2 className="card-h">Your details</h2>
-        <div><label htmlFor="nm">Name</label><input id="nm" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} onBlur={() => void flush()} maxLength={80} autoComplete="name" /></div>
+        <div><label htmlFor="nm">Name</label><input id="nm" value={draft.name} onChange={(e) => { setNameLeft(false); setDraft({ ...draft, name: e.target.value }); }} onBlur={() => { setNameLeft(true); void flush(); }} maxLength={80} autoComplete="name" aria-invalid={nameLeft && nameError ? true : undefined} aria-describedby={nameLeft && nameError ? "nm-error" : undefined} />{nameLeft && nameError && <p className="small field-error" id="nm-error" role="status">{nameError}</p>}</div>
         <div><label htmlFor="tt">Title</label><input id="tt" value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} onBlur={() => void flush()} maxLength={80} autoComplete="organization-title" /></div>
         {!noTexts && <div><label htmlFor="ph">Phone (only you see it)</label><input id="ph" type="tel" value={draft.phone} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} maxLength={32} autoComplete="tel" /></div>}
         {/* The zone email shows times in; the browser's until changed */}
