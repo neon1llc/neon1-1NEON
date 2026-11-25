@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+### Changed
+- Production sign-in codes come from "1NEON Security" (security@notify.neon1.tech), the same sender as the sign-in method notices; applies with the next infra apply.
+
 ### Added
 - Service agreement edition 2.3: as a client admin signs, they choose about anonymous case studies (yes, decide later, no) and the client list (ask first, yes, no), and can change either on the agreement page. A 2.1 signature still covers approvals, with case studies at decide later until an admin chooses.
 - A handover acceptance can carry a few words about the work, quoted only if the client ticks it.
@@ -12,7 +15,6 @@
 ## v0.27.3 - 2026-11-24
 
 ### Changed
-- Production sign-in codes come from "1NEON Security" (security@notify.neon1.tech), the same sender as the sign-in method notices; applies with the next infra apply.
 - The FAQ search marks your words in each matching question and answer, as the Knowledge Center search does.
 - 1NEON help links outline examples to the What to write section of How 1NEON accounts work.
 - Removed a one-time note about syncing legal wording that didn't belong in the repository.
