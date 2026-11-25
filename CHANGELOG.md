@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+### Added
+- The service agreement, a proposal, and the legal pages show where you are: a section index at the right edge, or a thin line under the bar on a phone.
+
 ### Changed
 - On a desktop (1200px and wider, with a mouse), reading text is 16px instead of 15px, and the rest of the type, controls, and spacing grow with it. Phones and tablets are unchanged.
 

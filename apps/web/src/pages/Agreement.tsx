@@ -8,6 +8,7 @@ import { STARTING_CHOICES, UNCHOSEN, choiceLabel, type ChoiceValues, type Signat
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { ChoiceFields, SignBox, signReady, type SignValue } from "../components/Billing.tsx";
+import { PageIndex } from "../components/PageIndex.tsx";
 import { Markdown } from "../components/Markdown.tsx";
 import { gate } from "../components/Reads.tsx";
 import { useOrg, useSession, useTopBar } from "../components/Shell.tsx";
@@ -86,6 +87,7 @@ export function AgreementPage() {
         <p className="notice small" role="status">Waiting for an admin of {org.name} to sign.</p>
       )}
       <Markdown source={a.text} />
+      <PageIndex key={a.edition} within=".content.agreement" />
       {maySign && (
         <form className="card sign-card" onSubmit={(e) => { e.preventDefault(); if (signReady(sign)) void submit(); }}>
           <ChoiceFields id="agreement-choice" value={picked} onChange={setPicked} />

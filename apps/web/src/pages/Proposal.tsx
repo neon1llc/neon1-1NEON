@@ -5,6 +5,7 @@
 // draft (?draft=1) built from the project's records the same way Issue freezes them.
 
 
+import { PageIndex } from "../components/PageIndex.tsx";
 import { isQuickFix, buildSnapshot, currentDecision, DecisionFields, hoursRange, hoursText, paymentPlan, priceCheckDue, priceMeaning, priceOf, proposalRef, revisions, todayIn, type Item, type ProposalFields, type ProposalSnapshot } from "@1neon/domain";
 import { FileText, Printer } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
@@ -157,6 +158,7 @@ function Proposal({ snapshot: s, rev, latestRev, decided, inForce, timeZone, slu
       {!rev && <p className="pp-state" role="status">Draft, not issued. It shows the project as it is now. I issue it as a numbered revision before an option can be approved.</p>}
       {older && <p className="pp-state" role="status">This is an earlier revision. <Link to={`${base}/proposal`}>Read the latest, r{latestRev}</Link>.</p>}
       {stale && <p className="pp-state warn" role="status">Prices may have changed since {longDate(rev!.issuedAt)}. Ask neon1 to refresh this proposal before choosing an option.</p>}
+    <PageIndex key={rev ? rev.issuedAt : "draft"} within="article.proposal" />
     <article className={`proposal${stale || older ? " pp-faded" : ""}`} aria-labelledby="pp-h1">
       {/* The fictional label, on screen and fixed to every printed page */}
       {DEMO && <p className="pp-note">{FICTIONAL}</p>}

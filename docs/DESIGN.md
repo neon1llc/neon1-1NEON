@@ -17,3 +17,5 @@ The look is `data-style` (sentinel, or absent for Matrix), `data-theme` (`awake`
 A component here overrides a step only where it must, with a comment saying why. `layout-contract.test.ts` fails when this stylesheet defines a base step of its own, uses a step that does not exist, or writes a text size as a number.
 
 The wordmark (`Wm`, neon1.tech's `.wm` rule) is for branding only: the public bar's logo, the menu's neon1.tech link, and letterheads. Everywhere else "neon1" is plain text at the text's size.
+
+Long documents (the legal pages, the service agreement, a proposal) take the site's section index through `components/PageIndex.tsx`, which loads `shared/page-index.js`. It shows only on three or more sections over two screens. Working screens such as Home and Board don't take it.

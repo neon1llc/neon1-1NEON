@@ -5,6 +5,7 @@
 
 import { AGREEMENT_TEXT } from "@1neon/domain";
 import { Markdown } from "../components/Markdown.tsx";
+import { PageIndex } from "../components/PageIndex.tsx";
 import { PublicBar } from "../components/PublicBar.tsx";
 import { PublicFooter } from "../components/PublicFooter.tsx";
 import { useDocumentScroll } from "../lib/edge.ts";
@@ -31,6 +32,7 @@ export function Legal({ doc }: { doc: keyof typeof DOCS }) {
     <main className="content legal pub-page" style={{ maxWidth: 760, margin: "0 auto" }}>
       {/* Rendered from Markdown, then links to the other two documents */}
       <Markdown source={DOCS[doc]} />
+      <PageIndex key={doc} within="main.legal" />
     </main>
     <PublicFooter />
     </>
