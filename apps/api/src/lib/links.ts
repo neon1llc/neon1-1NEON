@@ -18,6 +18,8 @@ export interface NoteLink {
   layer?: Layer;
   item?: string;
   invoice?: string;
+  /** A proposal revision, read on its own page */
+  proposal?: number;
   anchor?: string;
   /** The calendar day Home opens on */
   day?: string;
@@ -55,6 +57,9 @@ export async function eventLinks(repo: Pick<Repo, "listProjects" | "getItem" | "
     if (!p) return undefined;
     // Invoices and their payments open the invoice, with its lines and Pay
     if (kind === "invoice" || kind === "payment") return { project: p.key, invoice: e.target };
+    // An issued revision is its own document; the Needs tab has no row for it
+    const rev = e.action === "proposal.issued" ? Number(/-r(\d+)\b/.exec(e.summary)?.[1]) : 0;
+    if (rev) return { project: p.key, proposal: rev };
     if (kind === "comment") {
       const item = await repo.getItem(tid, p.id, e.target).catch(() => undefined);
       return item ? { project: p.key, layer: KIND_LAYER[item.kind as ItemKind], item: item.id } : { project: p.key };
@@ -75,6 +80,7 @@ export function linkUrl(home: string, link: NoteLink | undefined): string | unde
   if (link.page === "prospects") return `${home.replace(/\/o\/[^/]*$/, "")}/prospects${hash}`;
   if (link.page) return `${home}/${link.page}${link.day ? `?day=${link.day}` : ""}${hash}`;
   if (!link.project) return undefined;
+  if (link.proposal) return `${home}/projects/${link.project}/proposal?r=${link.proposal}`;
   if (link.invoice) return `${home}/projects/${link.project}/invoices/${link.invoice}`;
   return `${home}/projects/${link.project}${link.layer ? `/${SLUG[link.layer]}` : ""}${link.item ? `#item-${link.item}` : hash}`;
 }

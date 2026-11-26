@@ -18,7 +18,7 @@ import { useSession } from "./Shell.tsx";
 
 
 /** Where one leads, as the API says it (apps/api/src/lib/links.ts) */
-type NoteLink = { page?: string; project?: string; layer?: Layer; item?: string; invoice?: string; anchor?: string; day?: string };
+type NoteLink = { page?: string; project?: string; layer?: Layer; item?: string; invoice?: string; proposal?: number; anchor?: string; day?: string };
 /** One notification as the API returns it, with where it leads when the thing still exists */
 type Note = AuditEvent & { group: string; level: Level; unread: boolean; link?: NoteLink };
 
@@ -30,6 +30,7 @@ export function hrefOf(slug: string, link: NoteLink | undefined) {
   if (link.page === "prospects") return `/prospects${hash}`;
   if (link.page) return `/o/${slug}/${link.page}${link.day ? `?day=${link.day}` : ""}${hash}`;
   if (!link.project) return undefined;
+  if (link.proposal) return `/o/${slug}/projects/${link.project}/proposal?r=${link.proposal}`;
   if (link.invoice) return `/o/${slug}/projects/${link.project}/invoices/${link.invoice}`;
   return `/o/${slug}/projects/${link.project}${link.layer ? `/${layerSlug(link.layer)}` : ""}${link.item ? `#item-${link.item}` : hash}`;
 }

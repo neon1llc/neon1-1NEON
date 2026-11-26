@@ -296,7 +296,7 @@ async function eventTargets(d: OutboxDeps, e: AuditEvent, clock: Clock): Promise
     const issued = all.find((r) => r.id === e.target);
     if (project && issued) {
       const asked = askedToDecide(members.filter((m) => !cfg.operatorEmails.includes(m.email.toLowerCase())), project.people);
-      review = { ...asked, mail: { org: tenant?.name ?? "1NEON", projectKey: key, proposal: quick ? issued.title.replace("Proposal", "Quote") : issued.title, before: all.find((r) => r.p.rev === issued.p.rev - 1)?.p.snapshot.options, after: issued.p.snapshot.options, quick, url: opens, settingsUrl: `${cfg.publicUrl}/1NEON/me` } };
+      review = { ...asked, mail: { org: tenant?.name ?? "1NEON", projectKey: key, proposal: quick ? issued.title.replace("Proposal", "Quote") : issued.title, before: all.find((r) => r.p.rev === issued.p.rev - 1)?.p.snapshot.options, after: issued.p.snapshot.options, quick, url: `${home}/projects/${key}/needs#options`, settingsUrl: `${cfg.publicUrl}/1NEON/me` } };
     }
   }
   for (const m of members) {

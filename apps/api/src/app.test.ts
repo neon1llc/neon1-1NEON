@@ -2,6 +2,7 @@
 // levels, and conflict handling.
 
 
+import { eventLinks } from "./lib/links.ts";
 import { beforeEach, describe, expect, it } from "vitest";
 import type { CustomMessageTriggerEvent } from "aws-lambda";
 import { createApp } from "./app.ts";
@@ -591,6 +592,12 @@ describe("notifications", () => {
     expect(of("task.created")).toEqual({ project: "FLOW-1", layer: "execution", item: item.id });
     expect(of("comment.created")).toEqual({ project: "FLOW-1", layer: "execution", item: item.id });
     expect(of("project.moved")).toEqual({ project: "FLOW-1" });
+  });
+
+  it("opens an issued proposal at its revision, and a deleted item at its tab", async () => {
+    const repoStub = { listProjects: async () => [{ id: "p", key: "FLOW-1" }], getItem: async () => undefined, getCalEvent: async () => undefined } as never;
+    const ev = (action: string, summary: string) => ({ action, summary, target: "i1" }) as never;
+    expect(await eventLinks(repoStub, "t", [ev("proposal.issued", "FLOW-1: issued Proposal 0041-r2"), ev("task.deleted", "FLOW-1: removed a task")])).toEqual([{ project: "FLOW-1", proposal: 2 }, { project: "FLOW-1", layer: "execution" }]);
   });
 
   it("names neon1's own person even when added without a name", async () => {
