@@ -13,6 +13,7 @@
 - Each notification, and its email, opens the exact thing: the person, file, calendar day, invoice, setting, or item, scrolled into view and highlighted.
 
 ### Fixed
+- Booking links go to calendly.com/book-neon1/initial. The old link stopped working.
 - neon1's own person, added to an organization automatically, shows a name instead of "No name yet".
 
 

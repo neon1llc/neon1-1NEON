@@ -415,7 +415,7 @@ export function Example() {
           <p>That's the whole loop. A real project follows the same steps with its own need, setbacks, and numbers.</p>
           <div className="actions">
             <a className="btn btn-primary" href={`/1NEON/live${q(s.id)}`}>Watch it (about 3 minutes)</a>
-            <OutLink className="btn btn-ghost" href="https://calendly.com/1isgladtobeofservice/neon1-consultation">Book a call</OutLink>
+            <OutLink className="btn btn-ghost" href="https://calendly.com/book-neon1/initial">Book a call</OutLink>
           </div>
           <p className="small muted">Prefer to click around? <a href="/1NEON/demo/">Try the interactive demo</a>.</p>
         </section>
