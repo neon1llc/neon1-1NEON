@@ -111,7 +111,7 @@ export const GUIDES: Record<PageKey, Guide> = {
   newproject: {
     title: "New project",
     purpose: "Start a project with a few questions.",
-    howto: ["Templates run lightest to most involved, shown by the four boxes. N E O N means it follows Needs, Execute, Observe, and Normalize. Quick fix follows Quote, Fix, Accept.", "Pick the closest one. You can edit everything it adds.", "Only the name is required.", "Add a measure, with where it is now and where it should be, to show the before and after."],
+    howto: ["First pick how the work runs, lightest first: a Workbench, a quick fix, a proposal, or NEON. The four boxes show how involved each is.", "A proposal or NEON then asks what kind of work it is. That sets the key and the starter items, all editable.", "Only the name is required.", "Add a measure, with where it is now and where it should be, to show the before and after."],
     tour: [{ at: "wizard", title: "A few questions", text: "You can change everything later." }],
   },
   layer: {

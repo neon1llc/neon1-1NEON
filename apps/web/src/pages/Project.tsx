@@ -2,7 +2,7 @@
 // Execute, Observe, Normalize).
 
 
-import { isQuickFix, QUICK_FIX_HOURS, QUICK_FIX_MAX_HOURS, quoteFields, priceLine, type QuoteInput, balanceOf, billedOn, depositLines, hoursLogged, hoursText, lineage, lineCents, dollars as wholeDollars, failedOn, invoiceState, InvoiceFields, money as dollars, payableOn, paymentPlan, priceMeaning, priceOf, betterWhen, canApprove, changedSince, currentDecision, todayIn, isClosed, isOwnOrg, KIND_LAYER, metricProgress, MetricFields, OptionFields, priceCheckDue, ProjectRole, proposalRef, PurchaseFields, HandoffFields, optionHistory, revisions, type DocumentRecord, type Item, type ItemKind, type Layer, type Project, type Stage } from "@1neon/domain";
+import { benchStage, isBench, isQuickFix, QUICK_FIX_HOURS, QUICK_FIX_MAX_HOURS, quoteFields, priceLine, type QuoteInput, balanceOf, billedOn, depositLines, hoursLogged, hoursText, lineage, lineCents, dollars as wholeDollars, failedOn, invoiceState, InvoiceFields, money as dollars, payableOn, paymentPlan, priceMeaning, priceOf, betterWhen, canApprove, changedSince, currentDecision, todayIn, isClosed, isOwnOrg, KIND_LAYER, metricProgress, MetricFields, OptionFields, priceCheckDue, ProjectRole, proposalRef, PurchaseFields, HandoffFields, optionHistory, revisions, type DocumentRecord, type Item, type ItemKind, type Layer, type Project, type Stage } from "@1neon/domain";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, ExternalLink, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
@@ -119,13 +119,16 @@ export function ProjectPage() {
   // A quick fix has nothing to measure unless someone adds it: its Observe tab shows only once it has
   // an item or a file, so the client sees four sections that each hold something
   const observeEmpty = !items.some((i) => KIND_LAYER[i.kind] === "observation") && !detail.data.docs.some((d) => d.layer === "observation");
-  const tabs = LAYERS.filter((l) => !(isQuickFix(p) && l === "observation" && observeEmpty));
+  // A Workbench is one shared page (Execute's work, to-dos, and files); its other layers show only once they hold something
+  const bench = isBench(p);
+  const holds = (l: Layer) => items.some((i) => KIND_LAYER[i.kind] === l) || detail.data.docs.some((d) => d.layer === l);
+  const tabs = LAYERS.filter((l) => (bench ? l === "execution" || holds(l) : !(isQuickFix(p) && l === "observation" && observeEmpty)));
   return (
     <>
       {/* Shown data that a refresh couldn't update is marked, so nobody acts on it unknowingly */}
       <Stale reads={[projects, detail]} />
       {/* Key, current stage with its age, then the name with where it stands (health, or closed and when) and archive state */}
-      <p className="mono small muted" style={{ margin: 0 }}>{p.key} · {org.stages[stageAt]?.name} {inStageFor(p.stageEnteredAt)}</p>
+      <p className="mono small muted" style={{ margin: 0 }}>{p.key} · {bench ? (isClosed(org.stages, p.stageId) ? "Done" : "Open") : org.stages[stageAt]?.name} {inStageFor(p.stageEnteredAt)}</p>
       <h1 className="page-title" style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
         {p.name} <Standing health={p.health} closed={isClosed(org.stages, p.stageId)} since={p.stageEnteredAt} />
         <OnionProgress progress={prog} size={44} />
@@ -133,7 +136,10 @@ export function ProjectPage() {
       </h1>
       {/* Visible stages plus the project's own even if hidden; "done" counts by position among all stages */}
       <div className="steps" aria-label="Stage" data-tour="stage">
-        {org.stages.map((s, i) => (!s.hidden || s.id === p.stageId) && (
+        {bench ? ["Open", "Done"].map((w, i) => {
+          const on = (i === 1) === isClosed(org.stages, p.stageId);
+          return <span key={w} className={on ? "on" : i === 0 ? "done" : ""} aria-current={on ? "step" : undefined}>{w}</span>;
+        }) : org.stages.map((s, i) => (!s.hidden || s.id === p.stageId) && (
           <span key={s.id} className={s.id === p.stageId ? "on" : i < stageAt ? "done" : ""} aria-current={s.id === p.stageId ? "step" : undefined}>{s.name}</span>
         ))}
       </div>
@@ -143,7 +149,7 @@ export function ProjectPage() {
       <nav className="tabs" aria-label="Project sections" data-tour="layers">
         <NavLink to={base} end viewTransition onClick={(e) => toTab(e, base, 0)} className={() => (tab === "overview" ? "active" : "")}>Overview</NavLink>
         {tabs.map((l) => (
-          <NavLink key={l} to={`${base}/${layerSlug(l)}`} viewTransition onClick={(e) => toTab(e, `${base}/${layerSlug(l)}`, LAYERS.indexOf(l) + 1)}><LayerBadge layer={l} /><span className="tab-name">{layerName(l)}<small className="sub"><span className="sr">, </span>{layerHint(l)}</small></span> {prog[l][1] > 0 && <span className="muted" aria-label={`${prog[l][0]} of ${prog[l][1]} done`} title={`${prog[l][0]} of ${prog[l][1]} done`}>{prog[l][0]}/{prog[l][1]}</span>}</NavLink>
+          <NavLink key={l} to={`${base}/${layerSlug(l)}`} viewTransition onClick={(e) => toTab(e, `${base}/${layerSlug(l)}`, LAYERS.indexOf(l) + 1)}><LayerBadge layer={l} /><span className="tab-name">{bench && l === "execution" ? "Workbench" : layerName(l)}<small className="sub"><span className="sr">, </span>{bench && l === "execution" ? "Notes, to-dos, and files" : layerHint(l)}</small></span> {prog[l][1] > 0 && <span className="muted" aria-label={`${prog[l][0]} of ${prog[l][1]} done`} title={`${prog[l][0]} of ${prog[l][1]} done`}>{prog[l][0]}/{prog[l][1]}</span>}</NavLink>
         ))}
       </nav>
       {/* The section under the tabs pans by tab order */}
@@ -174,7 +180,7 @@ function NextStep({ project: p, items, stage, base }: { project: Project; items:
   const closed = isClosed(org.stages, p.stageId);
   // Where a move goes: the next shown stage, or for a closed project the shown stage before it
   const ahead = org.stages.slice(at + 1).find((s) => !s.hidden);
-  const back = org.stages.slice(0, at).filter((s) => !s.hidden).at(-1);
+  const back = isBench(p) ? benchStage(org.stages) : org.stages.slice(0, at).filter((s) => !s.hidden).at(-1);
   const decideAt = org.stages.findIndex((s) => s.id === "decide");
   const moveTo = async (to: Stage, word: string) => {
     try {
@@ -270,6 +276,13 @@ function NextStep({ project: p, items, stage, base }: { project: Project; items:
   } else if (me.operator && drafts.length) {
     text = <>{drafts.length === 1 ? `A ${String(drafts[0]!.fields.type)} invoice is` : `${drafts.length} invoices are`} drafted. Check {drafts.length === 1 ? "it" : "them"}, then issue.</>;
     action = { to: `${base}/execute#billing`, label: "Check invoices" };
+  } else if (isBench(p)) {
+    // A Workbench has one page and one move: done, when the people on it say so
+    const open = items.filter((i) => KIND_LAYER[i.kind] === "execution" && CHECKABLE.has(i.kind) && i.status !== "done").length;
+    const done = org.stages.find((s) => s.id === "closed");
+    text = mine.length ? <>You have {mine.length} open {mine.length === 1 ? "item" : "items"} on the Workbench.</> : open ? <>{open} open {open === 1 ? "to-do" : "to-dos"} on the Workbench. Mark it done when the work is finished.</> : <>Mark it done when the work is finished.</>;
+    if (mine.length) action = { to: `${base}/execute#item-${mine[0]!.id}`, label: "Open" };
+    if (canWrite && done && !mine.length) move = done;
   } else if (drives && catchUp) {
     // The work ran ahead of the board: say what's done, and move it to where the work is in one step
     text = <>{catchUp.why}, so this project's work is in <b>{catchUp.to.name}</b>. The board still shows <b>{stage?.name ?? "an earlier stage"}</b>.</>;
@@ -343,7 +356,7 @@ function NextStep({ project: p, items, stage, base }: { project: Project; items:
       <span className="eyebrow">Next step</span>
       <p>{text}</p>
       {action && <Link className="btn btn-primary btn-sm" to={action.to}>{action.label} <ArrowRight size={14} aria-hidden="true" /></Link>}
-      {move && <button className={`btn ${action ? "btn-ghost" : "btn-primary"} btn-sm`} onClick={() => void moveTo(move, "moved to")}>Move to {move.name} <ArrowRight size={14} aria-hidden="true" /></button>}
+      {move && <button className={`btn ${action ? "btn-ghost" : "btn-primary"} btn-sm`} onClick={() => void moveTo(move, "moved to")}>{isBench(p) ? "Mark done" : <>Move to {move.name}</>} <ArrowRight size={14} aria-hidden="true" /></button>}
     </div>
   );
 }
@@ -433,6 +446,16 @@ function Overview({ project: p, items, docs }: { project: Project; items: Item[]
       yes: "Archive it",
     }))) return;
     await save(p.version, { archived: !p.archived });
+  };
+  // NEON and a Workbench are two ways to run the same project; switching keeps every item, file, and record
+  const switchWay = async () => {
+    const toBench = !isBench(p);
+    if (!(await ask({
+      title: toBench ? `Run ${p.key} as a Workbench?` : `Run ${p.key} on NEON's stages?`,
+      body: toBench ? "It becomes one shared page for notes, to-dos, and files, open until someone marks it done. Nothing is removed, and you can switch back." : "It follows Needs, Execute, Observe, and Normalize from the stage it's in now. Nothing is removed, and you can switch back.",
+      yes: toBench ? "Run as a Workbench" : "Run on NEON",
+    }))) return;
+    await save(p.version, { workflow: toBench ? "bench" : "neon" });
   };
   // The summary edit started from an older version than the one now on screen
   const newerWhileEditing = editing && p.version > editBase && JSON.stringify(draft) !== JSON.stringify(basics());
@@ -543,6 +566,7 @@ function Overview({ project: p, items, docs }: { project: Project; items: Item[]
           <p className="small" style={{ marginTop: 18 }}>
             {/* Archiving asks first, as deleting does: the project leaves every list and locks. Restoring doesn't need to */}
             <button className="linkish" onClick={() => void archive()}>{p.archived ? "Restore from archive" : "Archive this project"}</button>
+            {!p.archived && !isQuickFix(p) && <><br /><button className="linkish" onClick={() => void switchWay()}>{isBench(p) ? "Run on NEON's stages" : "Run as a Workbench"}</button></>}
           </p>
         )}
       </aside>
@@ -1194,6 +1218,8 @@ function Options({ items, all, docs, path, project }: { items: Item[]; all: Item
   // The option waiting on approval, the conditions being typed, and initials when neon1 buys something
   const [approving, setApproving] = useState<Item>();
   const [conditions, setConditions] = useState("");
+  // How the approved work runs: NEON's stages (the default) or a Workbench. Not part of what's signed
+  const [runAs, setRunAs] = useState<"neon" | "bench">("neon");
   // Why the decision changes, when one is already in force: required, signed, and kept with it
   const [reason, setReason] = useState("");
   const [sign, setSign] = useState<SignValue>({ typedName: "", consent: false });
@@ -1279,6 +1305,12 @@ function Options({ items, all, docs, path, project }: { items: Item[]; all: Item
       await api(`${path}/items/${o.id}/approve`, { method: "POST", body: { version: o.version, conditions, reason: inForce ? reason.trim() : "", signature: { typedName: sign.typedName.trim(), consent: sign.consent } } });
       toast(`${inForce ? "Changed to" : "Approved"}: ${inRev(o)?.code ?? ""} ${o.title}`);
       setDraftFor(undefined);
+      // Running it as a Workbench is a separate project change, made after the signature from the latest version
+      if (runAs === "bench" && !isBench(project)) {
+        const now = await api<{ project: Project }>(`${path}`);
+        await api(path, { method: "PATCH", body: { version: now.project.version, workflow: "bench" } });
+        setRunAs("neon");
+      }
     } catch (e) {
       if (e instanceof HttpError && e.status === 409 && e.body.error === "conflict") toast("That option changed since you opened it. Review it again, then approve.");
       else toast(problem(e));
@@ -1450,6 +1482,13 @@ function Options({ items, all, docs, path, project }: { items: Item[]; all: Item
             </label>
             {agreeError && <p className="small warn-text" role="alert" style={{ margin: "6px 0 0" }}>The agreement was not signed, so nothing was approved. {agreeError}</p>}
           </section>
+        )}
+        {!quick && !inForce && !isBench(project) && (
+          <fieldset className="run-as">
+            <legend className="small">Then run the work</legend>
+            <label className="check"><input type="radio" name="run-as" checked={runAs === "neon"} onChange={() => setRunAs("neon")} /> On NEON's stages: build, check the results, hand over</label>
+            <label className="check"><input type="radio" name="run-as" checked={runAs === "bench"} onChange={() => setRunAs("bench")} /> On a Workbench: one shared page, open until it's done</label>
+          </fieldset>
         )}
         {signed || oneScreen ? <SignBox id="approve-sign" value={sign} onChange={setSign} /> : <AgreementNeeded />}
         <p className="small muted">{inForce ? "Signing replaces the decision in force with this option's scope and price under your service agreement. 1NEON keeps both decisions, your reason, and your signature. None of it can be edited afterwards." : `Signing approves ${quick ? "this quote's" : "this option's"} scope and price under your service agreement. 1NEON keeps a copy of these terms with your signature, who signed and when. None of it can be edited afterwards.`} Invoices follow as the {word.toLowerCase()} says.</p>

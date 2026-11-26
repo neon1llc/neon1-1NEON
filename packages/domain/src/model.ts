@@ -281,6 +281,8 @@ export const Project = z.object({
   summary: z.string().max(500).default(""),
   outcome: z.string().max(500).default(""),
   template: z.string().max(40).default("blank"),
+  // How the work runs: NEON's stages and layers (unset), or a Workbench (one shared page, open until done)
+  workflow: z.enum(["neon", "bench"]).optional(),
   stageId: id,
   stageEnteredAt: isoDate,
   health: Health,

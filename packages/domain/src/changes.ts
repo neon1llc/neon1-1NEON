@@ -58,6 +58,7 @@ export function projectChanges(before: Project, after: Project, nameOf: NameOf):
   if (before.health !== after.health) out.push(`health ${HEALTH[before.health] ?? before.health} → ${HEALTH[after.health] ?? after.health}`);
   if ((before.targetDate ?? "") !== (after.targetDate ?? "")) out.push(after.targetDate ? `target date ${dayWords(before.targetDate)} → ${dayWords(after.targetDate)}` : `target date ${dayWords(before.targetDate)} cleared`);
   if (before.archived !== after.archived) out.push(after.archived ? "archived" : "unarchived");
+  if ((before.workflow ?? "neon") !== (after.workflow ?? "neon")) out.push(after.workflow === "bench" ? "now runs as a Workbench" : "now runs on NEON's stages");
   // People: who joined, who left, and whose role changed (decision makers have their own event)
   const was = new Map(before.people.map((p) => [p.userId, p.role]));
   const now = new Map(after.people.map((p) => [p.userId, p.role]));

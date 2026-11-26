@@ -95,6 +95,9 @@ export const CreateProjectInput = z.object({
   idempotencyKey: z.string().regex(/^[A-Za-z0-9_-]{8,64}$/).optional(),
   name: z.string().trim().min(1).max(120),
   template: z.string().max(40).default("blank"),
+  // How the work runs, and for NEON where it starts: at the beginning, or with the proposal
+  workflow: z.enum(["neon", "bench"]).default("neon"),
+  start: z.enum(["intake", "proposal"]).default("intake"),
   summary: z.string().max(500).default(""),
   outcome: z.string().max(500).default(""),
   example: z.string().max(2000).default(""),
@@ -118,6 +121,7 @@ export const UpdateProjectInput = z.object({
   targetDate: z.string().date().nullable().optional(),
   archived: z.boolean().optional(),
   people: z.array(z.object({ userId: id, role: ProjectRole })).max(50).optional(),
+  workflow: z.enum(["neon", "bench"]).optional(),
 });
 
 

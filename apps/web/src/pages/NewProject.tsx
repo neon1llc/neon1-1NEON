@@ -2,10 +2,10 @@
 // measure it, then review.
 
 
-import { QUICK_FIX, TEMPLATES } from "@1neon/domain";
+import { benchStage, QUICK_FIX, TEMPLATES } from "@1neon/domain";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { useOrg, useTopBar } from "../components/Shell.tsx";
+import { useOrg, useSession, useTopBar } from "../components/Shell.tsx";
 import { dateLabel, useToast } from "../components/ui.tsx";
 import { api, Unconfirmed } from "../lib/api.ts";
 import { checkMeasures, MEASURE_TITLE_MAX, MEASURE_UNIT_MAX, numberWords, type MetricDraft } from "../lib/measures.ts";
@@ -15,10 +15,19 @@ import type { Project } from "@1neon/domain";
 
 
 // The wizard's steps, in order
-const STEPS = ["Template", "Basics", "Measures", "Review"] as const;
+const STEPS = ["Start", "Basics", "Measures", "Review"] as const;
 
-// The gallery, lightest to most involved; the domain's order (Blank first) stays the fallback
-const GALLERY = [...TEMPLATES].sort((a, b) => a.level - b.level);
+// How the work runs, lightest first. Workbench and Quick fix need no second question; a proposal and
+// NEON ask what kind of work it is, which sets the key prefix and the starter items
+type Way = "bench" | "quick" | "proposal" | "neon";
+const WAYS: { id: Way; name: string; line: string; level: 1 | 2 | 3 | 4; path?: string[] }[] = [
+  { id: "bench", name: "Workbench", line: "One shared page for notes, to-dos, and files, open until it's done.", level: 1, path: ["Open", "Done"] },
+  { id: "quick", name: "Quick fix", line: "A few hours: one quote, one signature, one invoice when it's fixed.", level: 2, path: ["Quote", "Fix", "Accept"] },
+  { id: "proposal", name: "Build a proposal", line: "Shape scope and price together, sign, then the work runs on NEON or a Workbench.", level: 3, path: ["Proposal", "Sign", "Run it"] },
+  { id: "neon", name: "NEON", line: "Needs and options, a signed decision, the work, measured results, and a handover.", level: 4 },
+];
+// The kinds of work, lightest to most involved; the domain's order (Blank first) stays the fallback
+const KINDS = TEMPLATES.filter((t) => t.id !== QUICK_FIX).sort((a, b) => a.level - b.level);
 const EFFORT = ["Light", "Moderate", "Involved", "Most involved"] as const;
 // NEON's four layers, in order, with the class that paints each its layer color
 const LAYERS = [["needs", "Needs"], ["execution", "Execute"], ["observation", "Observe"], ["next", "Normalize"]] as const;
@@ -29,6 +38,7 @@ const LAYERS = [["needs", "Needs"], ["execution", "Execute"], ["observation", "O
 // Four steps, then one create call; only editors and admins get the form
 export function NewProject() {
   const { org, summary, canWrite } = useOrg();
+  const me = useSession();
   const nav = useNavigate();
   const toast = useToast();
   const refresh = useRefresh(org.id);
@@ -41,7 +51,10 @@ export function NewProject() {
     stepHeading.current?.focus({ preventScroll: true });
   }, [step]);
   // Answers from every step, kept until Create
-  const [template, setTemplate] = useState("blank");
+  // A client starts on a Workbench and neon1 on NEON, as chosen for the workflows
+  const [way, setWay] = useState<Way>(me.operator ? "neon" : "bench");
+  const [kind, setKind] = useState("blank");
+  const template = way === "quick" ? QUICK_FIX : way === "bench" ? "blank" : kind;
   const [name, setName] = useState("");
   const [projectSummary, setSummary] = useState("");
   const [outcome, setOutcome] = useState("");
@@ -63,8 +76,11 @@ export function NewProject() {
   const t = TEMPLATES.find((x) => x.id === template) ?? TEMPLATES[0]!;
   // A quick fix skips Measures and asks only what's wrong: neon1 quotes it from the project itself.
   // `order` is the steps this template walks through, by their place in STEPS
-  const quick = template === QUICK_FIX;
-  const order = quick ? [0, 1, 3] : [0, 1, 2, 3];
+  const quick = way === "quick";
+  const bench = way === "bench";
+  // A quick fix and a Workbench skip Measures: one is done when it works, the other when everyone says so
+  const light = quick || bench;
+  const order = light ? [0, 1, 3] : [0, 1, 2, 3];
   const at = order.indexOf(step);
   const nextStep = order[at + 1];
   const prevStep = order[at - 1];
@@ -73,15 +89,16 @@ export function NewProject() {
   const measures = checkMeasures(metrics);
   const kept = measures.values;
   // The project starts in the first stage that isn't hidden, as the API does
-  const first = org.stages.find((x) => !x.hidden) ?? org.stages[0];
+  const shownFirst = org.stages.find((x) => !x.hidden) ?? org.stages[0];
+  const first = bench ? benchStage(org.stages) : way === "proposal" ? (org.stages.find((x) => x.id === "propose" && !x.hidden) ?? shownFirst) : shownFirst;
   // What was left blank, named on the review so skipping it is a choice, not an accident
-  const later = (quick ? [!projectSummary.trim() && "what's wrong"] : [!projectSummary.trim() && "what it is", !outcome.trim() && "what done looks like", kept.length === 0 && "a measure"]).filter(Boolean) as string[];
+  const later = (quick ? [!projectSummary.trim() && "what's wrong"] : bench ? [!projectSummary.trim() && "what it's about"] : [!projectSummary.trim() && "what it is", !outcome.trim() && "what done looks like", kept.length === 0 && "a measure"]).filter(Boolean) as string[];
   const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
   // Only the Basics step has a required field
   const ready = [true, name.trim().length > 0, true, true];
   // On a step with a problem, move to the first field to fix instead of going on; answers stay as typed
   const firstProblem = () => {
-    if (quick || !measures.first) return false;
+    if (light || !measures.first) return false;
     const [field, i] = measures.first.split(":");
     const ids = { title: "mt", unit: "mu", baseline: "mb", target: "mg" } as Record<string, string>;
     if (step !== 2) setStep(2);
@@ -100,19 +117,22 @@ export function NewProject() {
           idempotencyKey: requestKey,
           name: name.trim(),
           template,
+          workflow: bench ? "bench" : "neon",
+          start: way === "proposal" ? "proposal" : "intake",
           summary: projectSummary,
           outcome,
           example,
           targetDate: targetDate || undefined,
           // Exactly the values the Review step showed (a quick fix has none, and shows none)
-          metrics: quick ? [] : kept,
-          // Answers typed before switching to a quick fix, which doesn't ask them, aren't sent
-          ...(quick ? { outcome: "", example: "" } : {}),
+          metrics: light ? [] : kept,
+          // Answers typed before switching to a quick fix or a Workbench, which don't ask them, aren't sent
+          ...(light ? { outcome: "", example: "" } : {}),
         },
       });
       refresh();
       toast(`${p.key} created`);
-      nav(`/o/${summary.slug}/projects/${p.key}`);
+      // A proposal opens where it's shaped; a Workbench opens on its one shared page
+      nav(`/o/${summary.slug}/projects/${p.key}${way === "proposal" ? "/needs#options" : bench ? "/execute" : ""}`);
     } catch (e) {
       // Every answer ends the busy state; the answers stay on the form either way
       const lost = e instanceof Unconfirmed;
@@ -146,39 +166,55 @@ export function NewProject() {
       >
         {/* Step 1: template */}
         {step === 0 && (
-          <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
-            <legend className="muted small" style={{ marginBottom: 10 }}>Lightest first. Each starts with the usual questions, checks, and measures, all editable.</legend>
-            <div className="options tpl-grid">
-              {GALLERY.map((x) => (
-                <label key={x.id} className={`card option tpl${template === x.id ? " rec" : ""}`}>
-                  <input type="radio" name="template" value={x.id} checked={template === x.id} onChange={() => setTemplate(x.id)} className="sr" />
-                  <span className="tpl-row">
-                    <span className="tag">{x.keyPrefix}</span>
-                    <span className={`effort e${x.level}`} title={`${EFFORT[x.level - 1]} (${x.level} of 4)`}>
-                      {[1, 2, 3, 4].map((n) => <i key={n} className={n <= x.level ? "on" : ""} aria-hidden="true" />)}
-                      <span className="sr">{EFFORT[x.level - 1]}, {x.level} of 4</span>
+          <>
+            <fieldset className="np-q">
+              <legend>How should we work?</legend>
+              <div className="options tpl-grid ways">
+                {WAYS.map((w) => (
+                  <label key={w.id} className={`card option tpl${way === w.id ? " rec" : ""}`}>
+                    <input type="radio" name="way" value={w.id} checked={way === w.id} onChange={() => setWay(w.id)} className="sr" />
+                    <span className="tpl-row">
+                      <h4>{w.name}</h4>
+                      <span className="effort" title={`${EFFORT[w.level - 1]} (${w.level} of 4)`}>
+                        {[1, 2, 3, 4].map((n) => <i key={n} className={n <= w.level ? "on" : ""} aria-hidden="true" />)}
+                        <span className="sr">{EFFORT[w.level - 1]}, {w.level} of 4</span>
+                      </span>
                     </span>
-                  </span>
-                  <h4>{x.name}</h4>
-                  <span className="muted small">{x.summary}</span>
-                  {/* Which path the project follows: NEON's four layers, or a quick fix's three steps */}
-                  {x.id === QUICK_FIX
-                    ? <span className="tpl-path"><span className="sr">Path: </span>{["Quote", "Fix", "Accept"].map((p) => <b key={p}>{p}</b>)}</span>
-                    : <span className="tpl-path neon"><span className="sr">Path: NEON, </span>{LAYERS.map(([k, n]) => <b key={k} className={`l-${k}`} title={n}><span aria-hidden="true">{n[0]}</span><span className="sr">{n} </span></b>)}</span>}
-                </label>
-              ))}
-            </div>
-          </fieldset>
+                    <span className="muted small">{w.line}</span>
+                    {/* The path it follows: NEON's four layers in their colors, or its own short steps */}
+                    {w.path
+                      ? <span className="tpl-path"><span className="sr">Path: </span>{w.path.map((x) => <b key={x}>{x}</b>)}</span>
+                      : <span className="tpl-path neon"><span className="sr">Path: </span>{LAYERS.map(([k, n]) => <b key={k} className={`l-${k}`} title={n}><span aria-hidden="true">{n[0]}</span><span className="sr">{n} </span></b>)}</span>}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            {/* Only a proposal and NEON ask what kind of work: it sets the key and the starter items */}
+            {!light && (
+              <fieldset className="np-q">
+                <legend>What kind of work?</legend>
+                <div className="options tpl-grid kinds-grid">
+                  {KINDS.map((x) => (
+                    <label key={x.id} className={`card option tpl${kind === x.id ? " rec" : ""}`}>
+                      <input type="radio" name="kind" value={x.id} checked={kind === x.id} onChange={() => setKind(x.id)} className="sr" />
+                      <span className="tpl-row"><h4>{x.name}</h4><span className="tag">{x.keyPrefix}</span></span>
+                      <span className="muted small">{x.summary}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            )}
+          </>
         )}
         {/* Step 2: basics */}
         {step === 1 && (
           <>
             <p className="small muted" style={{ margin: 0 }}><sup className="req" aria-hidden="true">*</sup> Required. The rest can wait, and the project will remind you.</p>
             <div><label htmlFor="n">Name<sup className="req" aria-hidden="true">*</sup></label><input id="n" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} required autoFocus placeholder={quick ? "e.g. printer won't print from the front desk" : "e.g. move the file server to the cloud"} /></div>
-            <div><label htmlFor="s">{quick ? "What's wrong, in a sentence or two?" : "In one or two sentences, what is this?"}</label><textarea id="s" value={projectSummary} onChange={(e) => setSummary(e.target.value)} maxLength={500} rows={2} placeholder={quick ? "e.g. since Tuesday's update, jobs sit in the queue and nothing prints" : "e.g. patients email forms to one inbox, and staff retype them into the record"} /></div>
+            <div><label htmlFor="s">{quick ? "What's wrong, in a sentence or two?" : bench ? "What's it about?" : "In one or two sentences, what is this?"}</label><textarea id="s" value={projectSummary} onChange={(e) => setSummary(e.target.value)} maxLength={500} rows={2} placeholder={quick ? "e.g. since Tuesday's update, jobs sit in the queue and nothing prints" : "e.g. patients email forms to one inbox, and staff retype them into the record"} /></div>
             {/* A quick fix is done when it works, and has no example to collect: those two are for projects */}
-            {!quick && <div><label htmlFor="o">What will be true when it's done?</label><textarea id="o" value={outcome} onChange={(e) => setOutcome(e.target.value)} maxLength={500} rows={2} placeholder="e.g. patients upload once, and the front desk sees what's missing at a glance" /></div>}
-            {!quick && <div><label htmlFor="x">One real example of how it works today</label><textarea id="x" value={example} onChange={(e) => setExample(e.target.value)} maxLength={2000} rows={3} placeholder="e.g. every Monday, Tomas exports the schedule to a spreadsheet and emails it to the front desk…" /></div>}
+            {!light && <div><label htmlFor="o">What will be true when it's done?</label><textarea id="o" value={outcome} onChange={(e) => setOutcome(e.target.value)} maxLength={500} rows={2} placeholder="e.g. patients upload once, and the front desk sees what's missing at a glance" /></div>}
+            {!light && <div><label htmlFor="x">One real example of how it works today</label><textarea id="x" value={example} onChange={(e) => setExample(e.target.value)} maxLength={2000} rows={3} placeholder="e.g. every Monday, Tomas exports the schedule to a spreadsheet and emails it to the front desk…" /></div>}
             <div><label htmlFor="d">Target date (optional)</label><input id="d" type="date" value={targetDate} onChange={(e) => setTargetDate(e.target.value)} style={{ maxWidth: 220 }} /></div>
           </>
         )}
@@ -216,21 +252,22 @@ export function NewProject() {
         {step === 3 && (
           <div className="card">
             {/* The key's number is given at Create (the next free one), so only its prefix shows here */}
-            <p className="s mono muted small" style={{ margin: 0 }}>{t.keyPrefix} · {t.name}</p>
+            <p className="s mono muted small" style={{ margin: 0 }}>{t.keyPrefix} · {bench ? "Workbench" : way === "proposal" ? `${t.name}, from a proposal` : t.name}</p>
             <h2 style={{ margin: "6px 0 10px" }}>{name}</h2>
             {projectSummary && <p>{projectSummary}</p>}
-            {outcome && !quick && <p><b>Done when:</b> {outcome}</p>}
+            {outcome && !light && <p><b>Done when:</b> {outcome}</p>}
             {targetDate && <p><b>Target:</b> {dateLabel(targetDate)}</p>}
             {/* Each measure exactly as it will be saved: the normalized numbers, with unset ones named */}
-            {kept.length > 0 && !quick && (
+            {kept.length > 0 && !light && (
               <ul className="small" style={{ paddingLeft: 18 }}>
                 {kept.map((m, i) => <li key={i}>{m.title}: now {numberWords(m.baseline)}, target {numberWords(m.target)}{m.unit ? ` (${m.unit})` : ""}</li>)}
               </ul>
             )}
-            {!measures.ok && !quick && <p className="notice" role="alert">A measure needs fixing before Create. <button type="button" className="linkish" onClick={firstProblem}>Show the problem</button></p>}
+            {!measures.ok && !light && <p className="notice" role="alert">A measure needs fixing before Create. <button type="button" className="linkish" onClick={firstProblem}>Show the problem</button></p>}
             {later.length > 0 && <p className="small notice">Not written yet: {later.join(", ")}. You can add {later.length === 1 ? "it" : "them"} later from the project's Overview, which will remind you.</p>}
             {quick
               ? <p className="muted small">Gets the next {t.keyPrefix} number when created. Starts with a quote to price and issue, and one handover step, "{t.items.find((i) => i.kind === "handoff")?.title}". The client approves the quote with one signature, nothing is paid up front, and the invoice is drafted when they accept the fix.</p>
+              : bench ? <p className="muted small">Gets the next {t.keyPrefix} number when created. Opens as one shared page in {first?.name} on the board, and moves to done when you say so.</p>
               : <p className="muted small">Gets the next {t.keyPrefix} number when created. Starts in {first?.name}. Adds {plural(t.items.length, "starter item")}{kept.length ? ` and ${plural(kept.length, "measure")}` : ""}.</p>}
           </div>
         )}

@@ -2,7 +2,7 @@
 // ordered by rank. Drag and drop for pointers, a "Move to" menu for keyboards and screen readers.
 
 
-import { isClosed, type Project, type Stage } from "@1neon/domain";
+import { isBench, isClosed, type Project, type Stage } from "@1neon/domain";
 import { useState } from "react";
 import { Link } from "react-router";
 import { byRank } from "../lib/hooks.ts";
@@ -114,6 +114,7 @@ export function Board({
                 <div className="k">
                   <span>{p.key}</span>
                   {orgName?.(p) && <span className="tag client">{orgName(p)}</span>}
+                  {isBench(p) && <span className="tag">Workbench</span>}
                 </div>
                 <Link className="name" to={hrefFor(p)}>{p.name}</Link>
                 <div className="meta">

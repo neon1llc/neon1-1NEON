@@ -2747,3 +2747,12 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 :root[data-motion="off"] :is(.vm-btn .arr, .tile-ghost) { transition: none; }
 :root[data-motion="off"] .vm-panel { animation: none; }
 :root[data-motion="off"] .vm-btn:hover .arr { translate: none; }
+
+/* New project's two questions: how the work runs, then (for a proposal or NEON) what kind it is */
+.np-q { border: 0; padding: 0; margin: 0 0 var(--sp-5); min-width: 0; }
+.np-q legend { padding: 0; margin-bottom: var(--sp-3); font: 600 var(--fs-md) var(--sans); color: var(--text); }
+.ways { grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); }
+.tpl-row h4 { margin: 0; }
+.kinds-grid .option.tpl { gap: var(--sp-1); }
+.run-as { border: 1px solid var(--line); border-radius: var(--r-sm); padding: var(--sp-2) var(--sp-3); margin: 0 0 var(--sp-3); display: grid; gap: var(--sp-1); }
+.run-as legend { padding: 0 var(--sp-1); }

@@ -2,7 +2,7 @@
 // its starter items, read, edit (including who decides), move between stages, and trash.
 
 
-import { CreateProjectInput, assessed, isQuickFix, Item, MoveProjectInput, UpdateProjectInput, newId, rankBetween, templateById, type Project, changeRecord, projectChanges } from "@1neon/domain";
+import { CreateProjectInput, assessed, benchStage, isQuickFix, Item, MoveProjectInput, UpdateProjectInput, newId, rankBetween, templateById, type Project, changeRecord, projectChanges } from "@1neon/domain";
 import { z } from "zod";
 import { MAX_TRANSACTION, actorId, body, byRank, defined, fail, need, now, who } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
@@ -38,7 +38,11 @@ export function projectRoutes(app: App, k: Kit) {
     const named = await deciderChange(c, [], input.people);
     const tpl = templateById(input.template);
     const n = await repo.nextProjectNumber(t.id, tpl.keyPrefix);
-    const first = t.stages.find((s) => !s.hidden) ?? t.stages[0]!;
+    // A Workbench is open work from the start, so it sits with agreed work; a proposal start skips to
+    // Propose; anything else starts in the first shown stage. A quick fix keeps its own path
+    const bench = input.workflow === "bench" && !isQuickFix({ template: tpl.id });
+    const shown = t.stages.find((s) => !s.hidden) ?? t.stages[0]!;
+    const first = bench ? benchStage(t.stages) : input.start === "proposal" ? (t.stages.find((s) => s.id === "propose" && !s.hidden) ?? shown) : shown;
     const siblings = (await repo.listProjects(t.id)).filter((p) => p.stageId === first.id).sort(byRank);
     const ts = now();
     const by = actorId(c);
@@ -50,6 +54,7 @@ export function projectRoutes(app: App, k: Kit) {
       summary: input.summary,
       outcome: input.outcome,
       template: tpl.id,
+      workflow: bench ? "bench" : "neon",
       stageId: first.id,
       stageEnteredAt: ts,
       health: "not_started",
@@ -127,6 +132,14 @@ export function projectRoutes(app: App, k: Kit) {
     const named = input.people ? await deciderChange(c, p.people, input.people) : undefined;
     const { version, targetDate, ...patch } = input;
     const next: Project = { ...p, ...defined(patch), version: p.version + 1, updatedAt: now(), updatedBy: actorId(c) };
+    // Switching to a Workbench from a stage before agreed work moves it there: a Workbench is open work.
+    // Switching back to NEON leaves it where it is
+    if (input.workflow === "bench" && p.workflow !== "bench") {
+      const stages = c.get("tenant").stages;
+      const at = stages.findIndex((s) => s.id === p.stageId);
+      const to = benchStage(stages);
+      if (at < stages.indexOf(to)) Object.assign(next, { stageId: to.id, stageEnteredAt: next.updatedAt });
+    }
     if (targetDate !== undefined) next.targetDate = targetDate ?? undefined;
     // Setting health is an assessment: record who made it and when
     if (input.health !== undefined) Object.assign(next, assessed(input.health, actorId(c), next.updatedAt));

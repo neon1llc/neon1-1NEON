@@ -84,6 +84,13 @@ export const QUICK_FIX = "quick_fix";
 /** Is this project a quick fix? (its template, set when it was made, never changes) */
 export const isQuickFix = (p: { template?: string } | undefined) => p?.template === QUICK_FIX;
 
+/** Does this project run as a Workbench (one shared page, open until done) rather than NEON's stages? */
+export const isBench = (p: { workflow?: string } | undefined) => p?.workflow === "bench";
+
+/** Where a Workbench sits on the board: the first shown stage of agreed work (Build by default) */
+export const benchStage = <S extends { hidden: boolean; layer: string }>(stages: S[]) =>
+  stages.find((s) => !s.hidden && s.layer === "execution") ?? stages.find((s) => !s.hidden) ?? stages[0]!;
+
 /** The usual range of hours a quick fix is quoted at, before neon1 changes it */
 export const QUICK_FIX_HOURS = { low: 2, high: 5 } as const;
 

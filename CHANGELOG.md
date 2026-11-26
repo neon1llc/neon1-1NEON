@@ -13,9 +13,11 @@
 - New project templates for Custom software (APP) and Modernization (MOD).
 - Home is a grid of cards you can arrange. View, beside the greeting, shows or hides any card and counts what hidden cards hold: red for things that need action, plain for suggestions. Arrange moves cards by their grip and resizes them from the corner, settling on each card's preset sizes, with the cells it will take highlighted. A card shows more as it grows. The layout is saved to your profile, for each organization, wide and on a phone.
 - New Home cards: Overdue and blocked, Projects by layer, and Shortcuts.
+- Workbench: a project can run as one shared page for notes, to-dos, and files, open until someone marks it done, instead of on NEON's stages. Switch either way from the Overview, or choose it when approving an option. It shows on the Board in Build, tagged Workbench.
+- New project asks how the work runs first (Workbench, Quick fix, Build a proposal, NEON), then for a proposal or NEON what kind of work it is. Clients start on Workbench and neon1 on NEON. A proposal starts at Propose and opens on its options.
 
 ### Changed
-- New project lists templates from lightest to most involved, five across on a desktop. Each card shows how involved it is in four boxes and the path it follows: Needs, Execute, Observe, Normalize, or for a quick fix Quote, Fix, Accept.
+- New project's choices run from lightest to most involved, each with four boxes for how involved it is and the path it follows.
 - On a desktop, a project's layer tabs and your profile spread over two balanced columns.
 - Opening a notification marks only that one read; opening the list marks nothing. Unread ones are bold with a dot.
 - Each notification, and its email, opens the exact thing: the person, file, calendar day, invoice, setting, or item, scrolled into view and highlighted.
