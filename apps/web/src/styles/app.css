@@ -2615,3 +2615,35 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 /* An invoice's dispute (Dispute.tsx): above the letter, and left out of a printed or saved copy */
 .dispute { margin: 0 0 var(--sp-3); }
 @media print { .dispute { display: none; } }
+/* New project gallery: the form widens to the page on the template step so cards fill the desktop */
+.form.wide { max-width: none; }
+.tpl-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); }
+.option.tpl { cursor: pointer; padding: var(--sp-4); gap: var(--sp-1); }
+.option.tpl h4 { margin: var(--sp-1) 0 0; }
+.tpl-row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
+/* Involvement: four steps, each filled one stronger than the last */
+.effort { display: inline-flex; gap: 3px; }
+.effort i { width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--line-strong); }
+.effort i.on:nth-child(1) { background: color-mix(in srgb, var(--accent) 30%, transparent); border-color: transparent; }
+.effort i.on:nth-child(2) { background: color-mix(in srgb, var(--accent) 52%, transparent); border-color: transparent; }
+.effort i.on:nth-child(3) { background: color-mix(in srgb, var(--accent) 76%, transparent); border-color: transparent; }
+.effort i.on:nth-child(4) { background: var(--accent); border-color: transparent; }
+/* The path it follows, pinned to the card's foot so rows line up */
+.tpl-path { display: flex; flex-wrap: wrap; gap: var(--sp-1); margin-top: auto; padding-top: var(--sp-3); }
+.tpl-path b { font: 600 var(--fs-xs) var(--mono); padding: var(--sp-0) var(--sp-2); border-radius: var(--r-sm); border: 1px solid var(--line-strong); color: var(--muted); }
+.tpl-path.neon b { min-width: 24px; text-align: center; color: var(--badge-ink); border-color: transparent; }
+.tpl-path.neon b.l-needs { background: var(--l1); } .tpl-path.neon b.l-execution { background: var(--l2); } .tpl-path.neon b.l-observation { background: var(--l3); } .tpl-path.neon b.l-next { background: var(--l4); }
+
+/* Desktop: working pages spread over two balanced columns instead of one long one. Reading order
+   runs down the left column, then the right; wide blocks (options, the notification table) span both */
+@media (min-width: 1200px) and (hover: hover) and (pointer: fine) {
+  .kinds { columns: 2; column-gap: var(--sp-6); }
+  .kinds > * { break-inside: avoid; }
+  .kinds > #options, .kinds > .decision, .kinds > .card { column-span: all; }
+  .settings { grid-template-columns: 11rem minmax(0, 1fr); }
+  .settings-main { display: block; columns: 2; column-gap: var(--sp-4); }
+  .settings-main > *, .settings-main > .profile-form > section { break-inside: avoid; margin-bottom: var(--sp-4); }
+  /* The profile form's sections sit in the columns as if they were the page's own cards */
+  .settings-main > .profile-form { display: contents; }
+  .settings-main > .notify { column-span: all; margin-top: var(--sp-4); }
+}

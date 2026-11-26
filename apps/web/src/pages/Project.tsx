@@ -741,7 +741,7 @@ function LayerTab({ layer, project, items, docs, edits }: { layer: Layer; projec
   };
 
   return (
-    <>
+    <div className="kinds">
       {/* Approved decisions sit at the top of Needs as read-only banners */}
       {layer === "needs" && decisions.map((d) => (
         <DecisionCard key={d.id} d={d} superseded={decisions.some((x) => (x.fields.supersedes as string[] | undefined)?.includes(d.id))} />
@@ -800,7 +800,7 @@ function LayerTab({ layer, project, items, docs, edits }: { layer: Layer; projec
         <FileList docs={docs.filter((d) => d.layer === layer)} empty={`No ${layerName(layer)} files yet.`} />
         <div className="actions" style={{ marginTop: 10 }}><UploadButton target={{ layer, projectId: project.id }} label={`Upload ${layerName(layer)} files`} /></div>
       </section>
-    </>
+    </div>
   );
 }
 

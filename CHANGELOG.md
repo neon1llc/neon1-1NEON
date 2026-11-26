@@ -10,8 +10,11 @@
 - Delivery and review on a project's Execute and Normalize pages: neon1 records the handover, which asks the client to review within 10 business days and starts the 30-day defect period, and records when it's waiting on the client, a pause, and an ending. Each is told to the client by email. Acceptance is still only the client's signature, never silence.
 - A client can dispute part of an issued invoice, with the amount and why. neon1 answers on the invoice, and the undisputed amount stays due on its date.
 - One reminder the business day after an invoice is due, when an undisputed amount is still owed.
+- New project templates for Custom software (APP) and Modernization (MOD).
 
 ### Changed
+- New project lists templates from lightest to most involved, five across on a desktop. Each card shows how involved it is in four boxes and the path it follows: Needs, Execute, Observe, Normalize, or for a quick fix Quote, Fix, Accept.
+- On a desktop, a project's layer tabs and your profile spread over two balanced columns.
 - Opening a notification marks only that one read; opening the list marks nothing. Unread ones are bold with a dot.
 - Each notification, and its email, opens the exact thing: the person, file, calendar day, invoice, setting, or item, scrolled into view and highlighted.
 - The service agreement is edition 2.4: payment follows the billing schedule and never depends on recorded acceptance, a 10-business-day review, client delays, a pause once an undisputed amount is 7 days overdue, a 30% default deposit, and clearer limits, ending, and law. Approvals made under 2.1 or 2.3 keep those terms; the next approval needs a 2.4 signature.

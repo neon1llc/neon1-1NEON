@@ -51,6 +51,8 @@ export interface Template {
   name: string;
   keyPrefix: string;
   summary: string;
+  // How much the path asks of everyone, 1 (a quick job) to 4 (many moving parts). The gallery sorts by it
+  level: 1 | 2 | 3 | 4;
   items: TemplateItem[];
 }
 
@@ -93,6 +95,7 @@ const quickFix: Template = {
   id: QUICK_FIX,
   name: "Quick fix",
   keyPrefix: "FIX",
+  level: 1,
   summary: "A small job of a few hours: one quote, one signature, one invoice when it's fixed.",
   items: [
     // The quote: an hourly estimate capped at its high end until neon1 sets the rate (or a fixed price)
@@ -115,6 +118,7 @@ export const TEMPLATES: Template[] = [
     id: "blank",
     name: "Blank",
     keyPrefix: "PRJ",
+    level: 2,
     summary: "Start empty and add what you need.",
     items: [],
   },
@@ -122,6 +126,7 @@ export const TEMPLATES: Template[] = [
     id: "cloud_migration",
     name: "Cloud migration",
     keyPrefix: "MIG",
+    level: 4,
     summary: "Move servers, apps, and files to the cloud without a rewrite.",
     items: [
       ...common,
@@ -137,6 +142,7 @@ export const TEMPLATES: Template[] = [
     id: "workflow_automation",
     name: "Workflow automation",
     keyPrefix: "FLOW",
+    level: 3,
     summary: "Take a manual process out of the inbox and into a system.",
     items: [
       ...common,
@@ -147,9 +153,38 @@ export const TEMPLATES: Template[] = [
     ],
   },
   {
+    id: "custom_software",
+    name: "Custom software",
+    keyPrefix: "APP",
+    level: 4,
+    summary: "An app, portal, internal tool, or API that no product covers, tested and monitored.",
+    items: [
+      ...common,
+      { kind: "asset", title: "Systems and data it reads from or writes to" },
+      { kind: "requirement", title: "The people who use it can do the job without a workaround", fields: { priority: "must" } },
+      { kind: "metric", title: "Minutes per task", fields: { category: "performance", unit: "min", direction: "down" } },
+      { kind: "check", title: "Tested with real work by the people who'll use it" },
+    ],
+  },
+  {
+    id: "modernization",
+    name: "Modernization",
+    keyPrefix: "MOD",
+    level: 4,
+    summary: "Rebuild, migrate, upgrade, or repair an existing system, from a redesign to a targeted fix.",
+    items: [
+      ...common,
+      { kind: "asset", title: "Older systems, what depends on them, and who knows them" },
+      { kind: "requirement", title: "Nothing in daily use stops during the switch", fields: { priority: "must" } },
+      { kind: "metric", title: "Hours a month spent keeping the old system running", fields: { category: "cost", unit: "hours", direction: "down" } },
+      { kind: "check", title: "Old and new results compared on the same work" },
+    ],
+  },
+  {
     id: "network_systems",
     name: "Networks, devices, and connected systems",
     keyPrefix: "NET",
+    level: 3,
     summary: "Design a network or connected devices that stay reliable, separated, and documented.",
     items: [
       ...common,
@@ -163,6 +198,7 @@ export const TEMPLATES: Template[] = [
     id: "ai_assistant",
     name: "AI assistant",
     keyPrefix: "AI",
+    level: 3,
     summary: "Answers from your own approved documents, with sources.",
     items: [
       ...common,
@@ -176,7 +212,8 @@ export const TEMPLATES: Template[] = [
     id: "security_readiness",
     name: "Security readiness",
     keyPrefix: "SEC",
-    summary: "Get ready for SOC 2 or a security review.",
+    level: 4,
+    summary: "Get ready for SOC 2 or a security review, and help people spot phishing.",
     items: [
       ...common,
       { kind: "asset", title: "Systems in scope" },
@@ -189,6 +226,7 @@ export const TEMPLATES: Template[] = [
     id: "personal_tech",
     name: "Personal or home tech",
     keyPrefix: "HOME",
+    level: 2,
     summary: "Devices, accounts, network, and staying safe online.",
     items: [
       { kind: "discovery", title: "What's not working, in your own words" },

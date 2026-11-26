@@ -17,6 +17,12 @@ import type { Project } from "@1neon/domain";
 // The wizard's steps, in order
 const STEPS = ["Template", "Basics", "Measures", "Review"] as const;
 
+// The gallery, lightest to most involved; the domain's order (Blank first) stays the fallback
+const GALLERY = [...TEMPLATES].sort((a, b) => a.level - b.level);
+const EFFORT = ["Light", "Moderate", "Involved", "Most involved"] as const;
+// NEON's four layers, in order, with the class that paints each its layer color
+const LAYERS = [["needs", "Needs"], ["execution", "Execute"], ["observation", "Observe"], ["next", "Normalize"]] as const;
+
 
 
 
@@ -130,7 +136,7 @@ export function NewProject() {
       {/* Enter moves to the next step; on the last step it creates the project */}
       {/* The form pans like an assembly line: forward to the left, Back to the right */}
       <form
-        className="form slide-stage"
+        className={`form slide-stage${step === 0 ? " wide" : ""}`}
         onSubmit={(e) => {
           e.preventDefault();
           if (step >= 2 && firstProblem()) return;
@@ -141,14 +147,24 @@ export function NewProject() {
         {/* Step 1: template */}
         {step === 0 && (
           <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
-            <legend className="muted small" style={{ marginBottom: 10 }}>Start from a template with the usual questions, checks, and measures. All are editable.</legend>
-            <div className="options">
-              {TEMPLATES.map((x) => (
-                <label key={x.id} className={`card option${template === x.id ? " rec" : ""}`} style={{ cursor: "pointer", padding: 16 }}>
+            <legend className="muted small" style={{ marginBottom: 10 }}>Lightest first. Each starts with the usual questions, checks, and measures, all editable.</legend>
+            <div className="options tpl-grid">
+              {GALLERY.map((x) => (
+                <label key={x.id} className={`card option tpl${template === x.id ? " rec" : ""}`}>
                   <input type="radio" name="template" value={x.id} checked={template === x.id} onChange={() => setTemplate(x.id)} className="sr" />
-                  <span className="tag">{x.keyPrefix}</span>
+                  <span className="tpl-row">
+                    <span className="tag">{x.keyPrefix}</span>
+                    <span className={`effort e${x.level}`} title={`${EFFORT[x.level - 1]} (${x.level} of 4)`}>
+                      {[1, 2, 3, 4].map((n) => <i key={n} className={n <= x.level ? "on" : ""} aria-hidden="true" />)}
+                      <span className="sr">{EFFORT[x.level - 1]}, {x.level} of 4</span>
+                    </span>
+                  </span>
                   <h4>{x.name}</h4>
                   <span className="muted small">{x.summary}</span>
+                  {/* Which path the project follows: NEON's four layers, or a quick fix's three steps */}
+                  {x.id === QUICK_FIX
+                    ? <span className="tpl-path"><span className="sr">Path: </span>{["Quote", "Fix", "Accept"].map((p) => <b key={p}>{p}</b>)}</span>
+                    : <span className="tpl-path neon"><span className="sr">Path: NEON, </span>{LAYERS.map(([k, n]) => <b key={k} className={`l-${k}`} title={n}><span aria-hidden="true">{n[0]}</span><span className="sr">{n} </span></b>)}</span>}
                 </label>
               ))}
             </div>
