@@ -218,7 +218,7 @@ a.org { text-decoration: none; }
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: var(--sp-4); box-shadow: var(--shadow); color: inherit; transition: border-color .2s, transform .2s, box-shadow .2s; }
 /* A card's content sits on its padding: nothing adds space past the last line, so the bottom inset matches the top.
    A note under a card's buttons is its own line, one step below them (docs/DESIGN.md, Cards) */
-.card > :last-child { margin-bottom: 0; }
+.card > :nth-last-child(1 of :not(:is(ul, ol, div, p):empty)) { margin-bottom: 0; } /* an empty list left at the end does not count */
 .card > .actions + .helper { display: block; margin-top: var(--sp-3); }
 a.card { text-decoration: none; display: block; }
 a.card:hover { border-color: var(--line-strong); transform: translateY(-2px); box-shadow: var(--shadow-pop); }
