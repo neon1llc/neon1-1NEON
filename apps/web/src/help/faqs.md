@@ -76,7 +76,7 @@ Use the trash button or **Delete** in its panel, and confirm. Approved options a
 Progress. Needs is the center ring and Normalize the outside, each filling as work gets done.
 
 ### What does the board show?
-Every project as a card in its stage. Drag a card to move it, or use **Move to** on a phone. Move a closed project back the same way, or choose **Reopen**. [Watch it](/1NEON/live?play=build).
+Every project as a card in its stage. Hold a card to move it, or use its **Move to** menu. Move a closed project back the same way, or choose **Reopen**. [Watch it](/1NEON/live?play=build).
 
 ### What does the timeline show?
 Under **Projects**, **Timeline** draws each project from start to target date, colored by layer. The dashed line is today, the diamond the target, and red stripes time past the target. [Watch it](/1NEON/live?play=care).
