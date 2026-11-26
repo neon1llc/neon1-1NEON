@@ -355,6 +355,7 @@ dialog h2 { font-size: var(--fs-lg); margin-bottom: var(--sp-2); }
 /* People table */
 table.people { width: 100%; border-collapse: collapse; font-size: var(--fs-ui); }
 table.people th { text-align: left; font: var(--fs-xs) var(--mono); color: var(--muted); font-weight: 400; padding: var(--sp-2); border-bottom: 1px solid var(--line-strong); }
+.own-links > a { white-space: nowrap; }
 .own-links { display: flex; flex-wrap: wrap; gap: var(--sp-0) var(--sp-3); font-size: var(--fs-sm); }
 table.people td { padding: var(--sp-2) var(--sp-2); border-bottom: 1px solid var(--line); vertical-align: middle; }
 .who { display: flex; align-items: center; gap: var(--sp-2); }
