@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+### Fixed
+- Booking links go to calendly.com/book-neon1/initial. The old link stopped working.
+
 ## v0.29.0 - 2026-11-25
 
 ### Added

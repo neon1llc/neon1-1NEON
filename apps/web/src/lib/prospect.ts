@@ -7,7 +7,7 @@ import { isProspect, isSuspended, PROSPECT_LIMITS, type Tenant } from "@1neon/do
 
 
 /** The same link neon1.tech uses for "Book a call" */
-export const BOOK_A_CALL = "https://calendly.com/1isgladtobeofservice/neon1-consultation";
+export const BOOK_A_CALL = "https://calendly.com/book-neon1/initial";
 
 
 /** Why "Request assessment" is off, in the words shown beside it; undefined when nothing stops it. A note that has a problem
