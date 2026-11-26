@@ -30,9 +30,9 @@ export function FaceFacts({ place, link, linkedin }: Pick<Tenant, "place" | "lin
 
 
 /** The public pages a person chose to show */
-export function OwnLinks({ linkedin, website }: { linkedin?: string; website?: string }) {
-  if (!linkedin && !website) return null;
-  return <span className="own-links">{linkedin && <OutLink href={linkedin}>LinkedIn</OutLink>}{website && <OutLink href={website}>Website</OutLink>}</span>;
+export function OwnLinks({ linkedin, businessLinkedin, website }: { linkedin?: string; businessLinkedin?: string; website?: string }) {
+  if (!linkedin && !businessLinkedin && !website) return null;
+  return <span className="own-links">{linkedin && <OutLink href={linkedin}>LinkedIn</OutLink>}{businessLinkedin && <OutLink href={businessLinkedin}>Business page</OutLink>}{website && <OutLink href={website}>Website</OutLink>}</span>;
 }
 
 

@@ -56,23 +56,24 @@ export function MePage() {
   const [totpOpen, setTotpOpen] = useState(false);
   useTopBar(<span>Your profile</span>, []);
   // Edits show at once and save by themselves (below); only the phone and text consent wait for their own Save
-  const [draft, setDraft] = useState({ name: me.user.name, title: me.user.title, linkedin: me.user.linkedin ?? "", website: me.user.website ?? "", phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) });
+  const [draft, setDraft] = useState({ name: me.user.name, title: me.user.title, linkedin: me.user.linkedin ?? "", businessLinkedin: me.user.businessLinkedin ?? "", website: me.user.website ?? "", phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) });
   const [busy, setBusy] = useState(false);
   // A name the rule refuses (the API's own, forms.ts) is explained under its field and held back, so
   // the other fields still save. One saved before the rule is left as it is
   const nameWrong = (name: string, was: string) => (name === was ? undefined : nameProblem(name, { neon1: me.operator }));
   const [nameLeft, setNameLeft] = useState(false);
   const linkedinBad = (v: string) => v.trim() !== "" && !linkedinLink(v, "person");
+  const businessBad = (v: string) => v.trim() !== "" && !linkedinLink(v, "company");
   const websiteBad = (v: string) => v.trim() !== "" && !normalizeLink(v);
   // Which address field has been left, so its problem shows only then
-  const [leftLinks, setLeftLinks] = useState({ linkedin: false, website: false });
+  const [leftLinks, setLeftLinks] = useState({ linkedin: false, businessLinkedin: false, website: false });
   // Motion is this browser's choice, not the account's, so it changes at once and isn't part of Save
   const deviceLess = deviceLessMotion();
   const [less, setLess] = useState(() => deviceLess || chosenLessMotion());
   // What differs from what's saved
-  const saved = { name: me.user.name, title: me.user.title, linkedin: me.user.linkedin ?? "", website: me.user.website ?? "", phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) };
+  const saved = { name: me.user.name, title: me.user.title, linkedin: me.user.linkedin ?? "", businessLinkedin: me.user.businessLinkedin ?? "", website: me.user.website ?? "", phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) };
   // The fields that save by themselves; the phone and text consent do not, since saving a new number sends it a text
-  const autoPatch = (d: typeof draft) => ({ name: d.name, title: d.title, linkedin: d.linkedin, website: d.website, timeZone: d.timeZone, menu: d.menu, notify: d.notify });
+  const autoPatch = (d: typeof draft) => ({ name: d.name, title: d.title, linkedin: d.linkedin, businessLinkedin: d.businessLinkedin, website: d.website, timeZone: d.timeZone, menu: d.menu, notify: d.notify });
   type Auto = ReturnType<typeof autoPatch>;
   const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "failed">("idle");
@@ -100,6 +101,7 @@ export function MePage() {
     if (nameWrong(d.name, latest.current.me.user.name)) d.name = savedAuto.current.name;
     // A half-typed or wrong address is held back the same way
     if (linkedinBad(d.linkedin)) d.linkedin = savedAuto.current.linkedin;
+    if (businessBad(d.businessLinkedin)) d.businessLinkedin = savedAuto.current.businessLinkedin;
     if (websiteBad(d.website)) d.website = savedAuto.current.website;
     if (same(d, savedAuto.current)) return;
     inflight.current = true;
@@ -141,7 +143,7 @@ export function MePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const nameError = nameWrong(draft.name, me.user.name);
-  const waiting = !same(autoPatch({ ...draft, name: nameError ? savedAuto.current.name : draft.name, linkedin: linkedinBad(draft.linkedin) ? savedAuto.current.linkedin : draft.linkedin, website: websiteBad(draft.website) ? savedAuto.current.website : draft.website }), savedAuto.current);
+  const waiting = !same(autoPatch({ ...draft, name: nameError ? savedAuto.current.name : draft.name, linkedin: linkedinBad(draft.linkedin) ? savedAuto.current.linkedin : draft.linkedin, businessLinkedin: businessBad(draft.businessLinkedin) ? savedAuto.current.businessLinkedin : draft.businessLinkedin, website: websiteBad(draft.website) ? savedAuto.current.website : draft.website }), savedAuto.current);
   // Leaving the profile unsaved puts the menu preview back to its saved style
   useEffect(() => () => { previewMenu(undefined); }, []);
   // The phone check: a code is texted, then typed here
@@ -276,7 +278,7 @@ export function MePage() {
         <div><label htmlFor="nm">Name</label><input id="nm" value={draft.name} onChange={(e) => { setNameLeft(false); setDraft({ ...draft, name: e.target.value }); }} onBlur={() => { setNameLeft(true); void flush(); }} maxLength={80} autoComplete="name" aria-invalid={nameLeft && nameError ? true : undefined} aria-describedby={nameLeft && nameError ? "nm-error" : undefined} />{nameLeft && nameError && <p className="small field-error" id="nm-error" role="status">{nameError}</p>}</div>
         <div><label htmlFor="tt">Title</label><input id="tt" value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} onBlur={() => void flush()} maxLength={80} autoComplete="organization-title" /></div>
         {/* Public pages, both optional */}
-        {([["linkedin", "LinkedIn", "linkedin.com/in/your-name", linkedinBad, LINKEDIN_HINT.person], ["website", "Website", "yourname.com", websiteBad, "Enter a web address, like yourname.com."]] as const).map(([k, label, hint, bad, why]) => {
+        {([["linkedin", "LinkedIn", "linkedin.com/in/your-name", linkedinBad, LINKEDIN_HINT.person], ["businessLinkedin", "Your business on LinkedIn", "linkedin.com/company/your-business", businessBad, LINKEDIN_HINT.company], ["website", "Website", "yourname.com", websiteBad, "Enter a web address, like yourname.com."]] as const).map(([k, label, hint, bad, why]) => {
           const wrong = leftLinks[k] && bad(draft[k]);
           return (
             <div key={k}>
@@ -427,7 +429,7 @@ export function MePage() {
             <span className="actions">
               <button className="btn btn-ghost btn-sm" type="button" onClick={help.welcomeTour}>Replay the tour</button>
               {me.user.guide === "hidden" && <button className="btn btn-ghost btn-sm" type="button" onClick={() => void showGuide()}>Show Get to know 1NEON on Home</button>}
-              {me.user.linksCard === "hidden" && !me.user.linkedin && !me.user.website && <button className="btn btn-ghost btn-sm" type="button" onClick={() => void showLinksCard()}>Show Add your links on Home</button>}
+              {me.user.linksCard === "hidden" && !me.user.linkedin && !me.user.businessLinkedin && !me.user.website && <button className="btn btn-ghost btn-sm" type="button" onClick={() => void showLinksCard()}>Show Add your links on Home</button>}
               <Link className="btn btn-ghost btn-sm" to="/faqs">FAQs</Link>
             </span>
           </div>

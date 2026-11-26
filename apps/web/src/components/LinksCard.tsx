@@ -12,7 +12,7 @@ import { useToast } from "./ui.tsx";
 
 
 /** Does Home have this card to show this person? */
-export const wantsLinks = (me: Me) => me.user.linksCard !== "hidden" && !me.user.linkedin && !me.user.website;
+export const wantsLinks = (me: Me) => me.user.linksCard !== "hidden" && !me.user.linkedin && !me.user.businessLinkedin && !me.user.website;
 
 
 export function LinksCard({ me }: { me: Me }) {

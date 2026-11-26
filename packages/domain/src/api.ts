@@ -249,6 +249,8 @@ export const UpdateMeInput = z.object({
   title: z.string().trim().max(80).optional(),
   // The person's own public pages, both optional; "" removes one
   linkedin: linkedin("person").optional(),
+  // Their own business's page, for someone who works on their own account
+  businessLinkedin: linkedin("company").optional(),
   website: Link.optional(),
   linksCard: z.enum(["shown", "hidden"]).optional(),
   phone: z.string().trim().max(32).optional(),

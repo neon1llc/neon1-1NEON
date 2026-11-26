@@ -175,6 +175,7 @@ export const User = z.object({
   phone: z.string().trim().max(32).default(""),
   // Public pages they chose to show the people they work with
   linkedin: z.string().max(200).optional(),
+  businessLinkedin: z.string().max(200).optional(),
   website: z.string().max(200).optional(),
   // Home's "Add your links" card: put away from Home, and brought back from the profile
   linksCard: z.enum(["shown", "hidden"]).optional(),

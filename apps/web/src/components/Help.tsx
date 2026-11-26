@@ -154,7 +154,7 @@ export const GUIDES: Record<PageKey, Guide> = {
   me: {
     title: "Your profile",
     purpose: "Your details, preferences, notifications, security, and sign out.",
-    howto: ["Add your LinkedIn and website, if you like. People in your organizations see them.", "Most changes save by themselves. Phone and text settings have their own Save.", "Choose what reaches you by email or text under Notifications.", "Add a passkey, authenticator app, or text codes under Security. Admin actions need one.", "Under Help, replay the tour or bring back Get to know 1NEON. Sign out is below."],
+    howto: ["Add your LinkedIn, business page, and website, if you like. People in your organizations see them.", "Most changes save by themselves. Phone and text settings have their own Save.", "Choose what reaches you by email or text under Notifications.", "Add a passkey, authenticator app, or text codes under Security. Admin actions need one.", "Under Help, replay the tour or bring back Get to know 1NEON. Sign out is below."],
     tour: [{ at: "passkey", title: "Two-step verification", text: "Add a passkey, authenticator app, or text codes. Admins need one to manage people and settings." }],
   },
   contact: {

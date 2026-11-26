@@ -33,7 +33,7 @@ export function memberRoutes(app: App, k: Kit) {
     const users = await Promise.all(members.map((m) => repo.getUser(m.userId)));
     // Phone numbers stay on the person's own profile; organizations they share don't see them
     // neon1's own people are marked, so the page can show their access as neon1's to change
-    return c.json(members.map((m, i) => withOwnName({ ...m, name: users[i]?.name || m.name, title: users[i]?.title || m.title, neon1: cfg.operatorEmails.includes(m.email.toLowerCase()), linkedin: users[i]?.linkedin, website: users[i]?.website })));
+    return c.json(members.map((m, i) => withOwnName({ ...m, name: users[i]?.name || m.name, title: users[i]?.title || m.title, neon1: cfg.operatorEmails.includes(m.email.toLowerCase()), linkedin: users[i]?.linkedin, businessLinkedin: users[i]?.businessLinkedin, website: users[i]?.website })));
   });
 
   // Invite: create the person if new, add the membership, create the Cognito user, and email the link

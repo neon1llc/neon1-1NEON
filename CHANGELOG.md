@@ -5,7 +5,7 @@
 ## Unreleased
 
 ### Added
-- Your profile takes an optional LinkedIn address and website, shown to the people in your organizations on People. Organization settings take a LinkedIn company page. Home suggests adding your links until you do or hide the card.
+- Your profile takes an optional LinkedIn address, business LinkedIn page, and website, shown to the people in your organizations on People. Organization settings take a LinkedIn company page. Home suggests adding your links until you do or hide the card.
 - Notifications have Mark all read.
 
 ### Changed
