@@ -74,7 +74,7 @@ export function Prospects() {
     const state = prospectState(p.prospect);
     const deleting = state === "deleting";
     return (
-      <section className="card prospect" key={p.id} aria-label={p.name}>
+      <section className="card prospect" id={`org-${p.id}`} key={p.id} aria-label={p.name}>
         <div className="prospect-head">
           {/* Into the organization itself, where neon1 can act as in any client's */}
           <h2><Link to={`/o/${p.slug}/workspace`}>{p.name}</Link> <span className="tag">{p.clientId}</span></h2>
@@ -82,7 +82,7 @@ export function Prospects() {
         </div>
         <p className="small muted prospect-people">{p.people.length ? p.people.map((x) => `${x.name || x.email} (${x.email})`).join(", ") : "No one has joined."}</p>
         <dl className="prospect-facts small">
-          <div className="wide"><dt>Where</dt><dd><FaceFacts place={p.place} link={p.link} /></dd></div>
+          <div className="wide"><dt>Where</dt><dd><FaceFacts place={p.place} link={p.link} linkedin={p.linkedin} /></dd></div>
           {p.prospect.found && <div className="wide"><dt>Found neon1 through</dt><dd>{FOUND_VIA[p.prospect.found as FoundVia] ?? p.prospect.found}</dd></div>}
           <div><dt>Signed up</dt><dd>{dateLabel(p.prospect.since.slice(0, 10))}</dd></div>
           <div><dt>Last active</dt><dd>{p.lastActive ? ago(p.lastActive) : "never"}</dd></div>

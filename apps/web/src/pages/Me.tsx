@@ -11,7 +11,7 @@ import { Link, useLocation, useNavigate } from "react-router";
 import { useSession, useTopBar } from "../components/Shell.tsx";
 import { Avatar, useAsk, useToast } from "../components/ui.tsx";
 import { api } from "../lib/api.ts";
-import { emailDefault, menuOf, nameProblem, NOTIFY_GROUPS } from "@1neon/domain";
+import { emailDefault, linkedinLink, LINKEDIN_HINT, menuOf, nameProblem, normalizeLink, NOTIFY_GROUPS } from "@1neon/domain";
 import { problem } from "../lib/hooks.ts";
 import { passkeyCreation } from "../lib/passkey.ts";
 import { useProspectEverywhere } from "../components/Prospect.tsx";
@@ -48,7 +48,7 @@ export function MePage() {
   // A link to a part of the profile (#security, #notifications) lands on it
   const { hash } = useLocation();
   useEffect(() => {
-    if (hash) document.getElementById(hash.slice(1))?.scrollIntoView({ block: "start", behavior: "smooth" });
+    if (hash) document.getElementById(hash.slice(1))?.scrollIntoView({ block: hash === "#linkedin" ? "center" : "start", behavior: "smooth" });
   }, [hash]);
   const toast = useToast();
   const ask = useAsk();
@@ -56,19 +56,23 @@ export function MePage() {
   const [totpOpen, setTotpOpen] = useState(false);
   useTopBar(<span>Your profile</span>, []);
   // Edits show at once and save by themselves (below); only the phone and text consent wait for their own Save
-  const [draft, setDraft] = useState({ name: me.user.name, title: me.user.title, phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) });
+  const [draft, setDraft] = useState({ name: me.user.name, title: me.user.title, linkedin: me.user.linkedin ?? "", website: me.user.website ?? "", phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) });
   const [busy, setBusy] = useState(false);
   // A name the rule refuses (the API's own, forms.ts) is explained under its field and held back, so
   // the other fields still save. One saved before the rule is left as it is
   const nameWrong = (name: string, was: string) => (name === was ? undefined : nameProblem(name, { neon1: me.operator }));
   const [nameLeft, setNameLeft] = useState(false);
+  const linkedinBad = (v: string) => v.trim() !== "" && !linkedinLink(v, "person");
+  const websiteBad = (v: string) => v.trim() !== "" && !normalizeLink(v);
+  // Which address field has been left, so its problem shows only then
+  const [leftLinks, setLeftLinks] = useState({ linkedin: false, website: false });
   // Motion is this browser's choice, not the account's, so it changes at once and isn't part of Save
   const deviceLess = deviceLessMotion();
   const [less, setLess] = useState(() => deviceLess || chosenLessMotion());
   // What differs from what's saved
-  const saved = { name: me.user.name, title: me.user.title, phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) };
+  const saved = { name: me.user.name, title: me.user.title, linkedin: me.user.linkedin ?? "", website: me.user.website ?? "", phone: me.user.phone, timeZone: me.user.timeZone ?? browserZone(), menu: menuOf(me.user.menu), notify: me.user.notify ?? {}, smsConsent: Boolean(me.user.smsConsentAt) };
   // The fields that save by themselves; the phone and text consent do not, since saving a new number sends it a text
-  const autoPatch = (d: typeof draft) => ({ name: d.name, title: d.title, timeZone: d.timeZone, menu: d.menu, notify: d.notify });
+  const autoPatch = (d: typeof draft) => ({ name: d.name, title: d.title, linkedin: d.linkedin, website: d.website, timeZone: d.timeZone, menu: d.menu, notify: d.notify });
   type Auto = ReturnType<typeof autoPatch>;
   const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "failed">("idle");
@@ -94,6 +98,9 @@ export function MePage() {
     if (inflight.current) { again.current = true; return; }
     const d = autoPatch(latest.current.draft);
     if (nameWrong(d.name, latest.current.me.user.name)) d.name = savedAuto.current.name;
+    // A half-typed or wrong address is held back the same way
+    if (linkedinBad(d.linkedin)) d.linkedin = savedAuto.current.linkedin;
+    if (websiteBad(d.website)) d.website = savedAuto.current.website;
     if (same(d, savedAuto.current)) return;
     inflight.current = true;
     pendingQuick.current = false;
@@ -134,7 +141,7 @@ export function MePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const nameError = nameWrong(draft.name, me.user.name);
-  const waiting = !same(autoPatch({ ...draft, name: nameError ? savedAuto.current.name : draft.name }), savedAuto.current);
+  const waiting = !same(autoPatch({ ...draft, name: nameError ? savedAuto.current.name : draft.name, linkedin: linkedinBad(draft.linkedin) ? savedAuto.current.linkedin : draft.linkedin, website: websiteBad(draft.website) ? savedAuto.current.website : draft.website }), savedAuto.current);
   // Leaving the profile unsaved puts the menu preview back to its saved style
   useEffect(() => () => { previewMenu(undefined); }, []);
   // The phone check: a code is texted, then typed here
@@ -166,6 +173,15 @@ export function MePage() {
   };
   // Save the profile; shared theme controls live in the menu, so this form leaves the account theme untouched
   // Bring Home's "Get to know 1NEON" card back after it was hidden there
+  const showLinksCard = async () => {
+    try {
+      await api("/me", { method: "PATCH", body: { version: me.user.version, linksCard: "shown" } });
+      await qc.invalidateQueries({ queryKey: ["me"] });
+      toast("It's back on Home.");
+    } catch (e) {
+      toast(problem(e));
+    }
+  };
   const showGuide = async () => {
     try {
       await api("/me", { method: "PATCH", body: { version: me.user.version, guide: "shown" } });
@@ -259,6 +275,19 @@ export function MePage() {
           <h2 className="card-h">Your details</h2>
         <div><label htmlFor="nm">Name</label><input id="nm" value={draft.name} onChange={(e) => { setNameLeft(false); setDraft({ ...draft, name: e.target.value }); }} onBlur={() => { setNameLeft(true); void flush(); }} maxLength={80} autoComplete="name" aria-invalid={nameLeft && nameError ? true : undefined} aria-describedby={nameLeft && nameError ? "nm-error" : undefined} />{nameLeft && nameError && <p className="small field-error" id="nm-error" role="status">{nameError}</p>}</div>
         <div><label htmlFor="tt">Title</label><input id="tt" value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} onBlur={() => void flush()} maxLength={80} autoComplete="organization-title" /></div>
+        {/* Public pages, both optional */}
+        {([["linkedin", "LinkedIn", "linkedin.com/in/your-name", linkedinBad, LINKEDIN_HINT.person], ["website", "Website", "yourname.com", websiteBad, "Enter a web address, like yourname.com."]] as const).map(([k, label, hint, bad, why]) => {
+          const wrong = leftLinks[k] && bad(draft[k]);
+          return (
+            <div key={k}>
+              <label htmlFor={k}>{label} <small className="muted">optional</small></label>
+              <input id={k} inputMode="url" autoComplete={k === "website" ? "url" : "off"} placeholder={hint} value={draft[k]} maxLength={200} aria-invalid={wrong ? true : undefined} aria-describedby={wrong ? `${k}-error` : `links-who`}
+                onChange={(e) => { setLeftLinks((l) => ({ ...l, [k]: false })); setDraft({ ...draft, [k]: e.target.value }); }} onBlur={() => { setLeftLinks((l) => ({ ...l, [k]: true })); void flush(); }} />
+              {wrong && <p className="small field-error" id={`${k}-error`} role="status">{why}</p>}
+            </div>
+          );
+        })}
+        <span className="small muted" id="links-who">People in your organizations see these.</span>
         {!noTexts && <div><label htmlFor="ph">Phone (only you see it)</label><input id="ph" type="tel" value={draft.phone} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} maxLength={32} autoComplete="tel" /></div>}
         {/* The zone email shows times in; the browser's until changed */}
         <div>
@@ -398,6 +427,7 @@ export function MePage() {
             <span className="actions">
               <button className="btn btn-ghost btn-sm" type="button" onClick={help.welcomeTour}>Replay the tour</button>
               {me.user.guide === "hidden" && <button className="btn btn-ghost btn-sm" type="button" onClick={() => void showGuide()}>Show Get to know 1NEON on Home</button>}
+              {me.user.linksCard === "hidden" && !me.user.linkedin && !me.user.website && <button className="btn btn-ghost btn-sm" type="button" onClick={() => void showLinksCard()}>Show Add your links on Home</button>}
               <Link className="btn btn-ghost btn-sm" to="/faqs">FAQs</Link>
             </span>
           </div>

@@ -186,7 +186,7 @@ const ALLOWED: [method: string, path: RegExp][] = [
   ["POST", /^\/docs$/],
   ["POST", /^\/docs\/[^/]+\/done$/],
   ["DELETE", /^\/docs\/[^/]+$/],
-  ["POST", /^\/notifications\/seen$/],
+  ["POST", /^\/notifications\/(read-all|[^/]+\/read)$/],
   // The organization's chat with neon1: writing, and editing one's own message
   ["POST", /^\/chat$/],
   ["PATCH", /^\/chat\/[^/]+$/],

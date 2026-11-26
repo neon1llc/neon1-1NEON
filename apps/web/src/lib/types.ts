@@ -108,4 +108,4 @@ export interface AllProjects {
 // Membership with the person's current name and title. Phone numbers stay on each person's own
 // profile, so the list never carries one
 // A member as the list returns it; neon1 marks neon1's own people, whose access only neon1 changes
-export type MemberRow = Member & { neon1?: boolean };
+export type MemberRow = Member & { neon1?: boolean; linkedin?: string; website?: string };

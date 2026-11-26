@@ -4,6 +4,18 @@
 
 ## Unreleased
 
+### Added
+- Your profile takes an optional LinkedIn address and website, shown to the people in your organizations on People. Organization settings take a LinkedIn company page. Home suggests adding your links until you do or hide the card.
+- Notifications have Mark all read.
+
+### Changed
+- Opening a notification marks only that one read; opening the list marks nothing. Unread ones are bold with a dot.
+- Each notification, and its email, opens the exact thing: the person, file, calendar day, invoice, setting, or item, scrolled into view and highlighted.
+
+### Fixed
+- neon1's own person, added to an organization automatically, shows a name instead of "No name yet".
+
+
 ## v0.29.0 - 2026-11-25
 
 ### Added

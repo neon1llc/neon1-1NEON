@@ -148,13 +148,13 @@ export const GUIDES: Record<PageKey, Guide> = {
   settings: {
     title: "Settings",
     purpose: "Your organization: its details, agreement, data, and board stages.",
-    howto: ["See your organization's details. Admins can change where it's based and its website.", "Read the service agreement and see your case study and client list choices.", "Admins download a copy of everything under Your data.", "Admins rename, reorder, limit, and hide board stages, then Save workflow."],
+    howto: ["See your organization's details. Admins can change where it's based, its website, and its LinkedIn company page.", "Read the service agreement and see your case study and client list choices.", "Admins download a copy of everything under Your data.", "Admins rename, reorder, limit, and hide board stages, then Save workflow."],
     tour: [{ at: "stages", title: "Stages", text: "Each row is a column on the board, in order." }],
   },
   me: {
     title: "Your profile",
     purpose: "Your details, preferences, notifications, security, and sign out.",
-    howto: ["Most changes save by themselves. Phone and text settings have their own Save.", "Choose what reaches you by email or text under Notifications.", "Add a passkey, authenticator app, or text codes under Security. Admin actions need one.", "Under Help, replay the tour or bring back Get to know 1NEON. Sign out is below."],
+    howto: ["Add your LinkedIn and website, if you like. People in your organizations see them.", "Most changes save by themselves. Phone and text settings have their own Save.", "Choose what reaches you by email or text under Notifications.", "Add a passkey, authenticator app, or text codes under Security. Admin actions need one.", "Under Help, replay the tour or bring back Get to know 1NEON. Sign out is below."],
     tour: [{ at: "passkey", title: "Two-step verification", text: "Add a passkey, authenticator app, or text codes. Admins need one to manage people and settings." }],
   },
   contact: {
@@ -205,7 +205,7 @@ export const FREE: Partial<Record<PageKey, { purpose?: string; howto: string[] }
   normalize: { howto: ["Tick handover steps as they're done."] },
   people: { howto: ["Inviting people starts once we're working together."] },
   files: { howto: ["Choose where to file before you upload: the organization, a project, or one of its layers.", "10 files, 10 MB each and 50 MB in all.", "Whoever uploaded a file, or an admin, can delete it."] },
-  settings: { purpose: "Your organization: its details, data, and board stages.", howto: ["Admins can change where it's based and its website.", "Admins download a copy of everything under Your data.", "Board stages open up once we're working together."] },
+  settings: { purpose: "Your organization: its details, data, and board stages.", howto: ["Admins can change where it's based, its website, and its LinkedIn company page.", "Admins download a copy of everything under Your data.", "Board stages open up once we're working together."] },
 };
 
 

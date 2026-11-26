@@ -267,7 +267,7 @@ describe("the prospect, once the code is proved", () => {
   it("pauses a prospect who makes too many changes in an hour", async () => {
     const { tid } = await prospect();
     let last = 0;
-    for (let i = 0; i <= WRITE_LIMITS.prospect.hourly; i++) last = (await as(form.email, `/t/${tid}/notifications/seen`, "POST", {})).status;
+    for (let i = 0; i <= WRITE_LIMITS.prospect.hourly; i++) last = (await as(form.email, `/t/${tid}/notifications/read-all`, "POST", {})).status;
     expect(last).toBe(429);
   });
 
@@ -740,7 +740,7 @@ describe("tidying up", () => {
 
   it("marks a real change by the prospect, but not a notifications read", async () => {
     const { tid } = await prospect();
-    await as(form.email, `/t/${tid}/notifications/seen`, "POST", {});
+    await as(form.email, `/t/${tid}/notifications/read-all`, "POST", {});
     expect(await repo.table.get(`T#${tid}`, "ACTIVE")).toBeUndefined();
     await as(form.email, `/t/${tid}/projects`, "POST", { name: "Need" });
     expect(await repo.table.get(`T#${tid}`, "ACTIVE")).toBeTruthy();

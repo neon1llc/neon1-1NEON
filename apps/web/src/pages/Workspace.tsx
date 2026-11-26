@@ -8,6 +8,7 @@ import { KIND_LAYER, type ItemKind } from "@1neon/domain";
 import { useQuery } from "@tanstack/react-query";
 import { Check, CircleCheck, FileUp, ListTodo, PenLine, Receipt } from "lucide-react";
 import { Link, useSearchParams } from "react-router";
+import { LinksCard } from "../components/LinksCard.tsx";
 import { ComingUp } from "../components/ComingUp.tsx";
 import { Problem, Stale } from "../components/Reads.tsx";
 import { useHelp } from "../components/Help.tsx";
@@ -140,6 +141,7 @@ export function WorkspacePage() {
           {prospect && !me.operator && <KeepCard orgId={org.id} slug={summary.slug} canKeep={canWrite} />}
           {/* The sample project, walkthrough, demo, and FAQs, until put away (the profile brings it back) */}
           {!me.operator && <GuideCard me={me} prospect={prospect} />}
+          <LinksCard me={me} />
           {/* Setup, until every step is done */}
           {setupLeft > 0 && (
             <section className="card" data-tour="get-started">
@@ -191,7 +193,7 @@ export function WorkspacePage() {
             </section>
           )}
           {/* What happened lately */}
-          <section className="card" data-tour="activity">
+          <section className="card" id="activity" data-tour="activity">
             <h2 className="section-h">Recent activity</h2>
             {ws.data && ws.data.activity.length === 0 && <p className="muted small">No activity yet.</p>}
             <ul className="feed">

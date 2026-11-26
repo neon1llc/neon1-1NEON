@@ -12,7 +12,7 @@ import { ItemPanel, STATUS_WORDS, statusWord, useDeleteItem, useMayDelete } from
 import { downloadDocx, FICTIONAL } from "../lib/docx.ts";
 import { MarkupList } from "../components/Markup.tsx";
 import { gate, Stale } from "../components/Reads.tsx";
-import { Link, NavLink, useLocation, useNavigate, useParams } from "react-router";
+import { Link, NavLink, useNavigate, useParams } from "react-router";
 import { Readiness } from "../components/Readiness.tsx";
 import { useOrg, useSession, useTopBar } from "../components/Shell.tsx";
 import { Avatar, ConflictDialog, Dialog, Empty, Health, HEALTH_LABEL, Standing, LayerBadge, LAYERS, layerHint, layerName, layerProgress, OnionProgress, Trend, ago, dateLabel, daysSince, inStageFor, layerFromSlug, layerSlug, useAsk, useToast } from "../components/ui.tsx";
@@ -516,7 +516,7 @@ function Overview({ project: p, items, docs }: { project: Project; items: Item[]
           {p.flags.length > 0 && <div className="small"><span className="tag warn">sensitive data: {p.flags.join(", ")}</span></div>}
         </div>
         {/* Project roles, with a fallback for people who left the organization */}
-        <h2 className="section-h">People {canWrite && <button className="link small" onClick={() => setPeopleOpen(true)}>Edit</button>}</h2>
+        <h2 className="section-h" id="people">People {canWrite && <button className="link small" onClick={() => setPeopleOpen(true)}>Edit</button>}</h2>
         {!p.people.some((x) => x.role === "decision_maker") && <p className="notice small">No decision maker yet. An admin of your organization can approve options{(me.operator ? isOwnOrg(org.slug) : access === "admin") ? ", or name a decision maker under People" : ""}.</p>}
         {p.people.length === 0 ? <p className="muted small">No one on this project yet.</p> : (
           <div className="rows">
@@ -724,20 +724,6 @@ function LayerTab({ layer, project, items, docs, edits }: { layer: Layer; projec
   // Every item call goes through this project's API path
   const path = `/t/${org.id}/projects/${project.id}`;
   const decisions = items.filter((i) => i.kind === "decision");
-  // A link to one item (#item-…) or a group (#options) scrolls to it and flashes it once
-  // (the location's key changes on every click, so a link to where the page already is still scrolls)
-  const { hash, key } = useLocation();
-  useEffect(() => {
-    if (!hash) return;
-    const el = document.getElementById(hash.slice(1));
-    if (!el) return;
-    el.scrollIntoView({ behavior: lessMotion() ? "auto" : "smooth", block: el.offsetHeight > innerHeight * 0.6 ? "start" : "center" });
-    el.classList.add("flash");
-    const t = setTimeout(() => el.classList.remove("flash"), 2200);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hash, key, items.length]);
-
   // Quick edits (done, readings): on a conflict, say so and show the latest instead of a dialog
   // True once saved; on a failure the caller keeps what the person typed (EP-03)
   const patch = async (item: Item, body: Record<string, unknown>): Promise<boolean> => {

@@ -1,5 +1,7 @@
 // packages/domain/src/forms.test.ts - The shared form rules: names, junk, offensive words, email shape, minimum lengths,
 // and how a place is written and split.
+import { linkedinLink } from "./api.ts";
+import { withOwnName } from "./forms.ts";
 import { describe, expect, it } from "vitest";
 import { claimsToBeNeon1, cleanName, orgNameProblem, emailShapeOk, joinPlace, looksLikeJunk, messageProblem, MIN_TEXT, nameProblem, offensive, placeShapeProblem, splitPlace, stateCode, textProblem } from "./forms.ts";
 
@@ -105,5 +107,25 @@ describe("minimum lengths", () => {
     expect(messageProblem("  ")).toMatch(/what's going on/);
     expect(messageProblem("help")).toMatch(/at least 10/);
     expect(messageProblem("Our invoices are late every month.")).toBeUndefined();
+  });
+});
+
+
+describe("neon1's own names", () => {
+  it("fills a blank name and keeps a given one", () => {
+    expect(withOwnName({ email: "Pradeep@neon1.tech", name: "" }).name).toBe("Pradeep Tathineni");
+    expect(withOwnName({ email: "pradeep@neon1.tech", name: "Deep T" }).name).toBe("Deep T");
+    expect(withOwnName({ email: "lee@example.com", name: "" }).name).toBe("");
+  });
+});
+
+describe("LinkedIn addresses", () => {
+  it("takes a profile or company page of the right kind, written in full", () => {
+    expect(linkedinLink("linkedin.com/in/some-one/?utm=x", "person")).toBe("https://www.linkedin.com/in/some-one");
+    expect(linkedinLink("https://www.linkedin.com/company/neon1/", "company")).toBe("https://www.linkedin.com/company/neon1");
+    expect(linkedinLink("linkedin.com/company/neon1", "person")).toBeUndefined();
+    expect(linkedinLink("evillinkedin.com/in/x", "person")).toBeUndefined();
+    expect(linkedinLink("linkedin.com.evil.example/in/x", "person")).toBeUndefined();
+    expect(linkedinLink("javascript:alert(1)", "person")).toBeUndefined();
   });
 });

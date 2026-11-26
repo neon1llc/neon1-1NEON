@@ -13,6 +13,7 @@ import { SIGN_IN_METHODS } from "../lib/methods.ts";
 import { drew, fade, lessMotion } from "../lib/motion.ts";
 import { REWIND } from "../lib/nav.ts";
 import { useEntryScroll } from "../lib/scrollmemory.ts";
+import { useLandOnHash } from "../lib/land.ts";
 import { usePersisting } from "../lib/persist.ts";
 import { cleanCode, clearStep, loadStep, saveStep, session } from "../lib/signin.ts";
 import type { Me, OrgResponse, OrgSummary } from "../lib/types.ts";
@@ -810,6 +811,7 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
   // Back, Forward, and reload return to where each history entry was left; a new page opens at its top
   const how = useNavigationType();
   useEntryScroll(loc.key, section, loc.hash, how);
+  useLandOnHash();
   // The full menu closes after navigating, and on Escape
   useEffect(() => setOpen(false), [loc.pathname]);
   // Arriving on another page puts keyboard focus on its title, so a screen reader hears where it is and

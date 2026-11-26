@@ -355,6 +355,7 @@ dialog h2 { font-size: var(--fs-lg); margin-bottom: var(--sp-2); }
 /* People table */
 table.people { width: 100%; border-collapse: collapse; font-size: var(--fs-ui); }
 table.people th { text-align: left; font: var(--fs-xs) var(--mono); color: var(--muted); font-weight: 400; padding: var(--sp-2); border-bottom: 1px solid var(--line-strong); }
+.own-links { display: flex; flex-wrap: wrap; gap: var(--sp-0) var(--sp-3); font-size: var(--fs-sm); }
 table.people td { padding: var(--sp-2) var(--sp-2); border-bottom: 1px solid var(--line); vertical-align: middle; }
 .who { display: flex; align-items: center; gap: var(--sp-2); }
 
@@ -1091,7 +1092,6 @@ body:has(.shell.example) { scroll-behavior: smooth; }
 .bell-list .note { display: grid; grid-template-columns: 10px minmax(0, 1fr); gap: var(--sp-2); align-items: start; padding: var(--sp-2) var(--sp-3); color: inherit; text-decoration: none; }
 .bell-list a.note:hover, .bell-list a.note:focus-visible { background: var(--accent-soft); }
 .bell-list li + li { border-top: 1px solid var(--line); }
-.bell-list li.new { background: var(--accent-soft); }
 .bell-list .what { display: grid; gap: var(--sp-0); font-size: var(--fs-ui); }
 .bell-list .dot { width: 8px; height: 8px; margin-top: var(--sp-1); border-radius: 99px; background: var(--line-strong); }
 .bell-list .lvl-critical .dot { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
@@ -1307,18 +1307,17 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 /* --- Notifications, viewed (2026-11-11) ---
    What was new when the list opened sits under "New": a filled dot, the summary in bold, and a green
    edge. Everything else is under "Earlier" with a hollow dot. Importance is a word, not a dot color */
-.bell-sub { margin: 0; padding: var(--sp-2) var(--sp-3) var(--sp-1); font: 600 var(--fs-xs) var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-.bell-sub small { text-transform: none; letter-spacing: 0; font-weight: 400; }
 .bell-new { margin-left: var(--sp-1); font: 600 var(--fs-xs) var(--mono); color: var(--accent); }
-.bell-list .dot { background: none; border: 1.5px solid var(--line-strong); box-sizing: border-box; }
-.bell-list .dot.on, .bell-list .lvl-critical .dot.on { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-.bell-list .lvl-critical .dot:not(.on) { box-shadow: none; }
-.bell-list li.new { background: none; box-shadow: inset 3px 0 0 var(--accent); }
+/* Unread: a filled dot, an accent edge, a tint, and bold. Read: no dot and quiet text */
+.bell-list .dot, .bell-list .lvl-critical .dot { background: none; border: 0; box-shadow: none; }
+.bell-list li.new .dot { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.bell-list li.new { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
 .bell-list li.new .sum { font-weight: 600; }
 .bell-list li:not(.new) .what { color: var(--muted); }
-.bell-list li:not(.new) .what .sum { color: var(--text); opacity: .85; }
+.bell-list button.note { width: 100%; background: none; border: 0; font: inherit; text-align: left; cursor: pointer; }
+.bell-list button.note:hover, .bell-list button.note:focus-visible { background: var(--accent-soft); }
+.bell-foot { margin: 0; padding: var(--sp-2) var(--sp-3); border-top: 1px solid var(--line); }
 .bell-list .tag.imp { margin-left: var(--sp-1); font-size: var(--fs-xs); padding: 0 var(--sp-1); }
-.bell-group + .bell-group { border-top: 1px solid var(--line); }
 /* Read by screen readers, not drawn */
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 /* An edit's changes under its activity line, when there were more than the line could say */
@@ -2358,7 +2357,7 @@ dialog:has(.ns-quote), dialog:has(#call-note) { max-width: min(560px, calc(100vw
 .next-call { white-space: normal; }
 .review-list { padding-left: var(--sp-4); display: grid; gap: var(--sp-1); }
 /* Get to know 1NEON */
-.guide-card .section-h { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-3); }
+.guide-card .section-h, .links-card .section-h { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-3); }
 .guide-links { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-2); }
 .guide-links li { display: grid; gap: var(--sp-0); }
 /* A project's outline on its Overview */

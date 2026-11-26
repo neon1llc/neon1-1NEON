@@ -554,21 +554,30 @@ describe("session step-up", () => {
 
 // Notifications: others' changes count as new until opened, and important ones email by default
 describe("notifications", () => {
-  it("counts others' changes, clears on open, and emails a project move", async () => {
+  it("counts others' changes, reads one at a time or all at once, and emails a project move", async () => {
+    const tomas = "tomas@harborlineoutfitters.example";
+    const bell = async () => (await call(tomas, "GET", `/t/${s.acme.id}/notifications`)).json as { unread: number; events: { id: string; at: string; group: string; unread: boolean }[] };
     const list = await call("priya@harborlineoutfitters.example", "GET", `/t/${s.acme.id}/projects`);
     const p = list.json.find((x: { key: string }) => x.key === "FLOW-1");
-    await call("tomas@harborlineoutfitters.example", "POST", `/t/${s.acme.id}/notifications/seen`);
+    await call(tomas, "POST", `/t/${s.acme.id}/notifications/read-all`);
     await new Promise((r) => setTimeout(r, 5));
     await call("priya@harborlineoutfitters.example", "POST", `/t/${s.acme.id}/projects/${p.id}/items`, { kind: "request", title: "Text reminders" });
     await call("priya@harborlineoutfitters.example", "POST", `/t/${s.acme.id}/projects/${p.id}/move`, { version: p.version, stageId: "build", reason: "Starting early" });
-    const n = await call("tomas@harborlineoutfitters.example", "GET", `/t/${s.acme.id}/notifications`);
-    expect(n.json.unread).toBe(2);
+    const n = await bell();
+    expect(n.unread).toBe(2);
     // Both land in the same instant on a fast machine, so check the set, not the order
-    expect(n.json.events.map((e: { group: string }) => e.group)).toEqual(expect.arrayContaining(["workflow", "updates"]));
+    expect(n.events.map((e) => e.group)).toEqual(expect.arrayContaining(["workflow", "updates"]));
     // Moves are critical, so Tomas gets an email; the new request isn't, so she doesn't
-    expect(mailer.sent.filter((m) => m.to === "tomas@harborlineoutfitters.example").length).toBe(1);
-    await call("tomas@harborlineoutfitters.example", "POST", `/t/${s.acme.id}/notifications/seen`);
-    expect((await call("tomas@harborlineoutfitters.example", "GET", `/t/${s.acme.id}/notifications`)).json.unread).toBe(0);
+    expect(mailer.sent.filter((m) => m.to === tomas).length).toBe(1);
+    // Reading one leaves the other unread, and a second tap changes nothing
+    const first = n.events.find((e) => e.unread)!;
+    for (let i = 0; i < 2; i++) expect((await call(tomas, "POST", `/t/${s.acme.id}/notifications/${first.id}/read`)).status).toBe(204);
+    const one = await bell();
+    expect(one.unread).toBe(1);
+    expect(one.events.find((e) => e.id === first.id)!.unread).toBe(false);
+    // Mark all read reads up to what was on screen
+    await call(tomas, "POST", `/t/${s.acme.id}/notifications/read-all?upTo=${encodeURIComponent(n.events[0]!.at)}`);
+    expect((await bell()).unread).toBe(0);
   });
 
   it("says where each notification leads: the item on its layer, the project, or the page", async () => {
@@ -582,6 +591,13 @@ describe("notifications", () => {
     expect(of("task.created")).toEqual({ project: "FLOW-1", layer: "execution", item: item.id });
     expect(of("comment.created")).toEqual({ project: "FLOW-1", layer: "execution", item: item.id });
     expect(of("project.moved")).toEqual({ project: "FLOW-1" });
+  });
+
+  it("names neon1's own person even when added without a name", async () => {
+    const tomas = "tomas@harborlineoutfitters.example";
+    await call("priya@harborlineoutfitters.example", "POST", `/t/${s.acme.id}/members/invite`, { people: [{ email: "pradeep@neon1.tech", access: "viewer" }] });
+    const rows = (await call(tomas, "GET", `/t/${s.acme.id}/members`)).json as { email: string; name: string }[];
+    expect(rows.filter((m) => m.email === "pradeep@neon1.tech").every((m) => m.name !== "")).toBe(true);
   });
 });
 

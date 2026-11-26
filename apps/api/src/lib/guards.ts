@@ -89,8 +89,8 @@ export function prospectGuard(k: Pick<Kit, "repo">) {
       if (changes(c)) await countChange(k, "PROSPECT", user.id, WRITE_LIMITS.prospect);
       await next();
       // A real change that landed starts the quiet-prospect clock again (routes/prospects.ts). Marking
-      // notifications seen and edit markers don't count
-      if (changes(c) && c.res.status < 400 && !/^\/(notifications\/seen|projects\/[^/]+\/edits)/.test(rest)) {
+      // reading notifications and edit markers don't count
+      if (changes(c) && c.res.status < 400 && !/^\/(notifications\/|projects\/[^/]+\/edits)/.test(rest)) {
         await k.repo.table.write([{ put: { PK: `T#${tenant.id}`, SK: "ACTIVE", at: new Date().toISOString() }, guard: { always: true } }]).catch(() => undefined);
       }
       return;

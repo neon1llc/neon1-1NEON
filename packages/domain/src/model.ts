@@ -94,6 +94,8 @@ export const Tenant = z.object({
   // (Google, Yelp, LinkedIn). Sign-up needs at least one; an admin can fill them in any time in Settings
   place: z.string().trim().max(80).optional(),
   link: z.string().trim().max(200).optional(),
+  // Their LinkedIn company page
+  linkedin: z.string().trim().max(200).optional(),
   // Every signature of neon1's service agreement, oldest first; the latest at the current edition counts
   agreements: z.array(Signature).max(50).optional(),
   // Every choice made about case studies and naming, oldest first; the latest is in force
@@ -171,6 +173,11 @@ export const User = z.object({
   name: z.string().trim().max(80).default(""),
   title: z.string().trim().max(80).default(""),
   phone: z.string().trim().max(32).default(""),
+  // Public pages they chose to show the people they work with
+  linkedin: z.string().max(200).optional(),
+  website: z.string().max(200).optional(),
+  // Home's "Add your links" card: put away from Home, and brought back from the profile
+  linksCard: z.enum(["shown", "hidden"]).optional(),
   operator: z.boolean().default(false),
   // Whether a passkey or authenticator is enrolled, as last seen: a display hint only. Nothing is
   // authorized from it; factor changes read the live inventory and admin actions read the session
@@ -225,7 +232,7 @@ export const Member = z.object({
   invitedAt: isoDate,
   joinedAt: isoDate.optional(),
   lastSeenAt: isoDate.optional(),
-  // When this person last opened their notifications here; newer events count as new
+  // Where notification reading started before each person had a read record (store BELL#)
   seenAt: isoDate.optional(),
   // The latest invitation email: its state and when it was queued (resends are rate limited by it)
   invite: z.object({ state: InviteDelivery, queuedAt: isoDate, sentAt: isoDate.optional() }).optional(),

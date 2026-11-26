@@ -5,7 +5,7 @@
 
 
 import { HttpError } from "../lib/api.ts";
-import { joinPlace, normalizeLink, OUTSIDE_US, placeShapeProblem, splitPlace, US_STATES, type Tenant } from "@1neon/domain";
+import { joinPlace, linkedinLink, LINKEDIN_HINT, normalizeLink, OUTSIDE_US, placeShapeProblem, splitPlace, US_STATES, type Tenant } from "@1neon/domain";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "../lib/api.ts";
@@ -23,9 +23,16 @@ export function linkLabel(link: string) {
 
 
 /** The place and link, read only, or "Not added yet" */
-export function FaceFacts({ place, link }: Pick<Tenant, "place" | "link">) {
-  if (!place && !link) return <span className="muted">Not added yet</span>;
-  return <>{place}{place && link && " · "}{link && <OutLink href={link}>{linkLabel(link)}</OutLink>}</>;
+export function FaceFacts({ place, link, linkedin }: Pick<Tenant, "place" | "link" | "linkedin">) {
+  if (!place && !link && !linkedin) return <span className="muted">Not added yet</span>;
+  return <>{place}{place && link && " · "}{link && <OutLink href={link}>{linkLabel(link)}</OutLink>}{(place || link) && linkedin && " · "}{linkedin && <OutLink href={linkedin}>LinkedIn</OutLink>}</>;
+}
+
+
+/** The public pages a person chose to show */
+export function OwnLinks({ linkedin, website }: { linkedin?: string; website?: string }) {
+  if (!linkedin && !website) return null;
+  return <span className="own-links">{linkedin && <OutLink href={linkedin}>LinkedIn</OutLink>}{website && <OutLink href={website}>Website</OutLink>}</span>;
 }
 
 
@@ -43,6 +50,8 @@ export function FaceForm({ ask = false, onDone }: { ask?: boolean; onDone?: () =
   const [city, setCity] = useState(() => splitPlace(org.place ?? "").city);
   const [state, setState] = useState<string>(() => splitPlace(org.place ?? "").state);
   const [link, setLink] = useState(org.link ?? "");
+  const [company, setCompany] = useState(org.linkedin ?? "");
+  const companyBad = company.trim() !== "" && linkedinLink(company, "company") === undefined;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   // The API's answers by field (a link or place it can't take), shown under each
@@ -53,17 +62,18 @@ export function FaceForm({ ask = false, onDone }: { ask?: boolean; onDone?: () =
   const linkMsg = fieldErrs.link ?? (linkBad ? "Enter a web address, like yourbusiness.com." : undefined);
   const placeMsg = fieldErrs.place ?? placeBad;
   // Home's ask needs one to save; Settings can also clear both
-  const ready = (!ask || place !== "" || link.trim() !== "") && !linkBad && !placeBad;
-  const changed = place !== (org.place ?? "") || (link.trim() ? normalizeLink(link) : "") !== (org.link ?? "");
+  const ready = (!ask || place !== "" || link.trim() !== "") && !linkBad && !placeBad && !companyBad;
+  const changed = place !== (org.place ?? "") || (link.trim() ? normalizeLink(link) : "") !== (org.link ?? "") || (company.trim() ? linkedinLink(company, "company") : "") !== (org.linkedin ?? "");
 
   // Save both against the organization's version; the frame's copy of the organization takes the answer
   const save = async () => {
     setBusy(true);
     setError("");
     try {
-      const next = await api<Tenant>(`/t/${org.id}/profile`, { method: "PUT", body: { version: org.version, place, link } });
+      const next = await api<Tenant>(`/t/${org.id}/profile`, { method: "PUT", body: { version: org.version, place, link, ...(ask ? {} : { linkedin: company }) } });
       qc.setQueryData(["org", summary.id], { org: next, access });
       setLink(next.link ?? "");
+      setCompany(next.linkedin ?? "");
       // The place comes back in its proper spelling
       setCity(splitPlace(next.place ?? "").city);
       setState(splitPlace(next.place ?? "").state);
@@ -81,11 +91,17 @@ export function FaceForm({ ask = false, onDone }: { ask?: boolean; onDone?: () =
   return (
     <form className={`face-form${ask ? " card" : ""}`} onSubmit={(e) => { e.preventDefault(); if (ready && changed && !busy) void save(); }}>
       {ask && <h2 className="section-h">Where can I see your business?</h2>}
-      <p className="muted small">{ask ? "Add your website or a public page (Google, Yelp, LinkedIn), or where you're based, so I know who I'm working with. One is enough, and you can skip it." : "Your website or a public page, and where you're based. Both are optional."}</p>
+      <p className="muted small">{ask ? "Add your website or a public page (Google, Yelp, LinkedIn), or where you're based, so I know who I'm working with. One is enough, and you can skip it." : "All optional."}</p>
       {error && <p className="notice" role="alert">{error}</p>}
       <label className="field-label" htmlFor="face-link">Website or public page</label>
       <input id="face-link" inputMode="url" maxLength={200} autoComplete="url" placeholder="yourbusiness.com" aria-invalid={linkMsg ? true : undefined} aria-describedby={linkMsg ? "face-link-error" : undefined} value={link} onChange={(e) => { setLink(e.target.value); setFieldErrs(({ link: _l, ...r }) => r); }} />
       {linkMsg && <p className="small field-error" id="face-link-error" role="status">{linkMsg}</p>}
+      {/* Settings only: Home's ask stays short */}
+      {!ask && <>
+        <label className="field-label" htmlFor="face-linkedin">LinkedIn company page</label>
+        <input id="face-linkedin" inputMode="url" maxLength={200} placeholder="linkedin.com/company/your-business" aria-invalid={companyBad ? true : undefined} aria-describedby={companyBad ? "face-linkedin-error" : undefined} value={company} onChange={(e) => setCompany(e.target.value)} />
+        {companyBad && <p className="small field-error" id="face-linkedin-error" role="status">{LINKEDIN_HINT.company}</p>}
+      </>}
       {/* City and state side by side, the state narrower */}
       <div className="face-pair">
         <div>

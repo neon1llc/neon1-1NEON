@@ -11,7 +11,7 @@ import { KIND_LAYER, type CalEvent, type ItemKind } from "@1neon/domain";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { api } from "../lib/api.ts";
 import { problem, useMembers, useProjects, useRefresh, useSubmit } from "../lib/hooks.ts";
 import { moveDay, tabDay } from "../lib/calendar-keys.ts";
@@ -57,6 +57,14 @@ export function ComingUp({ tid, base }: { tid: string; base: string }) {
   const data = cal.data;
   const today = data?.today;
   const shown = month ?? data?.month;
+  // A link can name a day (?day=2026-11-30, from a notification): show its month and open it
+  const [params] = useSearchParams();
+  const asked = params.get("day") ?? "";
+  useEffect(() => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(asked)) return;
+    setMonth(asked.slice(0, 7));
+    setPicked(asked);
+  }, [asked]);
   // A new month clears the picked day unless it's in that month
   useEffect(() => { if (picked && shown && !picked.startsWith(shown)) setPicked(undefined); }, [shown, picked]);
 
@@ -92,7 +100,7 @@ export function ComingUp({ tid, base }: { tid: string; base: string }) {
   };
 
   return (
-    <section className="card coming cal" data-tour="coming-up" aria-busy={cal.isFetching}>
+    <section id="coming-up" className="card coming cal" data-tour="coming-up" aria-busy={cal.isFetching}>
       {/* The month's name, and the ways to move: back, forward, Today, or straight to a month */}
       <div className="cal-head">
         <h2 className="section-h" aria-live="polite">{monthName(shown)}</h2>

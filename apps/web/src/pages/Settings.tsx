@@ -78,7 +78,7 @@ export function Settings() {
             <div><dt>Client ID</dt><dd className="mono">{org.clientId}</dd></div>
             <div><dt>Address</dt><dd className="mono">neon1.tech/1NEON/o/{org.slug}</dd></div>
             {/* Where the business can be seen from outside; any admin may change it */}
-            <div><dt>Where</dt><dd><FaceFacts place={org.place} link={org.link} />{admin && !editFace && <> <button className="linkish helper" onClick={() => setEditFace(true)}>Change</button></>}{editFace && <FaceForm onDone={() => setEditFace(false)} />}</dd></div>
+            <div id="where"><dt>Where</dt><dd><FaceFacts place={org.place} link={org.link} linkedin={org.linkedin} />{admin && !editFace && <> <button className="linkish helper" onClick={() => setEditFace(true)}>Change</button></>}{editFace && <FaceForm onDone={() => setEditFace(false)} />}</dd></div>
             <div><dt>Your access</dt><dd><span className="tag">{access}</span></dd></div>
             {/* neon1's service agreement: who signed it, or a way to read and sign it */}
             <div hidden={prospect}><dt>Service agreement</dt><dd>{org.agreements?.length ? <>Signed by {org.agreements.at(-1)!.typedName}, edition {org.agreements.at(-1)!.ref}. Case studies: {choiceLabel("caseStudies", (org.choices?.at(-1) ?? UNCHOSEN).caseStudies)}. Client list: {choiceLabel("naming", (org.choices?.at(-1) ?? UNCHOSEN).naming)}. </> : "Not signed yet. "}<Link to={`/o/${summary.slug}/agreement`}>{org.agreements?.length ? "Read it" : "Read and sign"}</Link></dd></div>
@@ -96,7 +96,7 @@ export function Settings() {
           </div>
         </div>
       </div>
-      <h2 className="section-h">Board stages</h2>
+      <h2 className="section-h" id="stages">Board stages</h2>
       <p className="helper">Each row is a board column, in order: name, layer, when it's done, and an optional project limit. A hidden stage still shows while a project is in it.</p>
       {!canAdmin && <p className="helper">{prospect ? "Stages open up once we're working together." : "Only admins can change stages."}</p>}
       {/* One row per stage: name, layer, exit rule, limit, and order controls; phones stack each stage as a card */}

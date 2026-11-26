@@ -16,7 +16,7 @@ describe("prospectMay", () => {
 
   // The work a prospect came for: projects, needs, comments, files
   it("allows the listed changes", () => {
-    for (const [m, p] of [["POST", "/projects"], ["PATCH", "/projects/p1"], ["POST", "/projects/p1/items"], ["PATCH", "/projects/p1/items/i1"], ["POST", "/projects/p1/items/i1/comments"], ["POST", "/docs"], ["POST", "/docs/d1/done"], ["DELETE", "/docs/d1"], ["POST", "/notifications/seen"]]) {
+    for (const [m, p] of [["POST", "/projects"], ["PATCH", "/projects/p1"], ["POST", "/projects/p1/items"], ["PATCH", "/projects/p1/items/i1"], ["POST", "/projects/p1/items/i1/comments"], ["POST", "/docs"], ["POST", "/docs/d1/done"], ["DELETE", "/docs/d1"], ["POST", "/notifications/read-all"], ["POST", "/notifications/ev_1/read"]]) {
       expect(prospectMay(m!, p!), `${m} ${p}`).toBe(true);
     }
   });

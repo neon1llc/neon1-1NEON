@@ -35,6 +35,18 @@ const Place = z.string().trim().max(80).default("");
 // A website or public page; "" for none, otherwise it must make a real address
 const Link = z.string().trim().max(200).default("").refine((v) => v === "" || normalizeLink(v) !== undefined, "Enter a web address, like yourbusiness.com.").transform((v) => (v ? normalizeLink(v)! : ""));
 
+/** A LinkedIn address of the wanted kind, written in full; undefined if it's something else */
+export function linkedinLink(typed: string, kind: "person" | "company"): string | undefined {
+  const full = normalizeLink(typed);
+  if (!full) return undefined;
+  const u = new URL(full);
+  const path = u.pathname.replace(/\/+$/, "");
+  if (!/(^|\.)linkedin\.com$/.test(u.hostname) || !(kind === "person" ? /^\/in\/[^/]+$/ : /^\/(company|school|showcase)\/[^/]+$/).test(path)) return undefined;
+  return `https://www.linkedin.com${path}`;
+}
+export const LINKEDIN_HINT = { person: "Enter your LinkedIn profile address, like linkedin.com/in/your-name.", company: "Enter a LinkedIn company page, like linkedin.com/company/your-business." } as const;
+const linkedin = (kind: "person" | "company") => z.string().trim().max(200).refine((v) => v === "" || linkedinLink(v, kind) !== undefined, LINKEDIN_HINT[kind]).transform((v) => (v ? linkedinLink(v, kind)! : ""));
+
 /** Where neon1 can see an organization from outside: a place, a link, both, or neither. Both are
  * optional, so a person who'd rather stay private can still start; Home asks again later */
 export const PublicFace = z.object({ place: Place, link: Link });
@@ -48,7 +60,8 @@ export const CreateTenantInput = z.object({
 });
 
 /** An admin's edit of the organization's place and link (Settings) */
-export const OrgProfileInput = z.object({ version: z.number().int(), place: Place, link: Link });
+// Left out, the company page stays as it is
+export const OrgProfileInput = z.object({ version: z.number().int(), place: Place, link: Link, linkedin: linkedin("company").optional() });
 
 
 // People
@@ -234,6 +247,10 @@ export const UpdateMeInput = z.object({
   version: z.number().int(),
   name: z.string().trim().max(80).optional(),
   title: z.string().trim().max(80).optional(),
+  // The person's own public pages, both optional; "" removes one
+  linkedin: linkedin("person").optional(),
+  website: Link.optional(),
+  linksCard: z.enum(["shown", "hidden"]).optional(),
   phone: z.string().trim().max(32).optional(),
   theme: Theme.optional(),
   // An IANA zone name; anything the engine does not know is refused

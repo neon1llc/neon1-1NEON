@@ -212,7 +212,7 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
   // Nothing outlined yet: the card says what comes first, dimmed until there's something to assess
   if (asked.data && list.length === 0) {
     return (
-      <section className="card next-step-ask is-waiting" aria-labelledby="next-step-h" data-tour="next-step-ask">
+      <section id="next-step" className="card next-step-ask is-waiting" aria-labelledby="next-step-h" data-tour="next-step-ask">
         <h2 className="section-h" id="next-step-h">Next step</h2>
         <p className="ns-note">Outline up to {limit} <Link to={`${base}/projects`}>projects</Link>, then request an assessment for any of them here. The more you write first, the more our call can cover.</p>
         <p className="muted ns-intro">{intro}</p>
@@ -236,7 +236,7 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
     <>
     {/* Next step: how far each project is outlined, and a way to outline another. Clients have no outline, so for them Request assessment stands alone */}
     {prospect && (
-      <section className="card next-step-ask" aria-labelledby="next-step-h" aria-busy={asked.isPending} data-tour="next-step-ask">
+      <section id="next-step" className="card next-step-ask" aria-labelledby="next-step-h" aria-busy={asked.isPending} data-tour="next-step-ask">
         <h2 className="section-h" id="next-step-h">Next step</h2>
         <p className="ns-note">Outline up to {limit} <Link to={`${base}/projects`}>projects</Link>, then request an assessment for any of them here. The more you write first, the more our call can cover.</p>
         {/* One line per project, how far along it is, and what would help most */}
@@ -264,7 +264,7 @@ export function NextStep({ orgId, slug, prospect }: { orgId: string; slug: strin
         {list.length < limit && <div className="actions"><Link className="btn btn-sm" to={`${base}/projects/new`}>Outline another project</Link></div>}
       </section>
     )}
-    <section className={`card request-ask${locked ? " is-locked" : ""}`} aria-labelledby="request-h" aria-busy={asked.isPending} {...(prospect ? {} : { "data-tour": "next-step-ask" })}>
+    <section id="next-step" className={`card request-ask${locked ? " is-locked" : ""}`} aria-labelledby="request-h" aria-busy={asked.isPending} {...(prospect ? {} : { "data-tour": "next-step-ask" })}>
       <h2 className="section-h" id="request-h">Request assessment</h2>
       <p className="muted ns-intro">{intro}</p>
       {/* A client keeps it simple: only what was sent, and when */}

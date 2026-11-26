@@ -33,12 +33,14 @@ export function workspaceRoutes(app: App, k: Kit) {
     // The same checks as sign-up: a real place (stored in its proper spelling) and a link that answers
     input.place = await checkFace(d.vetting, input.place, input.link);
     const t = c.get("tenant");
-    const { place: _p, link: _l, ...rest } = t;
-    const next: Tenant = { ...rest, ...(input.place ? { place: input.place } : {}), ...(input.link ? { link: input.link } : {}), version: t.version + 1, updatedAt: now(), updatedBy: actorId(c) };
+    const { place: _p, link: _l, linkedin: was, ...rest } = t;
+    const company = input.linkedin ?? was;
+    const next: Tenant = { ...rest, ...(input.place ? { place: input.place } : {}), ...(input.link ? { link: input.link } : {}), ...(company ? { linkedin: company } : {}), version: t.version + 1, updatedAt: now(), updatedBy: actorId(c) };
     await repo.saveTenant(next, input.version);
     const record = changeRecord("Updated where the organization is", [
       ...(t.place !== next.place ? [`Place: ${next.place || "removed"}`] : []),
       ...(t.link !== next.link ? [`Link: ${next.link || "removed"}`] : []),
+      ...(t.linkedin !== next.linkedin ? [`LinkedIn: ${next.linkedin || "removed"}`] : []),
     ]);
     if (record) await repo.table.write([repo.auditOp({ tenantId: t.id, actorId: actorId(c), action: "org.profile", target: t.id, ...record })]);
     return c.json(next);

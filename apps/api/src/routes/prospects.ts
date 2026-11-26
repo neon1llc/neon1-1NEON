@@ -431,7 +431,7 @@ export function prospectRoutes(app: App, k: Kit) {
       const last = await lastActive(k, t);
       const p = t.prospect!;
       return {
-        id: t.id, slug: t.slug, name: t.name, clientId: t.clientId, place: t.place, link: t.link, prospect: p, people,
+        id: t.id, slug: t.slug, name: t.name, clientId: t.clientId, place: t.place, link: t.link, linkedin: t.linkedin, prospect: p, people,
         projects: projects.filter((x) => !x.deletedAt).length, files: files.length, bytes: files.reduce((n, x) => n + (x.size ?? 0), 0), lastActive: last,
         // When the clock deletes it if nothing changes; none while held, suspended, or being deleted
         deleteOn: p.heldAt || p.suspendedAt || p.deletingAt ? undefined : prospectDeleteOn(prospectClock(last, p.keptUntil), p.warnedAt),

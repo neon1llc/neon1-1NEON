@@ -108,6 +108,16 @@ export function looksLikeJunk(text: string): boolean {
 export const NAME_MAX = 80;
 
 
+/** neon1's own people, by address: a record made for one without a name (an invite, or an automatic
+ * membership) takes this one, so they never show as unnamed */
+const OWN_NAMES: Record<string, string> = { "pradeep@neon1.tech": "Pradeep Tathineni" };
+/** A record with its name filled in when it's one of neon1's own and has none */
+export const withOwnName = <T extends { email: string; name: string }>(r: T): T => {
+  const own = r.name ? undefined : OWN_NAMES[r.email.toLowerCase()];
+  return own ? { ...r, name: own } : r;
+};
+
+
 /** A name as it's stored: NFKC (fullwidth and styled letters become plain ones), every space and hyphen
  * the ordinary one, runs of spaces collapsed, ends trimmed */
 export function cleanName(name: string): string {

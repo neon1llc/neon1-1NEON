@@ -4,7 +4,7 @@
 
 
 import type { AuditEvent, CalEvent, ChatBlock, ChatMessage, ChatSeen, ChatThread, DocumentRecord, Item, Member, Project, Tenant, User } from "@1neon/domain";
-import { newId, themeOf } from "@1neon/domain";
+import { newId, themeOf, withOwnName } from "@1neon/domain";
 import { ConflictError, type Guard, type Row, type TableStore, type WriteOp } from "./types.ts";
 
 
@@ -41,6 +41,8 @@ export const keys = {
   security: (uid: string, at: string, id: string) => ({ PK: `USER#${uid}`, SK: `SEC#${at}#${id}` }),
   // Inside one tenant
   member: (tid: string, uid: string) => ({ PK: `T#${tid}`, SK: `MEMBER#${uid}` }),
+  // What one person has read in this organization's notifications; its own row, so neon1 can read in any
+  bell: (tid: string, uid: string) => ({ PK: `T#${tid}`, SK: `BELL#${uid}` }),
   project: (tid: string, pid: string) => ({ PK: `T#${tid}`, SK: `PROJ#${pid}` }),
   projectCounter: (tid: string, prefix: string) => ({ PK: `T#${tid}`, SK: `COUNTER#${prefix}` }),
   // One revision for the whole membership list: every change that could alter who is an admin bumps
@@ -305,7 +307,7 @@ export class Repo {
   // User and email claim land together, so an email maps to exactly one person
   async createUser(u: User) {
     await this.table.write([
-      { put: { ...keys.user(u.id), type: "user", ...u }, guard: { create: true } },
+      { put: { ...keys.user(u.id), type: "user", ...withOwnName(u) }, guard: { create: true } },
       { put: { ...keys.email(u.email), userId: u.id }, guard: { create: true } },
     ]);
   }
@@ -317,7 +319,7 @@ export class Repo {
 
   /** The profile write on its own, for combining with another write in one transaction */
   userOp(u: User, expected: number): WriteOp {
-    return { put: { ...keys.user(u.id), type: "user", ...u }, guard: { version: expected } };
+    return { put: { ...keys.user(u.id), type: "user", ...withOwnName(u) }, guard: { version: expected } };
   }
 
   // One person's membership in one organization
@@ -336,10 +338,21 @@ export class Repo {
     return (await this.table.queryIndex("GSI1", `USER#${uid}`, "T#")).map((r) => entity<Member>(r)!);
   }
 
+  // Notifications read: everything up to `allAt` ("Mark all read"), plus single ones opened since
+  async getBell(tid: string, uid: string) {
+    const k = keys.bell(tid, uid);
+    const r = await this.table.get(k.PK, k.SK);
+    return r ? { allAt: r.allAt as string | undefined, ids: (r.ids as string[] | undefined) ?? [], version: Number(r.version) } : undefined;
+  }
+
+  bellOp(tid: string, uid: string, b: { allAt?: string; ids: string[] }, was: number | undefined): WriteOp {
+    return { put: { ...keys.bell(tid, uid), type: "bell", ...(b.allAt ? { allAt: b.allAt } : {}), ids: b.ids, version: (was ?? 0) + 1 }, guard: was === undefined ? { create: true } : { version: was } };
+  }
+
   // Memberships are indexed by user (GSI1) for the organization chooser
   memberOp(m: Member, guard: Guard): WriteOp {
     return {
-      put: { ...keys.member(m.tenantId, m.userId), type: "member", GSI1PK: `USER#${m.userId}`, GSI1SK: `T#${m.tenantId}`, ...m },
+      put: { ...keys.member(m.tenantId, m.userId), type: "member", GSI1PK: `USER#${m.userId}`, GSI1SK: `T#${m.tenantId}`, ...withOwnName(m) },
       guard,
     };
   }

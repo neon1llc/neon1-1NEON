@@ -317,7 +317,7 @@ export function FileList({ docs, projectName, empty = "No files yet." }: { docs:
         </div>
       </Dialog>
       {list.map((d) => (
-        <div className="file" key={d.id}>
+        <div className="file" key={d.id} id={`doc-${d.id}`}>
           {d.projectId && d.layer ? <LayerBadge layer={d.layer} /> : <span className="badge level" aria-hidden="true">{d.projectId ? "P" : "O"}</span>}
           <div className="meta">
             {/* A ready file's name opens it, like other titles; others are plain text until they're ready */}

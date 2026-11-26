@@ -3,6 +3,7 @@
 
 
 import type { AccessLevel } from "@1neon/domain";
+import { OwnLinks } from "../components/OrgFace.tsx";
 import { useState } from "react";
 import { gate, Stale } from "../components/Reads.tsx";
 import { useOrg, useSession, useTopBar } from "../components/Shell.tsx";
@@ -88,8 +89,8 @@ export function People() {
               // Admins change others' access; nobody changes their own here, and neon1's access is neon1's to change
               const editable = canAdmin && m.userId !== me.user.id && (!m.neon1 || me.operator);
               return (
-              <tr key={m.userId} style={m.status === "deactivated" ? { opacity: 0.55 } : undefined}>
-                <td><span style={{ display: "inline-flex", gap: 10, alignItems: "center" }}><Avatar id={m.userId} name={m.name || m.email} /><span>{m.name || <span className="muted">{m.status === "invited" ? "Name comes when they join" : "No name yet"}</span>}<br /><span className="muted small">{m.title}</span></span></span></td>
+              <tr key={m.userId} id={`member-${m.userId}`} style={m.status === "deactivated" ? { opacity: 0.55 } : undefined}>
+                <td><span style={{ display: "inline-flex", gap: 10, alignItems: "center" }}><Avatar id={m.userId} name={m.name || m.email} /><span>{m.name || <span className="muted">{m.status === "invited" ? "Name comes when they join" : "No name yet"}</span>}<br /><span className="muted small">{m.title}</span><OwnLinks linkedin={m.linkedin} website={m.website} /></span></span></td>
                 <td className="mono small">{m.email}{m.neon1 && <span className="tag client" style={{ marginLeft: 8 }} title="neon1's access is managed by neon1">neon1</span>}</td>
                 <td>
                   {editable && m.status !== "deactivated" ? (

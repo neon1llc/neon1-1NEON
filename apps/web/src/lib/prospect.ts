@@ -65,6 +65,7 @@ export function stateLabel(p: NonNullable<Tenant["prospect"]>) {
 
 /** One row of GET /prospects */
 export interface ProspectRow {
+  linkedin?: string;
   id: string;
   slug: string;
   name: string;
