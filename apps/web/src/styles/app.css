@@ -2647,3 +2647,4 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
   .settings-main > .profile-form { display: contents; }
   .settings-main > .notify { column-span: all; margin-top: var(--sp-4); }
 }
+.agree-party input, .agree-party textarea { margin-bottom: var(--sp-3); }

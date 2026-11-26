@@ -76,7 +76,7 @@ export function contractRoutes(app: App, k: Kit) {
     const draft = decision && !hasFinal ? closingDraft(p, decision, items, now(), actorId(c)) : undefined;
     const due = dateLabelOf(plusBusinessDays(today, REVIEW_BUSINESS_DAYS));
     const next = await save(c, p, input.version, { handover: event(c, input.note) }, "project.handed_over",
-      `handed over: ${input.note}. Please review it by ${due} and record your acceptance, or tell me what doesn't work as agreed`,
+      `handed over: ${input.note.replace(/[.!?]$/, "")}. Please review it by ${due}.`,
       draft ? [repo.itemOp(draft, { create: true })] : []);
     return c.json(next);
   });

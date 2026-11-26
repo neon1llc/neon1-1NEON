@@ -11,6 +11,10 @@ import { api } from "../lib/api.ts";
 import { problem, useRefresh } from "../lib/hooks.ts";
 
 
+/** Words as a sentence: ends with a full stop unless it already ends with one */
+const sentence = (t: string) => (/[.!?]$/.test(t.trim()) ? t.trim() : `${t.trim()}.`);
+
+
 export function InvoiceDispute({ invoice, items, project, path }: { invoice: Item; items: Item[]; project: Project; path: string }) {
   const { org, access } = useOrg();
   const me = useSession();
@@ -43,7 +47,7 @@ export function InvoiceDispute({ invoice, items, project, path }: { invoice: Ite
   if (d) {
     return (
       <section className="dispute" aria-label="Dispute">
-        <p className="pp-state" role="status">{d.name} disputed {money(d.cents)} on {dateLabel(d.at.slice(0, 10))}: {d.reason}{d.resolved ? <> Answered by {d.resolved.name} on {dateLabel(d.resolved.at.slice(0, 10))}: {d.resolved.note}</> : <> The rest stays due on its date. neon1 answers here.</>}</p>
+        <p className="pp-state" role="status">{d.name} disputed {money(d.cents)} on {dateLabel(d.at.slice(0, 10))}: {sentence(d.reason)}{d.resolved ? <> Answered by {d.resolved.name} on {dateLabel(d.resolved.at.slice(0, 10))}: {sentence(d.resolved.note)}</> : <> The rest stays due on its date. neon1 answers here.</>}</p>
         {me.operator && !d.resolved && (open ? (
           <form className="accept-form" onSubmit={(e) => { e.preventDefault(); if (!busy && text.trim().length >= 3) void post("dispute/resolve", { note: text.trim() }, "Answered. The client is told."); }}>
             <label>Your answer (make any credit or new invoice separately)<textarea rows={2} value={text} onChange={(e) => setText(e.target.value)} maxLength={1000} required /></label>
