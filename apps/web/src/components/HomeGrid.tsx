@@ -80,14 +80,14 @@ export function HomeGrid({ tiles, cells, bp, arranging, onChange, onHide, onFit 
     const rows: Record<string, number> = {};
     for (const node of el.querySelectorAll<HTMLElement>(".tile[data-id]")) {
       const id = node.dataset.id!;
-      const card = node.querySelector<HTMLElement>(".tile-body > *");
-      if (!card) continue;
-      for (const k of card.children) if (!watched.current.has(k)) { watched.current.add(k); ro.current?.observe(k); }
-      card.style.height = "auto";
-      card.style.alignSelf = "start";
-      const natural = card.offsetHeight;
-      card.style.height = "";
-      card.style.alignSelf = "";
+      // A body can hold more than one card (Next step and its request form): measure them all, stacked
+      const body = node.querySelector<HTMLElement>(".tile-body");
+      const parts = body ? [...body.children].filter((k): k is HTMLElement => k instanceof HTMLElement && k.tagName !== "DIALOG") : [];
+      if (!body || !parts.length) continue;
+      for (const part of parts) for (const k of [part, ...part.children]) if (!watched.current.has(k)) { watched.current.add(k); ro.current?.observe(k); }
+      body.classList.add("measuring");
+      const natural = body.scrollHeight;
+      body.classList.remove("measuring");
       const h = Math.min(40, Math.max(2, Math.ceil((natural + s.gap) / s.y)));
       // Reported only when it changes, and at most a few times a second, so a fit can never chase itself
       const was = fitted.current.get(id);
