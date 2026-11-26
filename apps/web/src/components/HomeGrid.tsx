@@ -74,7 +74,8 @@ export function HomeGrid({ tiles, cells, bp, arranging, onChange, onHide, onFit 
       const was = rects.current.get(id);
       if (!was || id === hold?.id || still()) continue;
       const dx = was.left - r.left, dy = was.top - r.top;
-      if (!dx && !dy) continue;
+      // A jump bigger than a screen is a relayout, not a move worth watching
+      if ((!dx && !dy) || Math.abs(dx) > innerWidth || Math.abs(dy) > innerHeight) continue;
       node.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: "none" }], { duration: 220, easing: "cubic-bezier(.28, .11, .32, 1)" });
     }
     rects.current = next;
@@ -113,16 +114,20 @@ export function HomeGrid({ tiles, cells, bp, arranging, onChange, onHide, onFit 
 
   const drag = (e: React.PointerEvent) => {
     if (!hold) return;
-    // Near the window's top or bottom edge the page scrolls, so a card can travel past what's in view
-    if (e.clientY > innerHeight - 56) scrollBy(0, 14);
-    else if (e.clientY < 120) scrollBy(0, -14);
+    // Near the window's top or bottom edge the page scrolls, so a card can travel past what's in view.
+    // The scroller is the body when the shell says so (html.body-scrolls), else the document
+    const scroller = document.documentElement.classList.contains("body-scrolls") ? document.body : (document.scrollingElement ?? document.documentElement);
+    if (e.clientY > innerHeight - 56) scroller.scrollTop += 14;
+    else if (e.clientY < 120) scroller.scrollTop -= 14;
     const s = step();
     const dx = e.clientX - hold.x0;
     // The page's scroll since the press counts as movement too
     const dy = e.clientY - hold.y0 + (hold.top0 - grid.current!.getBoundingClientRect().top);
     let target: Cell;
     if (hold.mode === "move") {
-      target = { ...hold.origin, x: Math.round(hold.origin.x + dx / s.x), y: Math.max(0, Math.round(hold.origin.y + dy / s.y)) };
+      // Never past the last card's bottom: a card dropped lower would only pack back up
+      const floor = Math.max(0, ...cells.filter((c) => c.id !== hold.id).map((c) => c.y + c.h));
+      target = { ...hold.origin, x: Math.round(hold.origin.x + dx / s.x), y: Math.min(floor, Math.max(0, Math.round(hold.origin.y + dy / s.y))) };
     } else {
       const t = tiles.find((x) => x.id === hold.id)!;
       const p = snap(hold.origin.w + dx / s.x, hold.origin.h + dy / s.y, sizesOf(t));
