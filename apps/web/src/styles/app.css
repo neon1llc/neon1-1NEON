@@ -2698,15 +2698,19 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 .tile-body > .card > :last-child { margin-bottom: 0; }
 .tile-body .face-form { max-width: none; }
 
-/* What a card holds, as pills on its top edge (like a badge on an app icon): urgent red, suggested
-   amber, general green. The same pills sit in View's rows and, as totals, on the View button */
+/* What a card holds, as pills on its top edge (like a badge on an app icon). Three kinds, drawn from the
+   look's own status inks so they sit in Sentinel and Matrix, light or dark: urgent in the look's red,
+   suggested in its amber, to-know in its accent green. Each pill is the ink on a soft tint of itself, as
+   the portal's tags are, so the number keeps the ink's contrast with the panel */
+:root { --k-urgent: var(--red); --k-suggested: var(--amber); --k-general: var(--accent); }
 .cpills { display: inline-flex; align-items: center; gap: 4px; }
-.cpill { display: inline-grid; place-items: center; min-width: 1.7em; height: 1.7em; padding: 0 .45em; border-radius: 99px; font: 600 var(--fs-xs) var(--mono); line-height: 1; color: var(--on-color); white-space: nowrap; }
-.cpill.urgent { background: var(--red); }
-.cpill.suggested { background: var(--amber); }
-.cpill.general { background: var(--ok); }
-:root:is([data-theme="matrix"], [data-theme="device"]) .cpill:is(.suggested, .general) { color: var(--bg); }
-.tile-counts { position: absolute; top: -10px; right: var(--sp-4); z-index: 2; pointer-events: none; }
+.cpill { --k: var(--k-general); display: inline-grid; place-items: center; min-width: 1.8em; height: 1.8em; padding: 0 .5em; border: 1px solid color-mix(in srgb, var(--k) 55%, transparent); border-radius: 99px; background: color-mix(in srgb, var(--k) 12%, var(--panel)); color: var(--k); font: 600 var(--fs-xs) var(--mono); line-height: 1; white-space: nowrap; }
+.cpill.urgent { --k: var(--k-urgent); }
+.cpill.suggested { --k: var(--k-suggested); }
+.cpill.general { --k: var(--k-general); }
+/* Something urgent hidden from view: the pill fills, so it reads before its number does */
+.cpill.urgent.part { background: var(--k); color: var(--panel); }
+.tile-counts { position: absolute; top: -11px; right: var(--sp-4); z-index: 2; cursor: default; }
 
 /* Arrange mode: a hand to pick a card up; held, it lifts and closes the hand */
 .hg-bar { position: sticky; top: calc(var(--topbar, 64px) + var(--sp-2)); z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); margin: var(--sp-2) 0; padding: var(--sp-2) var(--sp-3); border: 1px solid var(--accent); border-radius: var(--r); background: var(--panel); font: var(--fs-sm) var(--mono); color: var(--accent); }

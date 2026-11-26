@@ -32,7 +32,7 @@ function Totals({ rows }: { rows: ViewRow[] }) {
   return (
     <span className="cpills">
       <span className="sr-only">{said}</span>
-      {parts.map((p) => <span key={p.k} className={`cpill ${p.k}${p.seen < p.total ? " part" : ""}`} aria-hidden="true">{p.seen < p.total ? `${p.seen}/${p.total}` : p.total}{p.k === "urgent" && p.seen < p.total ? " !" : ""}</span>)}
+      {parts.map((p) => <span key={p.k} className={`cpill ${p.k}${p.seen < p.total ? " part" : ""}`} aria-hidden="true" title={`${p.seen < p.total ? `${p.seen} of ${p.total} shown` : p.total}: ${p.k === "general" ? "to know" : p.k}${p.seen < p.total ? ", the rest in hidden cards" : ""}`}>{p.seen < p.total ? `${p.seen}/${p.total}` : p.total}{p.k === "urgent" && p.seen < p.total ? " !" : ""}</span>)}
     </span>
   );
 }
