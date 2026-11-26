@@ -61,7 +61,7 @@ export const GUIDES: Record<PageKey, Guide> = {
     howto: ["Editors and admins drag a card or use its Move to menu.", "Moving past Decide without an approved option asks for a reason."],
     tour: [
       { at: "board-column", title: "Stages", text: "Columns run left to right, from the first call to care after handover." },
-      { at: "board-card", title: "Projects", text: "Drag a card to the next stage, or open it to see the work." },
+      { at: "board-card", title: "Projects", text: "Hold a card to move it to another stage, or open it to see the work." },
     ],
   },
   projects: {

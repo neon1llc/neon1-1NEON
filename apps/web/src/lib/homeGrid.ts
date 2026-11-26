@@ -96,13 +96,15 @@ export function reconcile(saved: Cell[] | undefined, cards: { id: string; w: num
   return compact(flow(fresh, cols, compact(kept)));
 }
 
-/** A free size while resizing: whole cells within the grid, pulled onto a preset when within about a
- * cell of one (a magnet, so presets are easy to hit). `preset` names it when it lands on one */
+/** A free size while resizing: whole cells between the card's smallest and largest presets, pulled onto a
+ * preset when within about a cell of one (a magnet, so presets are easy to hit). `preset` names it */
 export function resizeTo(w: number, h: number, sizes: Size[], cols: number): { w: number; h: number; preset?: string } {
-  const min = sizes.reduce((m, s) => ({ w: Math.min(m.w, s.w), h: Math.min(m.h, s.h) }), { w: Infinity, h: Infinity });
-  const fw = Math.max(Math.min(min.w, 2), Math.min(cols, Math.round(w)));
-  const fh = Math.max(Math.min(min.h, 2), Math.round(h));
-  const near = sizes.find((s) => Math.abs(s.w - w) <= 0.75 && Math.abs(s.h - h) <= 1.5);
+  // Bounded by the card's smallest and largest presets, and the grid's edge
+  const lo = sizes.reduce((m, s) => ({ w: Math.min(m.w, s.w), h: Math.min(m.h, s.h) }), { w: Infinity, h: Infinity });
+  const hi = sizes.reduce((m, s) => ({ w: Math.max(m.w, s.w), h: Math.max(m.h, s.h) }), { w: 0, h: 0 });
+  const fw = Math.max(Math.min(lo.w, cols), Math.min(cols, hi.w, Math.round(w)));
+  const fh = Math.max(lo.h, Math.min(hi.h, Math.round(h)));
+  const near = sizes.find((s) => s.w <= cols && Math.abs(s.w - w) <= 0.75 && Math.abs(s.h - h) <= 1.5);
   return near ? { w: near.w, h: near.h, preset: near.key } : { w: fw, h: fh };
 }
 

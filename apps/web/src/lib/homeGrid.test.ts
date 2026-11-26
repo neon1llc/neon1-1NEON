@@ -41,7 +41,11 @@ describe("free sizing", () => {
     expect(resizeTo(5.5, 7.8, P, 12)).toEqual({ w: 6, h: 7, preset: "M" });
   });
   it("stays free between presets", () => {
-    expect(resizeTo(8.2, 9.1, P, 12)).toEqual({ w: 8, h: 9 });
+    expect(resizeTo(4.2, 9.1, P, 12)).toEqual({ w: 4, h: 9 });
+  });
+  it("stays within the smallest and largest presets", () => {
+    expect(resizeTo(11, 20, P, 12)).toEqual({ w: 6, h: 11 });
+    expect(resizeTo(1, 1, P, 12)).toEqual({ w: 3, h: 4 });
   });
   it("shows the layout of the widest preset that fits, then the tallest", () => {
     expect(viewFor({ w: 8, h: 9 }, P)).toBe("M");

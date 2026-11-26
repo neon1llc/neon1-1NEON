@@ -278,7 +278,7 @@ a.row:hover { background: var(--accent-soft); }
 .col.empty header h3 .nm { order: 2; writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; line-height: 1; }
 .col.empty .exit, .col.empty .none { display: none; }
 .col { background: var(--frame); border: 1px solid var(--line); border-radius: var(--r); padding: var(--sp-2); min-height: 160px; }
-.col.drop { border-color: var(--accent); background: var(--accent-soft); }
+.col.over { border-color: var(--accent); background: var(--accent-soft); }
 .col header { display: flex; justify-content: space-between; align-items: center; padding: var(--sp-0) var(--sp-1) var(--sp-2); gap: var(--sp-2); }
 .col header h3 { font-size: var(--fs-sm); display: flex; align-items: center; gap: var(--sp-2); }
 .col header .n { font: var(--fs-xs) var(--mono); color: var(--muted); }
@@ -288,7 +288,15 @@ a.row:hover { background: var(--accent-soft); }
 .pcard { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: var(--sp-3); margin-bottom: var(--sp-2); cursor: grab; box-shadow: var(--shadow); }
 .pcard[aria-disabled="true"] { cursor: pointer; }
 .pcard:hover { border-color: var(--line-strong); }
-.pcard.dragging { opacity: .45; }
+/* Moving a card (Board.tsx): held, it lifts and follows the pointer; the slot it will land in is a solid
+   outline, as on Home. A press on its name never opens the phone's link preview */
+.pcard.movable { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+.pcard.movable a.name { -webkit-touch-callout: none; }
+.pcard.dragging { position: relative; z-index: 30; cursor: grabbing; scale: 1.02; border-color: var(--accent); box-shadow: var(--shadow-float); pointer-events: none; }
+.board.holding, .board.holding .pcard { cursor: grabbing; }
+.pcard-slot { margin-bottom: var(--sp-2); border: 2px solid var(--accent); border-radius: 12px; background: var(--accent-soft); animation: fade-in var(--t-fast) var(--ease); }
+@media (prefers-reduced-motion: reduce) { .pcard-slot { animation: none; } }
+:root[data-motion="off"] .pcard-slot { animation: none; }
 .pcard .k { font: var(--fs-xs) var(--mono); color: var(--muted); display: flex; justify-content: space-between; gap: var(--sp-1); }
 .pcard a.name { display: block; font-weight: 600; color: var(--text); text-decoration: none; margin: var(--sp-1) 0 var(--sp-2); line-height: 1.35; }
 .pcard a.name:hover { color: var(--accent); }
@@ -2680,14 +2688,30 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 .vm-row[aria-pressed="true"] .vm-tick { border-color: var(--accent); }
 .vm-t { min-width: 0; overflow-wrap: anywhere; }
 .vm-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); margin-top: var(--sp-2); padding: var(--sp-2) var(--sp-3) var(--sp-1); border-top: 1px solid var(--line); }
-.vm-foot .linkish { display: inline-flex; align-items: center; gap: 4px; }
+/* The badge key, once, at the top of the menu */
+.vm-key { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-1) var(--sp-3); margin: 0 0 var(--sp-1); padding: var(--sp-1) var(--sp-3) var(--sp-2); border-bottom: 1px solid var(--line); font: var(--fs-xs) var(--mono); color: var(--muted); }
+.vm-key span { display: inline-flex; align-items: center; gap: 6px; }
+.kdot { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--k); background: color-mix(in srgb, var(--k) 25%, var(--panel)); }
+.kdot.urgent { --k: var(--k-urgent); } .kdot.suggested { --k: var(--k-suggested); } .kdot.general { --k: var(--k-general); }
+/* Round actions: an icon in a circle that opens leftward to its name; pressed again, it acts */
+.vm-acts { display: flex; align-items: center; gap: var(--sp-2); }
+.vm-act { display: inline-flex; align-items: center; height: 34px; min-width: 34px; padding: 0 9px; border: 1px solid var(--line-strong); border-radius: 99px; background: var(--panel); color: var(--muted); cursor: pointer; }
+.vm-act:hover, .vm-act:focus-visible { color: var(--accent); border-color: var(--accent); }
+.vm-act.open { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.vm-act-l { display: grid; grid-template-columns: 0fr; transition: grid-template-columns var(--t-base) var(--ease); }
+.vm-act-l > span { min-width: 0; overflow: hidden; white-space: nowrap; font: 500 var(--fs-xs) var(--mono); }
+.vm-act.open .vm-act-l { grid-template-columns: 1fr; margin-right: 6px; }
 
 /* The grid: 12 columns (4 on a phone), rows of 24px, and the gap between cards, read by HomeGrid.tsx.
    Cards are placed by transform (react-grid-layout's way), so making room is one CSS glide, never a jump */
-.hg { --row: 24px; position: relative; column-gap: var(--sp-4); transition: height var(--t-base) var(--ease); }
+.hg { --row: 24px; position: relative; column-gap: var(--sp-4); }
 .hg[data-bp="narrow"] { column-gap: var(--sp-3); }
-.tile { position: absolute; top: 0; left: 0; display: flex; transition: transform .32s cubic-bezier(.2, .8, .2, 1), width .32s cubic-bezier(.2, .8, .2, 1), height .32s cubic-bezier(.2, .8, .2, 1); }
-.tile.held { z-index: 10; transition: none; }
+.hg-wait { min-height: 60vh; }
+/* Cards glide only while arranging: on load and on return to Home, a saved layout is simply there */
+.tile { position: absolute; top: 0; left: 0; display: flex; }
+.hg.arranging { transition: height var(--t-base) var(--ease); }
+.hg.arranging .tile { transition: transform .32s cubic-bezier(.2, .8, .2, 1), width .32s cubic-bezier(.2, .8, .2, 1), height .32s cubic-bezier(.2, .8, .2, 1); }
+.hg .tile.held { z-index: 10; transition: none; }
 /* No inner scroll: a card is always as tall as its content, so the page scrolls, never the card */
 .tile-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-4); }
 .tile-body > :is(section, nav, .card) { margin: 0; flex: 0 0 auto; overflow: hidden; }
@@ -2740,12 +2764,14 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 /* A card's own bar, docked inside its bottom right: closed to a gear in a circle; the gear turns a full
    counterclockwise turn as the bar eases open to the left, holding the preset sizes and hide */
 .tile-cfg { position: absolute; right: var(--sp-3); bottom: var(--sp-3); z-index: 4; display: flex; align-items: center; height: 40px; padding: 2px; border: 1px solid var(--line-strong); border-radius: 99px; background: var(--panel); box-shadow: var(--shadow-pop); cursor: default; }
-.tile-cfg-items { display: flex; align-items: center; max-width: 0; overflow: hidden; opacity: 0; transition: max-width .45s cubic-bezier(.2, .8, .2, 1), opacity .3s; }
-.tile-cfg.open .tile-cfg-items { max-width: 360px; opacity: 1; }
+/* The bar opens to the measured width of its contents (HomeGrid.tsx) on the same clock and curve as the
+   gear's turn, so both start and finish together, opening and closing */
+.tile-cfg { --cfg-t: .8s; --cfg-ease: cubic-bezier(.45, 0, .2, 1); }
+.tile-cfg-items { display: flex; align-items: center; width: 0; overflow: hidden; transition: width var(--cfg-t) var(--cfg-ease); }
 .tile-cfg button { display: grid; place-items: center; min-width: 34px; height: 34px; padding: 0 6px; border: 0; border-radius: 99px; background: none; color: var(--muted); cursor: pointer; }
 .tile-cfg button:hover, .tile-cfg button:focus-visible { color: var(--accent); background: var(--accent-soft); }
 .tile-cfg .tile-gear { width: 34px; padding: 0; color: var(--accent); }
-.tile-gear svg { transition: rotate .6s cubic-bezier(.2, .8, .2, 1); }
+.tile-gear svg { transition: rotate var(--cfg-t) var(--cfg-ease); }
 .tile-cfg.open .tile-gear svg { rotate: -360deg; }
 /* Sizes, then hide, then the gear, divided by rules */
 .tile-sizes { display: flex; gap: 2px; padding: 0 4px; border-right: 1px solid var(--line); }
@@ -2790,8 +2816,9 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 .numbers .stats a { border-left: 0; border-top: 1px solid var(--line); }
 
 /* Reduced motion, from the device or the profile: cards snap into place, nothing glides, turns, or pops */
-@media (prefers-reduced-motion: reduce) { .vm-btn .arr, .tile, .tile-ghost, .hg, .tile-cfg-items, .tile-gear svg { transition: none; } .vm-panel { animation: none; } .vm-btn:hover .arr { translate: none; } }
-:root[data-motion="off"] :is(.vm-btn .arr, .tile, .tile-ghost, .hg, .tile-cfg-items, .tile-gear svg) { transition: none; }
+@media (prefers-reduced-motion: reduce) { .vm-btn .arr, .hg .tile, .tile-ghost, .hg, .tile-cfg-items, .tile-gear svg, .vm-act-l, .tile.pressing .tile-body > * { transition: none !important; } .vm-panel { animation: none; } .vm-btn:hover .arr { translate: none; } .tile.held, .pcard.dragging { scale: none; } }
+:root[data-motion="off"] :is(.vm-btn .arr, .hg .tile, .tile-ghost, .hg, .tile-cfg-items, .tile-gear svg, .vm-act-l, .tile.pressing .tile-body > *) { transition: none !important; }
+:root[data-motion="off"] :is(.tile.held, .pcard.dragging) { scale: none; }
 :root[data-motion="off"] .vm-panel { animation: none; }
 :root[data-motion="off"] .vm-btn:hover .arr { translate: none; }
 

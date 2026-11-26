@@ -52,7 +52,7 @@ export function Workflow() {
       <h1 className="page-title">Board</h1>
       <p className="lead">
         {/* Touch screens can't drag cards, so they hear only about the menu */}
-        {!canWrite ? "Every project and where it stands." : matchMedia("(pointer: fine)").matches ? "Drag a card, or use its Move to menu, to change a project's stage." : "Use a card's Move to menu to change a project's stage."}
+        {!canWrite ? "Every project and where it stands." : "Hold a card to move it, or use its Move to menu."}
       </p>
       <Stale reads={[projects]} />
       {/* Read-only board for viewers: no onMove */}

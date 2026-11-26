@@ -38,10 +38,13 @@ function Totals({ rows }: { rows: ViewRow[] }) {
 }
 
 
-export function HomeViews({ rows, arranging, onToggle, onArrange, onTidy, onReset }: {
-  rows: ViewRow[]; arranging: boolean; onToggle: (id: string) => void; onArrange: () => void; onTidy: () => void; onReset: () => void;
+export function HomeViews({ rows, ready = true, arranging, onToggle, onArrange, onTidy, onReset }: {
+  rows: ViewRow[]; ready?: boolean; arranging: boolean; onToggle: (id: string) => void; onArrange: () => void; onTidy: () => void; onReset: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  // Which round action is open, waiting for its second press
+  const [armed, setArmed] = useState<"tidy" | "reset" | null>(null);
+  useEffect(() => { if (!open) setArmed(null); }, [open]);
   const box = useRef<HTMLDivElement>(null);
   const btn = useRef<HTMLButtonElement>(null);
   const panelId = useId();
@@ -61,9 +64,12 @@ export function HomeViews({ rows, arranging, onToggle, onArrange, onTidy, onRese
       <button ref={btn} type="button" className="vm-btn" aria-expanded={open} aria-controls={panelId} onClick={() => setOpen(!open)}>
         <span className="arr arr-mixed" aria-hidden="true" />
         <span>View</span>
-        <Totals rows={rows} />
+        {/* Totals wait until every count has loaded, so they never show a wrong number first */}
+        {ready && <Totals rows={rows} />}
       </button>
       <div className="vm-panel" id={panelId} role="group" aria-label="Cards on Home" hidden={!open}>
+        {/* What the badges count, once, at the top */}
+        <p className="vm-key"><span><i className="kdot urgent" aria-hidden="true" />Urgent</span><span><i className="kdot suggested" aria-hidden="true" />Suggested</span><span><i className="kdot general" aria-hidden="true" />To know</span></p>
         {GROUPS.map((g) => {
           const list = rows.filter((r) => r.group === g.key);
           if (!list.length) return null;
@@ -82,9 +88,14 @@ export function HomeViews({ rows, arranging, onToggle, onArrange, onTidy, onRese
         })}
         <div className="vm-foot">
           <button type="button" className="btn btn-ghost btn-sm" aria-pressed={arranging} onClick={() => { onArrange(); setOpen(false); }}><LayoutGrid size={15} aria-hidden="true" /> {arranging ? "Done arranging" : "Arrange"}</button>
-          <span className="vm-foot-r">
-            <button type="button" className="linkish helper" onClick={() => { onTidy(); setOpen(false); }}><Sparkles size={13} aria-hidden="true" /> Tidy up</button>
-            <button type="button" className="linkish helper" onClick={onReset}><RotateCcw size={13} aria-hidden="true" /> Reset</button>
+          {/* Round buttons that open leftward to say what they do (one open at a time); a second press does it */}
+          <span className="vm-acts">
+            {([["tidy", Sparkles, "Tidy up", () => { onTidy(); setOpen(false); }], ["reset", RotateCcw, "Reset", () => onReset()]] as const).map(([k, Icon, label, run]) => (
+              <button key={k} type="button" className={`vm-act${armed === k ? " open" : ""}`} aria-label={armed === k ? `${label}: press again` : label} title={label}
+                onClick={() => { if (armed === k) { setArmed(null); run(); } else setArmed(k); }}>
+                <span className="vm-act-l"><span>{label}</span></span><Icon size={15} aria-hidden="true" />
+              </button>
+            ))}
           </span>
         </div>
       </div>

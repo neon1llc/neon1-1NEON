@@ -5,6 +5,9 @@
 ## Unreleased
 
 ### Added
+- Board cards move the way Home cards do: hold one for half a second, mouse or finger, and the slot it will land in shows as a solid outline. Holding a card on a phone no longer opens the link preview.
+- Home has its own preset sizes for a phone, designed for four columns, beside the desktop ones; a free resize stays between a card's smallest and largest preset.
+- View's menu opens with a key to the badges. Tidy up and Reset are round buttons that open to their name; a second press acts.
 - Home, rearranged: hold a card to pick it up (the hand closes), and the others glide out of its way. Drag an edge or corner to any size; it snaps to whole cells, and onto a card's preset sizes when close, with the landing cells outlined solid on a preset and dashed between. Each card has three or four presets, each laid out for its size. A gear at each card's corner opens its sizes and Hide. Tidy up, under View, repacks the cards with urgent ones first.
 - Each card's badges count what it holds: red urgent, amber suggested, green to know. View's rows show them, and the View button totals them, as shown out of total when a hidden card holds some, with "!" when that includes something urgent.
 - Your profile takes an optional LinkedIn address, business LinkedIn page, and website, shown to the people in your organizations on People. Organization settings take a LinkedIn company page. Home suggests adding your links until you do or hide the card.

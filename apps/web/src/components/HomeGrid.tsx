@@ -8,7 +8,7 @@
 
 import { EyeOff, Settings } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { compact, move, presetOf, resizeTo, sizeAt, SIZE_LABEL, viewFor, type Breakpoint, type Cell, type Size } from "../lib/homeGrid.ts";
+import { compact, move, presetOf, resizeTo, SIZE_LABEL, viewFor, type Breakpoint, type Cell, type Size } from "../lib/homeGrid.ts";
 
 
 /** What a card holds, by kind: urgent (red), suggested (amber), general (green) */
@@ -55,10 +55,12 @@ export function HomeGrid({ tiles, cells, bp, arranging, onChange, onHide, onFit 
   holdRef.current = hold;
   const [pressing, setPressing] = useState<string | null>(null);
   const [cfg, setCfg] = useState<string | null>(null);
+  const [cfgW, setCfgW] = useState(0);
   const [said, say] = useState("");
   const cols = bp === "wide" ? 12 : 4;
   const shown = hold?.preview ?? cells;
-  const sizesOf = (t: Tile) => t.sizes.map((k) => sizeAt(k, bp));
+  // A tile carries the presets for the grid it is on (Workspace picks wide or phone)
+  const sizesOf = (t: Tile) => t.sizes;
   const label = (k: string) => SIZE_LABEL[k] ?? k;
 
   // The grid's width, kept current; cells are sized from it
@@ -218,8 +220,7 @@ export function HomeGrid({ tiles, cells, bp, arranging, onChange, onHide, onFit 
   };
 
   const setSize = (t: Tile, k: Size) => {
-    const s = sizeAt(k, bp);
-    onChange(compact(move(cells, t.id, { w: s.w, h: s.h }, cols)));
+    onChange(compact(move(cells, t.id, { w: k.w, h: k.h }, cols)));
     say(`${t.title}: ${label(k.key).toLowerCase()}`);
   };
 
@@ -260,14 +261,20 @@ export function HomeGrid({ tiles, cells, bp, arranging, onChange, onHide, onFit 
               <>
                 {/* The card's own bar: closed to a gear; open, its preset sizes and hide */}
                 <div className={`tile-cfg${open ? " open" : ""}`}>
-                  <div className="tile-cfg-items" aria-hidden={!open} inert={!open || undefined}>
+                  {/* Its width opens to the measured width of its contents, on the gear's own clock, so the two
+                      start and finish together */}
+                  <div className="tile-cfg-items" aria-hidden={!open} inert={!open || undefined} style={{ width: open ? cfgW : 0 }}>
                     <span className="tile-sizes" role="group" aria-label={`${t.title} size`}>
                       {/* Each size button draws its shape, like the size picker on an iOS widget */}
                       {t.sizes.map((k) => <button key={k.key} type="button" aria-pressed={cur === k.key} aria-label={label(k.key)} title={label(k.key)} onClick={() => setSize(t, k)}><i style={{ width: 4 + k.w * 1.5, height: 3 + k.h * 0.8 }} /></button>)}
                     </span>
                     <button type="button" className="tile-hide" aria-label={`Hide ${t.title}`} title="Hide" onClick={() => { setCfg(null); onHide(t.id); }}><EyeOff size={16} aria-hidden="true" /></button>
                   </div>
-                  <button type="button" className="tile-gear" aria-expanded={open} aria-label={`${t.title} options`} onClick={() => setCfg(open ? null : t.id)}><Settings size={18} aria-hidden="true" /></button>
+                  <button type="button" className="tile-gear" aria-expanded={open} aria-label={`${t.title} options`} onClick={(e) => {
+                    const items = (e.currentTarget.parentElement?.querySelector(".tile-cfg-items") as HTMLElement | null);
+                    if (!open && items) setCfgW(items.scrollWidth);
+                    setCfg(open ? null : t.id);
+                  }}><Settings size={18} aria-hidden="true" /></button>
                 </div>
                 <span className="tile-edge e-w" aria-hidden="true" onPointerDown={(e) => edge(e, t.id, "w")} />
                 <span className="tile-edge e-h" aria-hidden="true" onPointerDown={(e) => edge(e, t.id, "h")} />

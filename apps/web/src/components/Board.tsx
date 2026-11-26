@@ -1,9 +1,10 @@
 // apps/web/src/components/Board.tsx - The workflow board: one column per stage, projects as cards,
-// ordered by rank. Drag and drop for pointers, a "Move to" menu for keyboards and screen readers.
+// ordered by rank. A card is picked up by holding it, as on Home (half a second, mouse or finger), and the
+// slot it will land in shows as a solid outline; a "Move to" menu serves keyboards and screen readers.
 
 
 import { isBench, isClosed, type Project, type Stage } from "@1neon/domain";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { byRank } from "../lib/hooks.ts";
 import { LayerBadge, Standing, stageAge } from "./ui.tsx";
@@ -32,52 +33,114 @@ export function Board({
   onMove?: (m: MoveRequest) => void;
   orgName?: (p: Project) => string | undefined;
 }) {
-  // The card being dragged and the column under the pointer
+  // The card held, how far it has moved, and the slot under the pointer (column, index, height)
   const [dragging, setDragging] = useState<string>();
   const [over, setOver] = useState<string>();
+  const [slot, setSlot] = useState<{ stageId: string; index: number; h: number }>();
+  const [shift, setShift] = useState({ x: 0, y: 0 });
+  const held = useRef<{ id: string; x: number; y: number; h: number } | null>(null);
+  const pending = useRef<{ id: string; x: number; y: number; timer: number } | null>(null);
+  // A drop is not also a click on the card's link
+  const justDropped = useRef(0);
   // Cards in one column, in rank order
   const byStage = (sid: string) => projects.filter((p) => p.stageId === sid).sort(byRank);
   // Hidden stages drop off the board, except while projects are still in them, so no project goes missing
   const visible = stages.filter((s) => !s.hidden || projects.some((p) => p.stageId === s.id));
 
-  // Drop before `beforeId`, or at the end of the column; a drop onto the card's own place is ignored
-  const drop = (stageId: string, beforeId?: string) => {
-    const p = projects.find((x) => x.id === dragging);
-    setDragging(undefined);
-    setOver(undefined);
+  // Drop at `idx` among the column's other cards; a drop onto the card's own place is ignored
+  const drop = (id: string, stageId: string, idx: number) => {
+    const p = projects.find((x) => x.id === id);
     if (!p || !onMove) return;
     const list = byStage(stageId).filter((x) => x.id !== p.id);
-    const at = beforeId ? list.findIndex((x) => x.id === beforeId) : list.length;
-    const idx = at < 0 ? list.length : at;
     if (p.stageId === stageId && byStage(stageId).findIndex((x) => x.id === p.id) === idx) return;
     onMove({ project: p, stageId, after: list[idx - 1]?.rank, before: list[idx]?.rank });
   };
 
+  // Where the pointer would drop: the column under it, and the first other card whose middle is below it
+  const slotAt = (x: number, y: number, id: string) => {
+    const col = document.elementsFromPoint(x, y).find((e): e is HTMLElement => e instanceof HTMLElement && Boolean(e.dataset.stage));
+    if (!col) return undefined;
+    const others = [...col.querySelectorAll<HTMLElement>(".pcard[data-id]")].filter((c) => c.dataset.id !== id);
+    const index = others.findIndex((c) => { const r = c.getBoundingClientRect(); return y < r.top + r.height / 2; });
+    return { stageId: col.dataset.stage!, index: index < 0 ? others.length : index };
+  };
+
+  const press = (e: React.PointerEvent, id: string) => {
+    if (!onMove || e.button !== 0 || (e.target as HTMLElement).closest(".move")) return;
+    const card = e.currentTarget as HTMLElement;
+    const p = { id, x: e.clientX, y: e.clientY, timer: 0 };
+    p.timer = window.setTimeout(() => {
+      pending.current = null;
+      held.current = { id, x: p.x, y: p.y, h: card.offsetHeight };
+      setDragging(id);
+      setShift({ x: 0, y: 0 });
+      const s0 = slotAt(p.x, p.y, id);
+      if (s0) setSlot({ ...s0, h: card.offsetHeight });
+      navigator.vibrate?.(8);
+    }, 500);
+    pending.current = p;
+  };
+
+  // Moving and letting go are followed on the window; until the hold starts, moving is scrolling
+  useEffect(() => {
+    const move = (e: PointerEvent) => {
+      const p = pending.current;
+      if (p) {
+        if (Math.hypot(e.clientX - p.x, e.clientY - p.y) > 8) { clearTimeout(p.timer); pending.current = null; }
+        return;
+      }
+      const h = held.current;
+      if (!h) return;
+      // Near the window's edges the page scrolls, and near the board's sides the board does
+      const sc = document.documentElement.classList.contains("body-scrolls") ? document.body : (document.scrollingElement ?? document.documentElement);
+      if (e.clientY > innerHeight - 56) sc.scrollTop += 12; else if (e.clientY < 110) sc.scrollTop -= 12;
+      const board = document.querySelector<HTMLElement>(".board");
+      if (board) { const r = board.getBoundingClientRect(); if (e.clientX > r.right - 40) board.scrollLeft += 14; else if (e.clientX < r.left + 40) board.scrollLeft -= 14; }
+      setShift({ x: e.clientX - h.x, y: e.clientY - h.y });
+      const s1 = slotAt(e.clientX, e.clientY, h.id);
+      setSlot(s1 ? { ...s1, h: h.h } : undefined);
+      setOver(s1?.stageId);
+    };
+    const up = (e: PointerEvent) => {
+      const p = pending.current;
+      if (p) { clearTimeout(p.timer); pending.current = null; }
+      const h = held.current;
+      if (!h) return;
+      held.current = null;
+      const s1 = slotAt(e.clientX, e.clientY, h.id);
+      setDragging(undefined); setOver(undefined); setSlot(undefined); setShift({ x: 0, y: 0 });
+      justDropped.current = Date.now();
+      if (s1 && e.type === "pointerup") drop(h.id, s1.stageId, s1.index);
+    };
+    // A held finger must not scroll the page instead
+    const stop = (e: TouchEvent) => { if (held.current) e.preventDefault(); };
+    addEventListener("pointermove", move);
+    addEventListener("pointerup", up);
+    addEventListener("pointercancel", up);
+    addEventListener("touchmove", stop, { passive: false });
+    return () => { removeEventListener("pointermove", move); removeEventListener("pointerup", up); removeEventListener("pointercancel", up); removeEventListener("touchmove", stop); };
+  });
+
+  // The landing slot, drawn where the card would go
+  const ghost = (stageId: string, index: number) => (slot && slot.stageId === stageId && slot.index === index ? <div className="pcard-slot" aria-hidden="true" style={{ height: slot.h }} /> : null);
+
   return (
-    <div className="board" role="list" aria-label="Workflow board">
+    <div className={`board${dragging ? " holding" : ""}`} role="list" aria-label="Workflow board">
       {visible.map((s) => {
         const cards = byStage(s.id);
         // Work-in-progress limits are advice: the count turns amber, nothing is blocked
         const overLimit = s.wipLimit !== undefined && cards.length > s.wipLimit;
+        // The column's cards other than the one held, which is where the slot's index counts
+        const rest = cards.filter((x) => x.id !== dragging);
         return (
           <section
             key={s.id}
             role="listitem"
             data-tour="board-column"
-            className={`col${cards.length ? "" : " empty"}${over === s.id ? " drop" : ""}`}
+            className={`col${cards.length || slot?.stageId === s.id ? "" : " empty"}${over === s.id ? " over" : ""}`}
+            data-stage={s.id}
             aria-label={`${s.name}, ${cards.length} ${cards.length === 1 ? "project" : "projects"}`}
             title={cards.length ? undefined : `${s.name}: no projects${s.exit ? `. Done when: ${s.exit}` : ""}`}
-            // Columns accept drops; a card accepts a drop to insert before itself
-            onDragOver={(e) => {
-              if (!onMove || !dragging) return;
-              e.preventDefault();
-              setOver(s.id);
-            }}
-            onDragLeave={() => setOver((o) => (o === s.id ? undefined : o))}
-            onDrop={(e) => {
-              e.preventDefault();
-              drop(s.id);
-            }}
           >
             {/* Column header: layer, name, and count against its limit */}
             <header>
@@ -87,27 +150,18 @@ export function Board({
               </span>
             </header>
             {s.exit && <div className="exit">Done when: {s.exit}</div>}
-            {/* Cards drag when the board is editable; a drop onto a card inserts before it */}
+            {/* Cards are held to move when the board is editable; the held one follows the pointer */}
             {cards.map((p) => (
+              <div key={p.id} className="pcard-at">
+              {p.id !== dragging && ghost(s.id, rest.indexOf(p))}
               <article
-                key={p.id}
                 data-tour="board-card"
-                className={`pcard${dragging === p.id ? " dragging" : ""}`}
-                draggable={Boolean(onMove)}
-                onDragStart={(e) => {
-                  e.dataTransfer.effectAllowed = "move";
-                  e.dataTransfer.setData("text/plain", p.key);
-                  setDragging(p.id);
-                }}
-                onDragEnd={() => {
-                  setDragging(undefined);
-                  setOver(undefined);
-                }}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  drop(s.id, p.id);
-                }}
+                data-id={p.id}
+                className={`pcard${dragging === p.id ? " dragging" : ""}${onMove ? " movable" : ""}`}
+                style={dragging === p.id ? { transform: `translate(${shift.x}px, ${shift.y}px)` } : undefined}
+                onPointerDown={(e) => press(e, p.id)}
+                onContextMenu={(e) => { if (onMove) e.preventDefault(); }}
+                onClickCapture={(e) => { if (Date.now() - justDropped.current < 400) { e.preventDefault(); e.stopPropagation(); } }}
               >
                 {/* Project key, its organization on All clients, name, then where it stands: health and days in
                     stage while open; for a closed project, that it's closed and when, never a health */}
@@ -151,8 +205,10 @@ export function Board({
                   </label>
                 )}
               </article>
+              </div>
             ))}
-            {cards.length === 0 && <p className="muted small none" style={{ padding: "4px" }}>No projects here.</p>}
+            {ghost(s.id, rest.length)}
+            {cards.length === 0 && slot?.stageId !== s.id && <p className="muted small none" style={{ padding: "4px" }}>No projects here.</p>}
           </section>
         );
       })}

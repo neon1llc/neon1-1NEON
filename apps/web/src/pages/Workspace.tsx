@@ -27,7 +27,7 @@ import { FaceForm, faceAskDismissed, setFaceAsk } from "../components/OrgFace.ts
 import { HomeGrid, type Counts, type Tile } from "../components/HomeGrid.tsx";
 import { HomeViews, type Group, type ViewRow } from "../components/HomeViews.tsx";
 import { useHomeLayout } from "../lib/homeLayout.ts";
-import { compact, reconcile, sizeAt, tidy, COLS, type Breakpoint, type Size } from "../lib/homeGrid.ts";
+import { compact, reconcile, tidy, COLS, type Breakpoint, type Size } from "../lib/homeGrid.ts";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
 
@@ -41,10 +41,10 @@ const ACTION = {
   do: { label: "Open", icon: ListTodo },
 } as const;
 
-// Preset sizes on the wide grid (12 columns, rows of 24px). Heights are written in steps of 40px rows and
-// scaled to the 24px grid: S small, M medium, T tall, L large, W wide, B a bar across the page. Each card
-// has three or four, each with its own layout (more detail as it grows, the vital part as it shrinks);
-// the first is the card's default
+// Preset sizes, rows of 24px (heights are written in steps of 40px rows and scaled): S small, M medium,
+// T tall, L large, W wide, B a bar across the page. Each card has its own set for the wide grid (12
+// columns) and for a phone (4 columns), each preset with its own layout: more detail as it grows, the
+// vital part as it shrinks. The first is the card's default; the smallest and largest bound a free resize
 const sz = (key: string, w: number, h: number): Size => ({ key, w, h: Math.round(h * 1.4) });
 const none: Counts = { urgent: 0, suggested: 0, general: 0 };
 const cnt = (urgent = 0, suggested = 0, general = 0): Counts => ({ urgent, suggested, general });
@@ -52,7 +52,9 @@ const RANK: Record<Group, number> = { urgent: 0, suggested: 1, general: 2 };
 type Keep = { free: boolean; held?: boolean; deleteOn?: string };
 
 /** One card Home can show: what it is, where it groups in the View menu, what a hidden one holds */
-interface Card extends Tile {
+interface Card extends Omit<Tile, "sizes"> {
+  // Presets for the wide grid (12 columns) and for a phone (4 columns), each designed for its width
+  sizes: Record<Breakpoint, Size[]>;
   group: Group;
   when: boolean;
   // A card put away somewhere of its own (the profile, or this browser) says whether it shows and how to toggle
@@ -94,6 +96,8 @@ export function WorkspacePage() {
   useLayoutEffect(() => {
     const el = wrap.current;
     if (!el) return;
+    // Set before the first paint, so a phone never shows the wide layout first
+    setBp(el.clientWidth >= 720 || el.clientWidth === 0 ? "wide" : "narrow");
     const ro = new ResizeObserver(([e]) => setBp((e?.contentRect.width ?? 0) >= 720 ? "wide" : "narrow"));
     ro.observe(el);
     return () => ro.disconnect();
@@ -146,42 +150,42 @@ export function WorkspacePage() {
   const cards: Card[] = [
     { id: "next", title: "Next step", group: "suggested", when: canWrite && !me.operator && (prospect || nextList.length > 0 || Boolean(asked.data?.assessment)),
       counts: cnt(0, nextList.length ? outlineTips : 1, asked.data?.assessment ? 1 : 0),
-      sizes: [sz("L", 6, 11), sz("M", 6, 8), sz("W", 12, 8)], body: () => <NextStep orgId={org.id} slug={summary.slug} prospect={prospect} /> },
+      sizes: { wide: [sz("L", 6, 11), sz("M", 6, 8), sz("W", 12, 8)], narrow: [sz("M", 4, 13), sz("L", 4, 18)] }, body: () => <NextStep orgId={org.id} slug={summary.slug} prospect={prospect} /> },
     { id: "keep", title: "Your account", group: "urgent", when: prospect && !me.operator && Boolean(k?.free && !k.held && k.deleteOn),
       counts: daysLeft !== undefined && daysLeft <= 7 ? cnt(1) : cnt(0, 0, 1),
-      sizes: [sz("M", 6, 5), sz("T", 4, 7), sz("W", 12, 3)], body: () => <KeepCard orgId={org.id} slug={summary.slug} canKeep={canWrite} /> },
+      sizes: { wide: [sz("M", 6, 5), sz("T", 4, 7), sz("W", 12, 3)], narrow: [sz("M", 4, 6), sz("T", 4, 8)] }, body: () => <KeepCard orgId={org.id} slug={summary.slug} canKeep={canWrite} /> },
     { id: "needs", title: "Needs you", group: "urgent", when: true, counts: cnt(pressing, Math.max(0, n - pressing)),
-      sizes: [sz("M", 6, 7), sz("S", 3, 4), sz("L", 6, 11), sz("W", 12, 7)], body: (v) => needsYou(v) },
+      sizes: { wide: [sz("M", 6, 7), sz("S", 3, 4), sz("L", 6, 11), sz("W", 12, 7)], narrow: [sz("M", 4, 9), sz("S", 2, 5), sz("L", 4, 14)] }, body: (v) => needsYou(v) },
     { id: "late", title: "Overdue and blocked", group: "urgent", when: !prospect && glance.length > 0,
       counts: cnt(late.reduce((t, g) => t + g.overdue, 0), late.reduce((t, g) => t + g.blocked, 0)),
-      sizes: [sz("S", 3, 4), sz("M", 6, 5), sz("T", 4, 8)], body: (v) => overdue(v) },
+      sizes: { wide: [sz("S", 3, 4), sz("M", 6, 5), sz("T", 4, 8)], narrow: [sz("S", 2, 5), sz("M", 4, 6), sz("T", 4, 9)] }, body: (v) => overdue(v) },
     { id: "coming", title: "Coming up", group: "general", when: true, counts: calCounts,
-      sizes: [sz("L", 6, 13), sz("W", 12, 13)], body: () => <ComingUp tid={org.id} base={base} /> },
+      sizes: { wide: [sz("L", 6, 13), sz("W", 12, 13)], narrow: [sz("L", 4, 18)] }, body: () => <ComingUp tid={org.id} base={base} /> },
     { id: "face", title: "Where can I see your business?", group: "suggested", when: admin && !me.operator && !org.place && !org.link, counts: cnt(0, 1),
       shown: !faceSkipped, toggle: (show) => { setFaceAsk(org.id, show); setFaceSkipped(!show); },
-      sizes: [sz("M", 6, 8), sz("W", 12, 6)], body: () => <FaceForm ask onDone={() => setFaceSkipped(true)} /> },
+      sizes: { wide: [sz("M", 6, 8), sz("W", 12, 6)], narrow: [sz("M", 4, 11)] }, body: () => <FaceForm ask onDone={() => setFaceSkipped(true)} /> },
     { id: "links", title: "Add your links", group: "suggested", when: !me.user.linkedin && !me.user.businessLinkedin && !me.user.website, counts: cnt(0, 1),
       shown: wantsLinks(me), toggle: flag("linksCard"),
-      sizes: [sz("S", 3, 4), sz("M", 6, 3)], body: () => <LinksCard me={me} /> },
+      sizes: { wide: [sz("S", 3, 4), sz("M", 6, 3)], narrow: [sz("S", 2, 6), sz("M", 4, 4)] }, body: () => <LinksCard me={me} /> },
     { id: "setup", title: "Get started", group: "suggested", when: setupLeft > 0, counts: cnt(0, setupLeft),
-      sizes: [sz("M", 6, 5), sz("T", 4, 6), sz("W", 12, 3)], body: () => getStarted() },
+      sizes: { wide: [sz("M", 6, 5), sz("T", 4, 6), sz("W", 12, 3)], narrow: [sz("M", 4, 7)] }, body: () => getStarted() },
     { id: "guide", title: "Get to know 1NEON", group: "general", when: !me.operator, counts: none,
       shown: me.user.guide !== "hidden", toggle: flag("guide"),
-      sizes: [sz("M", 6, 8), sz("T", 4, 10), sz("W", 12, 5)], body: () => <GuideCard me={me} prospect={prospect} /> },
+      sizes: { wide: [sz("M", 6, 8), sz("T", 4, 10), sz("W", 12, 5)], narrow: [sz("M", 4, 11)] }, body: () => <GuideCard me={me} prospect={prospect} /> },
     { id: "glance", title: "Projects at a glance", group: "general", when: glance.length > 0 && !prospect, counts: cnt(health("off_track"), health("at_risk")),
-      sizes: [sz("M", 6, 7), sz("T", 4, 8), sz("L", 6, 11), sz("W", 12, 7)], body: (v) => atGlance(v) },
+      sizes: { wide: [sz("M", 6, 7), sz("T", 4, 8), sz("L", 6, 11), sz("W", 12, 7)], narrow: [sz("T", 4, 9), sz("L", 4, 14)] }, body: (v) => atGlance(v) },
     { id: "layers", title: "Projects by layer", group: "general", when: glance.length > 0, counts: none,
-      sizes: [sz("S", 3, 4), sz("M", 6, 4), sz("B", 12, 3)], body: (v) => byLayer(v) },
+      sizes: { wide: [sz("S", 3, 4), sz("M", 6, 4), sz("B", 12, 3)], narrow: [sz("S", 2, 5), sz("M", 4, 4)] }, body: (v) => byLayer(v) },
     { id: "stats", title: "Numbers", group: "general", when: true, counts: none,
-      sizes: [sz("B", 12, 2), sz("M", 6, 4), sz("S", 3, 6)], body: (v) => numbers(v) },
+      sizes: { wide: [sz("B", 12, 2), sz("M", 6, 4), sz("S", 3, 6)], narrow: [sz("M", 4, 6), sz("S", 2, 8)] }, body: (v) => numbers(v) },
     { id: "quick", title: "Quick links", group: "general", when: true, counts: none,
-      sizes: [sz("S", 3, 6), sz("M", 6, 5), sz("B", 12, 2), sz("L", 6, 9)], body: (v) => quickLinks(v) },
+      sizes: { wide: [sz("S", 3, 6), sz("M", 6, 5), sz("B", 12, 2), sz("L", 6, 9)], narrow: [sz("S", 2, 8), sz("M", 4, 7), sz("L", 4, 12)] }, body: (v) => quickLinks(v) },
     { id: "away", title: "Away this week", group: "general", when: (ws.data?.away?.length ?? 0) > 0, counts: cnt(0, 0, ws.data?.away?.length ?? 0),
-      sizes: [sz("S", 3, 4), sz("M", 6, 4)], body: () => awayWeek() },
+      sizes: { wide: [sz("S", 3, 4), sz("M", 6, 4)], narrow: [sz("S", 2, 5), sz("M", 4, 5)] }, body: () => awayWeek() },
     { id: "updates", title: "Project updates", group: "general", when: (ws.data?.updates?.length ?? 0) > 0, counts: cnt(0, 0, ws.data?.updates?.length ?? 0),
-      sizes: [sz("M", 6, 7), sz("T", 4, 9), sz("L", 6, 11)], body: (v) => projectUpdates(v) },
+      sizes: { wide: [sz("M", 6, 7), sz("T", 4, 9), sz("L", 6, 11)], narrow: [sz("T", 4, 9), sz("L", 4, 13)] }, body: (v) => projectUpdates(v) },
     { id: "activity", title: "Recent activity", group: "general", when: true, counts: cnt(0, 0, recentActs),
-      sizes: [sz("M", 6, 8), sz("T", 4, 12), sz("L", 6, 12)], body: (v) => recent(v) },
+      sizes: { wide: [sz("M", 6, 8), sz("T", 4, 12), sz("L", 6, 12)], narrow: [sz("M", 4, 10), sz("T", 4, 12), sz("L", 4, 15)] }, body: (v) => recent(v) },
   ];
   const offered = cards.filter((x) => x.when);
   const isShown = (x: Card) => x.shown ?? !layout.hidden.includes(x.id);
@@ -191,7 +195,7 @@ export function WorkspacePage() {
   const [fitH, setFitH] = useState<Record<string, number>>({});
   const need = (id: string) => fitH[`${bp}.${id}`];
   const cells = compact(reconcile(layout[bp], visible.map((x) => {
-    const s = sizeAt(x.sizes[0]!, bp);
+    const s = x.sizes[bp][0]!;
     return { id: x.id, w: s.w, h: need(x.id) ?? s.h };
   }), COLS[bp]).map((c) => ({ ...c, h: Math.max(c.h, need(c.id) ?? 0) })));
 
@@ -208,6 +212,8 @@ export function WorkspacePage() {
     if (x && !isShown(x)) setShown(x.id, true);
   }, [hash]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Counts show once every read behind them has answered, so no badge flashes a wrong number first
+  const ready = ws.isSuccess && cal.isSuccess && (!(canWrite && !me.operator) || asked.isSuccess) && (!(prospect && !me.operator) || keep.isSuccess);
   const rows: ViewRow[] = offered.map((x) => ({ id: x.id, title: x.title, group: x.group, shown: isShown(x), counts: x.counts ?? none }));
   // Tidy up: urgent cards first, then suggested, then the rest; cards holding urgent items lead their group
   const rank = (id: string) => { const x = offered.find((y) => y.id === id); return x ? RANK[x.group] * 2 - ((x.counts?.urgent ?? 0) > 0 ? 1 : 0) : 9; };
@@ -444,7 +450,7 @@ export function WorkspacePage() {
       {/* The greeting wraps in its own column; the View menu holds the end of the row, level with the greeting's last line */}
       <div className="home-head">
         <h1 className="page-title">{first ? `Hi, ${first}` : "Home"}</h1>
-        <HomeViews rows={rows} arranging={arranging} onToggle={(id) => { const r = rows.find((x) => x.id === id); if (r) setShown(id, !r.shown); }}
+        <HomeViews rows={rows} ready={ready} arranging={arranging} onToggle={(id) => { const r = rows.find((x) => x.id === id); if (r) setShown(id, !r.shown); }}
           onArrange={() => setArranging(!arranging)} onReset={() => change(() => ({ hidden: [] }))}
           onTidy={() => change((l) => ({ ...l, [bp]: tidy(cells, rank, COLS[bp]) }))} />
       </div>
@@ -457,8 +463,9 @@ export function WorkspacePage() {
         </div>
       )}
       <div ref={wrap} className="home">
-        {blocked ? <Problem error={ws.error} reads={[ws]} /> : (
-          <HomeGrid tiles={visible} cells={cells} bp={bp} arranging={arranging}
+        {/* The grid waits for every read behind its cards, so it appears once, in place, and never reshuffles */}
+        {blocked ? <Problem error={ws.error} reads={[ws]} /> : !ready ? <div className="hg-wait" aria-busy="true" /> : (
+          <HomeGrid tiles={visible.map((x) => ({ ...x, sizes: x.sizes[bp], counts: ready ? x.counts : undefined }))} cells={cells} bp={bp} arranging={arranging}
             onFit={(rows) => setFitH((f) => ({ ...f, ...Object.fromEntries(Object.entries(rows).map(([id, h]) => [`${bp}.${id}`, h])) }))}
             onChange={(next) => change((l) => ({ ...l, [bp]: next }))} onHide={(id) => setShown(id, false)} />
         )}
