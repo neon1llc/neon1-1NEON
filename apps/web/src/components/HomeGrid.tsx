@@ -23,11 +23,11 @@ const viewOf = (c: Pick<Cell, "w" | "h">, sizes: { key: string; w: number; h: nu
 const still = () => matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.dataset.motion === "off";
 
 
-export function HomeGrid({ tiles, cells, bp, arranging, onChange, onHide, fitIds, onFit }: {
+export function HomeGrid({ tiles, cells, bp, arranging, onChange, onHide, onFit }: {
   tiles: Tile[]; cells: Cell[]; bp: Breakpoint; arranging: boolean;
   onChange: (cells: Cell[]) => void; onHide: (id: string) => void;
-  // Cards not yet placed by the person take the height their content needs, in whole rows
-  fitIds?: Set<string>; onFit?: (rows: Record<string, number>) => void;
+  // Each card's content height in whole rows, reported as it changes, so no card is ever cut short
+  onFit?: (rows: Record<string, number>) => void;
 }) {
   const grid = useRef<HTMLDivElement>(null);
   const [hold, setHold] = useState<Hold | null>(null);
@@ -49,7 +49,16 @@ export function HomeGrid({ tiles, cells, bp, arranging, onChange, onHide, fitIds
 
   // Cards that shift while another is held glide to their new place (FLIP), unless motion is reduced
   const rects = useRef(new Map<string, DOMRect>());
-  const fitted = useRef(new Map<string, number>());
+  const fitted = useRef(new Map<string, { h: number; at: number[] }>());
+  // A card's content can grow on its own (a form opens, a list loads): watch it and measure again
+  const [, bump] = useState(0);
+  const watched = useRef(new WeakSet<Element>());
+  const ro = useRef<ResizeObserver | null>(null);
+  useLayoutEffect(() => {
+    let frame = 0;
+    ro.current = new ResizeObserver(() => { cancelAnimationFrame(frame); frame = requestAnimationFrame(() => bump((n) => n + 1)); });
+    return () => { cancelAnimationFrame(frame); ro.current?.disconnect(); };
+  }, []);
   useLayoutEffect(() => {
     const el = grid.current;
     if (!el) return;
@@ -66,21 +75,25 @@ export function HomeGrid({ tiles, cells, bp, arranging, onChange, onHide, fitIds
     }
     rects.current = next;
     // Content height: the card at its natural height (let go of the cell for one synchronous read)
-    if (!fitIds?.size || !onFit || hold) return;
+    if (!onFit || hold) return;
     const s = step();
     const rows: Record<string, number> = {};
     for (const node of el.querySelectorAll<HTMLElement>(".tile[data-id]")) {
       const id = node.dataset.id!;
       const card = node.querySelector<HTMLElement>(".tile-body > *");
-      if (!fitIds.has(id) || !card) continue;
+      if (!card) continue;
+      for (const k of card.children) if (!watched.current.has(k)) { watched.current.add(k); ro.current?.observe(k); }
       card.style.height = "auto";
       card.style.alignSelf = "start";
       const natural = card.offsetHeight;
       card.style.height = "";
       card.style.alignSelf = "";
       const h = Math.min(40, Math.max(2, Math.ceil((natural + s.gap) / s.y)));
-      // Each card is fitted once per content height, so a fit can never chase itself
-      if (h !== cells.find((c) => c.id === id)?.h && fitted.current.get(id) !== h) { rows[id] = h; fitted.current.set(id, h); }
+      // Reported only when it changes, and at most a few times a second, so a fit can never chase itself
+      const was = fitted.current.get(id);
+      const now = performance.now();
+      const recent = (was?.at ?? []).filter((t) => now - t < 2000);
+      if (was?.h !== h && recent.length < 6) { rows[id] = h; fitted.current.set(id, { h, at: [...recent, now] }); }
     }
     if (Object.keys(rows).length) onFit(rows);
   });

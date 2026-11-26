@@ -27,7 +27,7 @@ import { FaceForm, faceAskDismissed, setFaceAsk } from "../components/OrgFace.ts
 import { HomeGrid, type Tile } from "../components/HomeGrid.tsx";
 import { HomeViews, type Group, type ViewRow } from "../components/HomeViews.tsx";
 import { useHomeLayout } from "../lib/homeLayout.ts";
-import { reconcile, sizeAt, COLS, type Breakpoint, type Size } from "../lib/homeGrid.ts";
+import { compact, reconcile, sizeAt, COLS, type Breakpoint, type Size } from "../lib/homeGrid.ts";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
 
@@ -168,14 +168,14 @@ export function WorkspacePage() {
   const offered = cards.filter((x) => x.when);
   const isShown = (x: Card) => x.shown ?? !layout.hidden.includes(x.id);
   const visible = offered.filter(isShown);
-  // Until the person places a card, it takes its first preset's width and the height its content needs
+  // Each card is at least as tall as its content: a card the person hasn't placed takes exactly that
+  // height (at its first preset's width); a placed one keeps its size unless the content outgrows it
   const [fitH, setFitH] = useState<Record<string, number>>({});
-  const placed = new Set((layout[bp] ?? []).map((c) => c.id));
-  const fitIds = new Set(visible.filter((x) => !placed.has(x.id)).map((x) => x.id));
-  const cells = reconcile(layout[bp], visible.map((x) => {
+  const need = (id: string) => fitH[`${bp}.${id}`];
+  const cells = compact(reconcile(layout[bp], visible.map((x) => {
     const s = sizeAt(x.sizes[0]!, bp);
-    return { id: x.id, w: s.w, h: fitH[`${bp}.${x.id}`] ?? s.h };
-  }), COLS[bp]);
+    return { id: x.id, w: s.w, h: need(x.id) ?? s.h };
+  }), COLS[bp]).map((c) => ({ ...c, h: Math.max(c.h, need(c.id) ?? 0) })));
 
   const setShown = (id: string, show: boolean) => {
     const x = offered.find((y) => y.id === id);
@@ -393,7 +393,7 @@ export function WorkspacePage() {
       )}
       <div ref={wrap} className="home">
         {blocked ? <Problem error={ws.error} reads={[ws]} /> : (
-          <HomeGrid tiles={visible} cells={cells} bp={bp} arranging={arranging} fitIds={fitIds}
+          <HomeGrid tiles={visible} cells={cells} bp={bp} arranging={arranging}
             onFit={(rows) => setFitH((f) => ({ ...f, ...Object.fromEntries(Object.entries(rows).map(([id, h]) => [`${bp}.${id}`, h])) }))}
             onChange={(next) => change((l) => ({ ...l, [bp]: next }))} onHide={(id) => setShown(id, false)} />
         )}
