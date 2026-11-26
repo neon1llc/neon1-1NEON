@@ -48,7 +48,7 @@ export function HomeGrid({ tiles, cells, bp, arranging, onChange, onHide, onFit 
   };
 
   // Cards that shift while another is held glide to their new place (FLIP), unless motion is reduced
-  const rects = useRef(new Map<string, DOMRect>());
+  const rects = useRef(new Map<string, { left: number; top: number }>());
   const fitted = useRef(new Map<string, { h: number; at: number[] }>());
   // A card's content can grow on its own (a form opens, a list loads): watch it and measure again
   const [, bump] = useState(0);
@@ -62,10 +62,14 @@ export function HomeGrid({ tiles, cells, bp, arranging, onChange, onHide, onFit 
   useLayoutEffect(() => {
     const el = grid.current;
     if (!el) return;
-    const next = new Map<string, DOMRect>();
+    // Places are kept relative to the grid, so scrolling the page (or the body, on a phone) is never
+    // mistaken for a card moving
+    const g = el.getBoundingClientRect();
+    const next = new Map<string, { left: number; top: number }>();
     for (const node of el.querySelectorAll<HTMLElement>(".tile[data-id]")) {
       const id = node.dataset.id!;
-      const r = node.getBoundingClientRect();
+      const b = node.getBoundingClientRect();
+      const r = { left: b.left - g.left, top: b.top - g.top };
       next.set(id, r);
       const was = rects.current.get(id);
       if (!was || id === hold?.id || still()) continue;
@@ -187,7 +191,8 @@ export function HomeGrid({ tiles, cells, bp, arranging, onChange, onHide, onFit 
           style.justifySelf = "start";
           style.alignSelf = "start";
         }
-        const cur = presetOf(c, sizesOf(t));
+        // The size button lit is the card's nominal preset; its height may have grown to fit its content
+        const cur = presetOf(c, sizesOf(t)) ?? viewOf(c, sizesOf(t));
         return (
           <div key={t.id} className={`tile${held ? " held" : ""}`} data-id={t.id} data-size={size ?? ""} style={style}>
             <div className="tile-body" inert={arranging || undefined}>{t.body(size)}</div>
