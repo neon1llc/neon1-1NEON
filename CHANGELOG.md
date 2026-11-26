@@ -7,10 +7,17 @@
 ### Added
 - Your profile takes an optional LinkedIn address, business LinkedIn page, and website, shown to the people in your organizations on People. Organization settings take a LinkedIn company page. Home suggests adding your links until you do or hide the card.
 - Notifications have Mark all read.
+- Delivery and review on a project's Execute and Normalize pages: neon1 records the handover, which asks the client to review within 10 business days and starts the 30-day defect period, and records when it's waiting on the client, a pause, and an ending. Each is told to the client by email. Acceptance is still only the client's signature, never silence.
+- A client can dispute part of an issued invoice, with the amount and why. neon1 answers on the invoice, and the undisputed amount stays due on its date.
+- One reminder the business day after an invoice is due, when an undisputed amount is still owed.
 
 ### Changed
 - Opening a notification marks only that one read; opening the list marks nothing. Unread ones are bold with a dot.
 - Each notification, and its email, opens the exact thing: the person, file, calendar day, invoice, setting, or item, scrolled into view and highlighted.
+- The service agreement is edition 2.4: payment follows the billing schedule and never depends on recorded acceptance, a 10-business-day review, client delays, a pause once an undisputed amount is 7 days overdue, a 30% default deposit, and clearer limits, ending, and law. Approvals made under 2.1 or 2.3 keep those terms; the next approval needs a 2.4 signature.
+- Signing the agreement records the organization's legal name and mailing address and the signer's authority, asks both choices with nothing selected, and each signature can be downloaded with its exact text.
+- New options state a 30% deposit unless another share is agreed.
+- The privacy policy and terms describe the chat with neon1, and the legal pages show when they were last updated.
 
 ### Fixed
 - Booking links go to calendly.com/book-neon1/initial. The old link stopped working.

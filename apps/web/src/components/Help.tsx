@@ -93,7 +93,7 @@ export const GUIDES: Record<PageKey, Guide> = {
   execute: {
     title: "Execute",
     purpose: "The work: tasks, purchases, hours, and invoices.",
-    howto: ["Tap an item's title for its owner, due date, details, and comments.", "You buy listed purchases in your organization's name and attach the receipt. neon1 buys one only after the decision maker initials it, and bills it at cost.", "neon1 logs hours. On an estimate, they're shown against its range.", "Open an invoice to read, print, or pay it."],
+    howto: ["Tap an item's title for its owner, due date, details, and comments.", "You buy listed purchases in your organization's name and attach the receipt. neon1 buys one only after the decision maker initials it, and bills it at cost.", "neon1 logs hours. On an estimate, they're shown against its range.", "Open an invoice to read, print, or pay it, or to dispute part of it.", "Delivery and review shows the handover, your review date, the defect period, and anything neon1 is waiting on."],
     tour: [{ at: "next-step", title: "Next step", text: "What has to happen now, and who it's waiting on." }, { at: "layers", title: "The four layers", text: "Needs, Execute, Observe, and Normalize. Overview sums them up." }],
   },
   observe: {
@@ -105,7 +105,7 @@ export const GUIDES: Record<PageKey, Guide> = {
   normalize: {
     title: "Normalize",
     purpose: "Handover, training, and care.",
-    howto: ["Tick handover steps as they're done.", "When all are ticked, the decision maker signs once to accept them. Check it and accept takes one early.", "How did it go? is optional. neon1 quotes it only if you tick the box, without names."],
+    howto: ["Tick handover steps as they're done.", "When neon1 records the handover, please review within 10 business days. The decision maker signs once to accept, and silence never counts as acceptance. Check it and accept takes one step early.", "How did it go? is optional. neon1 quotes it only if you tick the box, without names."],
     tour: [{ at: "next-step", title: "Next step", text: "What has to happen now, and who it's waiting on." }, { at: "layers", title: "The four layers", text: "Needs, Execute, Observe, and Normalize. Overview sums them up." }],
   },
   newproject: {
@@ -178,13 +178,13 @@ export const GUIDES: Record<PageKey, Guide> = {
   invoice: {
     title: "Invoice",
     purpose: "What's billed, what's paid, and what's left.",
-    howto: ["Pay online by bank transfer or card. 1NEON never sees your card or bank details.", "For check, Zelle, or wire, put the invoice number in the memo.", "If a line looks wrong, email hello@neon1.tech before you pay.", "Print or save it as a PDF. Once it's paid in full, it's your receipt."],
+    howto: ["Pay online by bank transfer or card. 1NEON never sees your card or bank details.", "For check, Zelle, or wire, put the invoice number in the memo.", "If a line looks wrong, choose Dispute part of this invoice. The rest stays due on its date.", "Print or save it as a PDF. Once it's paid in full, it's your receipt."],
     tour: [],
   },
   agreement: {
     title: "Service agreement",
     purpose: "neon1's terms for all work with your organization.",
-    howto: ["An admin signs at the bottom with a typed name, before the first approval.", "While signing, choose about anonymous case studies and neon1's client list.", "An admin can change either choice later on this page.", "Signatures lists each signature and its edition."],
+    howto: ["An admin signs at the bottom with a typed name, before the first approval, giving the legal name and mailing address.", "Choose about anonymized case studies and neon1's client list. Nothing is selected for you.", "An admin can change either choice later on this page.", "Signatures lists each signature and its edition, with a copy to download."],
     tour: [],
   },
   prospects: {

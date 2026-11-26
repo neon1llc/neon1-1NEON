@@ -42,6 +42,7 @@ import { projectRoutes } from "./routes/projects.ts";
 import { workspaceRoutes } from "./routes/workspace.ts";
 import { calendarRoutes } from "./routes/calendar.ts";
 import { billingRoutes, stripeWebhook } from "./routes/billing.ts";
+import { contractRoutes } from "./routes/contract.ts";
 import { e164 } from "./sms.ts";
 
 
@@ -213,6 +214,7 @@ export function createApp(d: Deps) {
   editRoutes(app, k);
   docRoutes(app, k);
   billingRoutes(app, k, pay);
+  contractRoutes(app, k);
   // Asking neon1 for an assessment or a call, from any account
   requestRoutes(app, k);
   // A free account's expiry date and its one "keep it"

@@ -5,7 +5,7 @@
 
 
 import {
-  AGREEMENT_ACCEPTED, AGREEMENT_EDITION, AGREEMENT_TEXT, AgreementChoicesInput, UNCHOSEN, agreementCovers, choiceLabel, CreateInvoiceInput, IssueInvoiceInput, Item, InvoiceFields, PaymentFields, RecordPaymentInput, SignAgreementInput, UpdateInvoiceInput, VoidInvoiceInput,
+  AGREEMENT_ACCEPTED, AGREEMENT_EDITION, AGREEMENT_TEXT, EARLIER_AGREEMENTS, AgreementChoicesInput, SIGN_AUTHORITY, agreementSigned, choiceLabel, CreateInvoiceInput, IssueInvoiceInput, Item, InvoiceFields, PaymentFields, RecordPaymentInput, SignAgreementInput, UpdateInvoiceInput, VoidInvoiceInput,
   balanceOf, canonical, creditRoomOn, signedNameProblem, clearingOn, depositLines, finalLines, priceOf, type PriceTerms, invoiceNumber, invoiceTotal, isOwnOrg, money, payableOn, plusDays, proposalNumber, reimbursementLines, revisions, sha256Hex, signature, todayIn,
   type Project, type Tenant,
 } from "@1neon/domain";
@@ -121,7 +121,11 @@ export function billingRoutes(app: App, k: Kit, pay: ReturnType<typeof stripeWeb
     const t = c.get("tenant");
     // The latest signature that still covers approvals, which may be of an earlier accepted edition
     const signed = (t.agreements ?? []).filter((a) => AGREEMENT_ACCEPTED.includes(a.ref)).at(-1);
-    return c.json({ edition: AGREEMENT_EDITION, text: AGREEMENT_TEXT, hash: await currentHash(), signed, history: t.agreements ?? [], choices: t.choices ?? [], required: !isOwnOrg(t.slug) });
+    // Each signature comes with the exact text it signed, when that text is known, so it can be downloaded
+    const hash = await currentHash();
+    const textOf = (h: { hash: string }) => (h.hash === hash ? AGREEMENT_TEXT : EARLIER_AGREEMENTS.find((e) => e.hash === h.hash)?.text);
+    const history = (t.agreements ?? []).map((h) => ({ ...h, text: textOf(h) }));
+    return c.json({ edition: AGREEMENT_EDITION, text: AGREEMENT_TEXT, hash, signed, history, choices: t.choices ?? [], required: !isOwnOrg(t.slug) });
   });
 
   /** A client admin signs the current edition for the organization, once */
@@ -138,12 +142,12 @@ export function billingRoutes(app: App, k: Kit, pay: ReturnType<typeof stripeWeb
     const ts = now();
     const misnamed = signedNameProblem(input.typedName, u.name);
     if (misnamed) fail(400, "signature_name", misnamed);
-    const signed = signature("agreement", AGREEMENT_EDITION, input.hash, input, { id: u.id, name: u.name || u.email, email: u.email }, ts, from(c));
-    const choice = { ...(input.choices ?? UNCHOSEN), by: u.id, name: u.name || u.email, email: u.email, at: ts, edition: AGREEMENT_EDITION };
+    const signed = { ...signature("agreement", AGREEMENT_EDITION, input.hash, input, { id: u.id, name: u.name || u.email, email: u.email }, ts, from(c)), party: { legalName: input.legalName, address: input.address }, authority: SIGN_AUTHORITY };
+    const choice = { ...input.choices, by: u.id, name: u.name || u.email, email: u.email, at: ts, edition: AGREEMENT_EDITION };
     const next: Tenant = { ...t, agreements: [...(t.agreements ?? []), signed], choices: [...(t.choices ?? []), choice].slice(-100), version: t.version + 1, updatedAt: ts, updatedBy: u.id };
     await repo.table.write([
       repo.tenantOp(next, { version: t.version }),
-      repo.auditOp({ tenantId: t.id, actorId: u.id, action: "agreement.signed", target: t.id, summary: `${input.typedName} signed neon1's service agreement, edition ${AGREEMENT_EDITION}. ${chosen(choice)}` }),
+      repo.auditOp({ tenantId: t.id, actorId: u.id, action: "agreement.signed", target: t.id, summary: `${input.typedName} signed neon1's service agreement, edition ${AGREEMENT_EDITION}, for ${input.legalName}, confirming their authority to sign. ${chosen(choice)}` }),
     ]);
     await keep(k, `t/${t.id}/agreement/${AGREEMENT_EDITION}-${ts}.json`, { ...signed, choices: choice, text: AGREEMENT_TEXT });
     return c.json(signed, 201);
@@ -155,7 +159,7 @@ export function billingRoutes(app: App, k: Kit, pay: ReturnType<typeof stripeWeb
     const { actor } = who(c);
     if (actor.operator || c.get("access") !== "admin") fail(403, "admin_only", "An admin of your organization makes these choices for it.");
     const input = await body(c, AgreementChoicesInput);
-    if (!agreementCovers(t.agreements)) fail(409, "agreement_needed", "Sign the service agreement first. You make these choices as you sign.");
+    if (!agreementSigned(t.agreements)) fail(409, "agreement_needed", "Sign the service agreement first. You make these choices as you sign.");
     const was = t.choices?.at(-1);
     if (was && was.caseStudies === input.caseStudies && was.naming === input.naming) return c.json(was);
     const u = who(c).user;

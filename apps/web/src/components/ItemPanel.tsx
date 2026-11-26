@@ -3,7 +3,7 @@
 // and Linear use, so a list stays short and every detail is one tap away.
 
 
-import { BasisLine, MetricFields, OptionFields, PurchaseFields, PurchaseLine, STATUSES, WORK_STATUSES, hoursRange, hoursText, paymentPlan, priceLine, priceOf, type AuditEvent, type Item, type ItemKind, type Price } from "@1neon/domain";
+import { BasisLine, DEFAULT_DEPOSIT_PERCENT, MetricFields, OptionFields, PurchaseFields, PurchaseLine, STATUSES, WORK_STATUSES, hoursRange, hoursText, paymentPlan, priceLine, priceOf, type AuditEvent, type Item, type ItemKind, type Price } from "@1neon/domain";
 import { numberProblem, optionalNumber } from "../lib/measures.ts";
 import { useQuery } from "@tanstack/react-query";
 import { Trash2, X } from "lucide-react";
@@ -100,7 +100,7 @@ function typed(key: string, v: string): unknown {
   if (key === "pricing") return v || null;
   if (key === "rateCents") { const n = optionalNumber(v); return n.ok && n.value !== undefined ? Math.round(n.value * 100) : null; }
   if (key === "hoursLow" || key === "hoursHigh") { const n = optionalNumber(v); return n.ok && n.value !== undefined ? n.value : null; }
-  // The deposit share: a whole percent from 0 to 100; blank goes back to the usual 50
+  // The deposit share: a whole percent from 0 to 100; blank goes back to the usual 30
   if (key === "depositPercent") { const n = optionalNumber(v.replace("%", "")); return n.ok && n.value !== undefined ? Math.min(100, Math.max(0, Math.round(n.value))) : null; }
   // Only called once the panel has checked the text (numberProblem); blank leaves the value unset
   if (key === "baseline" || key === "target") { const n = optionalNumber(v); return n.ok ? n.value : undefined; }
@@ -407,7 +407,7 @@ function KindFields({ kind, f, onChange }: { kind: ItemKind; f: Record<string, s
   const price = estimate ? priceOf({ pricing: "estimate", rateCents: rate === undefined ? undefined : Math.round(rate * 100), hoursLow: num(f.hoursLow), hoursHigh: num(f.hoursHigh) }) : undefined;
   // Any price in numbers (an estimate, or a fixed price written as one), for the deposit's preview
   const pct = num((f.depositPercent ?? "").replace("%", ""));
-  const priced = priceOf({ pricing: (f.pricing || undefined) as "fixed" | "estimate" | undefined, cost: f.cost, rateCents: rate === undefined ? undefined : Math.round(rate * 100), hoursLow: num(f.hoursLow), hoursHigh: num(f.hoursHigh), depositPercent: pct });
+  const priced = priceOf({ pricing: (f.pricing || undefined) as "fixed" | "estimate" | undefined, cost: f.cost, rateCents: rate === undefined ? undefined : Math.round(rate * 100), hoursLow: num(f.hoursLow), hoursHigh: num(f.hoursHigh), depositPercent: pct ?? DEFAULT_DEPOSIT_PERCENT });
   if (kind === "option") return (
     <div className="props">
       {/* How the price works. An estimate is hours at a rate: its cost and hours lines are worked out
@@ -434,11 +434,11 @@ function KindFields({ kind, f, onChange }: { kind: ItemKind; f: Record<string, s
         </>
       )}
       <label>Timeline<input value={f.timeline ?? ""} onChange={(e) => set("timeline", e.target.value)} placeholder="e.g. 3 weeks" maxLength={80} /></label>
-      {/* The share asked up front: the usual 50%, or what the client agreed (20%, or 0 for none) */}
+      {/* The share asked up front: the usual 30%, or what the client agreed (50%, or 0 for none) */}
       {priced && (
         <>
-          <label>Deposit up front<span className="affix"><input inputMode="numeric" value={f.depositPercent ?? ""} onChange={(e) => set("depositPercent", e.target.value)} placeholder="50" aria-describedby="deposit-say" /><span className="affix-after" aria-hidden="true">%</span></span></label>
-          <p id="deposit-say" className="small muted" style={{ gridColumn: "1 / -1", margin: 0 }}>{paymentPlan(priced).join("; ")}.{pct === undefined ? " Leave it blank for the usual 50%." : ""}</p>
+          <label>Deposit up front<span className="affix"><input inputMode="numeric" value={f.depositPercent ?? ""} onChange={(e) => set("depositPercent", e.target.value)} placeholder="30" aria-describedby="deposit-say" /><span className="affix-after" aria-hidden="true">%</span></span></label>
+          <p id="deposit-say" className="small muted" style={{ gridColumn: "1 / -1", margin: 0 }}>{paymentPlan(priced).join("; ")}.{pct === undefined ? " Leave it blank for the usual 30%." : ""}</p>
         </>
       )}
       {/* Where the hours go, so the price can be checked against the work */}

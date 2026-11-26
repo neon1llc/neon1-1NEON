@@ -12,7 +12,7 @@ import { AwsTexter, CognitoDirectory, LambdaNotifier, PushoverPusher, S3Records,
 import { sweepSignups } from "../routes/signup.ts";
 import { finishPurges, sweepQuietProspects } from "../routes/prospects.ts";
 import { sweepOutlineNudges } from "../routes/nudges.ts";
-import { sweepDecisionReminders } from "../routes/reminders.ts";
+import { sweepDecisionReminders, sweepOverdueInvoices } from "../routes/reminders.ts";
 import { sweepRequests } from "../routes/requests.ts";
 import { StripePayments } from "../payments.ts";
 import { beforeDeadline, drainOutbox } from "../outbox.ts";
@@ -202,8 +202,10 @@ export const handler = async (event: Parameters<typeof http>[0] | { source?: str
     // metric directive inside its message field
     // Decisions waiting on a client get their reminders once an hour
     const reminders = Date.now() < end - 1_000 ? await beforeDeadline(sweepDecisionReminders({ repo, d: deps, cfg }), end).catch((e) => ({ error: (e as Error).name })) : undefined;
-    process.stdout.write(`${JSON.stringify({ ...outboxMetrics(result, cfg.env), files, bugs, requests, signups, quiet, nudges, purges, reminders })}\n`);
-    return { ...result, files, bugs, requests, signups, quiet, nudges, purges, reminders };
+    // Overdue invoices get their one reminder, checked once an hour
+    const overdue = Date.now() < end - 1_000 ? await beforeDeadline(sweepOverdueInvoices({ repo }), end).catch((e) => ({ error: (e as Error).name })) : undefined;
+    process.stdout.write(`${JSON.stringify({ ...outboxMetrics(result, cfg.env), files, bugs, requests, signups, quiet, nudges, purges, reminders, overdue })}\n`);
+    return { ...result, files, bugs, requests, signups, quiet, nudges, purges, reminders, overdue };
   }
   return http(event as Parameters<typeof http>[0], context);
 };

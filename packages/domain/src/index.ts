@@ -14,6 +14,8 @@ export * from "./neo.ts";
 export * from "./changes.ts";
 export * from "./proposal.ts";
 export * from "./agreement.ts";
+export * from "./agreement-history.ts";
+export * from "./lifecycle.ts";
 export * from "./billing.ts";
 export * from "./history.ts";
 export * from "./prospect.ts";

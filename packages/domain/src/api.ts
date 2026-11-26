@@ -206,7 +206,16 @@ export const AcceptInput = z.object({ version: z.number().int(), note: z.string(
 
 // Signing the service agreement names the edition and hash the signer was shown, so a newer text can't be signed blind
 // Choices left out are recorded as not allowed without asking, never as yes
-export const SignAgreementInput = SignInput.extend({ edition: z.string().max(16), hash: z.string().regex(/^[0-9a-f]{64}$/), choices: ChoiceFields.optional() });
+// Signing records the organization's legal name and mailing address, the signer's authority, and both
+// choices, each picked by the signer (nothing is preselected)
+export const SignAgreementInput = SignInput.extend({
+  edition: z.string().max(16),
+  hash: z.string().regex(/^[0-9a-f]{64}$/),
+  choices: ChoiceFields,
+  legalName: z.string().trim().min(2).max(120),
+  address: z.string().trim().min(10).max(300),
+  authority: z.literal(true),
+});
 // An admin changes the choices any time after signing
 export const AgreementChoicesInput = ChoiceFields;
 

@@ -58,6 +58,10 @@ export const Signature = z.object({
   // Where it was signed from, for the audit trail; absent when the request didn't say
   ip: z.string().max(64).optional(),
   ua: z.string().max(300).optional(),
+  // On the service agreement (2.4 on): the organization's legal name and mailing address as signed, and
+  // the signer's confirmation that they may sign for it
+  party: z.object({ legalName: z.string().max(120), address: z.string().max(300) }).optional(),
+  authority: z.string().max(200).optional(),
 });
 export type Signature = z.infer<typeof Signature>;
 
@@ -72,6 +76,11 @@ export const Stage = z.object({
   hidden: z.boolean().default(false),
 });
 export type Stage = z.infer<typeof Stage>;
+
+
+/** One contract event on a project: when, who recorded it (with their name then), and a note */
+export const ContractEvent = z.object({ at: isoDate, by: id, name: z.string().max(80), note: z.string().max(1000).default("") });
+export type ContractEvent = z.infer<typeof ContractEvent>;
 
 
 /** An organization (tenant). Slug and client ID are its public handles; its ID scopes every key */
@@ -278,6 +287,14 @@ export const Project = z.object({
   archived: z.boolean().default(false),
   // Set when moved to Trash; the project then disappears from every view
   deletedAt: isoDate.optional(),
+  // The contract states of the service agreement (lifecycle.ts), each recorded by neon1 and kept apart:
+  // handover (delivery, which starts the review request and the defect period), waiting on the client
+  // (a delay notice), a pause, and an ending. Acceptance is the client's own signature on handover
+  // steps, and payment is the invoices; neither is ever inferred from these
+  handover: ContractEvent.optional(),
+  waiting: ContractEvent.extend({ need: z.string().trim().min(3).max(500) }).optional(),
+  paused: ContractEvent.extend({ reason: z.enum(["waiting", "overdue", "other"]) }).optional(),
+  ended: ContractEvent.extend({ reason: z.enum(["notice", "waiting", "other"]) }).optional(),
   ...versioned,
 });
 export type Project = z.infer<typeof Project>;
@@ -447,7 +464,7 @@ const priceFields = {
   hoursLow: z.number().min(0).max(10_000).optional(),
   hoursHigh: z.number().min(0).max(10_000).optional(),
   // The share asked up front, as a percent: of a fixed price, or of an estimate's low end. Unset means
-  // the usual 50; a client can agree a different share (20, or 0 for nothing up front)
+  // 50 on options stored before options stated it; new options state 30 unless the proposal agrees another share
   depositPercent: z.number().int().min(0).max(100).optional(),
   // Where the hours go, piece by piece, so the price can be checked against the work
   basis: z.array(BasisLine).max(40).optional(),

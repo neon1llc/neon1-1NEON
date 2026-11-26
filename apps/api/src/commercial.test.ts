@@ -528,7 +528,7 @@ describe("9. change of decision after partial invoicing", () => {
   /** A new $9,000 fixed option, shared and issued, so a bigger one can replace B */
   async function bigger() {
     const { path } = await flow();
-    const r = await call(OP, "POST", `${path}/items`, { kind: "option", title: "D. Whole practice portal", status: "proposed", fields: { pricing: "fixed", cost: "$9,000 fixed" } });
+    const r = await call(OP, "POST", `${path}/items`, { kind: "option", title: "D. Whole practice portal", status: "proposed", fields: { pricing: "fixed", cost: "$9,000 fixed", depositPercent: 50 } });
     expect(r.status).toBe(201);
     expect((await call(OP, "POST", `${path}/proposals`, { note: "Adds D" })).status).toBe(201);
     return itemNow(r.json.id);

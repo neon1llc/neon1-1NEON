@@ -3,7 +3,7 @@
 // decisions in one message, at most one an hour. neon1 is told with the second reminder, to follow up.
 
 import {
-  REMIND_BUSINESS_DAYS, askedToDecide, businessDaysBetween, dateIn, isOwnOrg, isProspect, projectDecisions, signatureDecision, todayIn, wants,
+  InvoiceFields, REMIND_BUSINESS_DAYS, askedToDecide, businessDaysBetween, dateIn, invoiceState, isOwnOrg, isProspect, money, projectDecisions, signatureDecision, todayIn, undisputedOn, wants,
   type ClientDecision, type ProposalFields, type Tenant,
 } from "@1neon/domain";
 import type { Kit } from "../lib/kit.ts";
@@ -201,4 +201,49 @@ export async function sweepDecisionReminders(k: Pick<Kit, "repo" | "d" | "cfg">,
     await one(t).catch((e) => console.error(JSON.stringify({ level: "error", message: "decision reminders failed", tenant: t.id, error: String(e).slice(0, 200) })));
   }
   return { sent, alerted };
+}
+
+
+/**
+ * The overdue reminder the service agreement promises: once per issued invoice, the first business day
+ * after it's due, in sending hours, when an undisputed amount is still owed. It's an audit notice, so
+ * the organization's billing contacts get it by bell and email (always, like the agreement's other notices)
+ */
+export async function sweepOverdueInvoices(k: Pick<Kit, "repo">, at = new Date()) {
+  const { repo } = k;
+  // At most once an hour, like the decision reminders
+  try {
+    await repo.table.write([{ put: { PK: "CONFIG", SK: `REMIND#inv#${at.toISOString().slice(0, 13)}`, ttl: Math.floor(at.getTime() / 1000) + 2 * 86_400 }, guard: { create: true } }]);
+  } catch {
+    return { sent: 0, skipped: true };
+  }
+  let sent = 0;
+  for (const t of await repo.listTenants()) {
+    if (isOwnOrg(t.slug) || isProspect(t) || t.status === "archived" || !inSendingHours(at, t.timeZone)) continue;
+    const today = todayIn(t.timeZone, at);
+    try {
+      for (const p of await repo.listProjects(t.id)) {
+        if (p.deletedAt) continue;
+        const items = await repo.listItems(t.id, p.id);
+        for (const i of items) {
+          if (i.kind !== "invoice" || i.status !== "issued" || invoiceState(i, items, today) !== "overdue") continue;
+          const f = InvoiceFields.parse(i.fields);
+          const owed = undisputedOn(i, items);
+          if (!f.dueDate || owed <= 0) continue;
+          try {
+            await repo.table.write([
+              { put: { PK: `T#${t.id}`, SK: `REMIND#inv#${i.id}`, at: at.toISOString() }, guard: { create: true } },
+              repo.auditOp({ tenantId: t.id, actorId: "system", action: "invoice.reminded", target: i.id, summary: `${p.key}: ${f.number} was due ${f.dueDate}, and ${money(owed)} is still owed. Pay it from the invoice, or tell me which part you dispute` }),
+            ]);
+            sent++;
+          } catch {
+            // Already reminded (the row exists): one reminder per invoice
+          }
+        }
+      }
+    } catch (e) {
+      console.error(JSON.stringify({ level: "error", message: "overdue reminders failed", tenant: t.id, error: String(e).slice(0, 200) }));
+    }
+  }
+  return { sent };
 }

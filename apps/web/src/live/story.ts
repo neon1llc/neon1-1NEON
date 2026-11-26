@@ -4,7 +4,6 @@
 // notification bell. Three made-up engagements share these chapters, and each brings its own friction.
 
 
-import { STARTING_CHOICES } from "@1neon/domain";
 import { demoPaymentEvent } from "../components/Billing.tsx";
 import { liveEngine } from "../lib/api.ts";
 import { CARE, fileText, sum } from "../lib/scenarios.ts";
@@ -123,7 +122,7 @@ export async function signAgreementAsOwner() {
   const t = await tid();
   const e = await engine();
   const a = await e.actAs<{ edition: string; hash: string; signed?: unknown }>(OWNER, `/t/${t}/agreement`);
-  if (!a.signed) await e.actAs(OWNER, `/t/${t}/agreement/sign`, "POST", { edition: a.edition, hash: a.hash, typedName: S.owner.name, consent: true, choices: STARTING_CHOICES });
+  if (!a.signed) await e.actAs(OWNER, `/t/${t}/agreement/sign`, "POST", { edition: a.edition, hash: a.hash, typedName: S.owner.name, consent: true, choices: { caseStudies: "later", naming: "ask" }, legalName: S.org.name, address: "100 Example Street, Springfield, NY 12000", authority: true });
 }
 
 /** The plan: a milestone, the tasks, the first hours, and a first update */
@@ -277,7 +276,7 @@ async function bankCheckout(s: Stage, thought: string) {
 // The option's article in the list, by its place (the first, the second); one neon1 set aside isn't drawn
 export const article = (n: number) => `.options article:nth-child(${n + 1})`;
 // What the deposit is, in the words of the invoice's own line
-const depositWhat = MONEY.fixed ? `half of the fixed price, ${MONEY.low}` : `half of the low end, ${MONEY.firstLow}`;
+const depositWhat = MONEY.fixed ? `${MONEY.depositPct}% of the fixed price, ${MONEY.low}` : `${MONEY.depositPct}% of the low end, ${MONEY.firstLow}`;
 // The count of options she compares, without the one neon1 set aside
 const live = S.options.length - S.declined.length;
 const care = CARE[S.id];
@@ -541,7 +540,7 @@ export const STORY: Section[] = [
     title: "Pay the deposit",
     why: "Pradeep's email says the deposit invoice is ready. Let me sign in and pay it.",
     run: async (s) => {
-      await s.say(`The deposit is ${MONEY.fixed ? "half of the price" : "half the low estimate"}, so Pradeep issues that invoice`);
+      await s.say(`The deposit is ${MONEY.depositPct}% of ${MONEY.fixed ? "the price" : "the low estimate"}, so Pradeep issues that invoice`);
       await s.others(issueDeposit, 900, "Pradeep issued the deposit invoice");
       await walkTo(s, `${base}/projects/${KEY}/execute`);
       await s.top();

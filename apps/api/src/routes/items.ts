@@ -153,7 +153,7 @@ export function itemRoutes(app: App, k: Kit) {
       // Sent fields replace what was there; a field sent as null is cleared
       const merged: Record<string, unknown> = { ...item.fields, ...fields };
       for (const [key, value] of Object.entries(fields)) if (value === null) delete merged[key];
-      next.fields = validateFields(item.kind, merged);
+      next.fields = validateFields(item.kind, merged, "depositPercent" in fields);
     }
     // Who buys can change before anything is bought; a change of buyer drops an earlier agreement
     if (item.kind === "purchase") {
@@ -526,7 +526,7 @@ function followWork(repo: Pick<Repo, "projectOp" | "auditOp">, t: Pick<Tenant, "
  * or a change to a smaller option), the credit that refunds the difference, as the service agreement
  * promises. Nothing when the work is already billed in full
  */
-function closingDraft(p: Project, decision: Item, items: Item[], ts: string, by: string): Item | undefined {
+export function closingDraft(p: Project, decision: Item, items: Item[], ts: string, by: string): Item | undefined {
   const final = draftInvoice(p, "final", finalLines(decision, items), ts, by);
   if (final) return final;
   const back = refundCredit(decision, items);

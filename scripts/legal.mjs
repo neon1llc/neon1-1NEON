@@ -51,7 +51,12 @@ try {
     const text = readFileSync(join(dir, from), "utf8");
     const body = text.replace(/^---\n[\s\S]*?\n---\n+/, "");
     if (body === text || !body.startsWith("# ")) throw new Error(`${from} has no front matter or no title`);
-    return [to, body];
+    // The page says when it last changed, from the corpus's own date, under its title
+    const updated = /^updated: (\d{4}-\d{2}-\d{2})$/m.exec(text)?.[1];
+    if (!updated) throw new Error(`${from} has no updated date`);
+    const said = new Date(`${updated}T12:00:00Z`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
+    const [title, ...rest] = body.split("\n");
+    return [to, `${title}\n\n*Last updated ${said}.*${rest.join("\n").replace(/^\n+/, " ").replace(/^ /, " ")}`];
   });
 
   // --- Write, only once every page converted ---

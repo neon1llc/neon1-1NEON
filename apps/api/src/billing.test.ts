@@ -65,6 +65,9 @@ async function issuedDeposit() {
 }
 
 
+const PARTY = { choices: { caseStudies: "later", naming: "ask" }, legalName: "Harborline Freight LLC", address: "12 Harbor Road, Portland, ME 04101", authority: true };
+
+
 describe("the service agreement", () => {
   it("records the choices made with it, never assuming yes, and lets only a client admin change them", async () => {
     const t = (await repo.getTenant(s.acme.id))!;
@@ -73,8 +76,16 @@ describe("the service agreement", () => {
     const no = { caseStudies: "no", naming: "no" };
     expect((await call(s.raj.email, "PUT", `${path}/choices`, no)).json.error).toBe("agreement_needed");
     const got = (await call(s.raj.email, "GET", path)).json;
-    await call(s.raj.email, "POST", `${path}/sign`, { edition: got.edition, hash: got.hash, typedName: "Priya Raman", consent: true });
+    const base = { edition: got.edition, hash: got.hash, typedName: "Priya Raman", consent: true, legalName: "Harborline Freight LLC", address: "12 Harbor Road, Portland, ME 04101", authority: true };
+    // Nothing is preselected: signing without both choices, or without authority, is refused
+    expect((await call(s.raj.email, "POST", `${path}/sign`, base)).status).toBe(400);
+    expect((await call(s.raj.email, "POST", `${path}/sign`, { ...base, choices: { caseStudies: "yes" } })).status).toBe(400);
+    expect((await call(s.raj.email, "POST", `${path}/sign`, { ...base, choices: { caseStudies: "later", naming: "ask" }, authority: false })).status).toBe(400);
+    const signed = await call(s.raj.email, "POST", `${path}/sign`, { ...base, choices: { caseStudies: "later", naming: "ask" } });
+    expect(signed.json).toMatchObject({ party: { legalName: "Harborline Freight LLC" }, authority: expect.stringContaining("authorized") });
     expect((await call(s.raj.email, "GET", path)).json.choices.at(-1)).toMatchObject({ caseStudies: "later", naming: "ask" });
+    // The signature comes back with the exact text it signed, so it can be downloaded
+    expect((await call(s.raj.email, "GET", path)).json.history.at(-1).text).toBe(AGREEMENT_TEXT);
     expect((await call(s.dana.email, "PUT", `${path}/choices`, no)).status).toBe(403);
     expect((await call(OP, "PUT", `${path}/choices`, no)).status).toBe(403);
     expect((await call(s.raj.email, "PUT", `${path}/choices`, no)).json).toMatchObject(no);
@@ -82,15 +93,25 @@ describe("the service agreement", () => {
     expect((await repo.getTenant(s.acme.id))!.choices).toHaveLength(2);
   });
 
-  it("keeps a 2.1 signature in force, with no case studies allowed by it", async () => {
+  it("asks a 2.1 or 2.3 signer to sign 2.4 before the next approval, keeping case studies at decide later", async () => {
     const t = (await repo.getTenant(s.acme.id))!;
-    const old = { ...t.agreements![0]!, ref: "2.1" };
-    await repo.saveTenant({ ...t, agreements: [old], choices: undefined, version: t.version + 1 }, t.version);
+    for (const ref of ["2.1", "2.3"]) {
+      const now = (await repo.getTenant(s.acme.id))!;
+      await repo.saveTenant({ ...now, agreements: [{ ...t.agreements![0]!, ref }], choices: undefined, version: now.version + 1 }, now.version);
+      const got = (await call(s.raj.email, "GET", `/t/${s.acme.id}/agreement`)).json;
+      expect(got.signed).toBeUndefined();
+      expect(got.history.at(-1).ref).toBe(ref);
+      expect(got.choices).toEqual([]);
+      // An earlier signer can still change the choices, which start at decide later and ask first
+      expect((await call(s.raj.email, "PUT", `/t/${s.acme.id}/agreement/choices`, { caseStudies: "no", naming: "ask" })).status).toBe(200);
+    }
+    const { opt, path } = await flow();
+    const b = opt("B");
+    expect((await call(s.raj.email, "POST", `${path}/items/${b.id}/approve`, { version: b.version, signature: SIGN })).json.error).toBe("agreement_needed");
     const got = (await call(s.raj.email, "GET", `/t/${s.acme.id}/agreement`)).json;
-    expect(got.signed.ref).toBe("2.1");
-    expect(got.choices).toEqual([]);
-    const again = await call(s.raj.email, "POST", `/t/${s.acme.id}/agreement/sign`, { edition: got.edition, hash: got.hash, typedName: "Priya Raman", consent: true });
-    expect(again.json.ref).toBe("2.1");
+    const again = await call(s.raj.email, "POST", `/t/${s.acme.id}/agreement/sign`, { edition: got.edition, hash: got.hash, typedName: "Priya Raman", consent: true, ...PARTY });
+    expect(again.json.ref).toBe("2.4");
+    expect((await call(s.raj.email, "POST", `${path}/items/${b.id}/approve`, { version: b.version, signature: SIGN })).status).toBe(201);
   });
 
   it("is signed once by a client admin, against the text they were shown, before any approval", async () => {
@@ -106,7 +127,7 @@ describe("the service agreement", () => {
     expect(got.json.hash).toBe(await sha256Hex(AGREEMENT_TEXT));
     expect(got.json.signed).toBeUndefined();
     const hash = got.json.hash as string;
-    const sign = { typedName: "Priya Raman", consent: true, edition: AGREEMENT_EDITION, hash };
+    const sign = { typedName: "Priya Raman", consent: true, edition: AGREEMENT_EDITION, hash, ...PARTY };
     // Editors and neon1 don't sign for the client; the consent box must be ticked; a changed text is refused
     expect((await call(s.dana.email, "POST", `/t/${s.acme.id}/agreement/sign`, sign)).status).toBe(403);
     expect((await call(OP, "POST", `/t/${s.acme.id}/agreement/sign`, sign)).status).toBe(403);

@@ -2609,3 +2609,9 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 .shell:not(.example) .content { --neo-clear: calc(var(--n1chat-bottom, max(var(--neo-gap), env(safe-area-inset-bottom))) + var(--neo-size) + var(--neo-gap)); padding-bottom: var(--neo-clear); }
 /* The last thing on a page keeps no space of its own under it, so the gap above the button stays that one gap */
 .shell:not(.example) .content :is(.page-in > :last-child, .page-in > :last-child > :last-child, .page-in > :last-child > :last-child > :last-child) { margin-bottom: 0; }
+
+/* Delivery and review (Contract.tsx): the shared facts card, then neon1's actions below it */
+.contract .actions { margin-top: var(--sp-2); flex-wrap: wrap; }
+/* An invoice's dispute (Dispute.tsx): above the letter, and left out of a printed or saved copy */
+.dispute { margin: 0 0 var(--sp-3); }
+@media print { .dispute { display: none; } }

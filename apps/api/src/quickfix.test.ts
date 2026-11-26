@@ -202,6 +202,8 @@ const stageOf = async (path: string) => (await call(OP, "GET", path)).json.proje
 const auditOf = async (action: string) => (await repo.listAudit(s.acme.id)).filter((e) => e.action === action).sort((a, b) => a.at.localeCompare(b.at));
 
 /** A quick fix quoted and issued, ready for the client */
+const PARTY = { choices: { caseStudies: "later", naming: "ask" }, legalName: "Harborline Freight LLC", address: "12 Harbor Road, Portland, ME 04101", authority: true };
+
 async function quoted() {
   const made = await create("quick_fix");
   const { option } = (await call(OP, "POST", `${made.path}/quote`, HOURLY)).json;
@@ -211,7 +213,7 @@ async function quoted() {
 /** What the combined dialog does for a first-time client: sign the agreement, then approve */
 async function signThenApprove(path: string, option: Item) {
   const a = (await call(s.raj.email, "GET", `/t/${s.acme.id}/agreement`)).json;
-  const signed = await call(s.raj.email, "POST", `/t/${s.acme.id}/agreement/sign`, { edition: a.edition, hash: a.hash, typedName: "Priya Raman", consent: true });
+  const signed = await call(s.raj.email, "POST", `/t/${s.acme.id}/agreement/sign`, { edition: a.edition, hash: a.hash, typedName: "Priya Raman", consent: true, ...PARTY });
   const approved = signed.status === 200 || signed.status === 201 ? await call(s.raj.email, "POST", `${path}/items/${option.id}/approve`, { version: option.version, signature: SIGN }) : undefined;
   return { signed, approved };
 }
@@ -244,7 +246,7 @@ describe("a first-time client approving a quick fix on one screen", () => {
     const { path, option } = await quoted();
     // A stale or wrong edition hash, a name that isn't the profile's, no consent, and an editor: each refused
     const a = (await call(s.raj.email, "GET", `/t/${s.acme.id}/agreement`)).json;
-    const sign = { edition: a.edition, hash: a.hash, typedName: "Priya Raman", consent: true };
+    const sign = { edition: a.edition, hash: a.hash, typedName: "Priya Raman", consent: true, ...PARTY };
     expect((await call(s.raj.email, "POST", `/t/${s.acme.id}/agreement/sign`, { ...sign, hash: "0".repeat(64) })).json.error).toBe("agreement_changed");
     expect((await call(s.raj.email, "POST", `/t/${s.acme.id}/agreement/sign`, { ...sign, typedName: "Someone Else" })).status).toBe(400);
     expect((await call(s.raj.email, "POST", `/t/${s.acme.id}/agreement/sign`, { ...sign, consent: false })).status).toBe(400);

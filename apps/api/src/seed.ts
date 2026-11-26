@@ -2,7 +2,7 @@
 // clients, and one prospect that signed itself up.
 
 
-import { AGREEMENT_EDITION, AGREEMENT_TEXT, STARTING_CHOICES, CalEvent, InvoiceFields, alignPrice, assessed, canonical, depositLines, finalLines, invoiceNumber, invoiceTotal, DEFAULT_STAGES, Item, formatClientId, formatProspectId, PORTAL_TERMS_EDITION, newId, rankBetween, sha256Hex, signature, type Member, type Project, type Tenant, type User } from "@1neon/domain";
+import { AGREEMENT_EDITION, AGREEMENT_TEXT, SIGN_AUTHORITY, CalEvent, InvoiceFields, alignPrice, assessed, canonical, depositLines, finalLines, invoiceNumber, invoiceTotal, DEFAULT_STAGES, Item, formatClientId, formatProspectId, PORTAL_TERMS_EDITION, newId, rankBetween, sha256Hex, signature, type Member, type Project, type Tenant, type User } from "@1neon/domain";
 import type { Repo } from "./store/repo.ts";
 import { issueProposal } from "./proposals.ts";
 
@@ -53,7 +53,7 @@ export async function seed(repo: Repo, operatorEmail = "pradeep@neon1.tech") {
   await member(harbor, lee, "admin", "invited");
 
   // Harborline signed neon1's service agreement when it became a client; Ridgeview hasn't yet
-  const signedAcme: Tenant = { ...acme, agreements: [signature("agreement", AGREEMENT_EDITION, await sha256Hex(AGREEMENT_TEXT), { typedName: raj.name, consent: true }, { id: raj.id, name: raj.name, email: raj.email }, day(-21))], choices: [{ ...STARTING_CHOICES, by: raj.id, name: raj.name, email: raj.email, at: day(-21), edition: AGREEMENT_EDITION }], version: acme.version + 1 };
+  const signedAcme: Tenant = { ...acme, agreements: [{ ...signature("agreement", AGREEMENT_EDITION, await sha256Hex(AGREEMENT_TEXT), { typedName: raj.name, consent: true }, { id: raj.id, name: raj.name, email: raj.email }, day(-21)), party: { legalName: `${acme.name} LLC`, address: "12 Harbor Road, Portland, ME 04101" }, authority: SIGN_AUTHORITY }], choices: [{ caseStudies: "later", naming: "ask", by: raj.id, name: raj.name, email: raj.email, at: day(-21), edition: AGREEMENT_EDITION }], version: acme.version + 1 };
   await repo.saveTenant(signedAcme, acme.version);
   Object.assign(acme, signedAcme);
 

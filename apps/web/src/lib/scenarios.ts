@@ -6,7 +6,7 @@
 // figure the others don't. Every name, number, and file is made up; none is a quote or a price list.
 
 
-import { DEPOSIT_PERCENT, dollars, hoursRange, hoursText, priceLine, priceOf, type BasisLine, type Price } from "@1neon/domain";
+import { DEFAULT_DEPOSIT_PERCENT, DEPOSIT_PERCENT, dollars, hoursRange, hoursText, priceLine, priceOf, type BasisLine, type Price } from "@1neon/domain";
 import { ACCESS_REVIEW, canaryTable, costTable, evalTable, exceptionTable, FILES, FULL_COMPARISON, monthly, restoreTable, RESTORE_AFTER, RESTORE_FIRST, ROLLBACK_MINUTES, ruleTable, vlanTable, type Kind, type Table } from "./artifacts.ts";
 
 
@@ -73,8 +73,9 @@ export interface Scenario {
 
 
 /** An option's pricing as the portal's fields */
-const estimate = (rateCents: number, hoursLow: number, hoursHigh: number, basis: BasisLine[]) => ({ pricing: "estimate" as const, rateCents, hoursLow, hoursHigh, basis });
-const fixed = (total: number, depositPercent?: number) => ({ pricing: "fixed" as const, cost: `$${total.toLocaleString("en-US")} fixed`, ...(depositPercent === undefined ? {} : { depositPercent }) });
+// Each states its deposit share, as a new option in the portal does (30% unless agreed otherwise)
+const estimate = (rateCents: number, hoursLow: number, hoursHigh: number, basis: BasisLine[]) => ({ pricing: "estimate" as const, rateCents, hoursLow, hoursHigh, basis, depositPercent: DEFAULT_DEPOSIT_PERCENT });
+const fixed = (total: number, depositPercent: number = DEFAULT_DEPOSIT_PERCENT) => ({ pricing: "fixed" as const, cost: `$${total.toLocaleString("en-US")} fixed`, depositPercent });
 export const sum = (b: BasisLine[]) => b.reduce((n, x) => n + x.hours, 0);
 /** A made-up hourly rate for the demo's estimates, in cents. It is not neon1's rate, and the pages never print it */
 export const RATE_CENTS = 12_000;
@@ -433,7 +434,7 @@ const QUILLWORK: Scenario = {
     compareA: "A moves the workers onto container tasks in our own Terraform. That's the real fix, and it ends the patching.",
     compareB: "B just resizes the hosts. Cheaper and quick, but we'd still patch them. A fallback if the team balks at containers.",
     compareC: "",
-    basisThink: "It's a fixed price, so I know the total before the work starts, and the deposit is half of it.",
+    basisThink: "It's a fixed price, so I know the total before the work starts, and the deposit is 30% of it.",
     agreementThink: "Purchases at cost, fixed prices stay fixed, invoices due in 15 days. Fair.",
     approveThink: "A. Pradeep recommends it, and the platform team's conventions are in the scope.",
     conditionThink: "Just never at month end. Our release rule.",
@@ -653,6 +654,7 @@ export function moneyOf(s: Scenario) {
   const earnedCents = now.kind === "fixed" ? now.totalCents : Math.round(Math.min(logged, now.hoursHigh) * now.rateCents);
   const e = (p: Price) => p as Extract<Price, { kind: "estimate" }>;
   return {
+    depositPct: first.depositPercent ?? DEFAULT_DEPOSIT_PERCENT,
     fixed: now.kind === "fixed",
     range: priceLine(now).replace(" estimate", ""),
     firstRange: priceLine(first).replace(" estimate", ""),

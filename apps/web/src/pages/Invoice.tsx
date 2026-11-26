@@ -8,6 +8,7 @@ import { Printer } from "lucide-react";
 import { useEffect } from "react";
 import { Link, useParams } from "react-router";
 import { lineAmount, usePay } from "../components/Billing.tsx";
+import { InvoiceDispute } from "../components/Dispute.tsx";
 import { gate } from "../components/Reads.tsx";
 import { useOrg, useSession, useTopBar } from "../components/Shell.tsx";
 import { Empty } from "../components/ui.tsx";
@@ -86,6 +87,7 @@ export function InvoicePage() {
       {failed && <p className="pp-state warn" role="status">The bank payment of {money(failed.amountCents)} started on {longDate(failed.receivedAt)} didn't go through, so no money moved and {money(payable)} is still owed. {me.operator ? "The client can pay again, by bank or card, or another way." : "You can pay again, by bank or card, or one of the other ways below."}</p>}
       {it.status === "draft" && <p className="pp-state" role="status">Draft, only neon1 sees it. Issuing numbers it and shows it to the client.</p>}
       {state === "void" && <p className="pp-state warn" role="status">Void{f.voided ? `: ${f.voided.reason}` : ""}. Nothing is owed on it.</p>}
+      <InvoiceDispute invoice={it} items={items} project={detail.data!.project} path={`/t/${org.id}/projects/${pid}`} />
       <article className={`proposal invoice${state === "void" ? " pp-faded" : ""}`} aria-labelledby="inv-h1">
         {DEMO && <p className="pp-note">{FICTIONAL.replace("proposal", "invoice").replace("Not an offer", "Not a bill")}</p>}
         {/* Letterhead: neon1 left, the invoice's number and dates right */}

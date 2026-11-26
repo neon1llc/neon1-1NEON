@@ -76,7 +76,7 @@ function storyOf(s: Scenario): Record<Layer, { lead: string; cards: Card[] }> {
         ...pieces("execution"),
         ...(s.purchase ? [{ title: "Purchases", lines: ["From the approved option, bought in the client's own name."], list: [{ text: `${s.purchase.name}: paid ${s.purchase.paid}, receipt attached`, state: "done" as const }] }] : []),
         { title: "Invoices", lines: ["Each invoice says what it's for and how it was worked out. Pay by bank transfer or card from the project."], list: [
-          { text: `INV-0039-01, deposit: ${M.deposit}, ${M.fixed ? "half of the fixed price" : `half of the estimate's low end (${M.firstLow})`}. Paid`, state: "done" },
+          { text: `INV-0039-01, deposit: ${M.deposit}, ${M.fixed ? `${M.depositPct}% of the fixed price` : `${M.depositPct}% of the estimate's low end (${M.firstLow})`}. Paid`, state: "done" },
           { text: `INV-0039-02, final: ${M.fixed ? `the fixed price, ${M.earned}` : `${M.logged} worked is ${M.earned}`}, less the deposit, ${M.final}. It lists ${M.fixed ? "what it bills" : "every hour it bills"}. Paid`, state: "done" },
           { text: `Total for the work: ${M.earned}${M.fixed ? "" : `, inside the ${M.range} approved`}` },
         ] },

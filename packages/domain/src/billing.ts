@@ -105,6 +105,12 @@ export const InvoiceFields = z.object({
   billTo: BillTo.optional(),
   hash: z.string().regex(/^[0-9a-f]{64}$/).optional(),
   voided: z.object({ by: id, name: z.string().max(80), at: isoDate, reason: z.string().max(500) }).optional(),
+  // The client disputes part of an issued invoice: how much and why. The rest stays due on its date.
+  // neon1 answers and resolves it (with a credit, a new invoice, or an explanation); it stays on record
+  dispute: z.object({
+    by: id, name: z.string().max(80), at: isoDate, cents: z.number().int().positive().max(1_000_000_000), reason: z.string().trim().min(3).max(1000),
+    resolved: z.object({ by: id, name: z.string().max(80), at: isoDate, note: z.string().trim().min(3).max(1000) }).optional(),
+  }).optional(),
 });
 export type InvoiceFields = z.infer<typeof InvoiceFields>;
 
@@ -201,9 +207,25 @@ export function invoiceState(invoice: Rec, items: Rec[], today: string): "draft"
   const left = balanceOf(invoice, items);
   if (left === 0) return "paid";
   if (clearingOn(invoice, items) >= left) return "clearing";
-  if (f.dueDate && today > f.dueDate) return "overdue";
+  // Only an undisputed amount can be overdue; a disputed part waits for its answer
+  if (f.dueDate && today > f.dueDate && undisputedOn(invoice, items) > 0) return "overdue";
   return left < invoiceTotal(f) ? "partly_paid" : "open";
 }
+
+
+/** What's still owed on an invoice outside an open dispute: the amount that stays due on its date */
+export function undisputedOn(invoice: Rec, items: Rec[]): number {
+  const f = InvoiceFields.parse(invoice.fields);
+  const open = f.dispute && !f.dispute.resolved ? f.dispute.cents : 0;
+  return Math.max(0, payableOn(invoice, items) - open);
+}
+
+
+/** Is the invoice's dispute open (raised and not yet answered)? */
+export const disputeOpen = (invoice: Rec) => {
+  const f = InvoiceFields.parse(invoice.fields);
+  return Boolean(f.dispute && !f.dispute.resolved);
+};
 
 
 // --- Prices ----------------------------------------------------------------------------------
@@ -219,7 +241,7 @@ export type Price =
   | { kind: "fixed"; totalCents: number; depositPercent: number }
   | { kind: "estimate"; rateCents: number; hoursLow: number; hoursHigh: number; lowCents: number; highCents: number; depositPercent: number };
 
-/** The share asked up front, in percent: what the terms agree, else the usual 50 */
+/** The share asked up front, in percent: what the terms agree, else 50 for terms stored before options stated it */
 export const depositPercentOf = (t: PriceTerms) => (typeof t.depositPercent === "number" && t.depositPercent >= 0 && t.depositPercent <= 100 ? Math.round(t.depositPercent) : DEPOSIT_PERCENT);
 
 /** The price in numbers, or undefined when it's only words ("depends on seats") */
@@ -287,10 +309,10 @@ export function paymentPlan(p: Price, percent = p.depositPercent ?? DEPOSIT_PERC
   if (percent <= 0) return p.kind === "fixed" ? [`Nothing up front, then ${money(p.totalCents)} when you accept the handover`] : ["Nothing up front, then the hours worked when you accept the handover"];
   if (p.kind === "fixed") {
     const first = Math.round((p.totalCents * percent) / 100);
-    return [`${money(first)} when you approve (${percent}% deposit)`, `${money(p.totalCents - first)} when you accept the handover`];
+    return [`${money(first)} when you approve (${percent}% deposit)`, `${money(p.totalCents - first)} by the agreed milestones or on delivery`];
   }
   const first = Math.round((p.lowCents * percent) / 100);
-  return [`${money(first)} when you approve (${percent}% of the low end, as a deposit)`, "The rest when you accept the handover: the hours worked, less the deposit"];
+  return [`${money(first)} when you approve (${percent}% of the low end, as a deposit)`, "Then the hours worked, every two weeks, less the deposit"];
 }
 
 /** Every hour logged on the project */
@@ -313,6 +335,8 @@ export function hoursStanding(terms: PriceTerms, items: Rec[]) {
 
 /** The share asked up front when an option is approved: of a fixed price, or of an estimate's low end */
 export const DEPOSIT_PERCENT = 50;
+/** The deposit share a new option states unless the proposal says otherwise (service agreement 2.4) */
+export const DEFAULT_DEPOSIT_PERCENT = 30;
 
 type Decision = { id: string; title: string; fields: Record<string, unknown> };
 type Terms = PriceTerms & { title?: string };

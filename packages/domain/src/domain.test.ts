@@ -200,6 +200,7 @@ describe("notification groups", () => {
       "org.created": "updates", "org.stages": "workflow", "project.created": "workflow", "project.moved": "workflow",
       "project.trashed": "workflow", "project.updated": "updates",
       "agreement.signed": "billing", "agreement.choices": "billing", "invoice.issued": "billing", "invoice.voided": "billing", "payment.started": "billing", "payment.received": "billing", "payment.failed": "billing",
+      "invoice.disputed": "billing", "invoice.dispute_resolved": "billing", "invoice.reminded": "billing", "project.handed_over": "billing", "project.waiting": "billing", "project.paused": "billing", "project.ended": "billing",
     };
     for (const kind of Object.keys(KIND_LAYER)) {
       for (const verb of ["created", "updated", "deleted"]) expected[`${kind}.${verb}`] = kind === "option" ? "decisions" : kind === "payment" ? "billing" : "updates";
@@ -214,6 +215,9 @@ describe("notification groups", () => {
     const inverse = { comments: { email: false, sms: false }, updates: { email: true, sms: true } };
     expect(wants(inverse, "comment.created", "email")).toBe(false);
     expect(wants(inverse, "comment.created", "sms")).toBe(false);
+    // The agreement's written notices always go by email, even with billing emails turned off
+    expect(wants({ billing: { email: false, sms: false } }, "project.handed_over", "email")).toBe(true);
+    expect(wants({ billing: { email: false, sms: false } }, "invoice.issued", "email")).toBe(false);
   });
 });
 

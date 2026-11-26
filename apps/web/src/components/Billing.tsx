@@ -4,7 +4,7 @@
 // client and draft, issue, void, credit, and record payment for neon1.
 
 
-import { AGREEMENT_CHOICES, AGREEMENT_EDITION, agreementCovers, type ChoiceValues, InvoiceFields, PaymentFields, SIGN_CONSENT, balanceOf, currentDecision, depositLines, dollars, failedOn, finalLines, reimbursementLines, hoursRange, hoursStanding, hoursText, invoiceState, invoiceTotal, isOwnOrg, lineCents, money, payableOn, paymentPlan, priceMeaning, priceOf, received, signedNameProblem, todayIn, type BasisLine, type InvoiceLine, type InvoiceType, type Item, type PaymentMethod, type PriceTerms, type Project } from "@1neon/domain";
+import { AGREEMENT_CHOICES, AGREEMENT_EDITION, SIGN_AUTHORITY, disputeOpen, agreementCovers, type ChoicePicks, type ChoiceValues, InvoiceFields, PaymentFields, SIGN_CONSENT, balanceOf, currentDecision, depositLines, dollars, failedOn, finalLines, reimbursementLines, hoursRange, hoursStanding, hoursText, invoiceState, invoiceTotal, isOwnOrg, lineCents, money, payableOn, paymentPlan, priceMeaning, priceOf, received, signedNameProblem, todayIn, type BasisLine, type InvoiceLine, type InvoiceType, type Item, type PaymentMethod, type PriceTerms, type Project } from "@1neon/domain";
 import { Trash2 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useHref, useLocation, useSearchParams } from "react-router";
@@ -229,7 +229,7 @@ export function DemoBank({ payment, onDone }: { payment: Item; onDone: () => voi
 /** A signature as the API takes it */
 export type SignValue = { typedName: string; consent: boolean };
 /** The agreement's choices (case studies, client list), every option shown with the same weight */
-export function ChoiceFields({ value, onChange, id }: { value: ChoiceValues; onChange: (v: ChoiceValues) => void; id: string }) {
+export function ChoiceFields({ value, onChange, id }: { value: ChoicePicks; onChange: (v: ChoicePicks) => void; id: string }) {
   return (
     <div className="agree-choices">
       {AGREEMENT_CHOICES.map((c) => (
@@ -237,12 +237,40 @@ export function ChoiceFields({ value, onChange, id }: { value: ChoiceValues; onC
           <legend>{c.question}</legend>
           {c.options.map((o) => (
             <label key={o.value} className="agree-opt">
-              <input type="radio" name={`${id}-${c.id}`} value={o.value} checked={value[c.id] === o.value} onChange={() => onChange({ ...value, [c.id]: o.value } as ChoiceValues)} />
+              <input type="radio" name={`${id}-${c.id}`} value={o.value} checked={value[c.id] === o.value} required onChange={() => onChange({ ...value, [c.id]: o.value })} />
               <span><b>{o.label}</b>{o.hint && <span className="muted">. {o.hint}</span>}</span>
             </label>
           ))}
         </fieldset>
       ))}
+    </div>
+  );
+}
+
+
+/** What signing the agreement records besides the signature: the organization's legal name and
+ * mailing address, the signer's authority, and both choices, none preselected */
+export type AgreeValue = { picks: ChoicePicks; legalName: string; address: string; authority: boolean };
+export const emptyAgree = (orgName = ""): AgreeValue => ({ picks: {}, legalName: orgName, address: "", authority: false });
+/** Every part filled in: both choices picked, a legal name, an address, and authority confirmed */
+export const agreeReady = (v: AgreeValue) => Boolean(v.picks.caseStudies && v.picks.naming) && v.legalName.trim().length >= 2 && v.address.trim().length >= 10 && v.authority;
+/** The body fields the sign route takes, from a ready value */
+export const agreeBody = (v: AgreeValue) => ({ choices: v.picks as ChoiceValues, legalName: v.legalName.trim(), address: v.address.trim(), authority: v.authority });
+
+/** The organization's legal name and address, the two choices, and the authority box */
+export function AgreeFields({ value, onChange, id }: { value: AgreeValue; onChange: (v: AgreeValue) => void; id: string }) {
+  return (
+    <div className="agree-fields">
+      <div className="agree-party">
+        <label htmlFor={`${id}-legal`}>Organization's legal name</label>
+        <input id={`${id}-legal`} value={value.legalName} onChange={(e) => onChange({ ...value, legalName: e.target.value })} maxLength={120} autoComplete="organization" required />
+        <label htmlFor={`${id}-address`}>Mailing address</label>
+        <textarea id={`${id}-address`} rows={2} value={value.address} onChange={(e) => onChange({ ...value, address: e.target.value })} maxLength={300} autoComplete="street-address" required />
+      </div>
+      <ChoiceFields id={`${id}-choice`} value={value.picks} onChange={(picks) => onChange({ ...value, picks })} />
+      <label className="sign-consent">
+        <input type="checkbox" checked={value.authority} onChange={(e) => onChange({ ...value, authority: e.target.checked })} required /> {SIGN_AUTHORITY}
+      </label>
     </div>
   );
 }
@@ -508,7 +536,7 @@ export function Invoices({ items, path, project }: { items: Item[]; path: string
               <div className="invoice-head">
                 <Link className="title" to={`/o/${org.slug}/projects/${project.key}/invoices/${inv.id}`} {...NEW_TAB}>{f.number ?? `${TYPE_WORDS[f.type]} draft`}</Link>
                 <span className="tag">{TYPE_WORDS[f.type]}</span>
-                <span className={`tag${state === "overdue" ? " warn" : state === "paid" ? " client" : ""}`}>{STATE_WORDS[state]}</span>
+                <span className={`tag${state === "overdue" ? " warn" : state === "paid" ? " client" : ""}`}>{STATE_WORDS[state]}</span>{disputeOpen(inv) && <span className="tag warn">disputed</span>}
               </div>
               <div className="purchase-meta">
                 <span>{money(invoiceTotal(f))}</span>

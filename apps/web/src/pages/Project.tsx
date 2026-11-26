@@ -2,7 +2,7 @@
 // Execute, Observe, Normalize).
 
 
-import { STARTING_CHOICES, type ChoiceValues, isQuickFix, QUICK_FIX_HOURS, QUICK_FIX_MAX_HOURS, quoteFields, priceLine, type QuoteInput, balanceOf, billedOn, depositLines, hoursLogged, hoursText, lineage, lineCents, dollars as wholeDollars, failedOn, invoiceState, InvoiceFields, money as dollars, payableOn, paymentPlan, priceMeaning, priceOf, betterWhen, canApprove, changedSince, currentDecision, todayIn, isClosed, isOwnOrg, KIND_LAYER, metricProgress, MetricFields, OptionFields, priceCheckDue, ProjectRole, proposalRef, PurchaseFields, HandoffFields, optionHistory, revisions, type DocumentRecord, type Item, type ItemKind, type Layer, type Project, type Stage } from "@1neon/domain";
+import { isQuickFix, QUICK_FIX_HOURS, QUICK_FIX_MAX_HOURS, quoteFields, priceLine, type QuoteInput, balanceOf, billedOn, depositLines, hoursLogged, hoursText, lineage, lineCents, dollars as wholeDollars, failedOn, invoiceState, InvoiceFields, money as dollars, payableOn, paymentPlan, priceMeaning, priceOf, betterWhen, canApprove, changedSince, currentDecision, todayIn, isClosed, isOwnOrg, KIND_LAYER, metricProgress, MetricFields, OptionFields, priceCheckDue, ProjectRole, proposalRef, PurchaseFields, HandoffFields, optionHistory, revisions, type DocumentRecord, type Item, type ItemKind, type Layer, type Project, type Stage } from "@1neon/domain";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, ExternalLink, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
@@ -17,9 +17,10 @@ import { Readiness } from "../components/Readiness.tsx";
 import { useOrg, useSession, useTopBar } from "../components/Shell.tsx";
 import { Avatar, ConflictDialog, Dialog, Empty, Health, HEALTH_LABEL, Standing, LayerBadge, LAYERS, layerHint, layerName, layerProgress, OnionProgress, Trend, ago, dateLabel, daysSince, inStageFor, layerFromSlug, layerSlug, useAsk, useToast } from "../components/ui.tsx";
 import { api, BASE_PATH, DEMO, HttpError, NEW_TAB } from "../lib/api.ts";
-import { AgreementNeeded, ChoiceFields, QuoteFields, quoteInput, type QuoteValue, Hours, Invoices, PriceBasis, SignBox, signReady, useAgreementSigned, type Priced, type SignValue } from "../components/Billing.tsx";
+import { AgreementNeeded, AgreeFields, agreeBody, agreeReady, emptyAgree, type AgreeValue, QuoteFields, quoteInput, type QuoteValue, Hours, Invoices, PriceBasis, SignBox, signReady, useAgreementSigned, type Priced, type SignValue } from "../components/Billing.tsx";
 import { firstYear, money, parseCost, type Recurring } from "../lib/cost.ts";
 import { handoverSummary } from "../lib/handover.ts";
+import { ContractStates } from "../components/Contract.tsx";
 import { numberProblem, optionalNumber } from "../lib/measures.ts";
 import { problem, useMembers, useProject, useProjects, useRefresh, useSubmit } from "../lib/hooks.ts";
 import { aimBetween, canSlide, lessMotion } from "../lib/motion.ts";
@@ -790,6 +791,7 @@ function LayerTab({ layer, project, items, docs, edits }: { layer: Layer; projec
       {/* Execute ends with the money: hours logged against an estimate, then the project's invoices
           (Pay for the client, drafts and payments for neon1) */}
       {/* A new account has no hours or invoices: those open once neon1 and it are working together */}
+      {(layer === "execution" || layer === "next") && !prospect && <ContractStates project={project} items={items} path={path} />}
       {layer === "execution" && !prospect && <Hours items={items} path={path} />}
       {layer === "execution" && !prospect && <Invoices items={items} path={path} project={project} />}
       {/* Every file filed under this layer of the project; anyone in the organization can add one */}
@@ -1202,7 +1204,7 @@ function Options({ items, all, docs, path, project }: { items: Item[]; all: Item
   // the agreement (the API says so too); anyone else keeps the usual link to read it
   const oneScreen = isQuickFix(project) && !signed && !me.operator && access === "admin";
   const [agreeRead, setAgreeRead] = useState(false);
-  const [choices, setChoices] = useState<ChoiceValues>(STARTING_CHOICES);
+  const [agree, setAgree] = useState<AgreeValue>(() => emptyAgree(org.name));
   // Why the agreement step failed, shown in the dialog (nothing is approved when it fails)
   const [agreeError, setAgreeError] = useState<string>();
   const agreement = useQuery({ queryKey: ["agreement", org.id], enabled: oneScreen && !currentDecision(all).decision, queryFn: () => api<{ edition: string; hash: string }>(`/t/${org.id}/agreement`) });
@@ -1262,7 +1264,7 @@ function Options({ items, all, docs, path, project }: { items: Item[]; all: Item
     // that fails, nothing is approved and the dialog stays open with the reason
     if (oneScreen && agreement.data) {
       try {
-        await api(`/t/${org.id}/agreement/sign`, { method: "POST", body: { edition: agreement.data.edition, hash: agreement.data.hash, typedName: sign.typedName.trim(), consent: agreeRead, choices } });
+        await api(`/t/${org.id}/agreement/sign`, { method: "POST", body: { edition: agreement.data.edition, hash: agreement.data.hash, typedName: sign.typedName.trim(), consent: agreeRead, ...agreeBody(agree) } });
         setAgreeError(undefined);
         // The organization's record carries the signature, which the approval checks
         await qc.invalidateQueries({ queryKey: ["org", org.id] });
@@ -1437,11 +1439,12 @@ function Options({ items, all, docs, path, project }: { items: Item[]; all: Item
             <p className="small" style={{ margin: "0 0 6px" }}>You sign it once for {org.name}, and it covers every project. In short:</p>
             <ul className="small" style={{ margin: "0 0 6px", paddingLeft: 18 }}>
               <li>Each approved quote fixes the scope and price of that work.</li>
-              <li>Invoices are due in 15 days, and what neon1 makes for you is yours once you've paid.</li>
+              <li>Invoices are due in 15 days. Paying doesn't depend on, or count as, accepting the work, and what neon1 makes for you is yours once you've paid.</li>
+              <li>You review the work within 10 business days of handover, and silence never counts as acceptance.</li>
               <li>Either of us can end the agreement with 14 days' written notice.</li>
             </ul>
             <p className="small" style={{ margin: "0 0 6px" }}><a href={`${BASE_PATH}/o/${org.slug}/agreement`} target="_blank" rel="noopener noreferrer">Read the full agreement (opens in a new tab)</a></p>
-            <ChoiceFields id="approve-choice" value={choices} onChange={setChoices} />
+            <AgreeFields id="approve-agree" value={agree} onChange={setAgree} />
             <label className="sign-consent">
               <input type="checkbox" checked={agreeRead} onChange={(e) => setAgreeRead(e.target.checked)} /> I have read neon1's service agreement{agreement.data ? `, edition ${agreement.data.edition},` : ""} and agree to it for {org.name}.
             </label>
@@ -1451,7 +1454,7 @@ function Options({ items, all, docs, path, project }: { items: Item[]; all: Item
         {signed || oneScreen ? <SignBox id="approve-sign" value={sign} onChange={setSign} /> : <AgreementNeeded />}
         <p className="small muted">{inForce ? "Signing replaces the decision in force with this option's scope and price under your service agreement. 1NEON keeps both decisions, your reason, and your signature. None of it can be edited afterwards." : `Signing approves ${quick ? "this quote's" : "this option's"} scope and price under your service agreement. 1NEON keeps a copy of these terms with your signature, who signed and when. None of it can be edited afterwards.`} Invoices follow as the {word.toLowerCase()} says.</p>
         <div className="actions">
-          <button className="btn btn-primary" disabled={(!signed && !(oneScreen && agreeRead && agreement.data)) || !signReady(sign) || (Boolean(inForce) && reason.trim().length < 3)} onClick={() => void approve()}>{inForce ? `Sign and change to ${aCode ?? ""}` : quick ? (oneScreen ? "Sign both and approve the quote" : "Sign and approve the quote") : `Sign and approve ${aCode ?? ""}`}</button>
+          <button className="btn btn-primary" disabled={(!signed && !(oneScreen && agreeRead && agreeReady(agree) && agreement.data)) || !signReady(sign) || (Boolean(inForce) && reason.trim().length < 3)} onClick={() => void approve()}>{inForce ? `Sign and change to ${aCode ?? ""}` : quick ? (oneScreen ? "Sign both and approve the quote" : "Sign and approve the quote") : `Sign and approve ${aCode ?? ""}`}</button>
           <button className="btn btn-ghost" onClick={() => setApproving(undefined)}>Cancel</button>
         </div>
       </Dialog>
@@ -1734,7 +1737,7 @@ function AcceptHandover({ steps, measures, path, project }: { steps: Item[]; mea
   return (
     <div className="handover-all card">
       {quick
-        ? <p style={{ margin: 0 }}><b>neon1 says it's fixed.</b> Check that it works, then accept it with one signature, and neon1 prepares the invoice.</p>
+        ? <p style={{ margin: 0 }}><b>neon1 says it's fixed.</b> Check that it works, then accept it with one signature.</p>
         : <p style={{ margin: 0 }}><b>Every step is done.</b> Accept the handover with one signature: it signs for {waiting.length === steps.length ? (steps.length === 1 ? "the one step" : `all ${steps.length} steps`) : `the ${waiting.length} ${waiting.length === 1 ? "step" : "steps"} not yet accepted`}, and neon1 prepares the final invoice.</p>}
       {open ? (
         <form className="accept-form" onSubmit={(e) => { e.preventDefault(); if (signReady(sign) && !busy) void accept(); }}>

@@ -1,12 +1,12 @@
 # Cookies and browser storage
 
-*Last updated November 20, 2026.* Scroll positions are now kept per page in a tab's history, and the older per-section record is removed. Matrix or Sentinel and light or dark mode are saved separately and shared with neon1.tech. There is no new tracking.
+*Last updated November 25, 2026.* Matrix or Sentinel and light or dark mode are saved separately, shared with neon1.tech. Older theme preferences remain readable during migration. There is no new tracking.
 
-This notice is part of the [privacy and data policy](https://neon1.tech/1NEON/privacy) and lists, in detail, every cookie and item neon1 saves in your browser. Neither neon1.tech nor the 1NEON portal uses analytics, advertising, or tracking of any kind.
+This notice is part of the [privacy and data policy](https://neon1.tech/1NEON/privacy) and lists every cookie and item neon1 saves in your browser. Neither neon1.tech nor the 1NEON portal uses analytics, advertising, or tracking of any kind.
 
 ## neon1.tech
 
-The website sets no cookies. Your browser keeps preferences on your device only. The shared theme and mode choices are listed below with the portal storage:
+The website sets no cookies. Your browser keeps preferences on your device only. The shared theme and mode choices are listed with the portal storage below.
 
 | Saved item | What it's for | How long it lasts |
 |---|---|---|
@@ -28,7 +28,7 @@ The portal uses only the cookies it needs to sign you in and keep you signed in:
 | `__Secure-1neon_flow` | Protects sign-in with Google, which is turned off today, so it isn't set | 10 minutes |
 | Sign-in service cookies on auth.neon1.tech | Protect the sign-in step (Amazon Cognito) | Your sign-in session |
 
-These cookies are strictly necessary, can only be read by the portal's own server, are never used for advertising or analytics, and are never shared. Because of that, the portal doesn't show a cookie consent banner. If you block them, you won't be able to sign in.
+These cookies are strictly necessary, can only be read by the portal's own server, and are never used for advertising or analytics or shared, so the portal shows no cookie consent banner. If you block them, you can't sign in.
 
 The portal also saves, on your device only:
 
@@ -37,25 +37,24 @@ The portal also saves, on your device only:
 | `1neon.last` (local storage) | Whether you were last signed in, so a reload starts on the right background | Until you clear it |
 | `1neon.email` (local storage) | With Remember me ticked, the email you signed in with, so it's filled in next time. Unticked, it's cleared | Until you sign in with Remember me unticked, or clear it |
 | `1neon.lastOrg` (local storage) | The organization you last had open, so pages outside one (your profile, the FAQs) keep its menu | Until you clear it |
-| `1neon.chat.draft.<organization>` (local storage) | A chat message you've typed and not sent, kept on this device so closing the page loses nothing | Until you send it or clear it |
 | `1neon.signup` (local storage) | Whether free-account sign-up was open when you last opened sign-in, so the page shows the right wording at once | Until you clear it |
-| `neon1.theme` and `neon1.theme.business` (local storage) | Older theme choices, read only to migrate to the shared mode | Until you clear them |
+| `neon1.theme` and `neon1.theme.business` (local storage) | Older theme choices, read only to migrate | Until you clear them |
 | `neon1.style` (local storage) | Matrix or Sentinel, shared with neon1.tech | Until you clear it |
 | `neon1.mode` (local storage) | Light or dark mode, kept when switching themes and shared with neon1.tech | Until you clear it |
 | `1neon.motion` (local storage) | That you chose **Reduced** motion on your profile, which turns 1NEON's animations off in this browser | Until you choose **Smooth** again, or clear it |
 | `1neon.face-ask.` and an organization's ID (local storage) | Admins only: that you chose **Not now** when Home asked where to see your business, so it stops asking in this browser | Until you clear it |
 | `1neon.signin` (session storage) | Your email and the sign-in step in progress, so a reload mid sign-in returns to the code step. The code itself is never saved | 5 minutes, or until the tab closes |
-| `neon1.rain` (local storage) | The same rain settings as the website, on the sign-in screen | Until you clear it |
 | `1neon.projects.view`, `1neon.projects.view.sort` (local storage) | Whether you last looked at projects as a list or a timeline, and how you sorted them | Until you clear it |
 | `1neon.tour-offered` (session storage) | That the welcome tour was already offered, so it isn't offered again in this tab | Until the tab closes |
-| `1neon.peeked` (session storage) | That the chat launcher already showed its label once, so it isn't shown again in this tab | Until the tab closes |
 | `1neon.entries` (session storage) | How far down you had scrolled on each page in this tab's history, so Back, Forward, and reload land where you were | Until the tab closes, or you sign out |
 | `1neon.scroll` (session storage) | The older scroll record, kept per section; removed the next time the portal opens | Until then |
+| `1neon.chat.draft.` and an organization's ID (local storage) | A chat message you've typed and not sent, so closing the page loses nothing | Until you send it or clear it |
+| `1neon.peeked` (session storage) | That the chat button already showed its label once in this tab | Until the tab closes |
 | `1neon-export` (the browser's private file storage) | Admins only: the zip from **Download everything** while it's built, so a large export doesn't fill memory. Never sent anywhere; your browser copies it to your downloads | 30 minutes after it's saved; if you close the tab sooner, the next time you open Settings or start an export |
 
-Your other preferences, such as your theme, are saved with your account.
+Your other preferences are saved with your account.
 
-The interactive demo (neon1.tech/1NEON/demo) and the guided walkthrough (neon1.tech/1NEON/live) run entirely in your browser. Once their pages and files have loaded from neon1.tech, which is how any page reaches you, they make no further calls: nothing you do in them is sent to me or to anyone else, and they use no analytics, fonts, or media from other sites. The interactive demo keeps your changes where your browser allows it; if it doesn't, the demo still works and lasts until you close or reload the tab. The guided walkthrough starts from fresh fictional data on every load and never saves its data.
+The interactive demo (neon1.tech/1NEON/demo) and the guided walkthrough (neon1.tech/1NEON/live) run entirely in your browser. Once their pages and files have loaded from neon1.tech, they make no further calls: nothing you do in them is sent to me or to anyone else, and they use no analytics, fonts, or media from other sites. The interactive demo keeps your changes where your browser allows, and otherwise lasts until you close or reload the tab. The guided walkthrough starts from fresh fictional data on every load and never saves its data.
 
 | Saved item | What it's for | How long it lasts |
 |---|---|---|
@@ -66,4 +65,4 @@ The interactive demo (neon1.tech/1NEON/demo) and the guided walkthrough (neon1.t
 | `1neon.liveFrom` (session storage) | Guided walkthrough: the page and answer you opened it from, so Exit takes you back there | Until the tab closes |
 | `1neon.liveSpeed` (local storage) | The walkthrough speed you picked | Until you clear it |
 
-If I ever add optional cookies or storage, such as analytics, I'll update this notice and ask for your consent first.
+If I add optional cookies or storage, such as analytics, I'll update this notice and ask for your consent first.

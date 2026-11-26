@@ -71,7 +71,9 @@ describe("a proposal waiting on a choice", () => {
   it("also waits on the agreement signature until one covers the work", () => {
     const choice = [{ key: "choose:r", kind: "choose" as const, title: "Choose", since: "2027-03-01T00:00:00Z" }];
     expect(signatureDecision({ agreements: [] }, choice)?.kind).toBe("sign");
-    expect(signatureDecision({ agreements: [{ ref: "2.3" }] as never }, choice)).toBeUndefined();
+    expect(signatureDecision({ agreements: [{ ref: "2.4" }] as never }, choice)).toBeUndefined();
+    // An earlier edition doesn't cover new approvals, so its organization is asked to sign 2.4
+    expect(signatureDecision({ agreements: [{ ref: "2.3" }] as never }, choice)?.kind).toBe("sign");
   });
 });
 

@@ -11,7 +11,7 @@ import { DESCRIBES, type Describes } from "./forms.ts";
 
 /** The portal terms edition shown at sign-up and recorded with it: the terms' "Last updated" date.
  * Change it whenever the terms in apps/web/src/legal change */
-export const PORTAL_TERMS_EDITION = "2026-11-15";
+export const PORTAL_TERMS_EDITION = "2026-11-26";
 
 
 /** "How did you find us?" on the sign-up form: optional, one answer. Ordered by where people most

@@ -2,7 +2,7 @@
 // body parsing, permission checks, and small pure helpers.
 
 
-import { KIND_LAYER, alignPrice, can, itemFields, type AccessLevel, type Action, type Actor, type Item, type Tenant, type User } from "@1neon/domain";
+import { DEFAULT_DEPOSIT_PERCENT, KIND_LAYER, alignPrice, can, itemFields, type AccessLevel, type Action, type Actor, type Item, type Tenant, type User } from "@1neon/domain";
 import type { Context } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
@@ -73,12 +73,19 @@ export const actorId = (c: Context<Env>) => who(c).user.id;
 // --- Pure helpers --------------------------------------------------------------
 
 /** Validate kind-specific fields; kinds without a schema keep free-form fields */
-export function validateFields(kind: Item["kind"], fields: Record<string, unknown>) {
+export function validateFields(kind: Item["kind"], fields: Record<string, unknown>, stampDeposit = true) {
   const schema = itemFields[kind];
   if (!schema) return fields;
   const r = schema.safeParse(fields);
   if (!r.success) fail(400, "invalid", r.error.issues.map((i) => `fields.${i.path.join(".")}: ${i.message}`).join("; "));
   // An estimate's written cost and hours always follow its numbers, however the form was filled in
+  // A new option states its deposit share, so a later change to the default never changes it; so does
+  // one whose share is edited (blank means the default). An older option edited otherwise keeps the
+  // earlier default (DEPOSIT_PERCENT) it was issued with
+  if (kind === "option" && stampDeposit) {
+    const f = r.data as Record<string, unknown>;
+    return alignPrice({ ...f, depositPercent: typeof f.depositPercent === "number" ? f.depositPercent : DEFAULT_DEPOSIT_PERCENT }) as Record<string, unknown>;
+  }
   return (kind === "option" ? alignPrice(r.data as Record<string, unknown>) : r.data) as Record<string, unknown>;
 }
 
