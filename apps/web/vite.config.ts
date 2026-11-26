@@ -19,7 +19,7 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      "/1NEON/api": "http://localhost:8787",
+      "/1NEON/api": `http://localhost:${process.env.API_PORT ?? 8787}`,
       "/shared": { target: site, changeOrigin: true },
       "/fonts": { target: site, changeOrigin: true },
       "/chat/api": { target: site, changeOrigin: true },

@@ -11,6 +11,8 @@
 - A client can dispute part of an issued invoice, with the amount and why. neon1 answers on the invoice, and the undisputed amount stays due on its date.
 - One reminder the business day after an invoice is due, when an undisputed amount is still owed.
 - New project templates for Custom software (APP) and Modernization (MOD).
+- Home is a grid of cards you can arrange. View, beside the greeting, shows or hides any card and counts what hidden cards hold: red for things that need action, plain for suggestions. Arrange moves cards by their grip and resizes them from the corner, settling on each card's preset sizes, with the cells it will take highlighted. A card shows more as it grows. The layout is saved to your profile, for each organization, wide and on a phone.
+- New Home cards: Overdue and blocked, Projects by layer, and Shortcuts.
 
 ### Changed
 - New project lists templates from lightest to most involved, five across on a desktop. Each card shows how involved it is in four boxes and the path it follows: Needs, Execute, Observe, Normalize, or for a quick fix Quote, Fix, Accept.
@@ -23,6 +25,7 @@
 - The privacy policy and terms describe the chat with neon1, and the legal pages show when they were last updated.
 
 ### Fixed
+- Home's cards keep their padding below the last line, and "Not now" on the business question can be undone from View.
 - Booking links go to calendly.com/book-neon1/initial. The old link stopped working.
 - neon1's own person, added to an organization automatically, shows a name instead of "No name yet".
 

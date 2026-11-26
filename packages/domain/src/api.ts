@@ -4,7 +4,7 @@
 import { NotifyPrefs } from "./notify.ts";
 import { InvoiceLine, InvoiceType, PaymentMethod, SignInput } from "./billing.ts";
 import { z } from "zod";
-import { AccessLevel, CalEventKind, CalRepeat, Health, ItemKind, Layer, Pricing, ProjectRole, Theme, Tour, email, id, ChoiceFields, Quote } from "./model.ts";
+import { AccessLevel, CalEventKind, CalRepeat, Health, HomeLayouts, ItemKind, Layer, Pricing, ProjectRole, Theme, Tour, email, id, ChoiceFields, Quote } from "./model.ts";
 import { QUICK_FIX_MAX_HOURS } from "./defaults.ts";
 import { isTimeZone } from "./timing.ts";
 
@@ -269,6 +269,8 @@ export const UpdateMeInput = z.object({
   menu: z.enum(["default", "mini"]).optional(),
   tour: Tour.optional(),
   guide: z.enum(["shown", "hidden"]).optional(),
+  // Home's layout for every organization, sent whole
+  home: HomeLayouts.optional(),
   notify: NotifyPrefs.optional(),
   // Yes or no to texts; the API records when
   smsConsent: z.boolean().optional(),

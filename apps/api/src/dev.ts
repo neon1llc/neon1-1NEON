@@ -24,4 +24,4 @@ const texter = new (class extends MemoryTexter {
 })();
 await seed(repo);
 const app = createApp({ cfg, repo, directory: new MemoryDirectory(), mailer, texter, storage: new MemoryStorage() });
-serve({ fetch: app.fetch, port: 8787 }, (i) => console.log(`1NEON API (memory) on http://localhost:${i.port}/1NEON/api`));
+serve({ fetch: app.fetch, port: Number(process.env.PORT ?? 8787) }, (i) => console.log(`1NEON API (memory) on http://localhost:${i.port}/1NEON/api`));

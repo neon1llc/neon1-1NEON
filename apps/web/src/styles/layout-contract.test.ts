@@ -37,16 +37,16 @@ describe("page content", () => {
   });
 });
 
-describe("a free account's Home", () => {
-  it("lays its cards out in the two Home columns, not in a grid of its own keyed to the expiry card", () => {
+describe("Home's card grid", () => {
+  it("lays every card on one 12-column grid (4 on a phone), not in columns keyed to one card", () => {
     // A rule on whatever contains `.keep-card` once squeezed that card into a fifth of its column
     expect(css).not.toMatch(/:has\(> \.keep-card\)/);
-    expect(css).toMatch(/\.home \{ display: grid; grid-template-columns: minmax\(0, 3fr\) minmax\(0, 2fr\);/);
-    expect(css).toMatch(/\.home-side \{ display: grid; gap: var\(--sp-4\); \}/);
+    expect(css).toMatch(/\.hg \{ --row: 24px;[^}]*grid-template-columns: repeat\(12, minmax\(0, 1fr\)\);/);
+    expect(css).toMatch(/\.hg\[data-bp="narrow"\] \{ grid-template-columns: repeat\(4, minmax\(0, 1fr\)\);/);
   });
-  it("leaves no other margin between the cards for the column's own 16px gap to add to", () => {
+  it("leaves the spacing between cards to the grid's gap", () => {
     expect(css).not.toMatch(/\.next-step-ask\) \+ \.card/);
-    expect(css).toMatch(/\.home-main \{ display: grid; gap: var\(--sp-4\);/);
+    expect(css).toMatch(/\.tile-body > :is\(section, nav, \.card\) \{ margin: 0;/);
   });
 });
 

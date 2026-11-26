@@ -39,6 +39,8 @@ export function OwnLinks({ linkedin, businessLinkedin, website }: { linkedin?: s
 // Home's ask stays put away once an admin says "Not now", per organization, in this browser
 const askKey = (orgId: string) => `1neon.face-ask.${orgId}`;
 export const faceAskDismissed = (orgId: string) => prefs.get(askKey(orgId)) === "no";
+/** Put the ask away, or bring it back (Home's View menu) */
+export const setFaceAsk = (orgId: string, shown: boolean) => prefs.set(askKey(orgId), shown ? "" : "no");
 
 
 /** An admin's form for the place and link. `ask` is Home's version, with the reason it's asked */
