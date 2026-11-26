@@ -95,3 +95,30 @@ export function reconcile(saved: Cell[] | undefined, cards: { id: string; w: num
   const fresh = cards.filter((c) => !kept.some((k) => k.id === c.id));
   return compact(flow(fresh, cols, compact(kept)));
 }
+
+/** A free size while resizing: whole cells within the grid, pulled onto a preset when within about a
+ * cell of one (a magnet, so presets are easy to hit). `preset` names it when it lands on one */
+export function resizeTo(w: number, h: number, sizes: Size[], cols: number): { w: number; h: number; preset?: string } {
+  const min = sizes.reduce((m, s) => ({ w: Math.min(m.w, s.w), h: Math.min(m.h, s.h) }), { w: Infinity, h: Infinity });
+  const fw = Math.max(Math.min(min.w, 2), Math.min(cols, Math.round(w)));
+  const fh = Math.max(Math.min(min.h, 2), Math.round(h));
+  const near = sizes.find((s) => Math.abs(s.w - w) <= 0.75 && Math.abs(s.h - h) <= 1.5);
+  return near ? { w: near.w, h: near.h, preset: near.key } : { w: fw, h: fh };
+}
+
+/** The preset whose layout a size shows. Width decides it (how much fits on a line): the widest preset
+ * that fits; among presets that wide, the tallest that fits, else the shortest. Height alone never drops a
+ * card to a smaller layout, so a card fitted to its content keeps the layout it was given */
+export function viewFor(c: Pick<Cell, "w" | "h">, sizes: Size[]): string {
+  const byW = [...sizes].sort((a, b) => a.w - b.w);
+  const w = [...byW].reverse().find((s) => s.w <= c.w)?.w ?? byW[0]!.w;
+  const same = sizes.filter((s) => s.w === w).sort((a, b) => a.h - b.h);
+  return ([...same].reverse().find((s) => s.h <= c.h) ?? same[0]!).key;
+}
+
+/** Tidy up: the same cards and sizes, repacked in priority order (urgent first, then by size) with no gaps */
+export function tidy(cells: Cell[], rank: (id: string) => number, cols: number): Cell[] {
+  const order = [...cells].sort((a, b) => rank(a.id) - rank(b.id) || b.w * b.h - a.w * a.h);
+  const out = flow(order.map((c) => ({ id: c.id, w: c.w, h: c.h })), cols);
+  return compact(out);
+}

@@ -8,7 +8,7 @@
 import { GuideCard, KeepCard, NextStep, ProspectNote } from "../components/Prospect.tsx";
 import { KIND_LAYER, Layer, type ItemKind } from "@1neon/domain";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, CircleCheck, FilePlus2, FileUp, FolderPlus, ListTodo, MessageSquare, PenLine, Receipt, UserPlus } from "lucide-react";
+import { ChartColumn, Check, CircleCheck, CircleHelp, FilePlus2, FileUp, Folder, FolderPlus, Kanban, ListTodo, MessageSquare, PenLine, Receipt, SlidersHorizontal, UserPlus } from "lucide-react";
 import { Link, useLocation, useSearchParams } from "react-router";
 import { LinksCard, wantsLinks } from "../components/LinksCard.tsx";
 import { ComingUp } from "../components/ComingUp.tsx";
@@ -22,12 +22,12 @@ import { api } from "../lib/api.ts";
 import { problem, qk } from "../lib/hooks.ts";
 import { noun } from "../lib/plural.ts";
 import { failureOf, hidesData, read } from "../lib/reads.ts";
-import type { Me, Workspace } from "../lib/types.ts";
+import type { CalendarMonth, Me, Workspace } from "../lib/types.ts";
 import { FaceForm, faceAskDismissed, setFaceAsk } from "../components/OrgFace.tsx";
-import { HomeGrid, type Tile } from "../components/HomeGrid.tsx";
+import { HomeGrid, type Counts, type Tile } from "../components/HomeGrid.tsx";
 import { HomeViews, type Group, type ViewRow } from "../components/HomeViews.tsx";
 import { useHomeLayout } from "../lib/homeLayout.ts";
-import { compact, reconcile, sizeAt, COLS, type Breakpoint, type Size } from "../lib/homeGrid.ts";
+import { compact, reconcile, sizeAt, tidy, COLS, type Breakpoint, type Size } from "../lib/homeGrid.ts";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
 
@@ -42,17 +42,19 @@ const ACTION = {
 } as const;
 
 // Preset sizes on the wide grid (12 columns, rows of 24px). Heights are written in steps of 40px rows and
-// scaled to the 24px grid: S small, M medium, T tall,
-// L large, W wide, B a bar across the page. The first is the card's default
+// scaled to the 24px grid: S small, M medium, T tall, L large, W wide, B a bar across the page. Each card
+// has three or four, each with its own layout (more detail as it grows, the vital part as it shrinks);
+// the first is the card's default
 const sz = (key: string, w: number, h: number): Size => ({ key, w, h: Math.round(h * 1.4) });
+const none: Counts = { urgent: 0, suggested: 0, general: 0 };
+const cnt = (urgent = 0, suggested = 0, general = 0): Counts => ({ urgent, suggested, general });
+const RANK: Record<Group, number> = { urgent: 0, suggested: 1, general: 2 };
 type Keep = { free: boolean; held?: boolean; deleteOn?: string };
 
 /** One card Home can show: what it is, where it groups in the View menu, what a hidden one holds */
 interface Card extends Tile {
   group: Group;
   when: boolean;
-  critical?: number;
-  suggested?: number;
   // A card put away somewhere of its own (the profile, or this browser) says whether it shows and how to toggle
   shown?: boolean;
   toggle?: (show: boolean) => void;
@@ -75,7 +77,9 @@ export function WorkspacePage() {
   // Counts, waiting items, and activity in one call, refreshed every 30 seconds
   const ws = useQuery({ queryKey: [...qk.workspace(org.id), showAll ? "all" : "preview"], queryFn: () => read<Workspace>(`/t/${org.id}/workspace${showAll ? "?waiting=all" : ""}`, { counts: "object", waiting: "array", activity: "array" }), refetchInterval: 30_000 });
   // The same reads Next step and the account card make (shared cache), so Home knows whether they have anything to show
-  const asked = useQuery({ queryKey: ["requests", org.id], queryFn: () => read<{ projects: { decided?: boolean }[]; assessment?: { sentAt?: string } }>(`/t/${org.id}/requests`, { projects: "array" }), enabled: canWrite && !me.operator });
+  const asked = useQuery({ queryKey: ["requests", org.id], queryFn: () => read<{ projects: { decided?: boolean; outline?: { missing: unknown[] } }[]; assessment?: { sentAt?: string } }>(`/t/${org.id}/requests`, { projects: "array" }), enabled: canWrite && !me.operator });
+  // The calendar's month in view, shared with Coming up, for what's overdue and due this week
+  const cal = useQuery({ queryKey: ["calendar", org.id, "now"], queryFn: () => read<CalendarMonth>(`/t/${org.id}/calendar`, { today: "string", entries: "array" }), refetchInterval: 60_000 });
   const keep = useQuery({ queryKey: ["keep", org.id], queryFn: () => read<Keep>(`/t/${org.id}/keep`, {}), enabled: prospect && !me.operator });
   useTopBar(<span>{org.name}</span>, [org.name]);
   const c = ws.data?.counts;
@@ -114,6 +118,17 @@ export function WorkspacePage() {
   const blocked = ws.isError && (!ws.data || hidesData(failureOf(ws.error)));
   const nextList = (asked.data?.projects ?? []).filter((p) => !p.decided);
   const k = keep.data;
+  // This week on the calendar: work that's mine and open is a suggestion, events and targets are to know
+  const today = cal.data?.today ?? new Date().toISOString().slice(0, 10);
+  const weekEnd = new Date(Date.parse(today + "T12:00:00Z") + 7 * 86_400_000).toISOString().slice(0, 10);
+  const week = (cal.data?.entries ?? []).filter((e) => !e.done && e.date >= today && e.date <= weekEnd);
+  const calOverdue = Math.max(cal.data?.overdue?.length ?? 0, (cal.data?.entries ?? []).filter((e) => e.overdue && !e.done).length);
+  const calCounts = cnt(calOverdue, week.filter((e) => e.source === "work" && e.mine).length, week.filter((e) => e.source !== "work").length);
+  const waiting = ws.data?.waiting ?? [];
+  const pressing = waiting.filter((w) => w.overdue || w.failed).length;
+  const outlineTips = nextList.filter((p) => (p.outline?.missing.length ?? 0) > 0).length;
+  const health = (h: string) => glance.filter((g) => !g.closed && g.health === h).length;
+  const recentActs = (ws.data?.activity ?? []).filter((a) => Date.now() - Date.parse(a.at) < 86_400_000).length;
   const daysLeft = k?.deleteOn ? Math.ceil((Date.parse(k.deleteOn) - Date.now()) / 86_400_000) : undefined;
 
   // A profile flag the View menu flips (the guide and the links card are put away on the profile)
@@ -129,41 +144,44 @@ export function WorkspacePage() {
 
   // Every card this person could have here, in default reading order
   const cards: Card[] = [
-    { id: "next", title: "Next step", group: "attention", when: canWrite && !me.operator && (prospect || nextList.length > 0 || Boolean(asked.data?.assessment)), suggested: asked.data?.assessment ? 0 : 1,
+    { id: "next", title: "Next step", group: "suggested", when: canWrite && !me.operator && (prospect || nextList.length > 0 || Boolean(asked.data?.assessment)),
+      counts: cnt(0, nextList.length ? outlineTips : 1, asked.data?.assessment ? 1 : 0),
       sizes: [sz("L", 6, 11), sz("M", 6, 8), sz("W", 12, 8)], body: () => <NextStep orgId={org.id} slug={summary.slug} prospect={prospect} /> },
-    { id: "keep", title: "Your account", group: "attention", when: prospect && !me.operator && Boolean(k?.free && !k.held && k.deleteOn), critical: daysLeft !== undefined && daysLeft <= 7 ? 1 : 0, suggested: daysLeft !== undefined && daysLeft > 7 ? 1 : 0,
-      sizes: [sz("M", 6, 5), sz("T", 4, 7)], body: () => <KeepCard orgId={org.id} slug={summary.slug} canKeep={canWrite} /> },
-    { id: "needs", title: "Needs you", group: "attention", when: true, critical: n,
-      sizes: [sz("M", 6, 7), sz("S", 3, 4), sz("L", 6, 11), sz("W", 12, 7)], body: (size) => needsYou(size) },
-    { id: "late", title: "Overdue and blocked", group: "attention", when: !prospect && glance.length > 0, critical: lateCount,
-      sizes: [sz("S", 3, 4), sz("M", 6, 5)], body: (size) => overdue(size) },
-    { id: "face", title: "Where can I see your business?", group: "suggested", when: admin && !me.operator && !org.place && !org.link, suggested: 1,
+    { id: "keep", title: "Your account", group: "urgent", when: prospect && !me.operator && Boolean(k?.free && !k.held && k.deleteOn),
+      counts: daysLeft !== undefined && daysLeft <= 7 ? cnt(1) : cnt(0, 0, 1),
+      sizes: [sz("M", 6, 5), sz("T", 4, 7), sz("W", 12, 3)], body: () => <KeepCard orgId={org.id} slug={summary.slug} canKeep={canWrite} /> },
+    { id: "needs", title: "Needs you", group: "urgent", when: true, counts: cnt(pressing, Math.max(0, n - pressing)),
+      sizes: [sz("M", 6, 7), sz("S", 3, 4), sz("L", 6, 11), sz("W", 12, 7)], body: (v) => needsYou(v) },
+    { id: "late", title: "Overdue and blocked", group: "urgent", when: !prospect && glance.length > 0,
+      counts: cnt(late.reduce((t, g) => t + g.overdue, 0), late.reduce((t, g) => t + g.blocked, 0)),
+      sizes: [sz("S", 3, 4), sz("M", 6, 5), sz("T", 4, 8)], body: (v) => overdue(v) },
+    { id: "coming", title: "Coming up", group: "general", when: true, counts: calCounts,
+      sizes: [sz("L", 6, 13), sz("W", 12, 13)], body: () => <ComingUp tid={org.id} base={base} /> },
+    { id: "face", title: "Where can I see your business?", group: "suggested", when: admin && !me.operator && !org.place && !org.link, counts: cnt(0, 1),
       shown: !faceSkipped, toggle: (show) => { setFaceAsk(org.id, show); setFaceSkipped(!show); },
       sizes: [sz("M", 6, 8), sz("W", 12, 6)], body: () => <FaceForm ask onDone={() => setFaceSkipped(true)} /> },
-    { id: "links", title: "Add your links", group: "suggested", when: !me.user.linkedin && !me.user.website, suggested: 1,
+    { id: "links", title: "Add your links", group: "suggested", when: !me.user.linkedin && !me.user.businessLinkedin && !me.user.website, counts: cnt(0, 1),
       shown: wantsLinks(me), toggle: flag("linksCard"),
       sizes: [sz("S", 3, 4), sz("M", 6, 3)], body: () => <LinksCard me={me} /> },
-    { id: "setup", title: "Get started", group: "suggested", when: setupLeft > 0, suggested: setupLeft,
-      sizes: [sz("M", 6, 5), sz("T", 4, 6)], body: () => getStarted() },
-    { id: "guide", title: "Get to know 1NEON", group: "suggested", when: !me.operator,
+    { id: "setup", title: "Get started", group: "suggested", when: setupLeft > 0, counts: cnt(0, setupLeft),
+      sizes: [sz("M", 6, 5), sz("T", 4, 6), sz("W", 12, 3)], body: () => getStarted() },
+    { id: "guide", title: "Get to know 1NEON", group: "general", when: !me.operator, counts: none,
       shown: me.user.guide !== "hidden", toggle: flag("guide"),
-      sizes: [sz("M", 6, 8), sz("T", 4, 10)], body: () => <GuideCard me={me} prospect={prospect} /> },
-    { id: "coming", title: "Coming up", group: "overview", when: true,
-      sizes: [sz("L", 6, 13), sz("W", 12, 13)], body: () => <ComingUp tid={org.id} base={base} /> },
-    { id: "glance", title: "Projects at a glance", group: "overview", when: glance.length > 0 && !prospect,
-      sizes: [sz("M", 6, 7), sz("L", 6, 11), sz("W", 12, 7)], body: () => atGlance() },
-    { id: "layers", title: "Projects by layer", group: "overview", when: glance.length > 0,
-      sizes: [sz("S", 3, 4), sz("M", 6, 4), sz("B", 12, 3)], body: (size) => byLayer(size) },
-    { id: "stats", title: "Numbers", group: "overview", when: true,
-      sizes: [sz("B", 12, 2), sz("M", 6, 4), sz("S", 3, 6)], body: () => numbers() },
-    { id: "quick", title: "Shortcuts", group: "overview", when: canWrite || canAdmin,
-      sizes: [sz("S", 3, 5), sz("B", 12, 2)], body: (size) => shortcuts(size) },
-    { id: "away", title: "Away this week", group: "overview", when: (ws.data?.away?.length ?? 0) > 0,
+      sizes: [sz("M", 6, 8), sz("T", 4, 10), sz("W", 12, 5)], body: () => <GuideCard me={me} prospect={prospect} /> },
+    { id: "glance", title: "Projects at a glance", group: "general", when: glance.length > 0 && !prospect, counts: cnt(health("off_track"), health("at_risk")),
+      sizes: [sz("M", 6, 7), sz("T", 4, 8), sz("L", 6, 11), sz("W", 12, 7)], body: (v) => atGlance(v) },
+    { id: "layers", title: "Projects by layer", group: "general", when: glance.length > 0, counts: none,
+      sizes: [sz("S", 3, 4), sz("M", 6, 4), sz("B", 12, 3)], body: (v) => byLayer(v) },
+    { id: "stats", title: "Numbers", group: "general", when: true, counts: none,
+      sizes: [sz("B", 12, 2), sz("M", 6, 4), sz("S", 3, 6)], body: (v) => numbers(v) },
+    { id: "quick", title: "Quick links", group: "general", when: true, counts: none,
+      sizes: [sz("S", 3, 6), sz("M", 6, 5), sz("B", 12, 2), sz("L", 6, 9)], body: (v) => quickLinks(v) },
+    { id: "away", title: "Away this week", group: "general", when: (ws.data?.away?.length ?? 0) > 0, counts: cnt(0, 0, ws.data?.away?.length ?? 0),
       sizes: [sz("S", 3, 4), sz("M", 6, 4)], body: () => awayWeek() },
-    { id: "updates", title: "Project updates", group: "overview", when: (ws.data?.updates?.length ?? 0) > 0,
-      sizes: [sz("M", 6, 7), sz("L", 6, 11)], body: () => projectUpdates() },
-    { id: "activity", title: "Recent activity", group: "overview", when: true,
-      sizes: [sz("M", 6, 8), sz("L", 6, 12), sz("T", 4, 12)], body: () => recent() },
+    { id: "updates", title: "Project updates", group: "general", when: (ws.data?.updates?.length ?? 0) > 0, counts: cnt(0, 0, ws.data?.updates?.length ?? 0),
+      sizes: [sz("M", 6, 7), sz("T", 4, 9), sz("L", 6, 11)], body: (v) => projectUpdates(v) },
+    { id: "activity", title: "Recent activity", group: "general", when: true, counts: cnt(0, 0, recentActs),
+      sizes: [sz("M", 6, 8), sz("T", 4, 12), sz("L", 6, 12)], body: (v) => recent(v) },
   ];
   const offered = cards.filter((x) => x.when);
   const isShown = (x: Card) => x.shown ?? !layout.hidden.includes(x.id);
@@ -190,13 +208,15 @@ export function WorkspacePage() {
     if (x && !isShown(x)) setShown(x.id, true);
   }, [hash]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const rows: ViewRow[] = offered.map((x) => ({ id: x.id, title: x.title, group: x.group, shown: isShown(x), critical: x.critical ?? 0, suggested: x.suggested ?? 0 }));
+  const rows: ViewRow[] = offered.map((x) => ({ id: x.id, title: x.title, group: x.group, shown: isShown(x), counts: x.counts ?? none }));
+  // Tidy up: urgent cards first, then suggested, then the rest; cards holding urgent items lead their group
+  const rank = (id: string) => { const x = offered.find((y) => y.id === id); return x ? RANK[x.group] * 2 - ((x.counts?.urgent ?? 0) > 0 ? 1 : 0) : 9; };
 
-  function needsYou(size: string | undefined): ReactNode {
-    // Small shows the count and the most pressing item; larger sizes list them
-    const small = size === "S";
+  function needsYou(view: string): ReactNode {
+    // Small shows the count and the most pressing item; larger sizes list them, in two columns across the page
+    const small = view === "S";
     return (
-      <section className="card needs" data-tour="needs-you" aria-busy={ws.isPending}>
+      <section className={`card needs v-${view}`} data-tour="needs-you" aria-busy={ws.isPending}>
         <h2 className="section-h">Needs you{ws.data && n > 0 && !small && <small>· {n} {n === 1 ? "item" : "items"}{shown < n ? `, showing ${shown}` : ""}</small>}</h2>
         {ws.data && n === 0 && <p className="empty-line"><Check size={18} aria-hidden="true" /> You're all caught up.</p>}
         {small && n > 0 ? (
@@ -229,41 +249,49 @@ export function WorkspacePage() {
     );
   }
 
-  // Projects with overdue or blocked work: the totals when small, each project when larger
-  function overdue(size: string | undefined) {
+  // Projects with overdue or blocked work: the totals when small, each project when larger, and each
+  // project's late and blocked counts with its next date when tall
+  function overdue(view: string) {
     const od = late.reduce((t, g) => t + g.overdue, 0), bl = late.reduce((t, g) => t + g.blocked, 0);
     return (
       <section className="card late">
         <h2 className="section-h">Overdue and blocked</h2>
         {late.length === 0 ? <p className="empty-line"><Check size={18} aria-hidden="true" /> Nothing overdue or blocked.</p>
-          : size === "S" ? <p className="big-count"><b>{od}</b> overdue{bl > 0 && <> · <b>{bl}</b> blocked</>}</p>
+          : view === "S" ? <p className="big-count"><b>{od}</b> overdue{bl > 0 && <> · <b>{bl}</b> blocked</>}</p>
           : <ul className="updates">{late.map((g) => (
-              <li key={g.key}><Link to={`${base}/projects/${g.key}`}><span className="s">{g.key}</span> {g.name}</Link> {g.overdue > 0 && <span className="tag warn">{g.overdue} overdue</span>} {g.blocked > 0 && <span className="tag warn">{g.blocked} blocked</span>}</li>
+              <li key={g.key}><Link to={`${base}/projects/${g.key}`}><span className="s">{g.key}</span> {g.name}</Link> {g.overdue > 0 && <span className="tag warn">{g.overdue} overdue</span>} {g.blocked > 0 && <span className="tag warn">{g.blocked} blocked</span>}
+                {view === "T" && g.next && <span className="muted small"> · next {dateLabel(g.next.date)}</span>}</li>
             ))}</ul>}
       </section>
     );
   }
 
-  // How many live projects sit in each layer, as one bar; larger sizes name each layer
-  function byLayer(size: string | undefined) {
+  // How many live projects sit in each layer, as one bar: badges and counts when small, named when
+  // medium, and in one line beside the bar across the page
+  function byLayer(view: string) {
     const live = glance.filter((g) => !g.closed);
     const per = Layer.options.map((l) => ({ l, n: live.filter((g) => g.layer === l).length }));
     return (
-      <section className="card layers">
+      <section className={`card layers v-${view}`}>
         <h2 className="section-h">Projects by layer</h2>
-        <span className="layer-bar" role="img" aria-label={per.map((p) => `${p.n} in ${layerName(p.l)}`).join(", ")}>
-          {per.map((p) => p.n > 0 && <i key={p.l} className={`lb-${p.l}`} style={{ flexGrow: p.n }} />)}
-        </span>
-        <ul className={`layer-keys${size === "S" ? " tight" : ""}`}>
-          {per.map((p) => <li key={p.l}><Link to={`${base}/layer/${layerSlug(p.l)}`} aria-label={`${layerName(p.l)}: ${p.n}`}><LayerBadge layer={p.l} />{size !== "S" && <span>{layerName(p.l)}</span>}<b>{p.n}</b></Link></li>)}
-        </ul>
+        <div className="layers-body">
+          <span className="layer-bar" role="img" aria-label={per.map((p) => `${p.n} in ${layerName(p.l)}`).join(", ")}>
+            {per.map((p) => p.n > 0 && <i key={p.l} className={`lb-${p.l}`} style={{ flexGrow: p.n }} />)}
+          </span>
+          <ul className="layer-keys">
+            {per.map((p) => <li key={p.l}><Link to={`${base}/layer/${layerSlug(p.l)}`} aria-label={`${layerName(p.l)}: ${p.n}`}><LayerBadge layer={p.l} />{view !== "S" && <span>{layerName(p.l)}</span>}<b>{p.n}</b></Link></li>)}
+          </ul>
+        </div>
       </section>
     );
   }
 
-  function atGlance() {
+  // Every live project: names and progress when tall and narrow; stage, health, and what's next when
+  // larger; two columns across the page
+  function atGlance(view: string) {
+    const brief = view === "T";
     return (
-      <section className="card glance" data-tour="glance">
+      <section className={`card glance v-${view}`} data-tour="glance">
         <h2 className="section-h">Projects at a glance <small><Link to={`${base}/projects`}>All projects</Link></small></h2>
         <ul>
           {glance.map((g) => {
@@ -271,15 +299,17 @@ export function WorkspacePage() {
             return (
               <li key={g.key}>
                 <Link to={`${base}/projects/${g.key}`} className="g-name"><span className="s">{g.key}</span> {g.name}</Link>
-                <span className="g-stage"><LayerBadge layer={g.layer} /> {g.stage}</span>
+                {!brief && <span className="g-stage"><LayerBadge layer={g.layer} /> {g.stage}</span>}
                 <Health value={g.health} />
                 <span className="g-bar" role="img" aria-label={g.total ? `${g.done} of ${g.total} done` : "No work yet"}><i style={{ width: `${pct}%` }} /></span>
-                <span className="g-meta">
-                  {g.total ? `${g.done} of ${g.total} done` : "No work yet"}
-                  {g.overdue > 0 && <span className="tag warn">{g.overdue} overdue</span>}
-                  {g.blocked > 0 && <span className="tag warn">{g.blocked} blocked</span>}
-                  {g.next ? <> · next: <Link to={`${base}/projects/${g.key}/${layerSlug(KIND_LAYER[g.next.kind as ItemKind] ?? "needs")}#item-${g.next.itemId}`}>{g.next.title}</Link> {dateLabel(g.next.date)}</> : g.targetDate && !g.closed ? <> · target {dateLabel(g.targetDate)}</> : null}
-                </span>
+                {!brief && (
+                  <span className="g-meta">
+                    {g.total ? `${g.done} of ${g.total} done` : "No work yet"}
+                    {g.overdue > 0 && <span className="tag warn">{g.overdue} overdue</span>}
+                    {g.blocked > 0 && <span className="tag warn">{g.blocked} blocked</span>}
+                    {g.next ? <> · next: <Link to={`${base}/projects/${g.key}/${layerSlug(KIND_LAYER[g.next.kind as ItemKind] ?? "needs")}#item-${g.next.itemId}`}>{g.next.title}</Link> {dateLabel(g.next.date)}</> : g.targetDate && !g.closed ? <> · target {dateLabel(g.targetDate)}</> : null}
+                  </span>
+                )}
               </li>
             );
           })}
@@ -305,10 +335,11 @@ export function WorkspacePage() {
     );
   }
 
-  // The headline numbers, each a way in. They reflow to the card's width (app.css)
-  function numbers() {
-    return (
-      <nav className="stats" aria-label="At a glance">
+  // The headline numbers, each a way in: a strip across the page (its own labels say what it is), or a
+  // titled card whose numbers reflow to its width
+  function numbers(view: string) {
+    const strip = (
+      <nav className="stats" aria-label="Numbers">
         <Link to={`${base}/projects`}><b>{c?.projects ?? "–"}</b> {noun(c?.projects ?? 0, "project")}</Link>
         {/* Deciding opens Needs at its Decide stage; building opens the Execute layer, each listing just those projects */}
         <Link to={`${base}/layer/needs#stage-decide`} title="Projects waiting on a decision"><b>{c?.deciding ?? "–"}</b> deciding</Link>
@@ -317,16 +348,45 @@ export function WorkspacePage() {
         <Link to={`${base}/documents`}><b>{c?.documents ?? "–"}</b> {noun(c?.documents ?? 0, "file")}</Link>
       </nav>
     );
+    if (view === "B") return strip;
+    return <section className="card numbers"><h2 className="section-h">Numbers</h2>{strip}</section>;
   }
 
-  // What people start most from Home, one press each
-  function shortcuts(size: string | undefined) {
+  // Where people go and what they start from Home: the four most used when small, each with a line on
+  // what it does when medium, a row beside the title across the page, and everything, grouped, when large
+  function quickLinks(view: string) {
+    type Q = { key: string; icon: typeof FolderPlus; label: string; note: string; to?: string; act?: () => void; when: boolean };
+    const all: Q[] = [
+      { key: "new", icon: FolderPlus, label: "New project", note: "Outline what you need", to: `${base}/projects/new`, when: canWrite },
+      { key: "file", icon: FilePlus2, label: "Add a file", note: "Share documents and exports", to: `${base}/documents`, when: canWrite },
+      { key: "invite", icon: UserPlus, label: "Invite someone", note: "Bring in your team", to: `${base}/people`, when: canAdmin },
+      { key: "chat", icon: MessageSquare, label: "Message me", note: "Ask anything, right here", act: () => dispatchEvent(new Event("1neon:chat")), when: !me.operator },
+      { key: "board", icon: Kanban, label: "Board", note: "Every item by stage", to: `${base}/workflow`, when: true },
+      { key: "projects", icon: Folder, label: "All projects", note: "Status and history", to: `${base}/projects`, when: true },
+      { key: "insights", icon: ChartColumn, label: "Insights", note: "Progress and spend", to: `${base}/insights`, when: !prospect },
+      { key: "settings", icon: SlidersHorizontal, label: "Settings", note: "Your organization", to: `${base}/settings`, when: admin },
+      { key: "faqs", icon: CircleHelp, label: "FAQs", note: "Short answers", to: "/faqs", when: true },
+    ].filter((q) => q.when);
+    const list = view === "S" ? all.slice(0, 4) : view === "M" ? all.slice(0, 6) : view === "B" ? all.slice(0, 5) : all;
+    const item = (q: Q) => {
+      const inner = <><q.icon size={17} aria-hidden="true" /><span className="q-t">{q.label}{(view === "M" || view === "L") && <small>{q.note}</small>}</span></>;
+      return <li key={q.key}>{q.to ? <Link to={q.to}>{inner}</Link> : <button type="button" onClick={q.act}>{inner}</button>}</li>;
+    };
+    if (view === "L") {
+      const start = all.filter((q) => ["new", "file", "invite", "chat"].includes(q.key));
+      const go = all.filter((q) => !start.includes(q));
+      return (
+        <nav className="card quick v-L" aria-labelledby="quick-h">
+          <h2 className="section-h" id="quick-h">Quick links</h2>
+          <p className="q-g">Start</p><ul>{start.map(item)}</ul>
+          <p className="q-g">Go to</p><ul>{go.map(item)}</ul>
+        </nav>
+      );
+    }
     return (
-      <nav className={`card quick${size === "B" ? " row" : ""}`} aria-label="Shortcuts">
-        {canWrite && <Link to={`${base}/projects/new`}><FolderPlus size={17} aria-hidden="true" /> New project</Link>}
-        {canWrite && <Link to={`${base}/documents`}><FilePlus2 size={17} aria-hidden="true" /> Add a file</Link>}
-        {canAdmin && <Link to={`${base}/people`}><UserPlus size={17} aria-hidden="true" /> Invite someone</Link>}
-        {!me.operator && <button type="button" onClick={() => dispatchEvent(new Event("1neon:chat"))}><MessageSquare size={17} aria-hidden="true" /> Message me</button>}
+      <nav className={`card quick v-${view}`} aria-labelledby="quick-h">
+        <h2 className="section-h" id="quick-h">Quick links</h2>
+        <ul>{list.map(item)}</ul>
       </nav>
     );
   }
@@ -344,7 +404,8 @@ export function WorkspacePage() {
     );
   }
 
-  function projectUpdates() {
+  // Each project's latest update; tall and narrow keeps the headline and health
+  function projectUpdates(view: string) {
     return (
       <section className="card">
         <h2 className="section-h">Project updates</h2>
@@ -354,6 +415,7 @@ export function WorkspacePage() {
               <Link to={`${base}/projects/${u.projectKey}`}><span className="s">{u.projectKey}</span> {u.projectName}</Link>
               <span className="u-line"><Health value={u.health as HealthT} /> <time>{ago(u.at)}</time></span>
               <p>{u.title}</p>
+              {view === "L" && u.body && <p className="muted small">{u.body.slice(0, 240)}</p>}
             </li>
           ))}
         </ul>
@@ -361,14 +423,16 @@ export function WorkspacePage() {
     );
   }
 
-  function recent() {
+  // What happened lately: six when medium, twelve when large or tall; tall and narrow drops who and what changed
+  function recent(view: string) {
+    const brief = view === "T";
     return (
       <section className="card" id="activity" data-tour="activity">
         <h2 className="section-h">Recent activity</h2>
         {ws.data && ws.data.activity.length === 0 && <p className="muted small">No activity yet.</p>}
         <ul className="feed">
-          {ws.data?.activity.slice(0, 12).map((a) => (
-            <li key={a.id}><span>{a.summary}{a.by && !a.summary.includes(a.by) && <small className="by">{a.by}</small>}<Changes e={a} /></span><time dateTime={a.at}>{ago(a.at)}</time></li>
+          {ws.data?.activity.slice(0, view === "M" ? 6 : 12).map((a) => (
+            <li key={a.id}><span>{a.summary}{!brief && a.by && !a.summary.includes(a.by) && <small className="by">{a.by}</small>}{!brief && <Changes e={a} />}</span><time dateTime={a.at}>{ago(a.at)}</time></li>
           ))}
         </ul>
       </section>
@@ -381,7 +445,8 @@ export function WorkspacePage() {
       <div className="home-head">
         <h1 className="page-title">{first ? `Hi, ${first}` : "Home"}</h1>
         <HomeViews rows={rows} arranging={arranging} onToggle={(id) => { const r = rows.find((x) => x.id === id); if (r) setShown(id, !r.shown); }}
-          onArrange={() => setArranging(!arranging)} onReset={() => change(() => ({ hidden: [] }))} />
+          onArrange={() => setArranging(!arranging)} onReset={() => change(() => ({ hidden: [] }))}
+          onTidy={() => change((l) => ({ ...l, [bp]: tidy(cells, rank, COLS[bp]) }))} />
       </div>
       {prospect && <ProspectNote />}
       <Stale reads={[ws]} />

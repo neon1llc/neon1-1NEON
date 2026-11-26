@@ -5,6 +5,8 @@
 ## Unreleased
 
 ### Added
+- Home, rearranged: hold a card to pick it up (the hand closes), and the others glide out of its way. Drag an edge or corner to any size; it snaps to whole cells, and onto a card's preset sizes when close, with the landing cells outlined solid on a preset and dashed between. Each card has three or four presets, each laid out for its size. A gear at each card's corner opens its sizes and Hide. Tidy up, under View, repacks the cards with urgent ones first.
+- Each card's badges count what it holds: red urgent, amber suggested, green to know. View's rows show them, and the View button totals them, as shown out of total when a hidden card holds some, with "!" when that includes something urgent.
 - Your profile takes an optional LinkedIn address, business LinkedIn page, and website, shown to the people in your organizations on People. Organization settings take a LinkedIn company page. Home suggests adding your links until you do or hide the card.
 - Notifications have Mark all read.
 - Delivery and review on a project's Execute and Normalize pages: neon1 records the handover, which asks the client to review within 10 business days and starts the 30-day defect period, and records when it's waiting on the client, a pause, and an ending. Each is told to the client by email. Acceptance is still only the client's signature, never silence.

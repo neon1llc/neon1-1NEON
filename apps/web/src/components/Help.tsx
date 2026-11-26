@@ -44,7 +44,7 @@ export const GUIDES: Record<PageKey, Guide> = {
   home: {
     title: "Home",
     purpose: "Your starting point: what needs you, and what changed lately.",
-    howto: ["Needs you lists what's waiting on you, most pressing first.", "While a decision waits on you, email reminds you after 3 and 7 business days.", "With projects waiting for an assessment, ask for one under Next step.", "On the calendar, choose a day to see it. Editors can add leave, closures, meetings, and care plan dates.", "View shows or hides any card. Its counts are what hidden cards hold: red needs action.", "Arrange, under View, moves cards by their grip and resizes them from the corner or by their size buttons. Your layout follows you to any device."],
+    howto: ["Needs you lists what's waiting on you, most pressing first.", "While a decision waits on you, email reminds you after 3 and 7 business days.", "With projects waiting for an assessment, ask for one under Next step.", "On the calendar, choose a day to see it. Editors can add leave, closures, meetings, and care plan dates.", "Each card's badges count what it holds: red is urgent, amber suggested, green to know. View shows or hides any card; its badges total them, as shown out of total when some are hidden.", "Arrange, under View: hold a card to move it, drag its edge or corner to resize, or open its gear for its sizes and Hide. Tidy up repacks everything. Your layout follows you to any device."],
     tour: [
       { at: "next-step-ask", title: "Next step", text: "Outline a project, then ask for an assessment of up to three. Add a note, then send. You can edit or withdraw it until it goes." },
       { at: "needs-you", title: "Needs you", text: "Things waiting on you: approvals, tasks, and files to send. Open one to act on it." },
@@ -198,7 +198,7 @@ export const GUIDES: Record<PageKey, Guide> = {
 
 // A free account's own people see less on these pages, so their help differs
 export const FREE: Partial<Record<PageKey, { purpose?: string; howto: string[] }>> = {
-  home: { howto: ["Outline up to three projects, then ask for an assessment under Next step.", "On the calendar, choose a day to see it or add to it.", "Your account shows how long it's kept, with Keep it 30 more days and Download a copy.", "View shows or hides any card; Arrange moves and resizes them."] },
+  home: { howto: ["Outline up to three projects, then ask for an assessment under Next step.", "On the calendar, choose a day to see it or add to it.", "Your account shows how long it's kept, with Keep it 30 more days and Download a copy.", "View shows or hides any card; Arrange moves and resizes them; Tidy up repacks them."] },
   project: { howto: ["Start with Next step.", "Each layer tab has its own help. Tap an item's title for its status, owner, due date, details, and comments.", "Ready for Execute shows what's left to outline. Everything in it is optional.", "Set health and post updates under How is it going?"] },
   needs: { purpose: "What's wanted.", howto: ["Add requests and the details behind them. Tap an item's title to comment.", "Options and approvals start once we're working together."] },
   execute: { purpose: "The work: tasks, milestones, and changes.", howto: ["Tap an item's title for its owner, due date, details, and comments."] },

@@ -38,15 +38,15 @@ describe("page content", () => {
 });
 
 describe("Home's card grid", () => {
-  it("lays every card on one 12-column grid (4 on a phone), not in columns keyed to one card", () => {
+  it("places every card on one 12-column grid (4 on a phone) by transform, not in columns keyed to one card", () => {
     // A rule on whatever contains `.keep-card` once squeezed that card into a fifth of its column
     expect(css).not.toMatch(/:has\(> \.keep-card\)/);
-    expect(css).toMatch(/\.hg \{ --row: 24px;[^}]*grid-template-columns: repeat\(12, minmax\(0, 1fr\)\);/);
-    expect(css).toMatch(/\.hg\[data-bp="narrow"\] \{ grid-template-columns: repeat\(4, minmax\(0, 1fr\)\);/);
+    expect(css).toMatch(/\.hg \{ --row: 24px; position: relative; column-gap: var\(--sp-4\);/);
+    expect(css).toMatch(/\.tile \{ position: absolute;/);
   });
   it("leaves the spacing between cards to the grid's gap", () => {
     expect(css).not.toMatch(/\.next-step-ask\) \+ \.card/);
-    expect(css).toMatch(/\.tile-body > :is\(section, nav, \.card\) \{ margin: 0;/);
+    expect(css).toMatch(/\.tile-body > :is\(section, nav, \.card\) \{ margin: 0; flex: 0 0 auto; overflow: hidden; \}/);
   });
 });
 

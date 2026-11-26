@@ -1,45 +1,50 @@
 // apps/web/src/components/HomeViews.tsx - Home's View menu, at the end of the greeting row: which cards
-// show, with a count on the button of what hidden cards hold (red for things that need action, quiet for
-// suggestions), grouped like GitHub's and Linear's dashboard pickers. Choosing a card shows or hides it;
-// Arrange turns on moving and resizing. A drop-down with neon1's drawn arrow, the same on every screen.
+// show, grouped like GitHub's and Linear's dashboard pickers, each with its urgent, suggested, and general
+// counts. The button totals each kind, as shown out of total once a card holding some is hidden. Arrange
+// turns on moving and resizing; Tidy up repacks the cards. A drop-down with neon1's drawn arrow.
 
 
-import { Check, LayoutGrid, RotateCcw } from "lucide-react";
+import { Check, LayoutGrid, RotateCcw, Sparkles } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
+import { CountPills, type Counts } from "./HomeGrid.tsx";
 
 
-export type Group = "attention" | "suggested" | "overview";
-export interface ViewRow { id: string; title: string; group: Group; shown: boolean; critical: number; suggested: number }
+export type Group = "urgent" | "suggested" | "general";
+export interface ViewRow { id: string; title: string; group: Group; shown: boolean; counts: Counts }
 const GROUPS: { key: Group; label: string }[] = [
-  { key: "attention", label: "Needs attention" },
+  { key: "urgent", label: "Urgent" },
   { key: "suggested", label: "Suggested" },
-  { key: "overview", label: "Overview" },
+  { key: "general", label: "General" },
 ];
+const KINDS: (keyof Counts)[] = ["urgent", "suggested", "general"];
 
 
-/** The counts a set of cards holds, as pills: "!" marks what needs action */
-function Counts({ critical, suggested, label }: { critical: number; suggested: number; label?: boolean }) {
-  if (!critical && !suggested) return null;
+/** The button's counts: each kind's total, or shown out of total when some are in hidden cards; a hidden
+ * urgent one adds "!" */
+function Totals({ rows }: { rows: ViewRow[] }) {
+  const parts = KINDS.map((k) => {
+    const total = rows.reduce((n, r) => n + r.counts[k], 0);
+    const seen = rows.filter((r) => r.shown).reduce((n, r) => n + r.counts[k], 0);
+    return { k, total, seen };
+  }).filter((p) => p.total > 0);
+  if (!parts.length) return null;
+  const said = parts.map((p) => `${p.seen < p.total ? `${p.seen} of ${p.total}` : p.total} ${p.k === "general" ? "to know" : p.k}`).join(", ");
   return (
-    <span className="vm-counts">
-      {critical > 0 && <span className="vm-pill crit" title={`${critical} hidden ${critical === 1 ? "thing needs" : "things need"} action`}>{critical}!</span>}
-      {suggested > 0 && <span className="vm-pill sugg" title={`${suggested} hidden ${suggested === 1 ? "suggestion" : "suggestions"}`}>{suggested}</span>}
-      {label && <span className="sr-only">{[critical && `${critical} need action`, suggested && `${suggested} suggested`].filter(Boolean).join(", ")} in hidden cards</span>}
+    <span className="cpills">
+      <span className="sr-only">{said}</span>
+      {parts.map((p) => <span key={p.k} className={`cpill ${p.k}${p.seen < p.total ? " part" : ""}`} aria-hidden="true">{p.seen < p.total ? `${p.seen}/${p.total}` : p.total}{p.k === "urgent" && p.seen < p.total ? " !" : ""}</span>)}
     </span>
   );
 }
 
 
-export function HomeViews({ rows, arranging, onToggle, onArrange, onReset }: {
-  rows: ViewRow[]; arranging: boolean; onToggle: (id: string) => void; onArrange: () => void; onReset: () => void;
+export function HomeViews({ rows, arranging, onToggle, onArrange, onTidy, onReset }: {
+  rows: ViewRow[]; arranging: boolean; onToggle: (id: string) => void; onArrange: () => void; onTidy: () => void; onReset: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   const btn = useRef<HTMLButtonElement>(null);
   const panelId = useId();
-  const hidden = rows.filter((r) => !r.shown);
-  const crit = hidden.reduce((n, r) => n + r.critical, 0);
-  const sugg = hidden.reduce((n, r) => n + r.suggested, 0);
 
   // Esc or a press outside closes it; Esc gives focus back to the button
   useEffect(() => {
@@ -56,7 +61,7 @@ export function HomeViews({ rows, arranging, onToggle, onArrange, onReset }: {
       <button ref={btn} type="button" className="vm-btn" aria-expanded={open} aria-controls={panelId} onClick={() => setOpen(!open)}>
         <span className="arr arr-mixed" aria-hidden="true" />
         <span>View</span>
-        <Counts critical={crit} suggested={sugg} label />
+        <Totals rows={rows} />
       </button>
       <div className="vm-panel" id={panelId} role="group" aria-label="Cards on Home" hidden={!open}>
         {GROUPS.map((g) => {
@@ -69,7 +74,7 @@ export function HomeViews({ rows, arranging, onToggle, onArrange, onReset }: {
                 <button key={r.id} type="button" className="vm-row" aria-pressed={r.shown} onClick={() => onToggle(r.id)}>
                   <span className="vm-tick" aria-hidden="true">{r.shown && <Check size={14} />}</span>
                   <span className="vm-t">{r.title}</span>
-                  {!r.shown && <Counts critical={r.critical} suggested={r.suggested} />}
+                  <CountPills counts={r.counts} />
                 </button>
               ))}
             </div>
@@ -77,7 +82,10 @@ export function HomeViews({ rows, arranging, onToggle, onArrange, onReset }: {
         })}
         <div className="vm-foot">
           <button type="button" className="btn btn-ghost btn-sm" aria-pressed={arranging} onClick={() => { onArrange(); setOpen(false); }}><LayoutGrid size={15} aria-hidden="true" /> {arranging ? "Done arranging" : "Arrange"}</button>
-          <button type="button" className="linkish helper" onClick={onReset}><RotateCcw size={13} aria-hidden="true" /> Reset</button>
+          <span className="vm-foot-r">
+            <button type="button" className="linkish helper" onClick={() => { onTidy(); setOpen(false); }}><Sparkles size={13} aria-hidden="true" /> Tidy up</button>
+            <button type="button" className="linkish helper" onClick={onReset}><RotateCcw size={13} aria-hidden="true" /> Reset</button>
+          </span>
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 // apps/web/src/components/OrgFace.tsx - Where an organization can be seen from outside: the city and
 // state it's based in, and its website or a public page. Both are optional at sign-up, so a person who'd
 // rather stay private can start; this shows them, lets an admin change them (Settings), and asks for them
-// on Home when an organization has neither, until the admin adds one or says "Not now".
+// on Home when an organization has neither, until the admin adds one or hides it from Home's View menu.
 
 
 import { HttpError } from "../lib/api.ts";
@@ -36,7 +36,7 @@ export function OwnLinks({ linkedin, businessLinkedin, website }: { linkedin?: s
 }
 
 
-// Home's ask stays put away once an admin says "Not now", per organization, in this browser
+// Home's ask stays put away once an admin hides it from View, per organization, in this browser
 const askKey = (orgId: string) => `1neon.face-ask.${orgId}`;
 export const faceAskDismissed = (orgId: string) => prefs.get(askKey(orgId)) === "no";
 /** Put the ask away, or bring it back (Home's View menu) */
@@ -123,7 +123,6 @@ export function FaceForm({ ask = false, onDone }: { ask?: boolean; onDone?: () =
       <div className="actions">
         <button className="btn btn-primary btn-sm" disabled={!ready || !changed || busy}>{busy ? "Saving…" : "Save"}</button>
         {onDone && !ask && <button type="button" className="btn btn-ghost btn-sm" onClick={onDone}>Cancel</button>}
-        {ask && <button type="button" className="btn btn-ghost btn-sm" onClick={() => { prefs.set(askKey(org.id), "no"); onDone?.(); }}>Not now</button>}
       </div>
     </form>
   );

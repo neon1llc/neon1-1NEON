@@ -40,26 +40,12 @@ export function ProspectNote() {
 
 
 /** Home's "Get to know 1NEON": the sample project, the walkthrough, the demo, and the FAQs, for anyone
- * who hasn't put it away. Hide sets the profile's `guide`; the profile's Tutorial brings it back */
+ * who hasn't put it away. Home's View menu sets the profile's `guide`; the profile's Tutorial also brings it back */
 export function GuideCard({ me, prospect }: { me: Me; prospect: boolean }) {
-  const qc = useQueryClient();
-  const toast = useToast();
-  const [busy, setBusy] = useState(false);
   if (me.user.guide === "hidden") return null;
-  const hide = async () => {
-    setBusy(true);
-    try {
-      await api("/me", { method: "PATCH", body: { version: me.user.version, guide: "hidden" } });
-      await qc.invalidateQueries({ queryKey: ["me"] });
-      toast("Hidden. Bring it back from your profile, under Tutorial.");
-    } catch (e) {
-      toast(problem(e));
-      setBusy(false);
-    }
-  };
   return (
     <section className="card guide-card" aria-labelledby="guide-h" data-tour="get-to-know">
-      <h2 className="section-h" id="guide-h">Get to know 1NEON <button type="button" className="linkish helper" disabled={busy} onClick={() => void hide()}>Hide</button></h2>
+      <h2 className="section-h" id="guide-h">Get to know 1NEON</h2>
       <ul className="guide-links">
         <li><button type="button" className="linkish guide-chat" onClick={() => dispatchEvent(new Event("1neon:chat"))}>Message me</button><span className="muted small">Ask anything, right here in the chat</span></li>
         <li><OutLink href={`${BASE_PATH}/example`}>A sample project</OutLink><span className="muted small">Three made-up clients, start to finish</span></li>
