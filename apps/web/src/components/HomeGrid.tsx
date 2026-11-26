@@ -49,6 +49,7 @@ export function HomeGrid({ tiles, cells, bp, arranging, onChange, onHide, onFit 
 
   // Cards that shift while another is held glide to their new place (FLIP), unless motion is reduced
   const rects = useRef(new Map<string, { left: number; top: number }>());
+  const dropped = useRef(0);
   const fitted = useRef(new Map<string, { h: number; at: number[] }>());
   // A card's content can grow on its own (a form opens, a list loads): watch it and measure again
   const [, bump] = useState(0);
@@ -72,7 +73,8 @@ export function HomeGrid({ tiles, cells, bp, arranging, onChange, onHide, onFit 
       const r = { left: b.left - g.left, top: b.top - g.top };
       next.set(id, r);
       const was = rects.current.get(id);
-      if (!was || id === hold?.id || still()) continue;
+      // Only while a card is held, or just let go: a later relayout (content loading) doesn't glide
+      if (!was || id === hold?.id || still() || (!hold && performance.now() - dropped.current > 250)) continue;
       const dx = was.left - r.left, dy = was.top - r.top;
       // A jump bigger than a screen is a relayout, not a move worth watching
       if ((!dx && !dy) || Math.abs(dx) > innerWidth || Math.abs(dy) > innerHeight) continue;
@@ -145,6 +147,7 @@ export function HomeGrid({ tiles, cells, bp, arranging, onChange, onHide, onFit 
   const end = () => {
     if (!hold) return;
     const done = compact(hold.preview);
+    dropped.current = performance.now();
     const t = tiles.find((x) => x.id === hold.id);
     const n = done.find((c) => c.id === hold.id)!;
     setHold(null);
