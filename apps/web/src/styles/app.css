@@ -382,7 +382,8 @@ table.people td { padding: var(--sp-2) var(--sp-2); border-bottom: 1px solid var
 /* Phones: the panel sits between the top bar and the bottom row (Neo at the left, the rain controls at
    the right, 48px tall at 16px or the home indicator's inset), so neither covers the form or its border */
 /* The same gap (20px) sits between the bar and the panel and between the panel and the top of Neo's launcher, on every screen and step */
-.signin { padding: calc(64px + env(safe-area-inset-top) + 20px) 0 calc(48px + max(16px, env(safe-area-inset-bottom)) + 20px); }
+/* The panel centers in the room above the footer; the footer ends the page, and its own foot leaves Neo's row, as on the site */
+.signin { padding: calc(64px + env(safe-area-inset-top) + 20px) 0 0; grid-template-columns: minmax(0, 1fr); grid-template-rows: 1fr auto; }
 /* Under a walkthrough's bar: the sign-in fills only the screen below it, so the panel centers in what
    shows instead of running off the bottom, and the site's top bar (hidden behind it) takes no room */
 body:has(.live-bar) .signin { min-height: calc(100dvh - var(--live-top, var(--demo-h))); }
@@ -1023,9 +1024,23 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 .example-picker a[aria-current="page"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 /* The sample's bar keeps the name beside the mark on a phone, as the user asked; the other bar buttons give way */
 @media (max-width: 480px) { .example .top-brand .lbl { display: inline; } .example .top-brand { margin-right: 0; } }
-/* The foot of the public pages: one quiet row of pages, then the way back to neon1.tech */
-.pub-foot { max-width: 920px; margin: var(--sp-7) auto 0; padding: var(--sp-5) var(--sp-5) calc(var(--sp-6) + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); display: grid; gap: var(--sp-2); }
-.pub-foot p { margin: 0; }
+/* The foot of the public pages is neon1.tech's legal strip (shared/neon1.css, .legal); here only its colors in each look, and its lines in
+   lowercase as on the site. The page-link rows are two so each fits a phone and no backslash is left hanging at the end of a line */
+.pub-foot { position: relative; z-index: 2; align-self: end; justify-self: stretch; margin-top: var(--sp-7); text-align: left; --glow: var(--accent); }
+.signin:not(.awake) .pub-foot { --glow: var(--neon); --muted: var(--m-muted, #CBD1CC); --text: var(--m-ink, #EDF1ED); --line: rgb(0 255 65 / .16); }
+.pub-foot .legal { text-transform: lowercase; }
+.pub-foot .legal .pub-links { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--sp-2) var(--sp-2); }
+.pub-foot .legal .policies { flex-wrap: nowrap; }
+.pub-foot .legal :is(.owner, .policies) .sep { display: inline; }
+.pub-foot .legal :is(.owner, .policies) { column-gap: var(--sp-2); }
+.pub-foot .legal .owner a { margin: 0; }
+.pub-foot .legal a, .pub-foot .legal a:hover { color: inherit; }
+.pub-foot .legal a.out, .pub-foot .legal a.out:hover { color: var(--glow); font-weight: 600; text-decoration: none; }
+.pub-foot .report-links .bug-glyph { margin: 0; vertical-align: 0; width: 14px; height: 14px; }
+@media (max-width: 599px) { .pub-foot .legal .pub-links { flex: 0 0 100%; justify-content: flex-start; flex-direction: column; } .pub-foot .pub-join { display: none; } }
+/* The copyright line is too long for a phone, so it stacks without its backslash, as on the site */
+@media (max-width: 599px) { .pub-foot .legal .owner .sep { display: none; } .pub-foot .legal .owner { flex: 0 0 100%; } }
+@media (max-width: 359px) { .pub-foot .legal .policies { flex-wrap: wrap; } }
 .example .example-layer { scroll-margin-top: calc(var(--top-h) + var(--demo-h, 0px) + 60px); }
 /* "On this page", as the Knowledge Center has it: a bar that stays under the top bar, names the layer in view, and opens the list of layers */
 .example .toc-bar { position: sticky; top: calc(var(--top-h) + var(--demo-h, 0px)); z-index: 5; margin: var(--sp-4) calc(50% - 50vw) var(--sp-4); background: color-mix(in srgb, var(--panel) 94%, transparent); -webkit-backdrop-filter: saturate(1.8) blur(16px); backdrop-filter: saturate(1.8) blur(16px); border-bottom: 1px solid var(--line); box-shadow: var(--shadow-pop); }
@@ -2168,20 +2183,6 @@ html:has(.signin.awake), html:has(.signin.awake) body { background: var(--bg); c
 .bug-glyph { width: 1.17em; height: 1.17em; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; margin-right: .18em; /* the gap equals the text-to-arrow gap, .18em */ /* the mark's middle sits on the x-height middle, as in the site footer's link */ vertical-align: -.335em; }
 .btn.bug-link { display: inline-flex; align-items: center; text-decoration: none; }
 .btn.bug-link .bug-glyph { vertical-align: 0; }
-/* The sign-in and sign-up screens' link: at the bottom right of the page (it scrolls with a tall form, so it never floats over it), its right edge on the bar's rightmost item (the theme switch, 24px
-   in, or the row's edge on a wide screen) and its middle on Neo's button (48px tall, 16px from the bottom), as the site's footer has it */
-.signin .bug-corner { position: absolute; z-index: 3; right: max(24px, env(safe-area-inset-right), calc((100% - 1200px) / 2 + 24px)); bottom: calc(max(16px, env(safe-area-inset-bottom)) + 24px); translate: 0 50%;
-  display: inline-flex; align-items: center; white-space: nowrap; font: 600 var(--fs-xs) var(--mono); color: var(--accent); }
-.bug-corner a { display: inline-flex; align-items: center; color: inherit; text-decoration: none; }
-.bug-corner .bug-lead { color: var(--muted); margin-right: .7em; }
-.bug-corner .bug-sep { margin: 0 .5em; opacity: .6; }
-.signin:not(.awake) .bug-corner { color: var(--neon); }
-/* In matrix the rain controls (grid, text, pause) would sit on the same corner: they rise one row above the link, and the page grows by that row so the form never meets them */
-.signin:not(.awake) .rainctl { bottom: calc(max(16px, env(safe-area-inset-bottom)) * 2 + 48px); }
-.signin:not(.awake) { padding-bottom: calc(48px + max(16px, env(safe-area-inset-bottom)) + 20px + 40px); }
-/* Without the rain controls (sign-in and create account) the corner needs only Neo's row */
-.signin:not(.awake):not(:has(.rainctl)) { padding-bottom: calc(48px + max(16px, env(safe-area-inset-bottom)) + 20px); }
-.signin .bug-corner .bug-glyph { vertical-align: 0; width: 14px; height: 14px; }
 .side .nav a.bug-row .ico { color: var(--accent); }
 .side .nav a.bug-row .bug-glyph { margin: 0; vertical-align: 0; }
 .side .nav a.bug-row:hover .out-arrow, .side .nav a.bug-row:focus-visible .out-arrow { transform: translate(1px, -1px); }
@@ -2551,14 +2552,8 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
   .signin .signin-more a, .signin .fine a { display: inline-flex; align-items: center; min-height: 44px; }
   .signin .signin-more { gap: 0 var(--sp-4); }
   .pcard .move select { min-height: 44px; }
-  /* The public footer's links are a row of 44px targets */
-  .pub-foot nav a { display: inline-block; padding-block: var(--sp-3); }
 }
 
-/* The Neo launcher floats over the bottom corner, so a public page ends with room under its last line */
-@media (max-width: 640px) {
-  .pub-foot { padding-bottom: calc(var(--sp-7) + var(--sp-7) + env(safe-area-inset-bottom)); }
-}
 
 /* A task's tick box sits in a label, so on a touch screen the label is the 44px target and the box keeps its place */
 .item-check { display: contents; }

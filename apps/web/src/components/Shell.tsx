@@ -502,8 +502,6 @@ function SignIn() {
       </div>
       {/* The public pages and policies, and the way back to neon1.tech, below the card as on every public page */}
       <PublicFooter />
-      {/* "report a bug" in the page's bottom right corner, centered on Neo's button, as the site's footer has it */}
-      <ReportBug kind="corner" />
     </main>
   );
 }
