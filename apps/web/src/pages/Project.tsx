@@ -621,7 +621,7 @@ function Overview({ project: p, items, docs }: { project: Project; items: Item[]
 const ROLE_SHORT: Record<Project["people"][number]["role"], string> = {
   decision_maker: "Decision maker",
   sponsor: "Sponsor",
-  lead_engineer: "Lead engineer",
+  lead_engineer: "Engineer",
   tech_contact: "Tech contact",
   stakeholder: "Stakeholder",
   observer: "Observer",
@@ -630,7 +630,7 @@ const ROLE_SHORT: Record<Project["people"][number]["role"], string> = {
 const ROLE_NAMES: Record<Project["people"][number]["role"], string> = {
   decision_maker: "Decision maker (approves options)",
   sponsor: "Sponsor",
-  lead_engineer: "Lead engineer",
+  lead_engineer: "Engineer",
   tech_contact: "Tech contact",
   stakeholder: "Stakeholder",
   observer: "Observer",

@@ -178,7 +178,7 @@ function App() {
 const PEOPLE = [
   ["priya@harborlineoutfitters.example", "Priya Raman", "Harborline Outfitters' operations director: approves options and manages people"],
   ["tomas@harborlineoutfitters.example", "Tomas Greer", "Harborline Outfitters' inventory lead: adds requests, answers, and files"],
-  ["pradeep@neon1.tech", "Pradeep", "neon1's lead engineer: every client, proposals, and the work"],
+  ["pradeep@neon1.tech", "Pradeep", "neon1's engineer: every client, proposals, and the work"],
 ] as const;
 // The demo signs in by picking a person; the live playback always shows the real sign-in instead
 // (email, then a code from her email), answered in the browser
