@@ -526,9 +526,9 @@ fieldset legend { font: var(--fs-xs) var(--mono); color: var(--muted); }
 .chip.on { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 
 /* Legal pages: comfortable reading width and list spacing */
-.legal p, .legal li { line-height: 1.7; }
-.legal ul, .legal ol { padding-left: var(--sp-5); }
-.legal code { font: var(--fs-sm) var(--mono); background: var(--accent-soft); padding: 1px var(--sp-1); border-radius: 4px; }
+.legal-doc p, .legal-doc li { line-height: 1.7; }
+.legal-doc ul, .legal-doc ol { padding-left: var(--sp-5); }
+.legal-doc code { font: var(--fs-sm) var(--mono); background: var(--accent-soft); padding: 1px var(--sp-1); border-radius: 4px; }
 
 /* The glitch itself (.glitch) comes from neon1.tech's /shared/neon1.css */
 
@@ -1041,6 +1041,8 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 /* The copyright line is too long for a phone, so it stacks without its backslash, as on the site */
 @media (max-width: 599px) { .pub-foot .legal .owner .sep { display: none; } .pub-foot .legal .owner { flex: 0 0 100%; } }
 @media (max-width: 359px) { .pub-foot .legal .policies { flex-wrap: wrap; } }
+/* On touch the two link rows sit far enough apart, with tap areas short enough, that no row takes the other's taps */
+@media (pointer: coarse) { .pub-foot .legal .pub-links { row-gap: var(--sp-5); } .pub-foot .legal :is(.owner, .policies) a::after { inset: -7px -4px; } }
 .example .example-layer { scroll-margin-top: calc(var(--top-h) + var(--demo-h, 0px) + 60px); }
 /* "On this page", as the Knowledge Center has it: a bar that stays under the top bar, names the layer in view, and opens the list of layers */
 .example .toc-bar { position: sticky; top: calc(var(--top-h) + var(--demo-h, 0px)); z-index: 5; margin: var(--sp-4) calc(50% - 50vw) var(--sp-4); background: color-mix(in srgb, var(--panel) 94%, transparent); -webkit-backdrop-filter: saturate(1.8) blur(16px); backdrop-filter: saturate(1.8) blur(16px); border-bottom: 1px solid var(--line); box-shadow: var(--shadow-pop); }

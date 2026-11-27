@@ -29,10 +29,10 @@ export function Legal({ doc }: { doc: keyof typeof DOCS }) {
   return (
     <>
     <PublicBar theme={look} onChange={setLook} back />
-    <main className="content legal pub-page" style={{ maxWidth: 760, margin: "0 auto" }}>
+    <main className="content legal-doc pub-page" style={{ maxWidth: 760, margin: "0 auto" }}>
       {/* Rendered from Markdown, then links to the other two documents */}
       <Markdown source={DOCS[doc]} />
-      <PageIndex key={doc} within="main.legal" />
+      <PageIndex key={doc} within="main.legal-doc" />
     </main>
     <PublicFooter />
     </>

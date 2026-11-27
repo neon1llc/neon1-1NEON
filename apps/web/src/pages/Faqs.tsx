@@ -70,7 +70,7 @@ export function Faqs() {
   return (
     <>
     <PublicBar theme={look} onChange={setLook} back />
-    <main className="content legal pub-page faqs" style={{ maxWidth: 760, margin: "0 auto" }}>
+    <main className="content legal-doc pub-page faqs" style={{ maxWidth: 760, margin: "0 auto" }}>
       <h1 className="page-title">FAQs</h1>
       <Markdown source={FAQ.intro} />
       <input type="search" aria-label="Search the FAQs" placeholder="Search the FAQs" value={q} onChange={(e) => setQ(e.target.value)} className="faq-search" />
