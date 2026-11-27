@@ -95,6 +95,10 @@ describe("asking to be recommissioned", () => {
     await as(OP, `/orgs/${tid}/members/${s.dana.id}/suspend`, "POST", {});
     expect((await as(TOMAS, `/t/${tid}/recommission`, "POST", { scope: "account", reason: " " })).status).toBe(400);
     expect((await as(TOMAS, `/t/${tid}/recommission`, "POST", { scope: "account", reason: "I was out on leave." })).status).toBe(201);
+    // super hears at once, with the reason
+    const alert = mailer.sent.find((m) => m.to === "hello@neon1.tech");
+    expect(alert?.subject).toMatch(/Recommission request/);
+    expect(alert?.text).toContain("I was out on leave.");
     // One open request per thing asked for
     expect((await as(PRIYA, `/t/${tid}/recommission`, "POST", { scope: "account", userId: s.dana.id, reason: "He's back." })).status).toBe(409);
     const list = await json(await as(OP, "/suspensions"));

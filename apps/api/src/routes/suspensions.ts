@@ -10,6 +10,8 @@ import { z } from "zod";
 import { body, check, fail, now, who, type Env } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
 import { factMail, subjectOf } from "../lib/factmail.ts";
+import { alertNeon1 } from "../lib/alert.ts";
+import { CONTACT_TO } from "./contact.ts";
 import type { WriteOp } from "../store/types.ts";
 import { isDev, neon1Only } from "../dev-guard.ts";
 
@@ -195,6 +197,20 @@ export function suspensionRoutes(app: App, k: Kit) {
     const r: Recommission = { id: newId("rc"), tenantId: t.id, orgName: t.name, scope: ask.scope, ...(uid ? { userId: uid, userName: target!.name || target!.email } : {}), by: user.id, byName: user.name || user.email, reason: ask.reason, at: now(), state: "open" };
     const what = ask.scope === "org" ? t.name : uid === user.id ? "their account" : `${r.userName}'s account`;
     await repo.table.write([{ put: { PK: REQ_PK, SK: `${t.id}#${r.id}`, ...r }, guard: { create: true } }, repo.auditOp({ tenantId: t.id, actorId: user.id, action: "recommission.requested", target: uid ?? t.id, summary: `${r.byName} asked to recommission ${what}: ${ask.reason.slice(0, 200)}` })]);
+    // super hears at once, with the reason, the way assessment and call requests arrive; a failed email
+    // leaves the request in Potentials all the same
+    const mail = factMail({
+      kicker: "recommission request",
+      title: `Recommission ${ask.scope === "org" ? t.name : r.userName}?`,
+      sub: t.name,
+      preheader: ask.reason.slice(0, 120),
+      intro: [ask.reason],
+      facts: [{ k: "Asked by", v: `${r.byName} (${user.email})` }, { k: "For", v: ask.scope === "org" ? "The organization" : uid === user.id ? "Their own account" : `${r.userName}'s account` }],
+      action: { label: "Open Potentials", url: `${k.cfg.publicUrl}/1NEON/all/prospects` },
+      why: "You're super in 1NEON, and someone suspended asked to be recommissioned.",
+    });
+    const subject = subjectOf("Recommission request", t.name);
+    await alertNeon1(k.d, { severity: "important", title: "Recommission request", text: "Someone suspended asked to be recommissioned.", source: "recommission", to: [CONTACT_TO], mail: { subject: t.test ? `[TEST] ${subject}` : subject, text: mail.text, html: mail.html, replyTo: user.email, as: "requests" } }).catch((e) => console.error(JSON.stringify({ level: "error", message: "recommission alert failed", tenant: t.id, error: String(e).slice(0, 200) })));
     return c.json({ request: r }, 201);
   });
 }
