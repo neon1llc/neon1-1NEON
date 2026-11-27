@@ -485,7 +485,7 @@ function SignIn() {
             <a href="/1NEON/demo/">Try it yourself</a>
             {/* The walkthrough already leads above the form on the plain sign-in screen */}
             {(signingUp || at.step !== "email") && (<>
-              <span className="more-sep" aria-hidden="true">·</span>
+              <span className="more-sep" aria-hidden="true">\</span>
               <a href="/1NEON/live">Or see how it works</a>
             </>)}
           </nav>

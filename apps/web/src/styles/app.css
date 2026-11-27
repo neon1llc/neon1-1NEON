@@ -443,7 +443,7 @@ body:has(.live-bar) .signin .n1-bar { display: none; }
 .signin .signin-lead { margin: 6px 0 20px; font-size: var(--fs-ui); color: var(--m-muted, #CBD1CC); }
 .signin .field-label { display: block; font: var(--fs-xs) var(--mono); color: var(--m-muted, #CBD1CC); margin: 0 0 -4px; }
 .signin form.stack > .next-hint { margin: -2px 0 0; }
-.signin .signin-more { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px; margin-top: 7px; padding-top: 14px; border-top: 1px solid rgba(0, 255, 65, .16); font-size: var(--fs-sm); }
+.signin .signin-more { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 16px; margin-top: 7px; padding-top: 14px; border-top: 1px solid rgba(0, 255, 65, .16); font-size: var(--fs-sm); }
 .signin .signin-more a { color: var(--m-muted, #CBD1CC); }
 .signin .signin-more a:hover { color: var(--neon); }
 .signin .signin-more .more-sep { color: var(--m-muted, #CBD1CC); }
