@@ -7,7 +7,7 @@ import { TrinAsk, type TrinReply } from "@1neon/domain";
 import { HTTPException } from "hono/http-exception";
 import { body, fail, need, who } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
-import { gather, material, nudges, RULES, search } from "../trin/trin.ts";
+import { cite, gather, material, nudges, RULES, search } from "../trin/trin.ts";
 
 
 // Prices in dollars per million tokens: Nova Lite in and out, and Titan V2 embeddings (about four characters a token)
@@ -43,11 +43,10 @@ export function trinRoutes(app: App, k: Kit) {
       // Millionths of a dollar: tokens times dollars per million tokens
       const micros = Math.ceil(r.inputTokens * PRICE.input + r.outputTokens * PRICE.output + (embedChars / 4) * PRICE.embed);
       await repo.table.increment("COUNTER", `TRIN#${month}`, micros);
-      // Sources are the pieces the answer links to, once each
-      const linked = top.filter((x) => r.text.includes(`](${x.href})`));
-      const sources = [...new Map(linked.map((x) => [x.href, { title: x.title, href: x.href }])).values()];
+      // Each [n] becomes a link to its piece; the cited pieces come back as the sources
+      const { answer, sources } = cite(r.text.trim(), top);
       console.log(JSON.stringify({ message: "trin", pieces: chunks.length, top: top.length, ms: Date.now() - started, micros }));
-      const reply: TrinReply = { answer: r.text.trim() || "I couldn't find anything on that yet.", sources };
+      const reply: TrinReply = { answer: answer || "I couldn't find anything on that yet.", sources };
       return c.json(reply);
     } catch (e) {
       if (e instanceof HTTPException) throw e;

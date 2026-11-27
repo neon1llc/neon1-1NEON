@@ -18,6 +18,7 @@ interface Line {
   id: number;
   who: "you" | "bot";
   text: string;
+  sources?: TrinReply["sources"];
 }
 
 
@@ -46,7 +47,7 @@ export function TrinChat({ org }: { org: { id: string; slug: string; name: strin
       // The last few turns go with it, so follow-ups make sense
       const history = before.slice(-6).map((l) => ({ role: l.who === "you" ? ("user" as const) : ("assistant" as const), text: l.text.slice(0, 4000) }));
       const r = await api<TrinReply>(`/t/${org.id}/trin`, { method: "POST", body: { question: q.slice(0, 1000), projectId: inView?.id, history } });
-      setLines((all) => [...all, { id: ++ids.current, who: "bot", text: r.answer }]);
+      setLines((all) => [...all, { id: ++ids.current, who: "bot", text: r.answer, sources: r.sources }]);
     } catch (e) {
       setText((t) => t || q);
       setLines((all) => [...all, { id: ++ids.current, who: "bot", text: `${problem(e)} Your question is back in the box.` }]);
@@ -70,6 +71,8 @@ export function TrinChat({ org }: { org: { id: string; slug: string; name: strin
         {lines.map((l) => (
           <div key={l.id} className={`n1chat-msg n1chat-${l.who} n1chat-in`}>
             {l.who === "you" ? l.text : <Reply text={l.text} />}
+            {/* Where it came from, numbered as the answer cites them */}
+            {l.sources && l.sources.length > 0 && <Reply text={l.sources.map((x, n) => `${n + 1}. [${x.title.replace(/[[\]]/g, "")}](${x.href})`).join("\n")} />}
           </div>
         ))}
         {busy && <div className="n1chat-msg n1chat-bot n1chat-typing n1chat-in" aria-label="Trin is thinking"><span /><span /><span /></div>}

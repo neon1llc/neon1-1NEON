@@ -27,7 +27,7 @@ const fake: TrinModel = {
     const text = messages.at(-1)!.text;
     seen.push({ system, text });
     const first = /title="([^"]+)" address="([^"]+)"/.exec(text);
-    return { text: first ? `See [${first[1]}](${first[2]}).` : "Nothing yet.", inputTokens: 2000, outputTokens: 100 };
+    return { text: first ? "See the first piece [1]." : "Nothing yet.", inputTokens: 2000, outputTokens: 100 };
   },
 };
 
