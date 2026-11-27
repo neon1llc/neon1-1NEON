@@ -63,6 +63,20 @@
       "impact": "serious",
       "selector": ".chip[type=\"button\"]:nth-child(4)",
       "reason": "The starter chip has only 19.6 CSS px of safe spacing from its nearest neighbor. Correcting the spacing requires a visual change to protected app.css, outside this lane's no-redesign scope; retain this known issue and fail on new rule/selector pairs."
+    },
+    {
+      "key": "target-size|input[aria-label=\"Limit for Hand over\"]",
+      "id": "target-size",
+      "impact": "serious",
+      "selector": "input[aria-label=\"Limit for Hand over\"]",
+      "reason": "The handover limit field measures below the target-size threshold. Its control height comes from protected app.css; retain this known issue and fail on new rule/selector pairs."
+    },
+    {
+      "key": "target-size|section:nth-child(3) > .add-row > .linkish.small",
+      "id": "target-size",
+      "impact": "serious",
+      "selector": "section:nth-child(3) > .add-row > .linkish.small",
+      "reason": "The Add change action is below the WCAG 2.2 target-size spacing threshold. Its shared small-control hit area is in protected app.css; retain this known issue and fail on new rule/selector pairs."
     }
   ],
   "manualFindings": [
@@ -305,6 +319,21 @@
       "key": "target-size-under-24|/1NEON/demo/o/:org/workspace|button.linkish",
       "type": "target-size-under-24",
       "reason": "The workspace monthly check-in action measures under 24 CSS px at desktop size. Its shared hit-area styles are in protected app.css; changing them would alter the protected Home layout outside this lane’s no-redesign scope. Keep this known finding and fail on new route/selector combinations."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/workspace|button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past",
+      "type": "target-size-under-24",
+      "reason": "Past-day buttons in the monthly check-in calendar are below the target-size threshold. Workspace and shared hit-area geometry are protected; retain this known route/selector group and fail on new route/selector combinations."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/workflow|a.name",
+      "type": "target-size-under-24",
+      "reason": "The workflow route has a small name link below the target-size threshold. Its hit area uses protected app.css; retain this known route/selector group and fail on new route/selector combinations."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/people|button.linkish.small,button.linkish.small,button.linkish.small,button.linkish.small",
+      "type": "target-size-under-24",
+      "reason": "The people route has four small linkish action buttons below the target-size threshold. Their hit areas use protected app.css; retain this known route/selector group and fail on new route/selector combinations."
     }
   ]
 }
