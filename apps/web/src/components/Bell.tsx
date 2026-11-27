@@ -36,8 +36,10 @@ export function hrefOf(slug: string, link: NoteLink | undefined) {
   return `/o/${slug}/projects/${link.project}${link.layer ? `/${layerSlug(link.layer)}` : ""}${link.item ? `#item-${link.item}` : hash}`;
 }
 interface Notes { unread: number; events: Note[] }
-// Each row says what kind of change it is, the kind you chose to hear about (GitHub names a notification's reason the same way)
-const GROUP_LABEL = new Map(NOTIFY_GROUPS.map((g) => [g.id, g.label]));
+// Each row says what kind of change it is, the kind you chose to hear about (GitHub names a notification's reason the
+// same way), in a word; the profile's Notifications rows carry the full names
+const SHORT: Record<string, string> = { files: "Files", access: "People", decisions: "Decisions", billing: "Billing", workflow: "Stages", messages: "Messages", comments: "Comments", updates: "Updates" };
+const GROUP_LABEL = new Map(NOTIFY_GROUPS.map((g) => [g.id, SHORT[g.id] ?? g.label]));
 
 
 /** The bell and its list for one organization; checks every 20 seconds and when the tab returns */
