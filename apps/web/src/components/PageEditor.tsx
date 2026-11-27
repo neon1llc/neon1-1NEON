@@ -89,7 +89,23 @@ function Surface({ doc, canEdit, placeholder, onEditor, aside }: { doc: Y.Doc; c
       Collaboration.configure({ document: doc, field: "page" }),
     ],
     editable: canEdit,
-    editorProps: { attributes: { class: "page-text", "aria-label": "Page" } },
+    editorProps: {
+      attributes: { class: "page-text", "aria-label": "Page" },
+      handleDOMEvents: {
+        focus: (view) => {
+          if (view.dom.matches(":focus-visible")) {
+            view.dom.style.outline = "2px solid var(--focus)";
+            view.dom.style.outlineOffset = "2px";
+          }
+          return false;
+        },
+        blur: (view) => {
+          view.dom.style.removeProperty("outline");
+          view.dom.style.removeProperty("outline-offset");
+          return false;
+        },
+      },
+    },
   }, [doc, canEdit]);
   // The live editor goes up for download and the plain copy; a rebuilt one replaces it
   useEffect(() => { if (editor) onEditor(editor); }, [editor, onEditor]);

@@ -125,6 +125,8 @@ export function Board({
   const ghost = (stageId: string, index: number) => (slot && slot.stageId === stageId && slot.index === index ? <div className="pcard-slot" aria-hidden="true" style={{ height: slot.h }} /> : null);
 
   return (
+    <>
+    <h2 className="sr">Project stages</h2>
     <div className={`board${dragging ? " holding" : ""}`} role="list" aria-label="Workflow board">
       {visible.map((s) => {
         const cards = byStage(s.id);
@@ -133,7 +135,7 @@ export function Board({
         // The column's cards other than the one held, which is where the slot's index counts
         const rest = cards.filter((x) => x.id !== dragging);
         return (
-          <section
+          <div
             key={s.id}
             role="listitem"
             data-tour="board-column"
@@ -209,9 +211,10 @@ export function Board({
             ))}
             {ghost(s.id, rest.length)}
             {cards.length === 0 && slot?.stageId !== s.id && <p className="muted small none" style={{ padding: "4px" }}>No projects here.</p>}
-          </section>
+          </div>
         );
       })}
     </div>
+    </>
   );
 }

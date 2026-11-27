@@ -770,6 +770,7 @@ function FrameBody({ org, all, reads = [], banner, pen, children }: { org?: OrgS
   const inOrg = useContext(OrgCtx);
   const [open, setOpen] = useState(false);
   const side = useRef<HTMLElement>(null);
+  const menuTrigger = useRef<HTMLButtonElement | null>(null);
   // Closing starts on the element itself: the drawer's class and the scrim's change in the frame of the tap, and the re-render that
   // follows (the whole shell, tens of milliseconds on a phone) waits until the slide is over, so it never holds up a frame of it
   const shutTurn = useRef(0);
@@ -843,7 +844,12 @@ function FrameBody({ org, all, reads = [], banner, pen, children }: { org?: OrgS
   }, [section]);
   useEffect(() => {
     if (!open) return;
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && shut();
+    const esc = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      shut();
+      menuTrigger.current?.focus({ preventScroll: true });
+    };
     addEventListener("keydown", esc);
     return () => removeEventListener("keydown", esc);
   }, [open]);
@@ -884,7 +890,6 @@ function FrameBody({ org, all, reads = [], banner, pen, children }: { org?: OrgS
     const el = side.current;
     if (!el) return;
     if (open) {
-      trigger.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       // The open menu starts on the same row the rail was showing at its top (the rows differ a little in height,
       // so the row is matched, not the offset); focusing the page in view must not scroll it (on the profile,
       // that link sits at the very bottom)
@@ -1052,13 +1057,13 @@ function FrameBody({ org, all, reads = [], banner, pen, children }: { org?: OrgS
         <header className="top">
           {/* The mark and name, Home's way in, before the menu button; in Mini the rail shows the mark instead */}
           {!mini && <Link className="top-brand" to={home} title="Home" aria-label="1NEON, Home"><span className="mark-box" aria-hidden="true"><Rings /></span><span className="lbl">1NEON</span></Link>}
-          <button className="icon-btn menu-btn" onClick={() => (open ? shut() : setOpen(true))} aria-expanded={open} aria-label="Menu" title="Menu" data-tour="menu"><MenuIcon size={18} /></button>
+          <button className="icon-btn menu-btn" onClick={(e) => { if (open) shut(); else { menuTrigger.current = e.currentTarget; trigger.current = e.currentTarget; setOpen(true); } }} aria-expanded={open} aria-label="Menu" title="Menu" data-tour="menu"><MenuIcon size={18} /></button>
           <div className="crumb">{top}</div>
           <span className="spacer" />
-          <button className="search-btn" onClick={() => { setNeoOpen(false); setSearch(true); }} data-tour="search" aria-label="Search">
+          <button className="search-btn" onClick={() => { setNeoOpen(false); setSearch(true); }} data-tour="search" aria-label={`Search ${/Mac|iPhone|iPad/.test(navigator.platform) ? "⌘K" : "Ctrl K"}`}>
             <SearchIcon size={16} aria-hidden="true" />
             <span className="hide-sm">Search</span>
-            <span className="kbd hide-sm">{/Mac|iPhone|iPad/.test(navigator.platform) ? "⌘K" : "Ctrl K"}</span>
+            <span className="kbd hide-sm" aria-hidden="true">{/Mac|iPhone|iPad/.test(navigator.platform) ? "⌘K" : "Ctrl K"}</span>
           </button>
           {pen}
           {org && <Bell tid={org.id} slug={org.slug} />}
@@ -1083,7 +1088,7 @@ function FrameBody({ org, all, reads = [], banner, pen, children }: { org?: OrgS
         ) : (
           <NavLink to="/"><HomeIcon size={20} aria-hidden="true" /><span>Home</span></NavLink>
         )}
-        <button type="button" className="menu-btn" onClick={() => (open ? shut() : setOpen(true))} aria-expanded={open}><MenuIcon size={20} aria-hidden="true" /><span>Menu</span></button>
+        <button type="button" className="menu-btn" onClick={(e) => { if (open) shut(); else { menuTrigger.current = e.currentTarget; trigger.current = e.currentTarget; setOpen(true); } }} aria-expanded={open}><MenuIcon size={20} aria-hidden="true" /><span>Menu</span></button>
       </nav>
       <Palette me={me} org={org} prospect={inOrg?.prospect} open={search} setOpen={setSearch} onHelp={help.open} onTour={help.welcomeTour} />
       <ConfirmDialog me={me} />

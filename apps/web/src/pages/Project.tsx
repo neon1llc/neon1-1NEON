@@ -1390,7 +1390,7 @@ function Options({ items, all, docs, path, project }: { items: Item[]; all: Item
                 </span>
                 <DeleteItem item={o} path={path} label="Option" />
               </div>
-              <h4><button type="button" className="item-open" onClick={() => setOpenId(o.id)}>{o.title}</button></h4>
+              <h4 aria-level={2}><button type="button" className="item-open" onClick={() => setOpenId(o.id)}>{o.title}</button></h4>
               {/* The card shows the first paragraph; the panel and the proposal show every detail */}
               {o.body && <p className="small muted" style={{ marginTop: 0, whiteSpace: "pre-wrap" }}>{o.body.split(/\n\s*\n/)[0]}</p>}
               {/* Revised terms say what they change from the option they replace, so the client sees the difference at a glance */}

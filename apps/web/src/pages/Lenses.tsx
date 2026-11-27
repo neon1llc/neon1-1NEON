@@ -8,7 +8,7 @@
 
 import { RECORD_KINDS, todayIn, type Item, type ItemKind, type Project } from "@1neon/domain";
 import { CalendarDays, FileText, Kanban, ListChecks, Plus } from "lucide-react";
-import { useState, type DragEvent } from "react";
+import { useState, type DragEvent, type FocusEvent } from "react";
 import { NavLink } from "react-router";
 import { ItemPanel, STATUS_WORDS } from "../components/ItemPanel.tsx";
 import { PageEditor } from "../components/PageEditor.tsx";
@@ -32,6 +32,16 @@ export type Lens = (typeof LENSES)[number]["id"];
 // A person's own lens for a project, remembered in this browser
 const mine = (pid: string) => `lens:${pid}`;
 
+function showFocus(e: FocusEvent<HTMLElement>) {
+  e.currentTarget.style.outline = "2px solid var(--focus)";
+  e.currentTarget.style.outlineOffset = "2px";
+}
+
+function clearFocus(e: FocusEvent<HTMLElement>) {
+  e.currentTarget.style.removeProperty("outline");
+  e.currentTarget.style.removeProperty("outline-offset");
+}
+
 /** The lens a project opens on: this person's last choice, else the project's, else its workflow's */
 export function lensFor(p: Project): Lens {
   const own = prefs.get(mine(p.id));
@@ -53,7 +63,7 @@ export function LensBar({ base, current, pid }: { base: string; current: Lens; p
         const Icon = l.icon;
         const to = l.id === "steps" ? `${base}/overview` : `${base}/${l.id}`;
         return (
-          <NavLink key={l.id} to={to} className={current === l.id ? "on" : ""} aria-current={current === l.id ? "page" : undefined} title={l.hint} onClick={() => keepLens(pid, l.id)}>
+          <NavLink key={l.id} to={to} className={current === l.id ? "on" : ""} aria-current={current === l.id ? "page" : undefined} title={l.hint} onClick={() => keepLens(pid, l.id)} onFocus={showFocus} onBlur={clearFocus}>
             <Icon size={16} aria-hidden="true" /><span>{l.label}</span>
           </NavLink>
         );
@@ -149,7 +159,7 @@ function QuickAdd({ onAdd, dated, label }: { onAdd: (title: string, due?: string
       setBusy(false);
     }}>
       <input aria-label={label} placeholder={label} value={title} maxLength={160} onChange={(e) => setTitle(e.target.value)} />
-      {dated && <input type="date" aria-label="Date" value={due} onChange={(e) => setDue(e.target.value)} />}
+        {dated && <input type="date" aria-label="Date" value={due} onChange={(e) => setDue(e.target.value)} onFocus={showFocus} onBlur={clearFocus} />}
       <button className="icon-act" disabled={!title.trim() || busy} aria-label="Add"><Plus size={18} aria-hidden="true" /></button>
     </form>
   );
@@ -226,7 +236,7 @@ export function TimelineLens({ project: p, items, kindLabel }: { project: Projec
             {undated.map((i) => (
               <div key={i.id} className="lens-slot">
                 <Card item={i} path={path} kindLabel={kindLabel(i.kind)} />
-                {editable && <input type="date" className="lens-move" aria-label={`Date for ${i.title}`} onChange={(e) => e.target.value && void patch(i, { dueDate: e.target.value })} />}
+                {editable && <input type="date" className="lens-move" aria-label={`Date for ${i.title}`} onChange={(e) => e.target.value && void patch(i, { dueDate: e.target.value })} onFocus={showFocus} onBlur={clearFocus} />}
               </div>
             ))}
           </div>

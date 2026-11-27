@@ -86,7 +86,7 @@ export function ProposalPage() {
     for (const o of snapshot.options) o.code = latest ? o.code : `Draft ${o.letter}`;
   }
   if (!snapshot.options.length) {
-    return <Empty text="There's no proposal yet. It's ready once neon1 shares options for this project." action={<Link className="btn btn-ghost" to={`${base}/needs#options`}>Options</Link>} />;
+    return <><h1 className="sr">Proposal</h1><Empty text="There's no proposal yet. It's ready once neon1 shares options for this project." action={<Link className="btn btn-ghost" to={`${base}/needs#options`}>Options</Link>} /></>;
   }
   // Decisions made on the revision shown, newest last; the one in force is marked
   const inForce = currentDecision(items).decision?.id;
