@@ -7,14 +7,17 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Download, FilePlus2, FileUp, Maximize2, Minimize2, PenLine, Trash2, X } from "lucide-react";
-import { createContext, useContext, useState, type ReactNode } from "react";
+import type { JSONContent } from "@tiptap/react";
+import { createContext, lazy, Suspense, useContext, useState, type ReactNode } from "react";
 import { useLocation } from "react-router";
 import { api } from "../lib/api.ts";
 import { problem, useProjects } from "../lib/hooks.ts";
 import type { PageMeta } from "../lib/pagesync.ts";
 import { read } from "../lib/reads.ts";
 import { uploadFiles } from "./Files.tsx";
-import { PageEditor, toMarkdown } from "./PageEditor.tsx";
+// The editor (Tiptap and Yjs) loads only when a page opens, so the rest of the app never carries it
+const PageEditor = lazy(() => import("./PageEditor.tsx").then((m) => ({ default: m.PageEditor })));
+const markdown = async (json: JSONContent) => (await import("./PageEditor.tsx")).toMarkdown(json);
 import { gate } from "./Reads.tsx";
 import { ago, Dialog, useAsk, useToast } from "./ui.tsx";
 
@@ -119,22 +122,23 @@ function OpenPage({ tid, at, canWrite, onBack }: { tid: string; at: Open; canWri
     }
   }
   return (
+    <Suspense fallback={<p className="helper" role="status">Opening…</p>}>
     <PageEditor
       key={path}
       path={path}
       canEdit={canWrite}
       head={({ editor, meta, here }) => {
         const name = meta?.title ?? "";
-        const md = () => (editor ? toMarkdown(editor.getJSON()) : "");
-        const download = () => {
-          const url = URL.createObjectURL(new Blob([md()], { type: "text/markdown" }));
+        const md = async () => (editor ? markdown(editor.getJSON()) : "");
+        const download = async () => {
+          const url = URL.createObjectURL(new Blob([await md()], { type: "text/markdown" }));
           const a = Object.assign(document.createElement("a"), { href: url, download: fileName(name) });
           a.click();
           setTimeout(() => URL.revokeObjectURL(url), 1000);
         };
         // A copy into Files, filed with the page's project; the page itself keeps changing
         const save = async () => {
-          const [job] = await uploadFiles(tid, [{ file: new File([md()], fileName(name), { type: "text/markdown" }) }], { projectId: at.pid });
+          const [job] = await uploadFiles(tid, [{ file: new File([await md()], fileName(name), { type: "text/markdown" }) }], { projectId: at.pid });
           toast(job?.error ? `Not saved to Files: ${job.error}` : `Saved "${fileName(name)}" to Files`);
           void qc.invalidateQueries({ queryKey: ["project", tid] });
         };
@@ -145,13 +149,14 @@ function OpenPage({ tid, at, canWrite, onBack }: { tid: string; at: Open; canWri
               ? <input className="page-title" aria-label="Page name" value={title ?? name} maxLength={120} onChange={(e) => setTitle(e.target.value)} onBlur={(e) => void rename(e.target.value, name)} onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }} />
               : <h2 className="page-title">{name || "Page"}</h2>}
             {here}
-            <button type="button" className="icon-act" onClick={download} disabled={!editor} aria-label="Download as Markdown" title="Download as Markdown"><Download size={16} aria-hidden="true" /></button>
+            <button type="button" className="icon-act" onClick={() => void download()} disabled={!editor} aria-label="Download as Markdown" title="Download as Markdown"><Download size={16} aria-hidden="true" /></button>
             {canWrite && <button type="button" className="icon-act" onClick={() => void save()} disabled={!editor} aria-label="Save a copy to Files" title="Save a copy to Files"><FileUp size={16} aria-hidden="true" /></button>}
             {canWrite && at.id !== "main" && <button type="button" className="icon-act del" onClick={() => void remove(name)} aria-label="Delete page" title="Delete page"><Trash2 size={16} aria-hidden="true" /></button>}
           </div>
         );
       }}
     />
+    </Suspense>
   );
 }
 
