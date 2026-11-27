@@ -27,8 +27,11 @@ export type ZipEntry = { name: string; input: Uint8Array; lastModified: Date };
 /** A comment on an item, as the export's history read gives it */
 export type Comment = { projectId: string; itemId: string; id: string; at: string; authorId: string; authorName: string; body: string };
 
+/** A page's plain copy, with the project it belongs to (none: the organization's) */
+export type PageCopy = { projectId?: string; id: string; title: string; text: string; updatedAt: string };
+
 /** Everything read, with paths planned, before any file is downloaded */
-export type Gathered = { at: string; held: Held[]; files: Planned[]; members: MemberRow[]; comments: Comment[]; activity: AuditEvent[]; reads: Reads; expected: number };
+export type Gathered = { at: string; held: Held[]; files: Planned[]; members: MemberRow[]; comments: Comment[]; activity: AuditEvent[]; reads: Reads; expected: number; pages?: PageCopy[] };
 
 
 // --- Reading the records ----------------------------------------------------------------------
@@ -59,6 +62,14 @@ export async function gather(org: Tenant, src: Source, say: Progress): Promise<G
     say(`Reading ${p.key} (${i + 1} of ${live.length})…`);
     details.push(await src.get<Detail>(`/t/${org.id}/projects/${p.id}`));
   }
+  // Pages, as their plain copies: the organization's and each live project's. An API without pages answers 404
+  say("Reading pages…");
+  const pages: PageCopy[] = [];
+  for (const pid of [undefined, ...live.map((p) => p.id)]) {
+    const base = pid ? `/t/${org.id}/projects/${pid}/pages` : `/t/${org.id}/pages`;
+    const list = (await src.get<{ id: string }[]>(base).catch(absent)) ?? [];
+    for (const x of list) pages.push({ projectId: pid, ...(await src.get<PageCopy>(`${base}/${x.id}`)) });
+  }
   // Project files come from each project's own read, which includes uploads that never finished; the
   // index adds the organization's own files
   const { held, files } = plan([
@@ -71,6 +82,7 @@ export async function gather(org: Tenant, src: Source, say: Progress): Promise<G
     activity: history?.audit ?? [],
     reads: { trash: trash ? "included" : "unavailable", history: history ? "included" : "unavailable" },
     expected: expectedBytes(files),
+    pages,
   };
 }
 
@@ -80,7 +92,7 @@ export async function gather(org: Tenant, src: Source, say: Progress): Promise<G
 const dollars = (cents: number | undefined) => (cents === undefined ? "" : (cents / 100).toFixed(2));
 
 /** organization.json, the CSV tables, and each project's project.json, as [path, text] */
-export function records(org: Tenant, g: Pick<Gathered, "at" | "held" | "members" | "comments" | "activity" | "reads">): [string, string][] {
+export function records(org: Tenant, g: Pick<Gathered, "at" | "held" | "members" | "comments" | "activity" | "reads" | "pages">): [string, string][] {
   const { at, held, members, comments, activity } = g;
   const out: [string, string][] = [];
   out.push(["organization.json", JSON.stringify({ exportedAt: at, organization: org }, null, 2)]);
@@ -112,6 +124,15 @@ export function records(org: Tenant, g: Pick<Gathered, "at" | "held" | "members"
     const nameOf = new Map(members.map((m) => [m.userId, m.name]));
     out.push(["activity.csv", csv(activity.map((e) => ({ at: e.at, who: nameOf.get(e.actorId) ?? e.actorId, action: e.action, summary: e.summary, details: e.details?.join("; ") ?? "", target: e.target, id: e.id })), ["at", "who", "action", "summary", "details", "target", "id"])]);
     out.push(["activity.json", JSON.stringify({ exportedAt: at, activity }, null, 2)]);
+  }
+
+  // Pages as text files: the organization's under pages/, a project's in its folder
+  const folderOf = new Map(held.map((h) => [h.project.id, h.folder]));
+  const safe = (t: string) => t.replace(/[^\w .-]+/g, "").trim() || "Page";
+  for (const pg of g.pages ?? []) {
+    const dir = pg.projectId ? folderOf.get(pg.projectId) : "";
+    if (pg.projectId && !dir) continue;
+    out.push([`${dir ? `${dir}/` : ""}pages/${safe(pg.title)} (${pg.id}).txt`, pg.text]);
   }
 
   // Each project's complete record, every field, with its comments

@@ -2849,3 +2849,85 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 .kinds-grid .option.tpl { gap: var(--sp-1); }
 .run-as { border: 1px solid var(--line); border-radius: var(--r-sm); padding: var(--sp-2) var(--sp-3); margin: 0 0 var(--sp-3); display: grid; gap: var(--sp-1); }
 .run-as legend { padding: 0 var(--sp-1); }
+
+/* Pages (components/Write.tsx, PageEditor.tsx): the sheet widens once a page is open (a reading measure,
+   like Plane's and Notion's pages) and can go full width; phones get the whole screen, since a page is
+   for writing, not a glance. The text is the reading size on the site's steps */
+dialog.write-sheet .dlg { display: grid; gap: var(--sp-3); align-content: start; }
+dialog.write-sheet.wide { max-width: min(760px, 100%); width: 100%; }
+dialog.write-sheet.full { max-width: 100%; border-radius: 0; }
+@media (max-width: 640px) {
+  dialog.write-sheet { inset: 0; height: var(--vvh, 100dvh); max-height: var(--vvh, 100dvh); border-radius: 0; }
+  dialog.write-sheet .dlg { padding: var(--sp-4); }
+}
+dialog.write-sheet .panel-head > span { display: inline-flex; gap: var(--sp-1); }
+dialog.write-sheet section .section-h { margin: var(--sp-4) 0 var(--sp-2); }
+.page-rows { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-1); }
+.page-row { display: grid; gap: var(--sp-0); width: 100%; text-align: left; padding: var(--sp-2) var(--sp-3); border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--panel); color: var(--text); font: inherit; font-size: var(--fs-ui); cursor: pointer; }
+.page-row:hover, .page-row:focus-visible { border-color: var(--accent); }
+.page-row .helper { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.page-new { display: flex; gap: var(--sp-2); margin-top: var(--sp-2); }
+.page-new input { flex: 1; min-width: 0; font-size: var(--fs-input); }
+.page-doc { display: grid; gap: var(--sp-2); align-content: start; }
+.page-head { display: flex; align-items: center; gap: var(--sp-1); min-width: 0; }
+.page-head .page-title { flex: 1; min-width: 0; margin: 0; font-size: var(--fs-xl); font-weight: 600; border: 0; background: none; color: var(--text); padding: var(--sp-1); border-radius: var(--r-sm); }
+.page-head input.page-title:hover, .page-head input.page-title:focus { background: var(--accent-soft); outline: none; }
+.page-here { display: inline-flex; margin-right: var(--sp-1); }
+.page-here > * + * { margin-left: calc(-1 * var(--sp-1)); }
+.page-bar { display: flex; flex-wrap: wrap; gap: var(--sp-0); position: sticky; top: calc(-1 * var(--sp-5)); z-index: 1; background: var(--panel); padding: var(--sp-1) 0; border-bottom: 1px solid var(--line); }
+.page-bar .icon-act.on { color: var(--accent); background: var(--accent-soft); }
+.page-text { min-height: 40vh; outline: none; font-size: var(--fs-base); line-height: 1.6; color: var(--text); padding: var(--sp-2) 0 var(--sp-6); overflow-wrap: anywhere; }
+.page-text > * + * { margin-top: var(--sp-2); }
+.page-text h1, .page-text h2 { font-size: var(--fs-xl); margin-top: var(--sp-5); }
+.page-text h3 { font-size: var(--fs-lg); margin-top: var(--sp-4); }
+.page-text p { margin: 0; }
+.page-text ul, .page-text ol { padding-left: var(--sp-5); margin: 0; }
+.page-text blockquote { margin: 0; padding-left: var(--sp-3); border-left: 3px solid var(--line); color: var(--muted); }
+.page-text code { font-family: var(--mono); font-size: var(--fs-sm); background: var(--accent-soft); padding: 0 var(--sp-1); border-radius: var(--sp-1); }
+.page-text a { color: var(--accent); text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 55%, transparent); }
+.page-text ul[data-type="taskList"] { list-style: none; padding-left: var(--sp-1); }
+.page-text ul[data-type="taskList"] li { display: flex; gap: var(--sp-2); align-items: flex-start; }
+.page-text ul[data-type="taskList"] li > label { margin-top: var(--sp-1); }
+.page-text ul[data-type="taskList"] li[data-checked="true"] > div { color: var(--muted); text-decoration: line-through; }
+.page-text p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: var(--muted); float: left; height: 0; pointer-events: none; }
+
+/* Project lenses (pages/Lenses.tsx): a segmented switch like Notion's and Asana's view tabs, icons with
+   short names; on a phone the names stay, the row scrolls if it must */
+.lens-bar { display: flex; gap: var(--sp-1); margin: var(--sp-3) 0; padding: var(--sp-0); border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--panel); width: fit-content; max-width: 100%; overflow-x: auto; }
+.lens-bar a { display: inline-flex; align-items: center; gap: var(--sp-1); padding: var(--sp-1) var(--sp-3); border-radius: calc(var(--r-sm) - 2px); color: var(--muted); font-size: var(--fs-sm); text-decoration: none; white-space: nowrap; min-height: 32px; }
+.lens-bar a:hover, .lens-bar a:focus-visible { color: var(--accent); }
+.lens-bar a.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+@media (pointer: coarse) { .lens-bar a { min-height: 44px; } }
+/* The project page reads as a document: one card at a reading measure */
+.lens-page { margin-top: var(--sp-3); max-width: 760px; padding: var(--sp-3) var(--sp-5) 0; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); }
+@media (max-width: 640px) { .lens-page { padding: var(--sp-2) var(--sp-3) 0; } }
+.lens-page .page-bar { top: var(--chrome-top, 0); }
+.lens-page .page-here { justify-self: end; }
+.lens-board { display: grid; grid-template-columns: repeat(4, minmax(220px, 1fr)); gap: var(--sp-3); margin-top: var(--sp-3); overflow-x: auto; padding-bottom: var(--sp-2); }
+@media (max-width: 760px) { .lens-board { grid-template-columns: repeat(4, 82%); scroll-snap-type: x mandatory; } .lens-col { scroll-snap-align: start; } }
+.lens-col { display: grid; gap: var(--sp-2); align-content: start; padding: var(--sp-3); border-radius: var(--r); background: var(--accent-soft); min-height: 120px; }
+.lens-col.over { outline: 2px dashed var(--accent); outline-offset: -2px; }
+.lens-col .section-h { margin: 0; }
+.lens-slot { display: grid; gap: var(--sp-1); }
+.lens-card { display: grid; gap: var(--sp-1); padding: var(--sp-2) var(--sp-3); border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--panel); }
+.lens-card[draggable="true"] { cursor: grab; }
+.lens-card .item-open { text-align: left; font-size: var(--fs-ui); }
+.lens-card.is-done .item-open { color: var(--muted); text-decoration: line-through; }
+.lens-meta { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
+.lens-meta:empty { display: none; }
+.lens-move { width: auto; font-size: var(--fs-xs); padding: var(--sp-0) var(--sp-1); border-radius: var(--r-sm); justify-self: start; color: var(--muted); }
+@media (pointer: coarse) { .lens-move { font-size: var(--fs-input); } }
+.lens-next { justify-self: start; padding: var(--sp-0) var(--sp-1); }
+@media (pointer: coarse) { .lens-next { min-height: 44px; } }
+.lens-add { display: flex; gap: var(--sp-1); align-items: center; }
+.lens-add input:not([type="date"]) { flex: 1; min-width: 0; font-size: var(--fs-input); }
+.lens-add input[type="date"] { flex: none; width: auto; }
+.lens-time { margin-top: var(--sp-3); max-width: 760px; display: grid; gap: var(--sp-3); }
+.lens-track { list-style: none; margin: 0; padding: 0 0 0 var(--sp-4); border-left: 2px solid var(--line); display: grid; gap: var(--sp-2); }
+.lens-month { font: var(--fs-xs) var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: var(--sp-3) 0 0 calc(-1 * var(--sp-4) - 1px); padding-left: var(--sp-4); }
+.lens-month:first-child { margin-top: 0; }
+.lens-stop { position: relative; }
+.lens-stop::before { content: ""; position: absolute; left: calc(-1 * var(--sp-4) - 6px); top: var(--sp-3); width: 10px; height: 10px; border-radius: 50%; background: var(--panel); border: 2px solid var(--accent); }
+.lens-mark { position: relative; font-size: var(--fs-sm); font-weight: 600; color: var(--accent); }
+.lens-mark::before { content: ""; position: absolute; left: calc(-1 * var(--sp-4) - 7px); top: 50%; width: 12px; height: 2px; background: var(--accent); }
+.lens-undated { display: grid; gap: var(--sp-2); }

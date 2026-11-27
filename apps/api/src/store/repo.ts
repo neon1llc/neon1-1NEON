@@ -3,7 +3,7 @@
 // hand.
 
 
-import type { AuditEvent, CalEvent, ChatBlock, ChatMessage, ChatSeen, ChatThread, DocumentRecord, Item, Member, Project, Tenant, User } from "@1neon/domain";
+import type { AuditEvent, CalEvent, ChatBlock, ChatMessage, ChatSeen, ChatThread, DocumentRecord, Item, Member, Page, Project, Tenant, User } from "@1neon/domain";
 import { newId, themeOf, withOwnName } from "@1neon/domain";
 import { ConflictError, type Guard, type Row, type TableStore, type WriteOp } from "./types.ts";
 
@@ -54,6 +54,8 @@ export const keys = {
   item: (tid: string, pid: string, iid: string) => ({ PK: `T#${tid}#P#${pid}`, SK: `ITEM#${iid}` }),
   // General files, with no project, share the "_" partition
   doc: (tid: string, pid: string | undefined, did: string) => ({ PK: `T#${tid}#P#${pid ?? "_"}`, SK: `DOC#${did}` }),
+  // Pages sit beside the files of the same project (or the organization's, "_")
+  page: (tid: string, pid: string | undefined, pgid: string) => ({ PK: `T#${tid}#P#${pid ?? "_"}`, SK: `PAGE#${pgid}` }),
   edit: (tid: string, pid: string, recordId: string) => ({ PK: `T#${tid}#P#${pid}`, SK: `EDIT#${recordId}` }),
   // Comments on one item, in time order
   comment: (tid: string, pid: string, iid: string, at: string, cid: string) => ({ PK: `T#${tid}#P#${pid}`, SK: `COMMENT#${iid}#${at}#${cid}` }),
@@ -480,6 +482,29 @@ export class Repo {
   // Document record write; the guard keeps scan results and renames from crossing
   async saveDoc(d: DocumentRecord, guard: Guard) {
     await this.table.write([this.docOp(d, guard)]);
+  }
+
+  // --- Pages --------------------------------------------------------------
+
+  // A project's pages, or the organization's own (no project)
+  async listPages(tid: string, pid: string | undefined) {
+    return (await this.table.query(`T#${tid}#P#${pid ?? "_"}`, "PAGE#")).map((r) => entity<Page>(r)!);
+  }
+
+  // One page
+  async getPage(tid: string, pid: string | undefined, pgid: string) {
+    const k = keys.page(tid, pid, pgid);
+    return entity<Page>(await this.table.get(k.PK, k.SK));
+  }
+
+  // Page write to combine with others in one transaction
+  pageOp(x: Page, guard: Guard): WriteOp {
+    return { put: { ...keys.page(x.tenantId, x.projectId, x.id), type: "page", ...x }, guard };
+  }
+
+  // Hard delete under the version read
+  async deletePage(x: Page) {
+    await this.table.write([{ delete: keys.page(x.tenantId, x.projectId, x.id), guard: { version: x.version } }]);
   }
 
   // --- Comments -----------------------------------------------------------

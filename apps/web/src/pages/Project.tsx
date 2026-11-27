@@ -8,6 +8,7 @@ import { ArrowRight, ExternalLink, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
 import { FileList, UploadButton } from "../components/Files.tsx";
 import { GUIDE, Pick, RequestBuilder, Starters } from "../components/Guide.tsx";
+import { BoardLens, LensBar, lensFor, PageLens, TimelineLens, type Lens } from "./Lenses.tsx";
 import { ItemPanel, STATUS_WORDS, statusWord, useDeleteItem, useMayDelete } from "../components/ItemPanel.tsx";
 import { downloadDocx, FICTIONAL } from "../lib/docx.ts";
 import { MarkupList } from "../components/Markup.tsx";
@@ -28,7 +29,7 @@ import type { EditMarker } from "../lib/types.ts";
 
 
 // Singular and plural labels for each kind of item
-const KIND_LABEL: Record<ItemKind, [string, string]> = {
+export const KIND_LABEL: Record<ItemKind, [string, string]> = {
   request: ["Request", "Requests"],
   discovery: ["Question", "Discovery"],
   asset: ["System or account", "Systems and accounts"],
@@ -70,7 +71,7 @@ const QUICK_GROUPS = new Set<ItemKind>(["option", "request", "task", "purchase",
 /** A project by key (FLOW-1): the key resolves to an ID through the project list */
 export function ProjectPage() {
   const { org, summary } = useOrg();
-  const { key, tab = "overview" } = useParams();
+  const { key, tab: tabParam } = useParams();
   const projects = useProjects(org.id);
   // The key resolves to an ID through the project list
   const pid = projects.data?.find((p) => p.key === key)?.id;
@@ -99,6 +100,11 @@ export function ProjectPage() {
   const wait = gate([detail], { out });
   if (wait || !detail.data) return wait;
   const { project: p, items } = detail.data;
+  // The lens in the address, else the one this person (or the project) opens on. Steps is NEON's
+  // Overview and layer tabs
+  const lens: Lens = tabParam === "page" || tabParam === "board" || tabParam === "timeline" ? tabParam : tabParam ? "steps" : lensFor(p);
+  const tab = lens === "steps" ? (tabParam ?? "overview") : lens;
+  const kindLabel = (k: ItemKind) => KIND_LABEL[k][0];
   // Stage progress: earlier stages are done, the current one is lit
   const stageAt = org.stages.findIndex((s) => s.id === p.stageId);
   // The open tab's position, so moving to a later tab pans left and an earlier one pans right
@@ -134,6 +140,14 @@ export function ProjectPage() {
         <OnionProgress progress={prog} size={44} />
         {p.archived && <span className="tag warn">archived</span>}
       </h1>
+      {/* How to look at it: the shared page, a board, a timeline, or NEON's steps */}
+      <LensBar base={base} current={lens} pid={p.id} />
+      {/* What's waiting on someone shows the same above every lens */}
+      {lens !== "steps" && <NextStep project={p} items={items} stage={org.stages[stageAt]} base={base} />}
+      {lens === "page" && <PageLens project={p} />}
+      {lens === "board" && <BoardLens project={p} items={items} kindLabel={kindLabel} />}
+      {lens === "timeline" && <TimelineLens project={p} items={items} kindLabel={kindLabel} />}
+      {lens === "steps" && <>
       {/* Visible stages plus the project's own even if hidden; "done" counts by position among all stages */}
       <div className="steps" aria-label="Stage" data-tour="stage">
         {bench ? ["Open", "Done"].map((w, i) => {
@@ -147,7 +161,7 @@ export function ProjectPage() {
       <NextStep project={p} items={items} stage={org.stages[stageAt]} base={base} />
       {/* Overview, then one tab per layer with its item count; at is the open tab's position */}
       <nav className="tabs" aria-label="Project sections" data-tour="layers">
-        <NavLink to={base} end viewTransition onClick={(e) => toTab(e, base, 0)} className={() => (tab === "overview" ? "active" : "")}>Overview</NavLink>
+        <NavLink to={`${base}/overview`} viewTransition onClick={(e) => toTab(e, `${base}/overview`, 0)} className={() => (tab === "overview" ? "active" : "")}>Overview</NavLink>
         {tabs.map((l) => (
           <NavLink key={l} to={`${base}/${layerSlug(l)}`} viewTransition onClick={(e) => toTab(e, `${base}/${layerSlug(l)}`, LAYERS.indexOf(l) + 1)}><LayerBadge layer={l} /><span className="tab-name">{bench && l === "execution" ? "Workbench" : layerName(l)}<small className="sub"><span className="sr">, </span>{bench && l === "execution" ? "Notes, to-dos, and files" : layerHint(l)}</small></span> {prog[l][1] > 0 && <span className="muted" aria-label={`${prog[l][0]} of ${prog[l][1]} done`} title={`${prog[l][0]} of ${prog[l][1]} done`}>{prog[l][0]}/{prog[l][1]}</span>}</NavLink>
         ))}
@@ -156,6 +170,7 @@ export function ProjectPage() {
       <div className="slide-stage">
       {tab === "overview" ? <Overview project={p} items={items} docs={detail.data.docs} /> : layerFromSlug(tab) ? <LayerTab layer={layerFromSlug(tab)!} project={p} items={items} docs={detail.data.docs} edits={detail.data.edits} /> : <Empty text="That section doesn't exist." />}
       </div>
+      </>}
     </>
   );
 }

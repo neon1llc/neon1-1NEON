@@ -26,6 +26,7 @@
     "hono": "^4.10.0",
     "otpauth": "^9.6.0",
     "qrcode": "^1.5.4",
+    "yjs": "13.6.33",
     "zod": "^4.1.0"
   },
   "devDependencies": {

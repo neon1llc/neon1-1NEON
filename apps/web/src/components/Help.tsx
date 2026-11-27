@@ -76,9 +76,10 @@ export const GUIDES: Record<PageKey, Guide> = {
   },
   project: {
     title: "Project",
-    purpose: "One project: what's next, and its work in four layers.",
-    howto: ["Start with Next step.", "Each layer tab has its own help. Tap an item's title for its status, owner, due date, details, and comments.", "Until a decision, Ready for Execute shows what's left to outline. Everything in it is optional.", "Editors and admins set health and post updates under How is it going?", "A client admin names the decision maker under People."],
+    purpose: "One project, seen the way you work: a shared page, a board, a timeline, or NEON's steps.",
+    howto: ["Pick how to look at it: Page to write together, Board to move cards, Timeline to plan by dates, Steps for NEON. Everyone sees the same work, and your pick is remembered.", "Start with Next step.", "Each layer tab has its own help. Tap an item's title for its status, owner, due date, details, and comments.", "Until a decision, Ready for Execute shows what's left to outline. Everything in it is optional.", "Editors and admins set health and post updates under How is it going?", "A client admin names the decision maker under People."],
     tour: [
+      { at: "lenses", title: "Ways to look at it", text: "Page, Board, Timeline, or Steps. Same work, your choice." },
       { at: "next-step", title: "Next step", text: "What has to happen now, and who it's waiting on." },
       { at: "readiness", title: "Ready for Execute", text: "0 to 100% before work starts: six outline parts, the assessment, options, and a decision." },
       { at: "stage", title: "Stage", text: "Where the project is. It moves on when this stage's work is done." },
@@ -133,7 +134,7 @@ export const GUIDES: Record<PageKey, Guide> = {
   files: {
     title: "Files",
     purpose: "Every file shared in this organization.",
-    howto: ["Choose where to file before you upload: the organization, a project, or one of its layers.", "Up to 100 MB each.", "Move refiles a file. Whoever uploaded it, or an admin, can delete it.", "To mark up a proposal, upload your edited Word copy here."],
+    howto: ["Choose where to file before you upload: the organization, a project, or one of its layers.", "Up to 100 MB each.", "To write instead, open Pages with the pen at the top. A page can be saved here as a copy.", "Move refiles a file. Whoever uploaded it, or an admin, can delete it.", "To mark up a proposal, upload your edited Word copy here."],
     tour: [{ at: "upload", title: "Upload", text: "Drop a file here, or choose one." }],
   },
   settings: {
@@ -190,7 +191,7 @@ export const GUIDES: Record<PageKey, Guide> = {
 // A free account's own people see less on these pages, so their help differs
 export const FREE: Partial<Record<PageKey, { purpose?: string; howto: string[] }>> = {
   home: { howto: ["Outline up to three projects, then ask for an assessment under Next step.", "On the calendar, choose a day to see it or add to it.", "Your account shows how long it's kept, with Keep it 30 more days and Download a copy.", "View shows or hides any card; Arrange moves and resizes them; Tidy up repacks them."] },
-  project: { howto: ["Start with Next step.", "Each layer tab has its own help. Tap an item's title for its status, owner, due date, details, and comments.", "Ready for Execute shows what's left to outline. Everything in it is optional.", "Set health and post updates under How is it going?"] },
+  project: { howto: ["Pick how to look at it: Page, Board, Timeline, or Steps. Everyone sees the same work.", "Start with Next step.", "Each layer tab has its own help. Tap an item's title for its status, owner, due date, details, and comments.", "Ready for Execute shows what's left to outline. Everything in it is optional.", "Set health and post updates under How is it going?"] },
   needs: { purpose: "What's wanted.", howto: ["Add requests and the details behind them. Tap an item's title to comment.", "Options and approvals start once we're working together."] },
   execute: { purpose: "The work: tasks, milestones, and changes.", howto: ["Tap an item's title for its owner, due date, details, and comments."] },
   normalize: { howto: ["Tick handover steps as they're done."] },

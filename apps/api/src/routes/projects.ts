@@ -55,6 +55,7 @@ export function projectRoutes(app: App, k: Kit) {
       outcome: input.outcome,
       template: tpl.id,
       workflow: bench ? "bench" : "neon",
+      lens: input.lens,
       stageId: first.id,
       stageEnteredAt: ts,
       health: "not_started",

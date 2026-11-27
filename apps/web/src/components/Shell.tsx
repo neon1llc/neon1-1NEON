@@ -30,6 +30,7 @@ import { FileText as FileIcon, Folder as FolderIcon, Home as HomeIcon, Kanban as
 import { ConfirmDialog } from "./Confirm.tsx";
 import { HelpProvider, useHelp } from "./Help.tsx";
 import { Neo } from "./Neo.tsx";
+import { WriteProvider } from "./Write.tsx";
 import { PublicTalk } from "./PublicTalk.tsx";
 import { ReportBug } from "./BugReport.tsx";
 import { usePreviewedMenu } from "../lib/preview.ts";
@@ -627,9 +628,13 @@ function Item({ to, icon, label, sub, end, tour }: { to: string; icon: ReactNode
  * layout's own queries, marked like the session when a refresh fails */
 function Frame({ org, all, reads, banner, children }: { org?: OrgSummary; all?: boolean; reads?: Read[]; banner?: ReactNode; children: ReactNode }) {
   const me = useSession();
+  const inOrg = useContext(OrgCtx);
   return (
     <HelpProvider me={me}>
-      <FrameBody org={org} all={all} reads={reads} banner={banner}>{children}</FrameBody>
+      {/* Pages from anywhere in an organization: the pen goes in the top bar */}
+      <WriteProvider org={inOrg ? { id: inOrg.summary.id, name: inOrg.summary.name, canWrite: inOrg.canWrite } : undefined}>
+        {(pen) => <FrameBody org={org} all={all} reads={reads} banner={banner} pen={pen}>{children}</FrameBody>}
+      </WriteProvider>
     </HelpProvider>
   );
 }
@@ -749,8 +754,7 @@ function MenuThemeControls({ theme, kind }: { theme: string; kind: "mode" | "fam
 
 
 // The frame itself, inside the help context so the ? button and search can use it
-function FrameBody({ org, all, reads = [], banner, children }: { org?: OrgSummary; all?: boolean; reads?: Read[]; banner?: ReactNode; children: ReactNode }) {
-  const me = useSession();
+function FrameBody({ org, all, reads = [], banner, pen, children }: { org?: OrgSummary; all?: boolean; reads?: Read[]; banner?: ReactNode; pen?: ReactNode; children: ReactNode }) {  const me = useSession();
   // The session query itself, for marking the frame when a background check of it fails
   const meRead = useMe();
   const help = useHelp();
@@ -1053,6 +1057,7 @@ function FrameBody({ org, all, reads = [], banner, children }: { org?: OrgSummar
             <span className="hide-sm">Search</span>
             <span className="kbd hide-sm">{/Mac|iPhone|iPad/.test(navigator.platform) ? "⌘K" : "Ctrl K"}</span>
           </button>
+          {pen}
           {org && <Bell tid={org.id} slug={org.slug} />}
           <button className="icon-btn help-btn" onClick={help.open} data-tour="help" aria-label="Help for this page" title="Help for this page">?</button>
         </header>

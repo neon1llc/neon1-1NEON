@@ -309,6 +309,9 @@ export const Project = z.object({
   template: z.string().max(40).default("blank"),
   // How the work runs: NEON's stages and layers (unset), or a Workbench (one shared page, open until done)
   workflow: z.enum(["neon", "bench"]).optional(),
+  // The picture the project opens on: its shared page, a board of cards, dated work, or NEON's steps.
+  // Unset: steps for NEON, the page for a Workbench. Anyone may look through another lens for themselves
+  lens: z.enum(["page", "board", "timeline", "steps"]).optional(),
   stageId: id,
   stageEnteredAt: isoDate,
   health: Health,
@@ -700,6 +703,29 @@ export const DocumentRecord = z.object({
   ...versioned,
 });
 export type DocumentRecord = z.infer<typeof DocumentRecord>;
+
+
+/**
+ * A page: a document people write together, kept with the files. Its content is a Yjs document (a
+ * CRDT, so edits made at the same time merge instead of overwriting), stored whole as base64. `text`
+ * is a plain copy for previews, search, download, and the assistants. No project: an organization
+ * page. The project's own page has the ID "main" and is made the first time anyone opens it
+ */
+export const Page = z.object({
+  tenantId: id,
+  projectId: id.optional(),
+  id: id,
+  title: z.string().trim().min(1).max(120),
+  // Encoded Yjs update; DynamoDB rows stop at 400 KB, so the API refuses growth past this
+  state: z.string().max(300_000).default(""),
+  text: z.string().max(40_000).default(""),
+  // Who had it open in the last few seconds, by user ID
+  seen: z.record(z.string(), z.object({ name: z.string().max(80), at: isoDate })).default({}),
+  ...versioned,
+});
+export type Page = z.infer<typeof Page>;
+/** The ID of a project's own page */
+export const MAIN_PAGE = "main";
 
 
 /** A file's state, reading older records by their `uploaded` flag */
