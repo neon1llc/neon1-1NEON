@@ -129,6 +129,8 @@ export const Tenant = z.object({
   test: z.boolean().optional(),
   // Suspended as a whole: every member but super reads only (suspension.ts)
   suspended: Suspension.optional(),
+  // A client being deleted on request (routes/prospects.ts startPurge): its people are shut out
+  deletingAt: isoDate.optional(),
   // super keeps this organization: the inactivity clock skips it (suspension.ts dormantStep)
   keptAt: isoDate.optional(),
   // Inactivity reminders sent since its people last signed in or changed something, and when the last went out

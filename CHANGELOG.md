@@ -5,6 +5,7 @@
 ## Unreleased
 
 ### Added
+- super can delete a client organization when it asks, from its Settings, by typing its name and recording who asked. Locked copies of its signatures and records are written first, and nothing is removed if they can't be.
 - New project is one screen: a name, a sentence, and how you want to see the work. The kind of work, what done looks like, an example, a target date, and measures sit under More about it. Quick fix is one of the kinds. Clients start on Page and neon1 on Steps.
 - Five views of one project's work: Page, Updates, Board, Timeline, and Steps. Each person's choice is remembered on their device.
 - Shared pages, opened from the pen in the top bar or a project's Page view: several people write at once, and a page can be saved to Files.
@@ -56,6 +57,7 @@
 - The privacy policy and terms describe the chat with neon1, and the legal pages show when they were last updated.
 
 ### Fixed
+- Deleting a free account also removes its sign-in records, queued notices, and waiting requests (a sign-in record made before this change goes once that person has signed in again). Its confirmed mobile number stays reserved for 30 days.
 - Keyboard and screen reader basics in the signed-in portal: Tab stays inside an open dialog, Escape on the menu returns to the button that opened it, date fields and the page editor show focus, and the board has a heading and list. An automated check now audits the signed-in demo.
 - In the walkthroughs, closing an item no longer leaves the walkthrough, and their steps follow the new Home and action buttons, so every story reaches its end again.
 - Deleting a quiet free account now also removes its pending file checks, its reply-by-email addresses, and Trin's index of its work.

@@ -6,7 +6,7 @@
 // deleted by it, and neither are suspended accounts, which wait on neon1's review list.
 
 
-import { PROSPECT_GRACE_DAYS, can, formatClientId, isProspect, prospectClock, prospectDeleteOn, prospectKeepUntil, quietDeletionDue, quietStep, type Tenant } from "@1neon/domain";
+import { PROSPECT_GRACE_DAYS, RECORD_KINDS, can, formatClientId, isOwnOrg, isProspect, prospectClock, prospectDeleteOn, prospectKeepUntil, quietDeletionDue, quietStep, type Tenant } from "@1neon/domain";
 import type { Context } from "hono";
 import { z } from "zod";
 import { body, check, fail, need, now, who, type Env } from "../lib/http.ts";
@@ -68,6 +68,13 @@ export class PurgeIncomplete extends Error {
 //    row; then every row; then each step is checked. Only when every check passes does one last
 //    transaction remove the organization's own record and the job row and write the receipt.
 
+// A client is deleted only when super asks for it, on the organization's request, by the same two steps.
+// Before anything is removed, a copy of its signatures and records goes to the locked store, where
+// signed and billed records are kept seven years.
+
+/** How long a deleted account's confirmed number stays taken, so it can't be reused to get around a limit */
+export const PHONE_HOLD_DAYS = 30;
+
 /** The job rows, one per organization being deleted, outside every partition the deletion removes */
 export const PURGE_PK = "PURGE";
 /** How long to wait after the mark: the longest request (28 s), the life of an upload link (300 s),
@@ -92,7 +99,11 @@ interface PurgeJob {
   PK: string;
   SK: string;
   markedAt: string;
-  reason: "operator" | "quiet";
+  reason: "operator" | "quiet" | "request";
+  // For a deletion on request: who asked and when, as super recorded it, and super's ID
+  request?: { note: string; by: string };
+  // The locked copy of the records is written
+  recordsCopied?: boolean;
   // For a quiet deletion: the last change it was decided on
   quietSince?: string;
   inventory?: Inventory;
@@ -110,13 +121,15 @@ type PurgeKit = Pick<Kit, "repo" | "d" | "cfg">;
  * mistake can never reach client records. With `quiet`, the deletion is for being quiet and goes
  * ahead only if every expiry condition still holds on the organization read fresh here. Returns
  * whether deletion has begun (an organization already being deleted counts) */
-export async function startPurge(k: PurgeKit, tid: string, opts: { quiet?: boolean; at?: Date } = {}) {
+export async function startPurge(k: PurgeKit, tid: string, opts: { quiet?: boolean; at?: Date; request?: { note: string; by: string } } = {}) {
   const { repo } = k;
   const at = opts.at ?? new Date();
   const t = await repo.getTenant(tid);
-  if (!t || !isProspect(t)) throw new Error("purgeProspect: not a prospect");
+  const client = Boolean(t && !isProspect(t));
+  if (!t || (client && (!opts.request || isOwnOrg(t.slug)))) throw new Error("purgeProspect: not a prospect");
   const job = await repo.table.get(PURGE_PK, tid);
-  if (t.prospect!.deletingAt) {
+  if (client && t.deletingAt) return { started: true as const };
+  if (t.prospect?.deletingAt) {
     // Marked by an earlier version that kept no job row: make one, counting the wait from the mark
     if (!job) await repo.table.write([{ put: { PK: PURGE_PK, SK: tid, markedAt: t.prospect!.deletingAt, reason: "operator", version: 1 }, guard: { create: true } }]);
     return { started: true as const };
@@ -124,8 +137,8 @@ export async function startPurge(k: PurgeKit, tid: string, opts: { quiet?: boole
   const last = await lastActive(k, t);
   if (opts.quiet && !quietDeletionDue(t.prospect!, last, at)) return { started: false as const };
   const ts = at.toISOString();
-  const marked: Tenant = { ...t, prospect: { ...t.prospect!, deletingAt: ts }, version: t.version + 1, updatedAt: ts };
-  const row: PurgeJob = { PK: PURGE_PK, SK: tid, markedAt: ts, reason: opts.quiet ? "quiet" : "operator", ...(opts.quiet ? { quietSince: last } : {}), version: 1 };
+  const marked: Tenant = { ...t, ...(client ? { deletingAt: ts } : { prospect: { ...t.prospect!, deletingAt: ts } }), version: t.version + 1, updatedAt: ts };
+  const row: PurgeJob = { PK: PURGE_PK, SK: tid, markedAt: ts, reason: client ? "request" : opts.quiet ? "quiet" : "operator", ...(opts.quiet ? { quietSince: last } : {}), ...(opts.request ? { request: opts.request } : {}), version: 1 };
   await repo.table.write([repo.tenantOp(marked, { version: t.version }), { put: { ...row }, guard: { create: true } }]);
   return { started: true as const };
 }
@@ -136,7 +149,34 @@ export async function startPurge(k: PurgeKit, tid: string, opts: { quiet?: boole
 async function globalRowsOf(repo: PurgeKit["repo"], tid: string): Promise<{ PK: string; SK: string }[]> {
   const watch = (await repo.table.query("DOCWATCH", `${tid}#`)).map((r) => ({ PK: String(r.PK), SK: String(r.SK) }));
   const replies = (await repo.table.query(`T#${tid}`, "REPLY#")).map((r) => keys.replyToken(String(r.SK).slice("REPLY#".length)));
-  return [...watch, ...replies];
+  const waiting = (await repo.table.get("REQUEST#PENDING", tid)) ? [{ PK: "REQUEST#PENDING", SK: tid }] : [];
+  const asks = (await repo.table.query("RECOMMISSION", `${tid}#`)).map((r) => ({ PK: String(r.PK), SK: String(r.SK) }));
+  return [...watch, ...replies, ...waiting, ...asks];
+}
+
+
+/** Queued notices about this organization, or to someone whose account goes with it */
+async function queuedFor(repo: PurgeKit["repo"], tid: string, gone: Set<string>) {
+  const rows = await repo.table.query("OUTBOX");
+  return rows.filter((r) => {
+    const p = r.payload as { tenantId?: string; userId?: string; event?: { tenantId?: string } } | undefined;
+    return p?.tenantId === tid || p?.event?.tenantId === tid || Boolean(p?.userId && gone.has(p.userId));
+  }).map((r) => ({ PK: String(r.PK), SK: String(r.SK) }));
+}
+
+
+/** A client's signatures and records, copied to the locked store before anything is removed */
+async function copyRecords(k: PurgeKit, t: Tenant, at: Date) {
+  const items = [];
+  for (const p of await k.repo.listProjectsWithTrash(t.id)) {
+    items.push(...(await k.repo.listItems(t.id, p.id)).filter((i) => RECORD_KINDS.has(i.kind) || /"doc":"(approval|acceptance)"/.test(JSON.stringify(i))));
+  }
+  const copy = { at: at.toISOString(), organization: { id: t.id, name: t.name, clientId: t.clientId, agreements: t.agreements ?? [], choices: t.choices ?? [] }, records: items };
+  if (!k.d.records) {
+    if (k.cfg.env !== "local") throw new Error("no locked record store");
+    return;
+  }
+  await k.d.records.put(`deleted/${t.id}/records.json`, copy);
 }
 
 
@@ -187,8 +227,8 @@ export async function finishPurge(k: PurgeKit, tid: string, at = new Date()): Pr
   if (at.getTime() < ready) return { deleted: false, pending: new Date(ready).toISOString() };
 
   if (!job.inventory) {
-    // A client never reaches here (promotion refuses a marked organization), but never delete one
-    if (t && !isProspect(t)) {
+    // A client is deleted only on request (promotion refuses a marked organization), so never otherwise
+    if (t && !isProspect(t) && job.reason !== "request") {
       await repo.table.write([{ delete: { PK: PURGE_PK, SK: tid }, guard: { version: job.version } }]);
       return { deleted: false, cancelled: true };
     }
@@ -203,6 +243,12 @@ export async function finishPurge(k: PurgeKit, tid: string, at = new Date()): Pr
     }
     if (!t) throw new PurgeIncomplete(tid, ["organization record missing before inventory"]);
     job = await saveJob(k, job, { inventory: await take(k, t) });
+  }
+  // The locked copy comes first: if it can't be written, nothing is removed
+  const whole = await repo.getTenant(tid);
+  if (!job.recordsCopied && whole && (job.reason === "request" || whole.prospect?.fromClient)) {
+    await retried(() => copyRecords(k, whole, at)).catch(() => { throw new PurgeIncomplete(tid, ["locked copy of records"]); });
+    job = await saveJob(k, job, { recordsCopied: true });
   }
   const inv = job.inventory!;
   // Anything the organization's remaining records still point to joins the inventory (nothing should,
@@ -247,6 +293,16 @@ export async function finishPurge(k: PurgeKit, tid: string, at = new Date()): Pr
   // leaving people's rows. The organization's own record stays until the very end
   const rowsOf = async () => {
     const out: { PK: string; SK: string }[] = [];
+    const gone = new Set(leaving.map((p) => p.uid));
+    // Global rows first, while the rows that point to them are still there
+    for (const p of leaving) {
+      for (const r of await repo.table.query(`USER#${p.uid}`)) {
+        const sk = String(r.SK);
+        const found = sk.startsWith("SESSIONREF#") ? keys.session(sk.slice(11)) : sk.startsWith("SUBJECTREF#") ? keys.subject(sk.slice(11)) : undefined;
+        if (found && (await repo.table.get(found.PK, found.SK))) out.push(found);
+      }
+    }
+    out.push(...(await queuedFor(repo, tid, gone)));
     for (const pk of pks) out.push(...(await repo.table.query(pk)).map((r) => ({ PK: String(r.PK), SK: String(r.SK) })));
     for (const p of leaving) out.push(...(await repo.table.query(`USER#${p.uid}`)).map((r) => ({ PK: String(r.PK), SK: String(r.SK) })));
     for (const r of globalRows) if (await repo.table.get(r.PK, r.SK)) out.push(r);
@@ -258,6 +314,16 @@ export async function finishPurge(k: PurgeKit, tid: string, at = new Date()): Pr
     for (const p of leaving) if (await repo.table.get(`EMAIL#${p.email.toLowerCase()}`, "USER")) out.push({ PK: `EMAIL#${p.email.toLowerCase()}`, SK: "USER" });
     return out;
   };
+  // A leaving person's confirmed number is held, not freed, for PHONE_HOLD_DAYS
+  for (const p of leaving) {
+    const u = await repo.getUser(p.uid);
+    for (const phone of new Set([u?.smsPhone, u?.smsPendingPhone].filter(Boolean) as string[])) {
+      const key = keys.smsOwner(phone);
+      const owner = await repo.table.get(key.PK, key.SK);
+      if (owner?.userId !== p.uid) continue;
+      await repo.table.write([{ put: { ...key, type: "sms-owner", userId: "deleted", heldAt: at.toISOString(), ttl: Math.floor(at.getTime() / 1000) + PHONE_HOLD_DAYS * 86_400, version: Number(owner.version ?? 0) + 1 }, guard: { version: Number(owner.version) } }]);
+    }
+  }
   const rows = [...(await rowsOf()), ...(await extra())];
   for (let i = 0; i < rows.length; i += 25) await repo.table.write(rows.slice(i, i + 25).map((r): WriteOp => ({ delete: r })));
 
@@ -279,7 +345,7 @@ export async function finishPurge(k: PurgeKit, tid: string, at = new Date()): Pr
   await repo.table.write([
     { delete: { PK: `T#${tid}`, SK: "META" } },
     { delete: { PK: PURGE_PK, SK: tid }, guard: { version: job.version } },
-    { put: { PK: "DELETED", SK: tid, at: at.toISOString(), rows: total, accounts: leaving.length, files: files.length }, guard: { always: true } },
+    { put: { PK: "DELETED", SK: tid, at: at.toISOString(), rows: total, accounts: leaving.length, files: files.length, reason: job.reason, ...(job.request ? { request: job.request } : {}) }, guard: { always: true } },
   ]);
   console.log(JSON.stringify({ level: "info", message: "prospect deleted", tenant: tid, rows: total, accounts: leaving.length, files: files.length }));
   return { deleted: true };
@@ -457,6 +523,20 @@ export function prospectRoutes(app: App, k: Kit) {
     }));
     const pending = (await repo.table.query(SIGNUP_PK)).length;
     return c.json({ prospects: rows.sort((a, b) => b.prospect!.since.localeCompare(a.prospect!.since)), signup: { open: await signupOpen(k), configured: Boolean(k.cfg.signup), paused: Boolean((await repo.table.get(SIGNUP_SWITCH.PK, SIGNUP_SWITCH.SK))?.paused), pending } });
+  });
+
+  // Delete a client organization, only when it asked. The name is typed to confirm, and who asked is kept on the receipt
+  app.post("/orgs/:tid/delete", async (c) => {
+    check(can(who(c).actor, "manage_orgs", undefined));
+    const t = await repo.getTenant(c.req.param("tid")!);
+    if (!t) fail(404, "not_found", "That organization doesn't exist.");
+    if (isOwnOrg(t.slug)) fail(409, "own_org", "neon1's own organization can't be deleted.");
+    if (isProspect(t)) fail(409, "potential", "Delete a potential from Potentials.");
+    if (t.deletingAt) fail(409, "deleting", `${t.name} is being deleted.`);
+    const input = await body(c, z.object({ confirm: z.string().max(80), request: z.string().trim().min(5).max(400) }));
+    if (input.confirm.trim() !== t.name) fail(400, "confirm", "Type the organization's name exactly to delete it.");
+    const { started } = await startPurge(k, t.id, { request: { note: input.request, by: who(c).user.id } });
+    return c.json({ ok: true, started, finishesBy: new Date(Date.now() + PURGE_DRAIN_MS).toISOString() }, 202);
   });
 
   // Promote: the next client ID, and every prospect limit lifted. Nothing in the work changes

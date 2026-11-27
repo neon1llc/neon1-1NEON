@@ -10,7 +10,7 @@ import { FaceFacts, FaceForm } from "../components/OrgFace.tsx";
 import { useOrg, useSession, useTopBar } from "../components/Shell.tsx";
 import { NoteDialog, useSuperAct } from "../components/Suspend.tsx";
 import { ReportBug } from "../components/BugReport.tsx";
-import { LayerBadge, LAYERS, layerName, useAsk, useToast } from "../components/ui.tsx";
+import { Dialog, LayerBadge, LAYERS, layerName, useAsk, useToast } from "../components/ui.tsx";
 import { api } from "../lib/api.ts";
 import { ExportCancelled, exportOrganization, type ExportResult } from "../lib/export.ts";
 import { clearStaleExports } from "../lib/export-disk.ts";
@@ -216,12 +216,32 @@ function ExportData() {
 
 /** super's controls for this organization: downgrade a client to a potential, suspend or recommission it, and
  * keep it off the inactivity clock (routes/suspensions.ts). Hidden from everyone else and in neon1's own */
+function DeleteOrgDialog({ open, onClose, name, go }: { open: boolean; onClose: () => void; name: string; go: (body: { confirm: string; request: string }) => Promise<void> }) {
+  const [request, setRequest] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+  const ready = request.trim().length >= 5 && confirm.trim() === name && !busy;
+  return (
+    <Dialog open={open} onClose={onClose} label={`Delete ${name}`}>
+      <h2>Delete {name}</h2>
+      <form className="form" onSubmit={(e) => { e.preventDefault(); if (!ready) return; setBusy(true); void go({ confirm, request }).then(onClose, () => undefined).finally(() => setBusy(false)); }}>
+        <p>Removes its work, files, and the sign-ins of people who belong nowhere else. Copies of signatures, invoices, and payments stay locked for seven years. This can't be undone.</p>
+        <div><label htmlFor="del-who">Who asked, and when</label><textarea id="del-who" rows={2} maxLength={400} value={request} onChange={(e) => setRequest(e.target.value)} /></div>
+        <div><label htmlFor="del-name">Type {name} to confirm</label><input id="del-name" autoComplete="off" value={confirm} onChange={(e) => setConfirm(e.target.value)} /></div>
+        <div className="actions"><button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button><button className="btn btn-primary" disabled={!ready}>Delete organization</button></div>
+      </form>
+    </Dialog>
+  );
+}
+
+
 function SuperControls() {
   const me = useSession();
   const { org } = useOrg();
   const act = useSuperAct();
   const ask = useAsk();
   const [suspending, setSuspending] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   if (!me.operator || isOwnOrg(org.slug)) return null;
   const s = suspensionOf(org);
   const potential = isProspect(org);
@@ -239,9 +259,11 @@ function SuperControls() {
             ? <button className="btn btn-ghost btn-sm" onClick={() => void act(`/orgs/${org.id}/recommission`, `${org.name} is recommissioned`).catch(() => undefined)}>Recommission</button>
             : <button className="btn btn-ghost btn-sm" onClick={() => setSuspending(true)}>Suspend</button>}
           {!potential && <button className="btn btn-ghost btn-sm" onClick={() => void downgrade()}>Make potential</button>}
+          {!potential && !org.deletingAt && <button className="btn btn-ghost btn-sm" onClick={() => setDeleting(true)}>Delete organization</button>}
           {(!potential || org.prospect?.fromClient) && <button className="btn btn-ghost btn-sm" onClick={() => void act(`/orgs/${org.id}/keep`, org.keptAt ? `${org.name} is back on the inactivity clock` : `${org.name} is kept`, { keep: !org.keptAt }).catch(() => undefined)}>{org.keptAt ? "Stop keeping" : "Keep active"}</button>}
         </div></dd></div>
       </dl>
+      <DeleteOrgDialog open={deleting} onClose={() => setDeleting(false)} name={org.name} go={(body) => act(`/orgs/${org.id}/delete`, `${org.name} is being deleted`, body)} />
       <NoteDialog scope="org" open={suspending} onClose={() => setSuspending(false)} title={`Suspend ${org.name}`} go={(note) => act(`/orgs/${org.id}/suspend`, `${org.name} is suspended`, note ? { note } : {})} />
     </>
   );

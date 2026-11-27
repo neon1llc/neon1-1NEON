@@ -1,6 +1,6 @@
 # Privacy and data policy
 
-*Last updated November 26, 2026.* This edition adds the chat with neon1 in 1NEON, says how anonymized case studies fit the no-marketing rule, and states which records are kept for seven years and why.
+*Last updated November 27, 2026.* This edition adds the chat with neon1 in 1NEON, says how anonymized case studies fit the no-marketing rule, and states which records are kept for seven years and why.
 
 neon1 LLC ("neon1", "I", "me") runs the website neon1.tech, Neo (the assistant on the website), and the 1NEON client portal at neon1.tech/1NEON, and does technology work for clients. This policy covers all of them. The [cookie and browser storage notice](https://neon1.tech/1NEON/cookies) is part of it. [How neon1 is built](https://neon1.tech/knowledge/company/architecture/) describes the systems.
 
@@ -124,6 +124,8 @@ Clients' projects and files are never deleted on a schedule, and I never sell, r
 | Neo's logs (timing, length, and errors, never the text) | 14 days |
 | Contact form counters | A day after their first count |
 | Free accounts (everything in them, including files, trashed projects too) | Deleted 30 days after the last change anyone in the account made, unless we're working together or I've told you I'm keeping it. Home shows the date, and **Keep it** adds 30 days to it, once. A suspended account waits for my review instead. You can ask me to delete one sooner. Check-ins come after 7 and 14 days and a final notice after 21 |
+| A deleted account's sign-in records, queued notices, and requests still waiting to be sent | Deleted with the account |
+| The confirmed mobile number of a deleted account | Reserved for 30 days so it can't be reused right away |
 | An unconfirmed sign-up, and sign-up counters (one-way fingerprints of addresses and emails) | One day, and two days |
 | Neo's question fingerprints | Ten minutes |
 | An unfinished authenticator app setup | 10 minutes |
@@ -138,7 +140,7 @@ An administrator of your organization can download all of its data at any time f
 
 ## Deleting your data
 
-Your organization can ask me to delete its data, or you can ask me to delete your account, at any time. I'll delete it from the portal, and backups and earlier file copies age out on the schedule above. Signatures, issued invoices, and payments stay write-protected until their seven years end, and so does anything else the law requires me to keep. I'll tell you in writing what was deleted, what remains, and when each remaining record expires.
+Your organization can ask me to delete its data, or you can ask me to delete your account, at any time. I'll delete it from the portal, and backups, earlier file copies, and the records of sent and failed messages age out on the schedule above. Signatures, issued invoices, and payments stay write-protected until their seven years end, and so does anything else the law requires me to keep. I'll tell you in writing what was deleted, what remains, and when each remaining record expires.
 
 ## If something goes wrong
 

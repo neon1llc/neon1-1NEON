@@ -90,7 +90,9 @@ export function meRoutes(app: App, k: Kit) {
     if (startConsent) {
       const ownerKey = { PK: `SMSPHONE#${newPhone}`, SK: "OWNER" };
       const owner = await repo.table.get(ownerKey.PK, ownerKey.SK);
-      if (owner && owner.userId !== user.id) fail(409, "phone_in_use", "This number is already connected to another 1NEON account. Remove it there first or use another number.");
+      // A deleted account's number stays taken until its hold ends (the table may remove the row a little late)
+      const lapsed = Boolean(owner?.heldAt) && Number(owner!.ttl) * 1000 <= Date.now();
+      if (owner && !lapsed && owner.userId !== user.id) fail(409, "phone_in_use", "This number is already connected to another 1NEON account. Remove it there first or use another number.");
       ops.push({ put: { ...ownerKey, type: "sms-owner", userId: user.id, version: Number(owner?.version ?? 0) + 1 }, guard: owner ? { version: Number(owner.version) } : { create: true } });
       ops.push(outboxOp(`S#${user.id}#SETUP#${next.smsConsentAt}`, { kind: "sms-confirmation", userId: user.id, to: newPhone!, consentAt: next.smsConsentAt! }));
     }

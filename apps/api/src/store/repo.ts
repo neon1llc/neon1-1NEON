@@ -35,6 +35,9 @@ export const keys = {
   // Duplicate SNS deliveries must not confirm a number or queue another acknowledgment
   smsInbound: (id: string) => ({ PK: "SMSINBOUND", SK: id }),
   // A reply-by-email token: which person, organization, and project an emailed reply posts as (lib/reply.ts)
+  // A person's own list of their sign-in sessions and sign-in IDs, so deleting the account finds the global rows
+  sessionRef: (uid: string, jti: string) => ({ PK: `USER#${uid}`, SK: `SESSIONREF#${jti}` }),
+  subjectRef: (uid: string, sub: string) => ({ PK: `USER#${uid}`, SK: `SUBJECTREF#${sub}` }),
   replyToken: (token: string) => ({ PK: `REPLY#${token}`, SK: "META" }),
   replyPointer: (tid: string, token: string) => ({ PK: `T#${tid}`, SK: `REPLY#${token}` }),
   // The person's recent code texts (time, number, purpose), kept apart from the codes themselves so
@@ -215,22 +218,28 @@ export class Repo {
 
   // Remember a subject after the first email match; relinking is harmless
   async linkSubject(sub: string, uid: string) {
-    await this.table.write([{ put: { ...keys.subject(sub), userId: uid }, guard: { always: true } }]);
+    await this.table.write([
+      { put: { ...keys.subject(sub), userId: uid }, guard: { always: true } },
+      { put: { ...keys.subjectRef(uid, sub) }, guard: { always: true } },
+    ]);
   }
 
   // A session's assurance. The row lives as long as its refresh token (30 days), but a passkey or
   // authenticator check only counts for STEP_UP_MS; after that admin actions ask again. `strongAt`
   // is when the proof happened, compared with the person's assurance floor
   async saveSession(jti: string, userId: string, strong: boolean, opts: { strongAt?: string; strongUntil?: string } = {}) {
-    await this.table.write([this.sessionOp(jti, userId, strong, opts)]);
+    await this.table.write(this.sessionOps(jti, userId, strong, opts));
   }
 
-  /** The session write on its own, so a proof can land in the same transaction that uses up a code */
-  sessionOp(jti: string, userId: string, strong: boolean, opts: { strongAt?: string; strongUntil?: string } = {}): WriteOp {
+  /** The session writes on their own, so a proof can land in the same transaction that uses up a code */
+  sessionOps(jti: string, userId: string, strong: boolean, opts: { strongAt?: string; strongUntil?: string } = {}): WriteOp[] {
     const ttl = Math.floor(Date.now() / 1000) + 30 * 24 * 3600;
     const strongAt = strong ? opts.strongAt ?? new Date().toISOString() : undefined;
     const strongUntil = strong ? opts.strongUntil ?? new Date(Date.now() + STEP_UP_MS).toISOString() : undefined;
-    return { put: { ...keys.session(jti), userId, strong, strongAt, strongUntil, ttl }, guard: { always: true } };
+    return [
+      { put: { ...keys.session(jti), userId, strong, strongAt, strongUntil, ttl }, guard: { always: true } },
+      { put: { ...keys.sessionRef(userId, jti), ttl }, guard: { always: true } },
+    ];
   }
 
   // The session row itself, for keeping its expiry when a factor change re-stamps it

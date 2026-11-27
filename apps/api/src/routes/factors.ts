@@ -148,7 +148,7 @@ export function factorRoutes(app: App, k: Kit) {
       const fresh = await repo.getUser(user.id);
       if (!fresh || !smsFactorOn(fresh, cfg.smsAllowedDestinations)) fail(409, "no_text_factor", "Turn on text codes on your profile first.");
       if (live.hash !== (await hashCode(user.id, code)) || live.phone !== fresh.smsPhone) fail(400, "wrong_code", "That code didn't match. Check the newest text.");
-      await consumeCode(live, jti ? [repo.sessionOp(jti, user.id, true)] : []);
+      await consumeCode(live, jti ? repo.sessionOps(jti, user.id, true) : []);
       return c.json({ ok: true });
     }
     const verdict = await useTotpCode(user.id, code);

@@ -81,6 +81,7 @@ export function prospectGuard(k: Pick<Kit, "repo">) {
     seen.add(c.req.raw);
     const tenant = c.get("tenant");
     const { user, actor } = who(c);
+    if (tenant.deletingAt && !actor.operator) fail(403, "suspended", "This organization is being deleted.");
     if (isProspect(tenant) && !actor.operator) {
       // Being deleted: refused everything. A suspension reads only, which suspensionGuard decides
       if (tenant.prospect?.deletingAt) fail(403, "suspended", "This account is being deleted.");

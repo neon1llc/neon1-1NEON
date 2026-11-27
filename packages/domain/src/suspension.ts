@@ -108,8 +108,8 @@ export function canAskRecommission(
 // --- Inactivity --------------------------------------------------------------
 
 /** Does the inactivity clock cover this organization? */
-export function dormantCovered(t: Pick<Tenant, "slug" | "test" | "keptAt" | "suspended" | "prospect">): boolean {
-  if (t.test || t.keptAt || t.suspended || t.slug === "neon1") return false;
+export function dormantCovered(t: Pick<Tenant, "slug" | "test" | "keptAt" | "suspended" | "prospect" | "deletingAt">): boolean {
+  if (t.deletingAt || t.test || t.keptAt || t.suspended || t.slug === "neon1") return false;
   // Self-signed-up free accounts have their own clock; a downgraded client does not
   return !t.prospect || Boolean(t.prospect.fromClient && !t.prospect.suspendedAt && !t.prospect.deletingAt);
 }
