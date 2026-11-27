@@ -19,12 +19,13 @@ export const INACTIVE_DAYS = 60;
 export const INACTIVE_NOTICE_DAYS = [30, 45, 53] as const;
 
 
-/** The banner's words when super gave none, one per reason */
+/** The banner's words when super gave none, one per reason, for an account; an organization's say so */
 export const SUSPEND_DEFAULT: Record<SuspendWhy, string> = {
-  super: "This account is suspended. You can look around and edit your profile until it's recommissioned.",
-  inactive: `No activity for ${INACTIVE_DAYS} days, so this account is suspended. Ask to recommission it to pick up where you left off.`,
+  super: "This account is suspended. You can look around, pay invoices, and edit your profile until it's recommissioned.",
+  inactive: `No activity for ${INACTIVE_DAYS} days, so this organization is suspended. Ask to recommission it to pick up where you left off.`,
   abuse: "Suspended for messages that broke the portal's rules.",
 };
+const ORG_DEFAULT = "This organization is suspended. You can look around, pay invoices, and edit your profile until it's recommissioned.";
 
 
 /** The suspension in force for this person here, the organization's first; undefined when free to act.
@@ -38,13 +39,15 @@ export function suspensionOf(t: Pick<Tenant, "suspended" | "prospect"> | undefin
 
 
 /** What the banner says */
-export const suspendText = (s: Pick<Suspension, "why" | "note">) => s.note?.trim() || SUSPEND_DEFAULT[s.why];
+export const suspendText = (s: Pick<Suspension, "why" | "note"> & { scope?: "org" | "account" }) => s.note?.trim() || (s.scope === "org" && s.why === "super" ? ORG_DEFAULT : SUSPEND_DEFAULT[s.why]);
 
 
 // Changes a suspended person may still make, by method and path under /t/:tid: asking for recommissioning,
-// marking notifications read, and (except after abuse) writing to super in the chat
+// marking notifications read, paying an invoice (money owed is never held up), and (except after abuse)
+// writing to super in the chat
 const ALWAYS: [method: string, path: RegExp][] = [
   ["POST", /^\/recommission$/],
+  ["POST", /^\/projects\/[^/]+\/invoices\/[^/]+\/pay$/],
   ["POST", /^\/notifications\/(read-all|[^/]+\/read)$/],
 ];
 const CHAT: [method: string, path: RegExp][] = [

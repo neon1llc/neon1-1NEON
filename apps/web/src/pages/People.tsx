@@ -103,7 +103,7 @@ export function People() {
                     <select aria-label={`Access for ${m.email}`} value={m.access} onChange={(e) => void change(m, { access: e.target.value })} style={{ minHeight: 32, paddingTop: 2, paddingBottom: 2, paddingLeft: 8, maxWidth: 140 }}>
                       <option value="viewer">Viewer</option><option value="editor">Editor</option><option value="admin">Admin</option>
                     </select>
-                  ) : <span className="tag">{m.access}</span>}
+                  ) : <span className="tag">{m.neon1 ? "super" : m.access}</span>}
                 </td>
                 <td className="small">
                   {m.status === "invited" ? <span className="tag warn">invited {ago(m.invitedAt)}</span> : m.status === "deactivated" ? "deactivated" : <span className="muted">seen {ago(m.lastSeenAt)}</span>}

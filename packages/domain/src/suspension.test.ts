@@ -13,6 +13,7 @@ describe("suspendedMay", () => {
     expect(suspendedMay("POST", "/recommission", "inactive")).toBe(true);
     expect(suspendedMay("POST", "/notifications/read-all", "super")).toBe(true);
     expect(suspendedMay("POST", "/chat", "super")).toBe(true);
+    expect(suspendedMay("POST", "/projects/p1/invoices/i1/pay", "abuse")).toBe(true);
     expect(suspendedMay("POST", "/projects", "super")).toBe(false);
     expect(suspendedMay("PUT", "/profile", "super")).toBe(false);
   });
@@ -35,6 +36,7 @@ describe("suspensionOf", () => {
   it("says super's note, or the default", () => {
     expect(suspendText({ why: "super", note: " Talk soon. " })).toBe("Talk soon.");
     expect(suspendText({ why: "inactive" })).toBe(SUSPEND_DEFAULT.inactive);
+    expect(suspendText({ why: "super", scope: "org" })).toMatch(/^This organization is suspended/);
   });
 });
 

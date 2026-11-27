@@ -4,7 +4,7 @@
 // only say so and offer the way back.
 
 
-import { SUSPEND_DEFAULT, suspendText, type Suspension, type SuspendWhy } from "@1neon/domain";
+import { suspendText, type Suspension, type SuspendWhy } from "@1neon/domain";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "../lib/api.ts";
@@ -54,7 +54,7 @@ export function AskDialog({ open, onClose, tid, scope, userId, whose }: { open: 
 
 
 /** super's note for a suspension: optional, with the default shown as the hint */
-export function NoteDialog({ open, onClose, title, why = "super", go }: { open: boolean; onClose: () => void; title: string; why?: SuspendWhy; go: (note: string) => Promise<void> }) {
+export function NoteDialog({ open, onClose, title, why = "super", scope = "account", go }: { open: boolean; onClose: () => void; title: string; why?: SuspendWhy; scope?: "org" | "account"; go: (note: string) => Promise<void> }) {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const run = async () => {
@@ -74,7 +74,7 @@ export function NoteDialog({ open, onClose, title, why = "super", go }: { open: 
       <h2>{title}</h2>
       <label className="field">
         <span>Message on their banner <small className="muted">optional</small></span>
-        <textarea rows={3} maxLength={400} value={note} placeholder={SUSPEND_DEFAULT[why]} onChange={(e) => setNote(e.target.value)} autoFocus />
+        <textarea rows={3} maxLength={400} value={note} placeholder={suspendText({ why, scope })} onChange={(e) => setNote(e.target.value)} autoFocus />
       </label>
       <div className="actions">
         <button className="btn btn-danger" disabled={busy} onClick={() => void run()}>Suspend</button>

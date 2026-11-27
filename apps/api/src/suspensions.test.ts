@@ -2,7 +2,7 @@
 // asks super to recommission it with a reason, and super lifts it. Downgrading keeps the client ID and the
 // work; the inactivity pass reminds, then suspends; repeated chat mutes suspend for abuse. Nothing is deleted.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { INACTIVE_DAYS, SUSPEND_DEFAULT, type Tenant } from "@1neon/domain";
+import { INACTIVE_DAYS, type Tenant } from "@1neon/domain";
 import { createApp } from "./app.ts";
 import { seed } from "./seed.ts";
 import { MemoryDirectory, MemoryMailer, MemoryPusher, MemoryStorage } from "./services.ts";
@@ -58,7 +58,7 @@ describe("an organization suspension", () => {
     const tid = s.acme.id;
     await as(OP, `/orgs/${tid}/suspend`, "POST", {});
     const r = await as(TOMAS, `/t/${tid}/projects`, "POST", { name: "New", template: "blank" });
-    expect((await json(r)).message).toBe(SUSPEND_DEFAULT.super);
+    expect((await json(r)).message).toMatch(/^This organization is suspended/);
     vi.setSystemTime(Date.now() + 3000);
     expect((await as(TOMAS, `/t/${tid}/chat`, "POST", { text: "Why are we paused?" })).status).toBe(201);
   });

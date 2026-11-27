@@ -144,7 +144,7 @@ export function Prospects() {
         </>
       )}
       {rest.map(card)}
-      <NoteDialog open={Boolean(suspending)} onClose={() => setSuspending(undefined)} title={`Suspend ${suspending?.name ?? ""}`} go={async (note) => { const p = suspending!; await act(`${p.name} is suspended`, () => api(`/prospects/${p.id}/suspend`, { method: "POST", body: note ? { note } : {} })); }} />
+      <NoteDialog scope="org" open={Boolean(suspending)} onClose={() => setSuspending(undefined)} title={`Suspend ${suspending?.name ?? ""}`} go={async (note) => { const p = suspending!; await act(`${p.name} is suspended`, () => api(`/prospects/${p.id}/suspend`, { method: "POST", body: note ? { note } : {} })); }} />
       {/* Delete is for good, so the organization's name is typed first */}
       <Dialog open={Boolean(doomed)} onClose={() => setDoomed(undefined)} label="Delete potential" className="ask">
         <h2>Delete {doomed?.name}?</h2>
@@ -215,7 +215,7 @@ function Suspensions() {
           <ul className="card suspended-list">
             {orgs.map((o) => (
               <li key={o.id}>
-                <span><Link to={`/o/${o.slug}/workspace`}>{o.name}</Link> <span className="tag">{o.clientId}</span>{whyTag(o.suspended) && <span className="tag warn">{whyTag(o.suspended)}</span>}<br /><small className="muted">{suspendText(o.suspended)} {ago(o.suspended.at)}</small></span>
+                <span><Link to={`/o/${o.slug}/workspace`}>{o.name}</Link> <span className="tag">{o.clientId}</span>{whyTag(o.suspended) && <span className="tag warn">{whyTag(o.suspended)}</span>}<br /><small className="muted">{suspendText({ ...o.suspended, scope: "org" })} {ago(o.suspended.at)}</small></span>
                 <button className="btn btn-ghost btn-sm" onClick={() => go(`/orgs/${o.id}/recommission`, `${o.name} is recommissioned`)}>Recommission</button>
               </li>
             ))}
