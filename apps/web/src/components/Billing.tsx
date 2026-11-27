@@ -445,7 +445,7 @@ export function Hours({ items, path }: { items: Item[]; path: string }) {
       {/* neon1 logs its own hours; the client only reads them */}
       {me.operator && at && (
         <form className="hours-add" onSubmit={(e) => { e.preventDefault(); if (ready && !busy) void add(); }}>
-          <div><label htmlFor="hours-date">Date</label><input id="hours-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required /></div>
+          <div><label htmlFor="hours-date">Date</label><input id="hours-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} onFocus={(e) => { e.currentTarget.style.outline = "2px solid var(--focus)"; e.currentTarget.style.outlineOffset = "2px"; }} onBlur={(e) => { e.currentTarget.style.removeProperty("outline"); e.currentTarget.style.removeProperty("outline-offset"); }} required /></div>
           <div><label htmlFor="hours-n">Hours</label><input id="hours-n" type="number" min={0.25} max={24} step={0.25} value={hours} onChange={(e) => setHours(e.target.value)} required /></div>
           <div className="grow"><label htmlFor="hours-what">Work done</label><input id="hours-what" value={what} onChange={(e) => setWhat(e.target.value)} maxLength={200} placeholder="e.g. Matched items across the POS and the web store" required /></div>
           <button className="btn btn-ghost btn-sm" disabled={!ready || busy}>Log hours</button>
