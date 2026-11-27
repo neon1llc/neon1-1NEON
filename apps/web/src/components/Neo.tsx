@@ -212,10 +212,11 @@ export function Neo({ open, setOpen, org, me, neo = true, trin = false }: { open
   const light = useLight();
   const loc = useLocation();
   // Without Neo (no model set up) the panel is only the conversation with Pradeep
-  const [tabWas, setTab] = useState<"neo" | "pradeep" | "trin">("neo");
-  // Trin works inside one organization, so its tab shows only in one
+  const [tabWas, setTab] = useState<"neo" | "pradeep" | "trin">(neo ? "neo" : "trin");
+  // Trin works inside one organization, so its tab shows only in one; a tab that isn't offered falls to the first that is
   const withTrin = trin && Boolean(org);
-  const tab = tabWas === "trin" && !withTrin ? "neo" : neo || tabWas === "trin" ? tabWas : "pradeep";
+  const offered = { neo, trin: withTrin, pradeep: me.operator || Boolean(org) };
+  const tab = offered[tabWas] ? tabWas : neo ? "neo" : withTrin ? "trin" : "pradeep";
   // Each organization's chat lives on its own page, so super picking one from the inbox goes there, and each
   // browser tab keeps its own organization (Pradeep, 2026-11-27); everyone else has their own
   const navigate = useNavigate();
@@ -328,13 +329,13 @@ export function Neo({ open, setOpen, org, me, neo = true, trin = false }: { open
   const submit = (e: FormEvent) => { e.preventDefault(); void ask(text); };
   let body: ReactNode = null;
   if (open) body = (
-    <div ref={panel} className={`n1chat n1chat-right n1neo${look}`} role="dialog" aria-label={canTalk ? (neo ? "Chat with Neo or neon1" : "Chat with neon1") : "Neo, your 1NEON assistant"} tabIndex={-1} onKeyDown={(e) => e.key === "Escape" && close()}>
+    <div ref={panel} className={`n1chat n1chat-right n1neo${look}`} role="dialog" aria-label={canTalk ? (neo ? "Chat with Neo or neon1" : withTrin ? "Chat with Trin or neon1" : "Chat with neon1") : "Neo, your 1NEON assistant"} tabIndex={-1} onKeyDown={(e) => e.key === "Escape" && close()}>
       <div className="n1chat-head">
-        {canTalk && !neo ? (
+        {canTalk && !neo && !withTrin ? (
           <strong className="n1chat-title"><Mark />{me.operator ? "Chat" : "neon1"}</strong>
         ) : canTalk ? (
           <span className="talk-tabs" role="tablist">
-            <button type="button" role="tab" aria-selected={tab === "neo"} className="n1chat-title talk-tab" onClick={() => setTab("neo")}><Mark />Neo</button>
+            {neo && <button type="button" role="tab" aria-selected={tab === "neo"} className="n1chat-title talk-tab" onClick={() => setTab("neo")}><Mark />Neo</button>}
             {withTrin && <button type="button" role="tab" aria-selected={tab === "trin"} className="n1chat-title talk-tab" onClick={() => setTab("trin")}>Trin</button>}
             <button type="button" role="tab" aria-selected={tab === "pradeep"} className="n1chat-title talk-tab" onClick={() => setTab("pradeep")}>{me.operator ? "Chat" : "neon1"}{unread > 0 && tab !== "pradeep" && <b className="talk-badge">{unread}</b>}</button>
           </span>
@@ -397,9 +398,9 @@ export function Neo({ open, setOpen, org, me, neo = true, trin = false }: { open
 
   return (
     <>
-      <button ref={launcher} type="button" className={`n1chat-launch n1chat-right n1neo${look}${open ? " n1chat-hidden" : ""}${peek ? " n1chat-peek" : ""}`} aria-expanded={open} aria-label={unread > 0 ? `Ask Neo or message Pradeep, ${unread} new` : canTalk ? (neo ? "Ask Neo or message Pradeep" : "Message Pradeep") : "Ask Neo, your 1NEON assistant"} onClick={() => setOpen(true)} data-tour="neo">
+      <button ref={launcher} type="button" className={`n1chat-launch n1chat-right n1neo${look}${open ? " n1chat-hidden" : ""}${peek ? " n1chat-peek" : ""}`} aria-expanded={open} aria-label={unread > 0 ? `Ask Neo or message Pradeep, ${unread} new` : canTalk ? (neo ? "Ask Neo or message Pradeep" : withTrin ? "Ask Trin or message Pradeep" : "Message Pradeep") : "Ask Neo, your 1NEON assistant"} onClick={() => setOpen(true)} data-tour="neo">
         <Mark />
-        <span className="n1chat-label" aria-hidden="true">{!canTalk ? "ask Neo" : neo ? "ask Neo or neon1" : "message neon1"}</span>
+        <span className="n1chat-label" aria-hidden="true">{!canTalk ? "ask Neo" : neo ? "ask Neo or neon1" : withTrin ? "ask Trin or neon1" : "message neon1"}</span>
         {unread > 0 && <b className="talk-badge talk-badge-launch" aria-hidden="true">{unread > 9 ? "9+" : unread}</b>}
       </button>
       {body}
