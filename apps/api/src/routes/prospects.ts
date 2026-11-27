@@ -80,6 +80,8 @@ interface Inventory {
   slug: string;
   // Every partition of the organization's rows
   pks: string[];
+  // File sweep rows share a global partition, so keep their exact keys
+  watchRows?: { PK: string; SK: string }[];
   // Every stored file's key
   files: string[];
   // People who belonged nowhere else when it was taken
@@ -135,6 +137,7 @@ async function take(k: PurgeKit, t: Tenant): Promise<Inventory> {
   const tid = t.id;
   const projects = await repo.listProjectsWithTrash(tid);
   const pks = [`T#${tid}`, `T#${tid}#AUDIT`, `T#${tid}#P#_`, ...projects.map((p) => `T#${tid}#P#${p.id}`), keys.chat(tid).PK];
+  const watchRows = (await repo.table.query("DOCWATCH", `${tid}#`)).map((r) => ({ PK: String(r.PK), SK: String(r.SK) }));
   const files: string[] = [];
   for (const pid of [undefined, ...projects.map((p) => p.id)]) files.push(...(await repo.listDocs(tid, pid)).map((x) => x.key));
   const accounts: Inventory["accounts"] = [];
@@ -142,7 +145,7 @@ async function take(k: PurgeKit, t: Tenant): Promise<Inventory> {
     if (cfg.operatorEmails.includes(m.email.toLowerCase())) continue;
     if (!(await repo.membershipsOf(m.userId)).some((x) => x.tenantId !== tid)) accounts.push({ uid: m.userId, email: m.email });
   }
-  return { slug: t.slug, pks, files, accounts };
+  return { slug: t.slug, pks, watchRows, files, accounts };
 }
 
 
@@ -201,9 +204,13 @@ export async function finishPurge(k: PurgeKit, tid: string, at = new Date()): Pr
     const now = await take(k, t);
     const pks = [...new Set([...inv.pks, ...now.pks])];
     const files = [...new Set([...inv.files, ...now.files])];
-    if (pks.length > inv.pks.length || files.length > inv.files.length) job = await saveJob(k, job, { inventory: { ...inv, pks, files } });
+    const watchRows = [...new Map([...(inv.watchRows ?? []), ...(now.watchRows ?? [])].map((r) => [`${r.PK}\u0000${r.SK}`, r])).values()];
+    if (pks.length > inv.pks.length || files.length > inv.files.length || watchRows.length > (inv.watchRows ?? []).length) {
+      job = await saveJob(k, job, { inventory: { ...inv, pks, watchRows, files } });
+    }
   }
   const { pks, files, accounts, slug } = job.inventory!;
+  const watchRows = job.inventory!.watchRows ?? [];
   const failed: string[] = [];
 
   // Files first, so no stored bytes outlive their records
@@ -234,6 +241,7 @@ export async function finishPurge(k: PurgeKit, tid: string, at = new Date()): Pr
     const out: { PK: string; SK: string }[] = [];
     for (const pk of pks) out.push(...(await repo.table.query(pk)).map((r) => ({ PK: String(r.PK), SK: String(r.SK) })));
     for (const p of leaving) out.push(...(await repo.table.query(`USER#${p.uid}`)).map((r) => ({ PK: String(r.PK), SK: String(r.SK) })));
+    for (const r of watchRows) if (await repo.table.get(r.PK, r.SK)) out.push(r);
     return out.filter((r) => !(r.PK === `T#${tid}` && r.SK === "META"));
   };
   const extra = async () => {
@@ -247,6 +255,7 @@ export async function finishPurge(k: PurgeKit, tid: string, at = new Date()): Pr
 
   // Check every step before the receipt: no rows left, no files left
   const left = [...(await rowsOf()), ...(await extra())];
+  left.push(...(await repo.table.query("DOCWATCH", `${tid}#`)).map((r) => ({ PK: String(r.PK), SK: String(r.SK) })));
   for (const key of files) {
     const seen = await d.storage.inspect(key);
     if (seen.kind === "present" || seen.kind === "error") left.push({ PK: "FILE", SK: key });
