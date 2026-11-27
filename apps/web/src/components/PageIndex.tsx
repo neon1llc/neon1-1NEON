@@ -23,24 +23,6 @@ export function PageIndex({ within }: { within: string }) {
       for (const { el } of items) (el as HTMLElement).style.scrollMarginTop = `${Math.round(barFoot()) + 16}px`;
       // A document shorter than a screen and a half needs no index; the line sits at the foot of whichever bar is showing
       remove = m.pageIndex(items, { end: doc, screens: 1.5, top: barFoot });
-      // On narrow or touch screens the shared index is only a pointer-inert progress line. Keep its tiny marks
-      // out of the keyboard and accessibility trees; desktop keeps the section buttons and their names.
-      const rail = document.querySelector<HTMLElement>(".pi-rail");
-      if (!rail) return;
-      const compact = matchMedia("(max-width: 1199px), (pointer: coarse)");
-      const sync = () => {
-        if (compact.matches) {
-          rail.setAttribute("aria-hidden", "true");
-          rail.querySelectorAll<HTMLElement>(".pi-link").forEach((link) => { link.tabIndex = -1; });
-        } else {
-          rail.removeAttribute("aria-hidden");
-          rail.querySelectorAll<HTMLElement>(".pi-link").forEach((link) => { link.removeAttribute("tabindex"); });
-        }
-      };
-      sync();
-      compact.addEventListener("change", sync);
-      const stop = remove;
-      remove = () => { compact.removeEventListener("change", sync); stop?.(); };
     }).catch(() => undefined);
     return () => { gone = true; remove?.(); };
   }, [within]);

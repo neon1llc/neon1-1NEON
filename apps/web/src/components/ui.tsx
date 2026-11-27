@@ -5,6 +5,7 @@
 import { LAYER_LETTER, LAYER_NAMES, RECORD_KINDS, type Health as HealthT, type Layer } from "@1neon/domain";
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { firstControl, needsInitialFocus } from "../lib/dialogfocus.ts";
+import "../lib/page-index-a11y.ts";
 
 
 // Avatar colors: brand greens and calm accents, all readable with white initials
