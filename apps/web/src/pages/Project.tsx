@@ -5,7 +5,7 @@
 import { benchStage, isBench, isQuickFix, QUICK_FIX_HOURS, QUICK_FIX_MAX_HOURS, quoteFields, priceLine, type QuoteInput, balanceOf, billedOn, depositLines, hoursLogged, hoursText, lineage, lineCents, dollars as wholeDollars, failedOn, invoiceState, InvoiceFields, money as dollars, payableOn, paymentPlan, priceMeaning, priceOf, betterWhen, canApprove, changedSince, currentDecision, todayIn, isClosed, isOwnOrg, KIND_LAYER, metricProgress, MetricFields, OptionFields, priceCheckDue, ProjectRole, proposalRef, PurchaseFields, HandoffFields, optionHistory, revisions, type DocumentRecord, type Item, type ItemKind, type Layer, type Project, type Stage } from "@1neon/domain";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, ExternalLink, Pencil, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FocusEvent as ReactFocusEvent, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
 import { FileList, UploadButton } from "../components/Files.tsx";
 import { GUIDE, Pick, RequestBuilder, Starters } from "../components/Guide.tsx";
 import { BoardLens, LensBar, lensFor, PageLens, TimelineLens, type Lens } from "./Lenses.tsx";
@@ -22,6 +22,16 @@ import { AgreementNeeded, AgreeFields, agreeBody, agreeReady, emptyAgree, type A
 import { firstYear, money, parseCost, type Recurring } from "../lib/cost.ts";
 import { handoverSummary } from "../lib/handover.ts";
 import { ContractStates } from "../components/Contract.tsx";
+
+function focusOutline(e: ReactFocusEvent<HTMLElement>) {
+  e.currentTarget.style.outline = "2px solid var(--focus)";
+  e.currentTarget.style.outlineOffset = "2px";
+}
+
+function clearOutline(e: ReactFocusEvent<HTMLElement>) {
+  e.currentTarget.style.removeProperty("outline");
+  e.currentTarget.style.removeProperty("outline-offset");
+}
 import { numberProblem, optionalNumber } from "../lib/measures.ts";
 import { problem, useMembers, useProject, useProjects, useRefresh, useSubmit } from "../lib/hooks.ts";
 import { aimBetween, canSlide, lessMotion } from "../lib/motion.ts";
@@ -505,7 +515,7 @@ function Overview({ project: p, items, docs }: { project: Project; items: Item[]
             <div><label htmlFor="pn">Name<sup className="req" aria-hidden="true">*</sup></label><input id="pn" autoComplete="off" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} maxLength={120} required /></div>
             <div><label htmlFor="ps">In one or two sentences, what is this?</label><textarea id="ps" value={draft.summary} onChange={(e) => setDraft({ ...draft, summary: e.target.value })} maxLength={500} rows={2} /></div>
             <div><label htmlFor="po">What will be true when it's done?</label><textarea id="po" value={draft.outcome} onChange={(e) => setDraft({ ...draft, outcome: e.target.value })} maxLength={500} rows={2} /></div>
-            <div><label htmlFor="pd">Target date</label><input id="pd" type="date" value={draft.targetDate} onChange={(e) => setDraft({ ...draft, targetDate: e.target.value })} style={{ maxWidth: 220 }} /></div>
+            <div><label htmlFor="pd">Target date</label><input id="pd" type="date" value={draft.targetDate} onChange={(e) => setDraft({ ...draft, targetDate: e.target.value })} style={{ maxWidth: 220 }} onFocus={focusOutline} onBlur={clearOutline} /></div>
             <p className="small muted" style={{ margin: 0 }}>The real example is under <Link to={`/o/${org.slug}/projects/${p.key}/${layerSlug("needs")}`}>Needs</Link>, and measures under <Link to={`/o/${org.slug}/projects/${p.key}/${layerSlug("observation")}`}>Observe</Link>, where they can be changed too. The key, {p.key}, stays the same.</p>
             <div className="actions" style={{ justifyContent: "flex-start" }}>
               <button className="btn btn-primary" type="submit" disabled={!draft.name.trim()}>Save</button>
@@ -543,7 +553,7 @@ function Overview({ project: p, items, docs }: { project: Project; items: Item[]
             <span className="small muted">Target date</span>
             {canWrite ? (
               <input type="date" aria-label="Target date" value={p.targetDate ?? ""} style={{ width: "auto", minHeight: 36, padding: "4px 10px" }}
-                onChange={(e) => void save(p.version, { targetDate: e.target.value || null })} />
+                onChange={(e) => void save(p.version, { targetDate: e.target.value || null })} onFocus={focusOutline} onBlur={clearOutline} />
             ) : <span className="small">{p.targetDate ? dateLabel(p.targetDate) : "none set"}</span>}
           </div>
           {update && <div className="small"><span className="muted">Latest update ({ago(update.updatedAt)})</span><br />{update.title}</div>}

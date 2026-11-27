@@ -1063,6 +1063,7 @@ function FrameBody({ org, all, reads = [], banner, pen, children }: { org?: OrgS
           <button className="search-btn" onClick={() => { setNeoOpen(false); setSearch(true); }} data-tour="search" aria-label={`Search ${/Mac|iPhone|iPad/.test(navigator.platform) ? "⌘K" : "Ctrl K"}`}>
             <SearchIcon size={16} aria-hidden="true" />
             <span className="hide-sm">Search</span>
+            {" "}
             <span className="kbd hide-sm" aria-hidden="true">{/Mac|iPhone|iPad/.test(navigator.platform) ? "⌘K" : "Ctrl K"}</span>
           </button>
           {pen}
