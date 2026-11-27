@@ -13,6 +13,8 @@ import { Repo } from "../store/repo.ts";
 const repo = new Repo(new DynamoTable(process.env.TABLE_NAME!));
 // The sign-in page that codes are entered on (PUBLIC_URL is set by Terraform; dev.neon1.tech in dev)
 const PORTAL = `${process.env.PUBLIC_URL ?? "https://neon1.tech"}/1NEON/`;
+// Where the dev site's gate takes its emailed link (neon1-aws-infrastructure site-dev)
+const GATE = `${process.env.PUBLIC_URL ?? "https://neon1.tech"}/__auth`;
 
 
 /** One function serves both triggers; Cognito names the trigger in triggerSource */
@@ -42,7 +44,9 @@ const CODES: Record<string, { subject: string; kind: string; title: string; says
 export function message(event: CustomMessageTriggerEvent, at = new Date(), zone?: string) {
   // Sign-in codes share their template with the browser demo
   if ((event.triggerSource as string) === "CustomMessage_Authentication") {
-    const mail = signInCodeEmail({ code: event.request.codeParameter, portal: PORTAL, at, zone });
+    // A code the dev site's gate asked for links back to the gate, which holds that sign-in; 1NEON doesn't
+    const gate = Boolean(process.env.GATE_CLIENT_ID) && event.callerContext?.clientId === process.env.GATE_CLIENT_ID;
+    const mail = signInCodeEmail({ code: event.request.codeParameter, portal: gate ? GATE : PORTAL, gate, at, zone });
     event.response.emailSubject = mail.subject;
     event.response.emailMessage = mail.html;
     return event;

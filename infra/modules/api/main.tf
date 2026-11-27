@@ -17,6 +17,11 @@ variable "malware_scan" {
   default = true
 }
 variable "public_url" { type = string }
+# The app client of a private site's sign-in gate on this pool, whose code emails link back to it (dev only)
+variable "gate_client_id" {
+  type    = string
+  default = ""
+}
 variable "auth_domain" { type = string }
 variable "mail_from" { type = string }
 variable "ses_identity_arn" { type = string }
@@ -479,7 +484,7 @@ resource "aws_lambda_function" "trigger" {
   filename      = data.archive_file.trigger_placeholder.output_path
 
   environment {
-    variables = { TABLE_NAME = var.table_name, PUBLIC_URL = var.public_url }
+    variables = { TABLE_NAME = var.table_name, PUBLIC_URL = var.public_url, GATE_CLIENT_ID = var.gate_client_id }
   }
 
   logging_config {

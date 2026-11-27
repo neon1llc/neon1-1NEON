@@ -96,6 +96,12 @@ module "sms" {
 }
 
 
+# dev.neon1.tech's sign-in gate (neon1-aws-infrastructure site-dev, applied after this stack's pool)
+data "aws_ssm_parameter" "gate_client_id" {
+  name = "/neon1-site/dev/gate_client_id"
+}
+
+
 # The API and the Cognito trigger
 module "api" {
   source                  = "../../modules/api"
@@ -110,6 +116,7 @@ module "api" {
   records_bucket          = module.records.bucket
   records_bucket_arn      = module.records.bucket_arn
   public_url              = local.public_url
+  gate_client_id          = data.aws_ssm_parameter.gate_client_id.value
   auth_domain             = local.auth_domain
   mail_from               = local.mail_from
   ses_identity_arn        = local.ses_identity_arn

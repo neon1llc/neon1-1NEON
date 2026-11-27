@@ -136,6 +136,16 @@ describe("email", () => {
     expect(out.response.emailMessage).toContain('href="https://neon1.tech/1NEON/#code={####}"');
   });
 
+  it("links a code the dev gate asked for back to the gate, and every other client's to 1NEON", () => {
+    process.env.GATE_CLIENT_ID = "gate-client";
+    const ask = (clientId: string) => message({ triggerSource: "CustomMessage_Authentication", callerContext: { clientId }, request: { codeParameter: "{####}", userAttributes: {} }, response: {} } as unknown as CustomMessageTriggerEvent, new Date("2026-11-06T20:22:00Z")).response;
+    const gate = ask("gate-client");
+    expect(gate.emailSubject).toBe("Your neon1 dev sign-in code, sent 3:22 PM EST");
+    expect(gate.emailMessage).toContain('href="https://neon1.tech/__auth#code={####}"');
+    expect(ask("portal-client").emailMessage).toContain('href="https://neon1.tech/1NEON/#code={####}"');
+    delete process.env.GATE_CLIENT_ID;
+  });
+
   it("shows the sign-in code's time in the person's own zone when 1NEON has one", () => {
     const event = { triggerSource: "CustomMessage_Authentication", request: { codeParameter: "{####}", userAttributes: {} }, response: {} } as unknown as CustomMessageTriggerEvent;
     const out = message(event, new Date("2026-11-06T20:22:00Z"), "Europe/Berlin");
