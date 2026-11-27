@@ -33,6 +33,12 @@
 - Workbench: a project can run as one shared page for notes, to-dos, and files, open until someone marks it done, instead of on NEON's stages. Switch either way from the Overview, or choose it when approving an option. It shows on the Board in Build, tagged Workbench.
 
 ### Changed
+- An item's panel has its own address (#item-<id>): it can be pasted, Back closes it, and links from Home, the calendar, the bell, and emails open it instead of only scrolling to the row.
+- A project's stage is one control beside its key, listing every stage when pressed; the row of stage chips is gone. On phones, the lenses that aren't open show their icon, so all five fit.
+- A task's status, owner, and due date save as soon as they change; title and details still wait for Save.
+- Notifications are tagged with their kind (Files, Billing, Messages). Sign-ins no longer appear in the bell.
+- On phones the top bar drops its Menu button (the tab bar has one) and keeps the page name on one line.
+- Trin introduces itself as Neo's partner inside 1NEON.
 - A dropdown someone can't change (read-only for them) no longer shows its arrow, so it never promises a list that won't open.
 - Home starts with three cards: Needs you, Coming up, and Project updates, plus Next step, setup, and suggestions while they apply. The rest (overdue and blocked, projects at a glance, by layer, numbers, quick links, who's away, recent activity, the charts, Get to know 1NEON) wait under View. Reset under View returns to these three.
 - The View button counts only what hidden cards hold, once, so it no longer adds up the same item from several cards. Cards that repeat another card's items don't count.
