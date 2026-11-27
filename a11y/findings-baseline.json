@@ -293,6 +293,11 @@
       "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project/timeline|a",
       "type": "target-size-under-24",
       "reason": "This route has one or more clickable targets under 24 CSS px at desktop size. The global app.css that controls shared target geometry is protected by the handoff; target expansion would change layout outside this semantics and focus lane. Keep as a known finding and fail on new route/selector combinations."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/workspace|button.linkish",
+      "type": "target-size-under-24",
+      "reason": "The workspace monthly check-in action measures under 24 CSS px at desktop size. Its shared hit-area styles are in protected app.css; changing them would alter the protected Home layout outside this lane’s no-redesign scope. Keep this known finding and fail on new route/selector combinations."
     }
   ]
 }

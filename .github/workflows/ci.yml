@@ -76,6 +76,7 @@ jobs:
   a11y:
     name: ci-a11y
     strategy:
+      fail-fast: false
       max-parallel: 8
       matrix:
         role: [priya, tomas, pradeep]
