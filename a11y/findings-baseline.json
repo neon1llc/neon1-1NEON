@@ -77,6 +77,27 @@
       "impact": "serious",
       "selector": "section:nth-child(3) > .add-row > .linkish.small",
       "reason": "The Add change action is below the WCAG 2.2 target-size spacing threshold. Its shared small-control hit area is in protected app.css; retain this known issue and fail on new rule/selector pairs."
+    },
+    {
+      "key": "target-size|input[aria-label=\"Limit for Verify\"]",
+      "id": "target-size",
+      "impact": "serious",
+      "selector": "input[aria-label=\"Limit for Verify\"]",
+      "reason": "The Verify limit field measures below the WCAG 2.2 target-size threshold. Its control height comes from protected app.css; retain this known issue and fail on new rule/selector pairs."
+    },
+    {
+      "key": "target-size|section:nth-child(3) > .add-row > .chips.starters[aria-label=\"Suggestions\"] > .chip[type=\"button\"]:nth-child(3)",
+      "id": "target-size",
+      "impact": "serious",
+      "selector": "section:nth-child(3) > .add-row > .chips.starters[aria-label=\"Suggestions\"] > .chip[type=\"button\"]:nth-child(3)",
+      "reason": "The Short how-to video starter chip has insufficient safe target spacing. Its dimensions are set by protected app.css; retain this known issue and fail on new rule/selector pairs."
+    },
+    {
+      "key": "target-size|section:nth-child(4) > .add-row > .linkish.small",
+      "id": "target-size",
+      "impact": "serious",
+      "selector": "section:nth-child(4) > .add-row > .linkish.small",
+      "reason": "The Add update action measures below the WCAG 2.2 target-size threshold. Its shared small-control hit area is in protected app.css; retain this known issue and fail on new rule/selector pairs."
     }
   ],
   "manualFindings": [
@@ -334,6 +355,46 @@
       "key": "target-size-under-24|/1NEON/demo/o/:org/people|button.linkish.small,button.linkish.small,button.linkish.small,button.linkish.small",
       "type": "target-size-under-24",
       "reason": "The people route has four small linkish action buttons below the target-size threshold. Their hit areas use protected app.css; retain this known route/selector group and fail on new route/selector combinations."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/people|button.linkish.small,button.linkish.small,button.linkish.small",
+      "type": "target-size-under-24",
+      "reason": "The operator route exposes this exact target-size group, whose hit areas use protected app.css geometry. Keep this known route and selector combination visible and fail on any new combination."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project|a,button.linkish,button.linkish,button.linkish.small,button.linkish.small",
+      "type": "target-size-under-24",
+      "reason": "The operator route exposes this exact target-size group, whose hit areas use protected app.css geometry. Keep this known route and selector combination visible and fail on any new combination."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/all/workflow|a.name,a.name,a.name,a.name,a.name",
+      "type": "target-size-under-24",
+      "reason": "The operator route exposes this exact target-size group, whose hit areas use protected app.css geometry. Keep this known route and selector combination visible and fail on any new combination."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/all/prospects|a",
+      "type": "target-size-under-24",
+      "reason": "The operator route exposes this exact target-size group, whose hit areas use protected app.css geometry. Keep this known route and selector combination visible and fail on any new combination."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project/observation|a",
+      "type": "target-size-under-24",
+      "reason": "The operator route exposes this exact target-size group, whose hit areas use protected app.css geometry. Keep this known route and selector combination visible and fail on any new combination."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project/overview|a,button.linkish,button.linkish,button.linkish.small,button.linkish.small",
+      "type": "target-size-under-24",
+      "reason": "The operator route exposes this exact target-size group, whose hit areas use protected app.css geometry. Keep this known route and selector combination visible and fail on any new combination."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/people|button.linkish.small,button.linkish.small",
+      "type": "target-size-under-24",
+      "reason": "The operator route exposes this exact target-size group, whose hit areas use protected app.css geometry. Keep this known route and selector combination visible and fail on any new combination."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project/timeline|a,button.item-open",
+      "type": "target-size-under-24",
+      "reason": "The operator route exposes this exact target-size group, whose hit areas use protected app.css geometry. Keep this known route and selector combination visible and fail on any new combination."
     }
   ]
 }
