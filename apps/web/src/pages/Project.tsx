@@ -159,7 +159,7 @@ export function ProjectPage() {
       {lens === "timeline" && <TimelineLens project={p} items={items} kindLabel={kindLabel} />}
       {lens === "steps" && <>
       {/* Visible stages plus the project's own even if hidden; "done" counts by position among all stages */}
-      <div className="steps" aria-label="Stage" data-tour="stage">
+      <div className="steps" role="region" aria-label="Project stage" tabIndex={0} data-tour="stage">
         {bench ? ["Open", "Done"].map((w, i) => {
           const on = (i === 1) === isClosed(org.stages, p.stageId);
           return <span key={w} className={on ? "on" : i === 0 ? "done" : ""} aria-current={on ? "step" : undefined}>{w}</span>;
