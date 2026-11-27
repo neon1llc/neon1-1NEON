@@ -9,7 +9,7 @@ import { LASTING_OPS, type NeoPlan, type NeoTour } from "@1neon/domain";
 import { useQuery } from "@tanstack/react-query";
 import { driver } from "driver.js";
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { problem } from "../lib/hooks.ts";
 import { askNeo, blocks, fit, keep, runStep, type Piece, type Turn } from "../lib/neo.ts";
 import { navigate, refreshAll } from "../lib/nav.ts";
@@ -213,9 +213,13 @@ export function Neo({ open, setOpen, org, me, neo = true }: { open: boolean; set
   // Without Neo (no model set up) the panel is only the conversation with Pradeep
   const [tabWas, setTab] = useState<"neo" | "pradeep">("neo");
   const tab = neo ? tabWas : "pradeep";
-  // neon1 can pick any organization from its inbox; everyone else has their own
-  const [picked, setPicked] = useState<ChatOrg | undefined>();
-  const chatOrg = me.operator ? picked ?? org : org;
+  // Each organization's chat lives on its own page, so super picking one from the inbox goes there, and each
+  // browser tab keeps its own organization (Pradeep, 2026-11-27); everyone else has their own
+  const navigate = useNavigate();
+  const pick = (o: ChatOrg) => navigate(`/o/${o.slug}?chat=1`);
+  const chatOrg = org;
+  // In Potentials, the inbox lists potentials only
+  const only = loc.pathname.startsWith("/all/prospects") ? ("potential" as const) : undefined;
   const canTalk = me.operator || Boolean(org);
   const unread = useUnread(chatOrg, me.operator, open && tab === "pradeep");
   // Once a session, the launcher opens its label for a few seconds so people see there are two to talk to (Neo and neon1)
@@ -339,7 +343,7 @@ export function Neo({ open, setOpen, org, me, neo = true }: { open: boolean; set
         </span>
       </div>
       {tab === "pradeep" && canTalk ? (
-        <Talk org={chatOrg} me={me.id} operator={me.operator} active={open && tab === "pradeep"} pick={setPicked} />
+        <Talk org={chatOrg} me={me.id} operator={me.operator} active={open && tab === "pradeep"} pick={pick} only={only} />
       ) : (
         <>
         <div ref={log} className="n1chat-log" role="log" aria-live="polite">

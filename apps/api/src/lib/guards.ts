@@ -4,7 +4,7 @@
 // organization, and its own change counter is the same as everyone's.
 
 
-import { PROSPECT_LIMITS, isProspect, isSuspended, prospectFileAllowed, prospectMay } from "@1neon/domain";
+import { PROSPECT_LIMITS, isProspect, prospectFileAllowed, prospectMay, suspendedMay, suspendText, suspensionOf } from "@1neon/domain";
 import type { Context } from "hono";
 import { fail, who, type Env } from "./http.ts";
 import type { Kit } from "./kit.ts";
@@ -82,7 +82,8 @@ export function prospectGuard(k: Pick<Kit, "repo">) {
     const tenant = c.get("tenant");
     const { user, actor } = who(c);
     if (isProspect(tenant) && !actor.operator) {
-      if (isSuspended(tenant)) fail(403, "suspended", "This account is paused. Email hello@neon1.tech if you think that's a mistake.");
+      // Being deleted: refused everything. A suspension reads only, which suspensionGuard decides
+      if (tenant.prospect?.deletingAt) fail(403, "suspended", "This account is being deleted.");
       // The path after /t/:tid, which the allowlist is written against
       const rest = c.req.path.replace(/^.*?\/t\/[^/]+/, "");
       if (!prospectMay(c.req.method, rest)) fail(403, "prospect_limit", "That opens once we're working together. Email hello@neon1.tech, or keep adding your needs here.");
@@ -97,6 +98,16 @@ export function prospectGuard(k: Pick<Kit, "repo">) {
     }
     await next();
   };
+}
+
+
+/** Inside an organization: a suspended organization or account reads, asks to be recommissioned, marks
+ * notifications read and (unless suspended for abuse) writes to super; nothing else. super is never suspended */
+export async function suspensionGuard(c: Context<Env>, next: () => Promise<void>) {
+  if (who(c).actor.operator) return next();
+  const s = suspensionOf(c.get("tenant"), c.get("member"));
+  if (s && !suspendedMay(c.req.method, c.req.path.replace(/^.*?\/t\/[^/]+/, ""), s.why)) fail(403, "suspended", suspendText(s));
+  await next();
 }
 
 

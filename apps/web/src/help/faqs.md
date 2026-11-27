@@ -176,6 +176,9 @@ You can still sign in with an emailed code. The second step is only for admin ac
 ### My email address changed.
 Your email is how 1NEON knows you, so you can't change it on your profile. Ask an admin to invite the new address and deactivate the old one, or email [hello@neon1.tech](mailto:hello@neon1.tech). Earlier work stays under the old address.
 
+### My account says it's suspended.
+You can still sign in, read everything, and change your profile. Nothing is deleted. Press Ask to recommission on the banner and say why; an admin can ask for the whole organization or a colleague. An organization nobody opens for 60 days is suspended too, after reminders by email.
+
 ### Who do I ask for access?
 An admin of your organization. If you don't know who that is, or neon1's access needs to change, email [hello@neon1.tech](mailto:hello@neon1.tech).
 

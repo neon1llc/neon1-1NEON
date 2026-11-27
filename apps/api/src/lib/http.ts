@@ -2,7 +2,7 @@
 // body parsing, permission checks, and small pure helpers.
 
 
-import { DEFAULT_DEPOSIT_PERCENT, KIND_LAYER, alignPrice, can, itemFields, type AccessLevel, type Action, type Actor, type Item, type Tenant, type User } from "@1neon/domain";
+import { DEFAULT_DEPOSIT_PERCENT, KIND_LAYER, alignPrice, can, itemFields, type AccessLevel, type Action, type Actor, type Item, type Member, type Tenant, type User } from "@1neon/domain";
 import type { Context } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
@@ -18,7 +18,7 @@ export interface Who {
 
 
 // Per-request values set by middleware: who is calling, and the tenant a /t/:tid route resolved
-export type Env = { Variables: { who: Who; tenant: Tenant; access: AccessLevel | undefined } };
+export type Env = { Variables: { who: Who; tenant: Tenant; access: AccessLevel | undefined; member: Member | undefined } };
 
 
 // Timestamps are ISO strings in UTC, as the schemas expect

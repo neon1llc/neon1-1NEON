@@ -2,13 +2,14 @@
 
 
 import { plural } from "../lib/plural.ts";
-import { UNCHOSEN, choiceLabel, type Layer, type Stage, type Tenant } from "@1neon/domain";
+import { INACTIVE_DAYS, UNCHOSEN, choiceLabel, isOwnOrg, isProspect, suspendText, suspensionOf, type Layer, type Stage, type Tenant } from "@1neon/domain";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { FaceFacts, FaceForm } from "../components/OrgFace.tsx";
-import { useOrg, useTopBar } from "../components/Shell.tsx";
+import { useOrg, useSession, useTopBar } from "../components/Shell.tsx";
+import { NoteDialog, useSuperAct } from "../components/Suspend.tsx";
 import { ReportBug } from "../components/BugReport.tsx";
-import { LayerBadge, LAYERS, layerName, useToast } from "../components/ui.tsx";
+import { LayerBadge, LAYERS, layerName, useAsk, useToast } from "../components/ui.tsx";
 import { api } from "../lib/api.ts";
 import { ExportCancelled, exportOrganization, type ExportResult } from "../lib/export.ts";
 import { clearStaleExports } from "../lib/export-disk.ts";
@@ -94,6 +95,7 @@ export function Settings() {
             <span className="helper">Tell me what happened, or what you think, on a page that opens in a new tab.</span>
             <ReportBug kind="buttons" />
           </div>
+          <SuperControls />
         </div>
       </div>
       <h2 className="section-h" id="stages">Board stages</h2>
@@ -205,5 +207,39 @@ function ExportData() {
         </div>
       )}
     </div>
+  );
+}
+
+
+/** super's controls for this organization: downgrade a client to a potential, suspend or recommission it, and
+ * keep it off the inactivity clock (routes/suspensions.ts). Hidden from everyone else and in neon1's own */
+function SuperControls() {
+  const me = useSession();
+  const { org } = useOrg();
+  const act = useSuperAct();
+  const ask = useAsk();
+  const [suspending, setSuspending] = useState(false);
+  if (!me.operator || isOwnOrg(org.slug)) return null;
+  const s = suspensionOf(org);
+  const potential = isProspect(org);
+  const downgrade = async () => {
+    if (await ask({ title: `Make ${org.name} a potential?`, body: "Its people get free-account limits and it moves to Potentials. Its work and client ID stay, and promoting it brings both back.", yes: "Make potential", danger: true })) await act(`/orgs/${org.id}/downgrade`, `${org.name} is a potential`).catch(() => undefined);
+  };
+  return (
+    <>
+      <h2 className="section-h" id="super">super</h2>
+      <dl className="card facts">
+        <div><dt>Standing</dt><dd>{s ? <>Suspended {s.why === "super" ? "" : `(${s.why === "inactive" ? "inactivity" : "abuse"}) `}<span className="helper">{suspendText(s)}</span></> : potential ? "Potential" : "Client"}</dd></div>
+        <div><dt>Inactivity</dt><dd>{org.keptAt ? "Kept: never suspended for inactivity" : potential && !org.prospect?.fromClient ? "Free-account clock" : org.dormant ? `${plural(org.dormant.notices, "reminder")} sent` : `Suspended after ${INACTIVE_DAYS} quiet days`}</dd></div>
+        <div className="actions">
+          {s
+            ? <button className="btn btn-ghost btn-sm" onClick={() => void act(`/orgs/${org.id}/recommission`, `${org.name} is recommissioned`).catch(() => undefined)}>Recommission</button>
+            : <button className="btn btn-ghost btn-sm" onClick={() => setSuspending(true)}>Suspend</button>}
+          {!potential && <button className="btn btn-ghost btn-sm" onClick={() => void downgrade()}>Make potential</button>}
+          {(!potential || org.prospect?.fromClient) && <button className="btn btn-ghost btn-sm" onClick={() => void act(`/orgs/${org.id}/keep`, org.keptAt ? `${org.name} is back on the inactivity clock` : `${org.name} is kept`, { keep: !org.keptAt }).catch(() => undefined)}>{org.keptAt ? "Stop keeping" : "Keep active"}</button>}
+        </div>
+      </dl>
+      <NoteDialog open={suspending} onClose={() => setSuspending(false)} title={`Suspend ${org.name}`} go={(note) => act(`/orgs/${org.id}/suspend`, `${org.name} is suspended`, note ? { note } : {})} />
+    </>
   );
 }

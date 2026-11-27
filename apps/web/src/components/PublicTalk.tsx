@@ -7,7 +7,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { useLocation } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { usePublicNeo, type PublicTab } from "../lib/publicNeo.ts";
 import { Talk, useUnread, type ChatOrg } from "./Talk.tsx";
 
@@ -18,9 +18,13 @@ export function PublicTalk({ org, me, demo }: { org?: ChatOrg; me: { id: string;
   const [tab, setTab] = useState<PublicTab>();
   // True while the neon1 tab is the one in view, so the conversation is read (and marked seen) only then
   const [active, setActive] = useState(false);
-  // neon1 can pick any organization from its inbox; everyone else has their own
-  const [picked, setPicked] = useState<ChatOrg | undefined>();
-  const chatOrg = me.operator ? picked ?? org : org;
+  // Each organization's chat lives on its own page, so super picking one from the inbox goes there, and each
+  // browser tab keeps its own organization (Pradeep, 2026-11-27); everyone else has their own
+  const navigate = useNavigate();
+  const pick = (o: ChatOrg) => navigate(`/o/${o.slug}?chat=1`);
+  const chatOrg = org;
+  // In Potentials, the inbox lists potentials only
+  const only = loc.pathname.startsWith("/all/prospects") ? ("potential" as const) : undefined;
   const canTalk = me.operator || Boolean(org);
 
   // Add the tab to the window while this is mounted, and take it away after
@@ -45,5 +49,5 @@ export function PublicTalk({ org, me, demo }: { org?: ChatOrg; me: { id: string;
   }, [neo, tab, loc.search]);
 
   if (!tab) return null;
-  return createPortal(<Talk org={chatOrg} me={me.id} operator={me.operator} active={active} pick={setPicked} note={demo ? "This is the demo: messages stay in your browser." : undefined} />, tab.el);
+  return createPortal(<Talk org={chatOrg} me={me.id} operator={me.operator} active={active} pick={pick} only={only} note={demo ? "This is the demo: messages stay in your browser." : undefined} />, tab.el);
 }

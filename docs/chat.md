@@ -24,7 +24,7 @@ Under `/1NEON/api`. All need a sign-in and the `x-1neon` header.
 | `GET /t/:tid/chat` | a member, or neon1 | The conversation you may see, how many messages are new to you, and the reply hours. Opening it marks it seen. |
 | `POST /t/:tid/chat` | a member who can comment, or neon1 | Sends `{ text }`. A member may add `private: true`; neon1 may add `to` (a member's ID). |
 | `PATCH /t/:tid/chat/:mid` | the message's author | Edits it. The earlier text stays on the message. |
-| `GET /chat/inbox` | neon1 only | Every organization that wrote, most recent first. |
+| `GET /chat/inbox` | super only | Every organization's chat, most recent first, and every organization (`orgs`), so super can write first. |
 
 A member of another organization gets 404. A free account passes the free-account allowlist for `POST` and `PATCH` (`packages/domain/src/prospect.ts`).
 
@@ -50,7 +50,7 @@ Rules for the screen: no explanatory copy (the controls explain themselves), one
 
 ## Sending and drafts
 
-A message saves the moment Send is pressed (Enter sends, Shift Enter adds a line, as in Neo). What is typed and not sent is kept on the device in local storage (`1neon.chat.draft.<organization>`, listed in the cookie notice) and cleared once a send is accepted, so closing the page or locking a phone loses nothing. Earlier versions of an edited message are shown to neon1 only; everyone sees that it was edited. For neon1, the panel's inbox lists every organization that wrote, with new counts; choosing one opens its conversation without leaving the page.
+A message saves the moment Send is pressed (Enter sends, Shift Enter adds a line, as in Neo). What is typed and not sent is kept on the device in local storage (`1neon.chat.draft.<organization>`, listed in the cookie notice) and cleared once a send is accepted, so closing the page or locking a phone loses nothing. Earlier versions of an edited message are shown to neon1 only; everyone sees that it was edited. For super, the panel's inbox lists organizations that wrote, with new counts, then every other one under "No messages yet", with a search; in Potentials it lists potentials only. Choosing one opens that organization's own page (`/o/<slug>?chat=1`), so each browser tab keeps its own organization.
 
 ## Alerts
 
@@ -75,7 +75,7 @@ Everything below is counted in the table, so it costs nothing, and none of it ap
 | Per network address | Twelve messages an hour and forty a day from one address across every account, hashed, so many sign-ups don't multiply a person's allowance. |
 | Auto-flag | A message with an obscenity or slur is accepted, flagged for neon1 (told on its own, even inside a burst), and counts as two strikes. |
 | Report | A member can report another member's message. neon1 is told with the message, once per reporter. |
-| Mute and ban | neon1 can mute a member for a time or ban them from the message, and lift either. The inbox marks organizations with flags. |
+| Mute and ban | neon1 can mute a member for a time or ban them from the message, and lift either. The inbox marks organizations with flags. A third automatic mute in 30 days suspends the account for abuse (routes/suspensions.ts), which closes chat too. |
 
 ## Limits
 

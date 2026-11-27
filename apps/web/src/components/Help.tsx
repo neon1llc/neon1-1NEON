@@ -124,7 +124,7 @@ export const GUIDES: Record<PageKey, Guide> = {
   people: {
     title: "People",
     purpose: "Who's in this organization, and what each person can do.",
-    howto: ["Admins invite by email, resend an invitation, change access, and deactivate or reactivate people.", "Inviting and access changes ask you to confirm it's you."],
+    howto: ["Admins invite by email, resend an invitation, change access, and deactivate or reactivate people.", "Inviting and access changes ask you to confirm it's you.", "A suspended account reads only. Its owner, or an admin, can ask to recommission it."],
     tour: [
       { at: "invite", title: "Invite people", text: "Type their email. They get a link and sign in with a code." },
       { at: "people-list", title: "Access", text: "Change what someone can do, or deactivate them." },
@@ -180,8 +180,8 @@ export const GUIDES: Record<PageKey, Guide> = {
   },
   prospects: {
     title: "Potentials",
-    purpose: "Free accounts that aren't clients yet.",
-    howto: ["Promote makes one a client. You can also suspend, keep, or delete an account, and pause sign-up."],
+    purpose: "Free accounts and clients you made potentials, with recommission requests and every suspension above them.",
+    howto: ["Promote makes one a client. You can also suspend, keep, or delete an account, and pause sign-up.", "Recommission lifts a suspension; Set aside closes a request without lifting it.", "The chat inbox here lists potentials only."],
     tour: [],
   },
 };

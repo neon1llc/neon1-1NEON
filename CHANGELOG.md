@@ -5,6 +5,12 @@
 ## Unreleased
 
 ### Added
+- Suspensions. super can suspend an organization or one person's account, with an optional message for their banner. A suspended person can still sign in, read everything, edit their profile, and (unless suspended for abuse) write in the chat; every other change is refused. Nothing is deleted.
+- Ask to recommission, on the banner and on People: anyone suspended can ask for their own account, and an admin can also ask for a colleague's or the whole organization. A reason is required, and super sees it in Potentials, with Recommission or Set aside.
+- An organization nobody opens for 60 days is suspended automatically, after emails to its admins at 30, 45, and 53 days. Signing in counts. super can keep an organization off this clock. Free accounts keep their own clock.
+- A third automatic chat mute within 30 days suspends that account for abuse.
+- super can make a client a potential: it gets free-account limits and moves to Potentials, keeping its work and client ID, which promotion gives back. It is never deleted for being quiet.
+- super's chat inbox lists every organization, not just those that wrote, with a search; in Potentials it lists potentials only. Choosing one opens that organization's own page, so each browser tab keeps its own.
 - Board cards move the way Home cards do: hold one for half a second, mouse or finger, and the slot it will land in shows as a solid outline. Holding a card on a phone no longer opens the link preview.
 - Home has its own preset sizes for a phone, designed for four columns, beside the desktop ones; a free resize stays between a card's smallest and largest preset.
 - View's menu opens with a key to the badges. Tidy up and Reset are round buttons that open to their name; a second press acts.
@@ -22,6 +28,8 @@
 - New project asks how the work runs first (Workbench, Quick fix, Build a proposal, NEON), then for a proposal or NEON what kind of work it is. Clients start on Workbench and neon1 on NEON. A proposal starts at Propose and opens on its options.
 
 ### Changed
+- neon1's role is named super everywhere it shows: People, your profile, and the emails it receives.
+- A suspended free account can now sign in and read, as other suspensions do, instead of being turned away.
 - New project's choices run from lightest to most involved, each with four boxes for how involved it is and the path it follows.
 - On a desktop, a project's layer tabs and your profile spread over two balanced columns.
 - Opening a notification marks only that one read; opening the list marks nothing. Unread ones are bold with a dot.

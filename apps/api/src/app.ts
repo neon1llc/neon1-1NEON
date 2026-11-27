@@ -21,7 +21,8 @@ import { installOutbox } from "./lib/transactions.ts";
 import { authRoutes } from "./routes/auth.ts";
 import { signupRoutes } from "./routes/signup.ts";
 import { keepRoutes, prospectRoutes } from "./routes/prospects.ts";
-import { QUOTA_SK, accountGuard, prospectGuard } from "./lib/guards.ts";
+import { suspensionRoutes } from "./routes/suspensions.ts";
+import { QUOTA_SK, accountGuard, prospectGuard, suspensionGuard } from "./lib/guards.ts";
 import { commentRoutes } from "./routes/comments.ts";
 import { contactRoutes } from "./routes/contact.ts";
 import { chatInboxRoutes, chatRoutes } from "./routes/chat.ts";
@@ -187,6 +188,9 @@ export function createApp(d: Deps) {
   // A prospect's own people: the allowlist, a tighter change counter, and nothing while suspended
   app.use("/t/:tid/*", prospectGuard(k));
   app.use("/t/:tid", prospectGuard(k));
+  // A suspended organization or account reads only, beyond asking to be recommissioned (lib/guards.ts)
+  app.use("/t/:tid/*", suspensionGuard);
+  app.use("/t/:tid", suspensionGuard);
 
   /** Resolve :tid and the caller's access, or answer 404 for non-members (the operator may enter any) */
   async function loadTenant(c: Context<Env>, next: () => Promise<void>) {
@@ -197,6 +201,7 @@ export function createApp(d: Deps) {
     if (!tenant || (!access && !actor.operator)) fail(REASONS.not_member[0], REASONS.not_member[1], REASONS.not_member[2]);
     c.set("tenant", tenant);
     c.set("access", access);
+    c.set("member", access ? member : undefined);
     await next();
   }
 
@@ -211,6 +216,8 @@ export function createApp(d: Deps) {
   commentRoutes(app, k);
   // The organization's shared chat with neon1
   chatRoutes(app, k);
+  // Suspensions, downgrades, and recommission requests (super's routes sit outside /t/:tid)
+  suspensionRoutes(app, k);
   editRoutes(app, k);
   docRoutes(app, k);
   billingRoutes(app, k, pay);

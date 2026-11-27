@@ -299,10 +299,14 @@ describe("neon1's review queue", () => {
 
   it("suspends and resumes a prospect", async () => {
     const { tid } = await prospect();
-    expect((await as(OP, `/prospects/${tid}/suspend`, "POST", {})).status).toBe(200);
-    expect((await as(form.email, `/t/${tid}/projects`)).status).toBe(403);
-    expect((await as(OP, `/prospects/${tid}/resume`, "POST", {})).status).toBe(200);
+    expect((await as(OP, `/prospects/${tid}/suspend`, "POST", { note: "Paused while we talk." })).status).toBe(200);
+    // Suspended reads only (Pradeep, 2026-11-27): its people still sign in and see the banner's note
     expect((await as(form.email, `/t/${tid}/projects`)).status).toBe(200);
+    const refused = await as(form.email, `/t/${tid}/projects`, "POST", { name: "New", template: "blank" });
+    expect(refused.status).toBe(403);
+    expect(((await refused.json()) as { message: string }).message).toBe("Paused while we talk.");
+    expect((await as(OP, `/prospects/${tid}/resume`, "POST", {})).status).toBe(200);
+    expect((await as(form.email, `/t/${tid}/projects`, "POST", { name: "New", template: "blank" })).status).toBe(201);
   });
 
   it("deletes a prospect only when its name is typed, and never a client", async () => {

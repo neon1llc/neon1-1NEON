@@ -1,7 +1,7 @@
 // apps/web/src/lib/types.ts - Response shapes from the API, built on the shared domain types.
 
 
-import type { AccessLevel, AuditEvent, CalEvent, DocumentRecord, Item, Layer, Member, Project, Stage, Tenant, User } from "@1neon/domain";
+import type { AccessLevel, AuditEvent, CalEvent, DocumentRecord, Item, Layer, Member, Project, Stage, Suspension, Tenant, User } from "@1neon/domain";
 
 
 /** An organization in the chooser: its handles and the caller's access */
@@ -38,6 +38,8 @@ export type SmsState = "unavailable" | "no_number" | "not_agreed" | "opted_out" 
 export interface OrgResponse {
   org: Tenant;
   access: AccessLevel;
+  // The suspension in force for the caller here (suspension.ts suspensionOf)
+  suspension?: Suspension & { scope: "org" | "account" };
 }
 
 

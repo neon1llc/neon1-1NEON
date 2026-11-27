@@ -9,7 +9,7 @@
 // "Accepted" means the provider took the message; it is not proof that it was delivered.
 
 
-import { replyOpen, actorHears, groupOf, isOwnOrg, isProspect, isQuickFix, neon1Only, noticeSummary, wants, type AuditEvent, type Member, type User, askedToDecide, revisions } from "@1neon/domain";
+import { replyOpen, actorHears, groupOf, isOwnOrg, isProspect, isQuickFix, neon1Only, accountNotice, noticeSummary, wants, type AuditEvent, type Member, type User, askedToDecide, revisions } from "@1neon/domain";
 import type { Config } from "./config.ts";
 import { inviteEmail, noticeEmail, prospectFacts } from "./emails.ts";
 import { eventLinks, linkUrl } from "./lib/links.ts";
@@ -305,6 +305,7 @@ async function eventTargets(d: OutboxDeps, e: AuditEvent, clock: Clock): Promise
     if (!u) continue;
     // neon1's working drafts reach neon1 only
     if (neon1Only(e.action) && !cfg.operatorEmails.includes(u.email)) continue;
+    if (accountNotice(e.action) && m.userId !== e.target && m.access !== "admin") continue;
     // Options reach the client when the proposal is issued, in one email, not one per edit
     if (/^option\.(created|updated|deleted|quoted)$/.test(e.action) && !cfg.operatorEmails.includes(u.email.toLowerCase())) continue;
     if (wants(u.notify, e.action, "email")) {

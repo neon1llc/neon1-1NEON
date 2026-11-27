@@ -1,11 +1,13 @@
-// apps/web/src/pages/Prospects.tsx - Prospects, neon1 only: everyone who signed themselves up and isn't a
-// client yet. Who they are, when they came and were last here, what they hold, and what neon1 can do:
+// apps/web/src/pages/Prospects.tsx - Potentials, super only: everyone who signed themselves up and isn't a
+// client yet, and clients super downgraded. Above them, recommission requests and every suspended client and
+// account (components/Suspend.tsx, routes/suspensions.ts). Who they are, when they came and were last here, what they hold, and what neon1 can do:
 // promote, suspend or resume, keep, delete, and pause or reopen sign-up. Suspended accounts sit at the top for
 // review, since nothing deletes them on its own. Changes here need a confirmed
 // session, so the API's "Confirm it's you" answer opens that dialog as it does for other admin actions.
 
 
-import { FOUND_VIA, type FoundVia } from "@1neon/domain";
+import { FOUND_VIA, suspendText, type FoundVia, type Recommission, type Suspension } from "@1neon/domain";
+import { NoteDialog, useSuperAct } from "../components/Suspend.tsx";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router";
@@ -57,9 +59,9 @@ export function Prospects() {
   const promote = async (p: ProspectRow) => {
     if (await ask({ title: `Make ${p.name} a client?`, body: "It gets the next client ID and every limit lifts. Nothing in its work changes.", yes: "Promote" })) void act(`${p.name} is a client`, () => post(p, "promote"));
   };
-  const suspend = async (p: ProspectRow) => {
-    if (await ask({ title: `Suspend ${p.name}?`, body: "Its people are turned away at once. Nothing is deleted, even later: it waits at the top of this page until you resume or delete it.", yes: "Suspend", danger: true })) void act(`${p.name} is suspended`, () => post(p, "suspend"));
-  };
+  // Suspending asks for the banner's optional message; its people can still sign in and read
+  const [suspending, setSuspending] = useState<ProspectRow>();
+  const suspend = (p: ProspectRow) => setSuspending(p);
   const setSignup = async (paused: boolean) => {
     if (paused && !(await ask({ title: "Pause sign-up?", body: "The form says sign-up is paused, and nobody new can start until you reopen it.", yes: "Pause", danger: true }))) return;
     void act(paused ? "Sign-up is paused" : "Sign-up is open", () => api("/signup", { method: "PUT", body: { paused } }));
@@ -77,14 +79,14 @@ export function Prospects() {
       <section className="card prospect" id={`org-${p.id}`} key={p.id} aria-label={p.name}>
         <div className="prospect-head">
           {/* Into the organization itself, where neon1 can act as in any client's */}
-          <h2><Link to={`/o/${p.slug}/workspace`}>{p.name}</Link> <span className="tag">{p.clientId}</span></h2>
+          <h2><Link to={`/o/${p.slug}/workspace`}>{p.name}</Link> <span className="tag">{p.clientId}</span>{p.prospect.fromClient && <span className="tag">was a client</span>}</h2>
           <span className={`tag${state === "suspended" || state === "final" || deleting ? " warn" : state === "kept" ? " client" : ""}`}>{stateLabel(p.prospect)}</span>
         </div>
         <p className="small muted prospect-people">{p.people.length ? p.people.map((x) => `${x.name || x.email} (${x.email})`).join(", ") : "No one has joined."}</p>
         <dl className="prospect-facts small">
           <div className="wide"><dt>Where</dt><dd><FaceFacts place={p.place} link={p.link} linkedin={p.linkedin} /></dd></div>
           {p.prospect.found && <div className="wide"><dt>Found neon1 through</dt><dd>{FOUND_VIA[p.prospect.found as FoundVia] ?? p.prospect.found}</dd></div>}
-          <div><dt>Signed up</dt><dd>{dateLabel(p.prospect.since.slice(0, 10))}</dd></div>
+          <div><dt>{p.prospect.fromClient ? "Potential since" : "Signed up"}</dt><dd>{dateLabel(p.prospect.since.slice(0, 10))}</dd></div>
           <div><dt>Last active</dt><dd>{p.lastActive ? ago(p.lastActive) : "never"}</dd></div>
           {p.prospect.suspendedAt && <div><dt>Suspended</dt><dd>{ago(p.prospect.suspendedAt)}</dd></div>}
           {p.deleteOn && <div><dt>Deleted if quiet</dt><dd>{dateLabel(p.deleteOn.slice(0, 10))}</dd></div>}
@@ -113,9 +115,10 @@ export function Prospects() {
   return (
     <>
       <h1 className="page-title">Potentials</h1>
-      <p className="lead">People who signed themselves up. They stay limited until you promote them.</p>
+      <p className="lead">Free accounts, and clients you made potentials. They stay limited until you promote them.</p>
       <Stale reads={[q]} />
       {wait}
+      <Suspensions />
       {/* The sign-up switch: whether the form takes new people right now */}
       {s && (
         <div className="card signup-switch" role="group" aria-label="Sign-up">
@@ -141,6 +144,7 @@ export function Prospects() {
         </>
       )}
       {rest.map(card)}
+      <NoteDialog open={Boolean(suspending)} onClose={() => setSuspending(undefined)} title={`Suspend ${suspending?.name ?? ""}`} go={async (note) => { const p = suspending!; await act(`${p.name} is suspended`, () => api(`/prospects/${p.id}/suspend`, { method: "POST", body: note ? { note } : {} })); }} />
       {/* Delete is for good, so the organization's name is typed first */}
       <Dialog open={Boolean(doomed)} onClose={() => setDoomed(undefined)} label="Delete potential" className="ask">
         <h2>Delete {doomed?.name}?</h2>
@@ -154,6 +158,76 @@ export function Prospects() {
           </div>
         </form>
       </Dialog>
+    </>
+  );
+}
+
+
+/** GET /suspensions */
+interface SuspensionsResponse {
+  orgs: { id: string; slug: string; name: string; clientId: string; potential: boolean; suspended: Suspension }[];
+  accounts: { tenantId: string; slug: string; orgName: string; userId: string; name: string; email: string; suspended: Suspension }[];
+  requests: Recommission[];
+}
+
+
+/** Why a suspension happened, in a word, when it wasn't super's own call */
+const whyTag = (s: Suspension) => (s.why === "inactive" ? "inactivity" : s.why === "abuse" ? "abuse" : "");
+
+
+/**
+ * Recommission requests, with the reason people gave, and every suspended client and account. Free accounts
+ * that are suspended stay in their own section below, as before
+ */
+function Suspensions() {
+  const q = useQuery({ queryKey: ["suspensions"], queryFn: () => read<SuspensionsResponse>("/suspensions", { orgs: "array", accounts: "array", requests: "array" }), refetchInterval: 30_000 });
+  const act = useSuperAct();
+  const go = (path: string, done: string) => void act(path, done).catch(() => undefined);
+  const open = (q.data?.requests ?? []).filter((r) => r.state === "open");
+  const orgs = (q.data?.orgs ?? []).filter((o) => !o.potential);
+  const accounts = q.data?.accounts ?? [];
+  if (!open.length && !orgs.length && !accounts.length) return null;
+  const lift = (r: Recommission) => (r.scope === "org" ? `/orgs/${r.tenantId}/recommission` : `/orgs/${r.tenantId}/members/${r.userId}/recommission`);
+  return (
+    <>
+      {open.length > 0 && (
+        <>
+          <h2 className="section-h">Asking to be recommissioned</h2>
+          {open.map((r) => (
+            <section className="card prospect" key={r.id} aria-label={`${r.orgName}: ${r.byName}`}>
+              <div className="prospect-head">
+                <h2>{r.scope === "org" ? r.orgName : `${r.userName} · ${r.orgName}`}</h2>
+                <span className="tag warn">{r.scope === "org" ? "organization" : "account"}</span>
+              </div>
+              <p className="recommission-why">{r.reason}</p>
+              <p className="small muted">{r.byName}, {ago(r.at)}</p>
+              <div className="prospect-actions">
+                <button className="btn btn-primary btn-sm" onClick={() => go(lift(r), "Recommissioned")}>Recommission</button>
+                <button className="btn btn-ghost btn-sm" onClick={() => go(`/recommissions/${r.tenantId}/${r.id}/dismiss`, "Set aside")}>Set aside</button>
+              </div>
+            </section>
+          ))}
+        </>
+      )}
+      {(orgs.length > 0 || accounts.length > 0) && (
+        <>
+          <h2 className="section-h">Suspended clients and accounts</h2>
+          <ul className="card suspended-list">
+            {orgs.map((o) => (
+              <li key={o.id}>
+                <span><Link to={`/o/${o.slug}/workspace`}>{o.name}</Link> <span className="tag">{o.clientId}</span>{whyTag(o.suspended) && <span className="tag warn">{whyTag(o.suspended)}</span>}<br /><small className="muted">{suspendText(o.suspended)} {ago(o.suspended.at)}</small></span>
+                <button className="btn btn-ghost btn-sm" onClick={() => go(`/orgs/${o.id}/recommission`, `${o.name} is recommissioned`)}>Recommission</button>
+              </li>
+            ))}
+            {accounts.map((a) => (
+              <li key={`${a.tenantId}:${a.userId}`}>
+                <span>{a.name || a.email} · <Link to={`/o/${a.slug}/people`}>{a.orgName}</Link>{whyTag(a.suspended) && <span className="tag warn">{whyTag(a.suspended)}</span>}<br /><small className="muted">{suspendText(a.suspended)} {ago(a.suspended.at)}</small></span>
+                <button className="btn btn-ghost btn-sm" onClick={() => go(`/orgs/${a.tenantId}/members/${a.userId}/recommission`, `${a.name || a.email} is recommissioned`)}>Recommission</button>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </>
   );
 }

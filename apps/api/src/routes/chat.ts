@@ -4,7 +4,7 @@
 // earlier text stays on it for the record. neon1 is alerted (email, and a push to its phone when configured) when a
 // member writes, and members are emailed when neon1 replies, unless they are reading. Replies come in the reply
 // hours (packages/domain/src/chat.ts).
-import { CHAT_AUTO_MUTE_HOURS, CHAT_EDIT_HISTORY, CHAT_PAGE, CHAT_READING_MS, ChatText, blockActive, chatJunk, chatVisibleTo, REPLY_HOURS_TEXT, chatProblem, isProspect, newId, replyExpectation, type ChatBlock, type ChatFlag, type ChatMessage, type ChatThread, type ChatThreadPublic, type ChatView, type Tenant, type User } from "@1neon/domain";
+import { CHAT_AUTO_MUTE_HOURS, CHAT_EDIT_HISTORY, CHAT_PAGE, CHAT_READING_MS, ChatText, blockActive, chatJunk, chatVisibleTo, REPLY_HOURS_TEXT, chatProblem, isProspect, newId, replyExpectation, suspensionOf, type ChatBlock, type ChatFlag, type ChatMessage, type ChatThread, type ChatThreadPublic, type ChatView, type Tenant, type User } from "@1neon/domain";
 import { z } from "zod";
 import { body, fail, need, now, who } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
@@ -130,11 +130,14 @@ export async function chatReplyByEmail(k: Pick<Kit, "repo" | "d" | "cfg" | "drai
 }
 
 
-/** The operator's inbox: every organization that has written, most recent first. It sits outside any organization */
+/** super's inbox: every organization's chat, most recent first, and every organization, so super can write to
+ * one that hasn't written yet (Pradeep, 2026-11-27). It sits outside any organization */
 export function chatInboxRoutes(app: App, k: Kit) {
   app.get("/chat/inbox", async (c) => {
     if (!who(c).actor.operator) fail(404, "not_found", "That doesn't exist.");
-    return c.json({ threads: await k.repo.chatInbox() });
+    const [threads, tenants] = await Promise.all([k.repo.chatInbox(), k.repo.listTenants()]);
+    const orgs = tenants.filter((t) => t.status === "active" && !t.prospect?.deletingAt).map((t) => ({ id: t.id, name: t.name, slug: t.slug, potential: isProspect(t), suspended: Boolean(suspensionOf(t)), test: Boolean(t.test) })).sort((a, b) => a.name.localeCompare(b.name));
+    return c.json({ threads, orgs });
   });
 }
 

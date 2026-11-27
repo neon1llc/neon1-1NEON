@@ -31,9 +31,13 @@ export function memberRoutes(app: App, k: Kit) {
     need(c, "read");
     const members = await repo.listMembers(c.get("tenant").id);
     const users = await Promise.all(members.map((m) => repo.getUser(m.userId)));
+    // A suspension's note is for that person, the organization's admins, and super; colleagues see only that it's suspended
+    const { user, actor } = who(c);
+    const sees = (m: Member) => actor.operator || c.get("access") === "admin" || m.userId === user.id;
+    const shown = (m: Member): Member => (m.suspended && !sees(m) ? { ...m, suspended: { at: m.suspended.at, why: m.suspended.why } } : m);
     // Phone numbers stay on the person's own profile; organizations they share don't see them
     // neon1's own people are marked, so the page can show their access as neon1's to change
-    return c.json(members.map((m, i) => withOwnName({ ...m, name: users[i]?.name || m.name, title: users[i]?.title || m.title, neon1: cfg.operatorEmails.includes(m.email.toLowerCase()), linkedin: users[i]?.linkedin, businessLinkedin: users[i]?.businessLinkedin, website: users[i]?.website })));
+    return c.json(members.map((m, i) => withOwnName({ ...shown(m), name: users[i]?.name || m.name, title: users[i]?.title || m.title, neon1: cfg.operatorEmails.includes(m.email.toLowerCase()), linkedin: users[i]?.linkedin, businessLinkedin: users[i]?.businessLinkedin, website: users[i]?.website })));
   });
 
   // Invite: create the person if new, add the membership, create the Cognito user, and email the link

@@ -3,7 +3,7 @@
 
 
 import { checkFace } from "../lib/vet.ts";
-import { InvoiceFields, OrgProfileInput, RECORD_KINDS, Stage, canApprove, dollars, failedOn, invoiceState, payableOn, changeRecord, occurrences, stageChanges, dateIn, isClosed, isOwnOrg, metricReached, mondayOf, neon1Only, plusDays, todayIn, type Tenant } from "@1neon/domain";
+import { InvoiceFields, OrgProfileInput, RECORD_KINDS, Stage, canApprove, dollars, failedOn, invoiceState, payableOn, changeRecord, occurrences, stageChanges, dateIn, isClosed, isOwnOrg, metricReached, mondayOf, neon1Only, plusDays, todayIn, type Tenant, suspensionOf } from "@1neon/domain";
 import { z } from "zod";
 import { actorId, body, fail, need, now, who } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
@@ -20,7 +20,9 @@ export function workspaceRoutes(app: App, k: Kit) {
   // The organization and the caller's access, for the web app's frame
   app.get("/t/:tid", (c) => {
     need(c, "read");
-    return c.json({ org: c.get("tenant"), access: who(c).actor.operator ? "admin" : c.get("access") });
+    // The suspension in force for this caller (the organization's, else their own account's); super sees the organization's
+    const suspension = suspensionOf(c.get("tenant"), who(c).actor.operator ? undefined : c.get("member"));
+    return c.json({ org: c.get("tenant"), access: who(c).actor.operator ? "admin" : c.get("access"), ...(suspension ? { suspension } : {}) });
   });
 
   // Where the organization is based and its website or public page: admins (prospects too, since it's

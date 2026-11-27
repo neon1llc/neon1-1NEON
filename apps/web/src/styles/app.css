@@ -203,6 +203,14 @@ a.org { text-decoration: none; }
 .kbd { font: var(--fs-xs) var(--mono); border: 1px solid var(--line-strong); border-radius: 5px; padding: 1px var(--sp-1); color: var(--muted); }
 /* The All clients banner, then page titles and section headings */
 .readonly-bar { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-5); font: var(--fs-sm) var(--mono); color: #3B2600; background: repeating-linear-gradient(-45deg, #FFE1A8, #FFE1A8 12px, #FFD98F 12px, #FFD98F 24px); border-bottom: 1px solid #E0B25A; }
+/* A suspension's banner: the read-only bar's look, wrapping on a phone, its button in the bar's own ink */
+.suspend-bar { flex-wrap: wrap; row-gap: var(--sp-1); }
+.suspend-bar .linkish { color: inherit; font-weight: 700; }
+/* Potentials: a request's reason in full, and the suspended list's rows */
+.recommission-why { margin: var(--sp-2) 0; white-space: pre-wrap; }
+.suspended-list { list-style: none; padding: 0; }
+.suspended-list li { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border-bottom: 1px solid var(--soft); }
+.suspended-list li:last-child { border-bottom: 0; }
 /* The page's content is 1280px wide at the 15px base, plus the gutter either side, centered: at 1440 the gutters are the same 28px, and a wider
    screen leaves equal space on both sides instead of all of it on the right */
 .content { padding: var(--sp-5); max-width: calc(1280px + 2 * var(--gut)); width: 100%; margin-inline: auto; }
@@ -2503,6 +2511,9 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 .talk-row.new .talk-row-name { font-weight: 700; }
 .talk-row-text { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .talk-row small { color: var(--muted); }
+/* super's inbox: find an organization, and the divider before those with no messages yet */
+.talk-find { width: 100%; margin: var(--sp-2) 0; }
+.talk-sep { margin: var(--sp-3) 0 0; color: var(--muted); font-size: var(--fs-xs); text-transform: lowercase; }
 .talk-priv.on { background: var(--accent); color: var(--accent-ink, #0d0208); }
 .talk-to { width: auto; min-height: 0; padding: var(--sp-1) var(--sp-2); font-size: var(--fs-sm); }
 

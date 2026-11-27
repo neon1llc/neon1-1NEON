@@ -1,7 +1,7 @@
 // apps/web/src/components/Talk.tsx - The conversation with Pradeep, inside Neo's panel (components/Neo.tsx) and drawn
 // with its pieces: the same log, bubbles, composer, and send button. One shared chat per organization, so everyone in
 // it sees the same messages with their names. A message sends when Send is pressed; what is typed and not sent is kept
-// on this device as a draft. You can edit your own messages. neon1 gets an inbox of every organization that wrote.
+// on this device as a draft. You can edit your own messages. super gets an inbox of every organization, and can write first.
 
 
 import { blockMessage, CHAT_MAX, chatVisibleTo, type ChatBlock, type ChatMessage, type ChatThread, type ChatView } from "@1neon/domain";
@@ -113,19 +113,43 @@ function Bubble({ m, me, operator, who, edit, mod }: { m: ChatMessage; me: strin
 }
 
 
-/** neon1's inbox: every organization that wrote, most recent first, new counts marked */
-function Inbox({ pick }: { pick: (o: ChatOrg) => void }) {
-  const q = useQuery({ queryKey: ["chat", "inbox"], queryFn: () => read<{ threads: ChatThread[] }>("/chat/inbox", { threads: "array" }), refetchInterval: POLL });
-  const threads = q.data?.threads ?? [];
+/** One organization super can write to, from the inbox's full list */
+interface InboxOrg { id: string; name: string; slug: string; potential: boolean; suspended: boolean; test: boolean }
+
+
+/**
+ * super's inbox: organizations that have written, most recent first, then every other one, so super can write
+ * first (an Intercom-style "new conversation"). In Potentials it lists potentials only. Picking one opens that
+ * organization's own page, so each browser tab keeps its place
+ */
+function Inbox({ pick, only }: { pick: (o: ChatOrg) => void; only?: "potential" }) {
+  const q = useQuery({ queryKey: ["chat", "inbox"], queryFn: () => read<{ threads: ChatThread[]; orgs?: InboxOrg[] }>("/chat/inbox", { threads: "array" }), refetchInterval: POLL });
+  const [find, setFind] = useState("");
+  const orgs = new Map((q.data?.orgs ?? []).map((o) => [o.id, o]));
+  const keep = (id: string, name: string) => (!only || orgs.get(id)?.potential) && name.toLowerCase().includes(find.trim().toLowerCase());
+  const threads = (q.data?.threads ?? []).filter((t) => keep(t.tenantId, t.orgName));
+  const wrote = new Set((q.data?.threads ?? []).map((t) => t.tenantId));
+  const rest = [...orgs.values()].filter((o) => !wrote.has(o.id) && keep(o.id, o.name));
+  const tag = (id: string, free?: boolean) => {
+    const o = orgs.get(id);
+    return <>{(o?.potential ?? free) ? <small> potential</small> : null}{o?.suspended ? <small> suspended</small> : null}{o?.test ? <small> test</small> : null}</>;
+  };
   return (
     <div className="n1chat-log">
+      <input className="talk-find" type="search" value={find} onChange={(e) => setFind(e.target.value)} placeholder={only ? "Find a potential" : "Find an organization"} aria-label="Find an organization" />
       {q.isPending && <p className="talk-hint">Loading…</p>}
-      {!q.isPending && !threads.length && <p className="talk-hint">Nobody has written yet.</p>}
+      {!q.isPending && !threads.length && !rest.length && <p className="talk-hint">{find ? "No match." : only ? "No potentials yet." : "No organizations yet."}</p>}
       {threads.map((t) => (
         <button key={t.tenantId} type="button" className={`talk-row${t.ownerUnread ? " new" : ""}`} onClick={() => pick({ id: t.tenantId, name: t.orgName, slug: t.orgSlug })}>
-          <span className="talk-row-name">{t.orgName}{t.free ? <small> free</small> : null}{t.ownerUnread ? <b className="talk-badge">{t.ownerUnread}</b> : null}{t.ownerFlagged ? <b className="talk-badge talk-badge-flag" title="Flagged or reported">{t.ownerFlagged}!</b> : null}</span>
+          <span className="talk-row-name">{t.orgName}{tag(t.tenantId, t.free)}{t.ownerUnread ? <b className="talk-badge">{t.ownerUnread}</b> : null}{t.ownerFlagged ? <b className="talk-badge talk-badge-flag" title="Flagged or reported">{t.ownerFlagged}!</b> : null}</span>
           <span className="talk-row-text">{t.lastFrom === "neon1" ? "You" : t.lastBy}: {t.preview}</span>
           <small>{ago(t.lastAt)}</small>
+        </button>
+      ))}
+      {rest.length > 0 && <p className="talk-sep">No messages yet</p>}
+      {rest.map((o) => (
+        <button key={o.id} type="button" className="talk-row" onClick={() => pick({ id: o.id, name: o.name, slug: o.slug })}>
+          <span className="talk-row-name">{o.name}{tag(o.id)}</span>
         </button>
       ))}
     </div>
@@ -173,7 +197,7 @@ function Composer({ org, operator, people, block, send }: { org: ChatOrg; operat
   if (block) return <p className="talk-hint talk-paused" role="status">{blockMessage(block)}</p>;
   return (
     <form className="n1chat-form" onSubmit={(e) => { e.preventDefault(); void go(); }}>
-      <textarea ref={field} className="n1chat-input" rows={1} maxLength={CHAT_MAX} value={text} aria-label="Your message" placeholder={operator ? "Reply" : "Write to me"}
+      <textarea ref={field} className="n1chat-input" rows={1} maxLength={CHAT_MAX} value={text} aria-label="Your message" placeholder={operator ? `Write to ${org.name}` : "Write to me"}
         onChange={(e) => change(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void go(); } }} />
       {operator ? (
@@ -236,11 +260,11 @@ function Thread({ org, me, operator, active, inbox, note }: { org: ChatOrg; me: 
 
 
 /** The neon1 tab: a member's own organization; for neon1, the inbox and any organization chosen from it */
-export function Talk({ org, me, operator, active, pick, note }: { org: ChatOrg | undefined; me: string; operator: boolean; active: boolean; pick: (o: ChatOrg) => void; note?: string }) {
+export function Talk({ org, me, operator, active, pick, note, only }: { org: ChatOrg | undefined; me: string; operator: boolean; active: boolean; pick: (o: ChatOrg) => void; note?: string; only?: "potential" }) {
   const [inbox, setInbox] = useState(operator && !org);
   // Choosing an organization (from the inbox, or by moving to one) shows its conversation
   useEffect(() => { if (org) setInbox(false); }, [org?.id]);
-  if (operator && (inbox || !org)) return <Inbox pick={(o) => { pick(o); setInbox(false); }} />;
+  if (operator && (inbox || !org)) return <Inbox only={only} pick={(o) => { pick(o); setInbox(false); }} />;
   if (!org) return null;
   return <Thread org={org} me={me} operator={operator} active={active} inbox={() => setInbox(true)} note={note} />;
 }

@@ -30,7 +30,7 @@ export interface NotifyGroup {
 // In order of importance; the first group whose match accepts an action owns it
 export const NOTIFY_GROUPS: NotifyGroup[] = [
   { id: "files", label: "Files", hint: "A file is uploaded or removed", level: "critical", email: true, match: (a) => a.startsWith("doc.") },
-  { id: "access", label: "People and access", hint: "Someone is invited, joins, signs up, or gets a different access level", level: "critical", email: true, match: (a) => a === "member.invited" || a === "member.joined" || a === "member.updated" || a.startsWith("prospect.") },
+  { id: "access", label: "People and access", hint: "Someone is invited, joins, signs up, gets a different access level, or is suspended or recommissioned", level: "critical", email: true, match: (a) => a === "member.invited" || a === "member.joined" || a === "member.updated" || a.startsWith("prospect.") || a.startsWith("access.") || a.startsWith("account.") || a.startsWith("recommission.") || a === "org.kept" || a === "org.unkept" },
   { id: "decisions", label: "Decisions and options", hint: "A proposal is issued, an option is approved or changed to another, a refresh is asked for, or a decision is waiting on you", level: "critical", email: true, match: (a) => a === "decision.approved" || a === "decision.changed" || a.startsWith("option.") || a === "proposal.issued" || a === "proposal.refresh_asked" || a === "purchase.agreed" || a === "handoff.accepted" },
   { id: "billing", label: "Agreements, invoices, and payments", hint: "The service agreement is signed or its choices change, work is handed over, paused, or ended, neon1 is waiting on you, an invoice is issued, voided, disputed, or overdue, or a payment starts, arrives, or fails", level: "critical", email: true, match: (a) => a === "agreement.signed" || a === "agreement.choices" || a === "invoice.issued" || a === "invoice.voided" || a === "invoice.disputed" || a === "invoice.dispute_resolved" || a === "invoice.reminded" || a.startsWith("payment.") || CONTRACT_NOTICES.has(a) },
   { id: "workflow", label: "Workflow and stages", hint: "A project moves stage, or the board's stages change", level: "critical", email: true, match: (a) => a === "project.moved" || a === "org.stages" || a === "project.created" || a === "project.trashed" },
@@ -64,7 +64,10 @@ export const actorHears = (action: string, ownOrg: boolean) => RECEIPTS.has(acti
 
 /** Actions only neon1 hears about: its own working drafts, which a client sees once issued, and its
  * handling of prospects (sign-up, keeping, suspending), apart from a promotion to client */
-export const neon1Only = (action: string) => action === "invoice.drafted" || (action.startsWith("prospect.") && action !== "prospect.promoted");
+export const neon1Only = (action: string) => action === "invoice.drafted" || (action.startsWith("prospect.") && action !== "prospect.promoted") || action.startsWith("recommission.") || action === "org.kept" || action === "org.unkept";
+
+/** One account's suspension reaches that person and the organization's admins, not every colleague */
+export const accountNotice = (action: string) => action.startsWith("account.");
 
 
 /**

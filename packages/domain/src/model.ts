@@ -89,6 +89,21 @@ export const ChoiceFields = z.object({ caseStudies: z.enum(["yes", "later", "no"
 export const AgreementChoice = ChoiceFields.extend({ by: id, name: z.string().max(80), email: z.string().max(200), at: isoDate, edition: z.string().max(16) });
 
 
+/** Why an organization or one account is suspended: super's own call, or automatic for inactivity or abuse */
+export const SuspendWhy = z.enum(["super", "inactive", "abuse"]);
+export type SuspendWhy = z.infer<typeof SuspendWhy>;
+/** A suspension: its people can sign in and read, but change nothing beyond their profile (suspension.ts) */
+export const Suspension = z.object({
+  at: isoDate,
+  why: SuspendWhy,
+  // Who placed it; missing when automatic
+  by: id.optional(),
+  // super's own words for the banner; missing shows the default for `why`
+  note: z.string().trim().max(400).optional(),
+});
+export type Suspension = z.infer<typeof Suspension>;
+
+
 export const Tenant = z.object({
   id: id,
   slug: z.string().regex(/^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/),
@@ -112,6 +127,12 @@ export const Tenant = z.object({
   // A test organization for neon1's own checks: left out of All clients, the Prospects page, neon1's notices
   // and requests (marked [TEST]), the tip and quiet-prospect emails, and the quiet-prospect deletion
   test: z.boolean().optional(),
+  // Suspended as a whole: every member but super reads only (suspension.ts)
+  suspended: Suspension.optional(),
+  // super keeps this organization: the inactivity clock skips it (suspension.ts dormantStep)
+  keptAt: isoDate.optional(),
+  // Inactivity reminders sent since its people last signed in or changed something, and when the last went out
+  dormant: z.object({ notices: z.number().int().min(0).max(10), noticeAt: isoDate }).optional(),
   // Set while this organization is a prospect that signed itself up (prospect.ts has its limits).
   // Promotion to a client removes it; suspension keeps it and shuts its members out
   prospect: z
@@ -142,6 +163,9 @@ export const Tenant = z.object({
       // past the date shown when they pressed it (prospect.ts prospectKeepUntil)
       keptAt: isoDate.optional(),
       keptUntil: isoDate.optional(),
+      // A client super downgraded: its earlier client ID, given back on promotion. The free-account clock
+      // never deletes it; the inactivity clock covers it instead
+      fromClient: z.string().max(20).optional(),
     })
     .optional(),
   ...versioned,
@@ -255,6 +279,8 @@ export const Member = z.object({
   seenAt: isoDate.optional(),
   // The latest invitation email: its state and when it was queued (resends are rate limited by it)
   invite: z.object({ state: InviteDelivery, queuedAt: isoDate, sentAt: isoDate.optional() }).optional(),
+  // This one account is suspended in this organization (suspension.ts)
+  suspended: Suspension.optional(),
   ...versioned,
 });
 export type Member = z.infer<typeof Member>;

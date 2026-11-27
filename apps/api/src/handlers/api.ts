@@ -11,6 +11,7 @@ import { GetParametersCommand, SSMClient } from "@aws-sdk/client-ssm";
 import { AwsTexter, CognitoDirectory, LambdaNotifier, PushoverPusher, S3Records, S3Storage, SesMailer, TurnstileCheck } from "../services.ts";
 import { sweepSignups } from "../routes/signup.ts";
 import { finishPurges, sweepQuietProspects } from "../routes/prospects.ts";
+import { sweepDormant } from "../routes/suspensions.ts";
 import { sweepOutlineNudges } from "../routes/nudges.ts";
 import { sweepDecisionReminders, sweepOverdueInvoices } from "../routes/reminders.ts";
 import { sweepRequests } from "../routes/requests.ts";
@@ -193,6 +194,8 @@ export const handler = async (event: Parameters<typeof http>[0] | { source?: str
     // (and, at the end, deletion) once a day. Neither may hold up the next pass
     const signups = await beforeDeadline(sweepSignups({ repo, d: deps }, { deadline: end - 300 }), end).catch((e) => ({ removed: 0, error: (e as Error).name }));
     const quiet = Date.now() < end - 1_000 ? await beforeDeadline(sweepQuietProspects({ repo, d: deps, cfg }), end).catch((e) => ({ error: (e as Error).name })) : undefined;
+    // Organizations nobody has opened in a long while get their reminders, then a suspension, once a day
+    const dormant = Date.now() < end - 1_000 ? await beforeDeadline(sweepDormant({ repo, d: deps, cfg }), end).catch((e) => ({ error: (e as Error).name })) : undefined;
     // Unfinished outlines get their tips once a day, after the check-ins so the two never land together
     const nudges = Date.now() < end - 1_000 ? await beforeDeadline(sweepOutlineNudges({ repo, d: deps, cfg }), end).catch((e) => ({ error: (e as Error).name })) : undefined;
     // Free-account deletions under way go on every minute until each is done and checked
@@ -204,8 +207,8 @@ export const handler = async (event: Parameters<typeof http>[0] | { source?: str
     const reminders = Date.now() < end - 1_000 ? await beforeDeadline(sweepDecisionReminders({ repo, d: deps, cfg }), end).catch((e) => ({ error: (e as Error).name })) : undefined;
     // Overdue invoices get their one reminder, checked once an hour
     const overdue = Date.now() < end - 1_000 ? await beforeDeadline(sweepOverdueInvoices({ repo }), end).catch((e) => ({ error: (e as Error).name })) : undefined;
-    process.stdout.write(`${JSON.stringify({ ...outboxMetrics(result, cfg.env), files, bugs, requests, signups, quiet, nudges, purges, reminders, overdue })}\n`);
-    return { ...result, files, bugs, requests, signups, quiet, nudges, purges, reminders, overdue };
+    process.stdout.write(`${JSON.stringify({ ...outboxMetrics(result, cfg.env), files, bugs, requests, signups, quiet, dormant, nudges, purges, reminders, overdue })}\n`);
+    return { ...result, files, bugs, requests, signups, quiet, dormant, nudges, purges, reminders, overdue };
   }
   return http(event as Parameters<typeof http>[0], context);
 };

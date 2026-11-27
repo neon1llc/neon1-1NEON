@@ -260,7 +260,7 @@ export function MePage() {
         </span>
         {status === "failed" && <button className="linkish small" type="button" onClick={() => void flush()}>Retry</button>}
       </div>
-      <p className="lead">{me.user.email}{me.operator ? " · neon1 operator" : ""}</p>
+      <p className="lead">{me.user.email}{me.operator ? " · super" : ""}</p>
       {/* Name, title, and mobile number */}
       {/* Two columns on a wide screen: profile and preferences beside notifications; one column when narrow */}
       <div className="settings">

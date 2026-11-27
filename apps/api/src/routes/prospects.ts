@@ -352,7 +352,7 @@ export async function sweepQuietProspects(k: Pick<Kit, "repo" | "d" | "cfg">, at
     if (q.deletingAt) continue;
     // Held by neon1, or suspended: no emails and no deletion. Suspended accounts wait on neon1's
     // review list instead (Pradeep, 2026-11-16)
-    if (q.heldAt || q.suspendedAt) continue;
+    if (q.heldAt || q.suspendedAt || q.fromClient || t.suspended) continue;
     const clock = prospectClock(last, q.keptUntil);
     const step = quietStep((at.getTime() - Date.parse(clock)) / DAY_MS, q.notices ?? 0, q.warnedAt ? (at.getTime() - Date.parse(q.warnedAt)) / DAY_MS : undefined);
     if (!step) continue;
@@ -445,21 +445,26 @@ export function prospectRoutes(app: App, k: Kit) {
   app.post("/prospects/:tid/promote", async (c) => {
     const t = await prospect(c);
     if (t.prospect!.deletingAt) fail(409, "deleting", `${t.name} is being deleted, so it can't become a client.`);
-    const clientId = formatClientId(await repo.nextClientNumber());
-    const next: Tenant = { ...t, clientId, prospect: undefined, version: t.version + 1, updatedAt: now(), updatedBy: who(c).user.id };
+    // A downgraded client gets its earlier client ID back
+    const clientId = t.prospect!.fromClient ?? formatClientId(await repo.nextClientNumber());
+    const next: Tenant = { ...t, clientId, prospect: undefined, suspended: undefined, version: t.version + 1, updatedAt: now(), updatedBy: who(c).user.id };
     return c.json(await save(c, t, next, "prospect.promoted", `${t.name} became a client (${t.clientId} → ${clientId})`));
   });
 
   // Suspend: its people are refused everything until it's resumed; nothing is deleted
   app.post("/prospects/:tid/suspend", async (c) => {
     const t = await live(c);
-    const next: Tenant = { ...t, prospect: { ...t.prospect!, suspendedAt: now() }, version: t.version + 1, updatedAt: now(), updatedBy: who(c).user.id };
+    // The banner's words, optional; older callers send no body at all
+    const raw = await c.req.json().catch(() => ({}));
+    const note = z.object({ note: z.string().trim().max(400).optional() }).catch({}).parse(raw).note;
+    const at = now();
+    const next: Tenant = { ...t, suspended: { at, why: "super", by: who(c).user.id, ...(note ? { note } : {}) }, prospect: { ...t.prospect!, suspendedAt: at }, version: t.version + 1, updatedAt: at, updatedBy: who(c).user.id };
     return c.json(await save(c, t, next, "prospect.suspended", `${t.name} was suspended`));
   });
 
   app.post("/prospects/:tid/resume", async (c) => {
     const t = await live(c);
-    const next: Tenant = { ...t, prospect: { ...t.prospect!, suspendedAt: undefined }, version: t.version + 1, updatedAt: now(), updatedBy: who(c).user.id };
+    const next: Tenant = { ...t, suspended: undefined, prospect: { ...t.prospect!, suspendedAt: undefined }, version: t.version + 1, updatedAt: now(), updatedBy: who(c).user.id };
     return c.json(await save(c, t, next, "prospect.resumed", `${t.name} was resumed`));
   });
 

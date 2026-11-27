@@ -108,7 +108,8 @@ export function prospectKeepUntil(currentDeleteOn: string, at: Date): string {
  * clock (Pradeep, 2026-11-16): they wait on neon1's review list until it resumes or deletes them
  */
 export function quietDeletionDue(p: NonNullable<Tenant["prospect"]>, lastActive: string, at: Date): boolean {
-  if (p.heldAt || p.suspendedAt || p.deletingAt) return false;
+  // A downgraded client is never deleted: the inactivity clock (suspension.ts) covers it instead
+  if (p.heldAt || p.suspendedAt || p.deletingAt || p.fromClient) return false;
   // A real change after the last email restarts the emails, so it can't be due
   if (p.noticeAt && lastActive > p.noticeAt) return false;
   const day = 24 * 60 * 60 * 1000;
@@ -197,6 +198,8 @@ const ALLOWED: [method: string, path: RegExp][] = [
   ["DELETE", /^\/requests\/assessment$/],
   // Keeping a quiet account 30 more days, once (routes/prospects.ts)
   ["POST", /^\/keep$/],
+  // Asking super to lift a suspension (routes/suspensions.ts)
+  ["POST", /^\/recommission$/],
 ];
 
 

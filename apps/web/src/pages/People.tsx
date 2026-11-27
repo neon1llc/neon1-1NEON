@@ -1,9 +1,11 @@
-// apps/web/src/pages/People.tsx - People: who belongs to the organization, their access, and
-// invitations.
+// apps/web/src/pages/People.tsx - People: who belongs to the organization, their access, invitations,
+// and suspended accounts (super suspends and recommissions; the person or an admin asks for it back).
 
 
 import type { AccessLevel } from "@1neon/domain";
+import { suspendText } from "@1neon/domain";
 import { OwnLinks } from "../components/OrgFace.tsx";
+import { AskDialog, NoteDialog, useSuperAct } from "../components/Suspend.tsx";
 import { useState } from "react";
 import { gate, Stale } from "../components/Reads.tsx";
 import { useOrg, useSession, useTopBar } from "../components/Shell.tsx";
@@ -27,7 +29,11 @@ const INVITE_STATE = { queued: "email on its way", sent: "email sent", failed: "
 
 // The member table for everyone; invites and access changes for admins
 export function People() {
-  const { org, canAdmin: admin, prospect } = useOrg();
+  const { org, canAdmin: admin, prospect, access } = useOrg();
+  const act = useSuperAct();
+  // The account super is suspending, and the one someone is asking back for
+  const [suspending, setSuspending] = useState<MemberRow>();
+  const [asking, setAsking] = useState<MemberRow>();
   // A new account can't invite people or change access; that opens once neon1 and it are working together
   const canAdmin = admin && !prospect;
   const me = useSession();
@@ -91,7 +97,7 @@ export function People() {
               return (
               <tr key={m.userId} id={`member-${m.userId}`} style={m.status === "deactivated" ? { opacity: 0.55 } : undefined}>
                 <td><span style={{ display: "inline-flex", gap: 10, alignItems: "center" }}><Avatar id={m.userId} name={m.name || m.email} /><span>{m.name || <span className="muted">{m.status === "invited" ? "Name comes when they join" : "No name yet"}</span>}<br /><span className="muted small">{m.title}</span><OwnLinks linkedin={m.linkedin} businessLinkedin={m.businessLinkedin} website={m.website} /></span></span></td>
-                <td className="mono small">{m.email}{m.neon1 && <span className="tag client" style={{ marginLeft: 8 }} title="neon1's access is managed by neon1">neon1</span>}</td>
+                <td className="mono small">{m.email}{m.neon1 && <span className="tag client" style={{ marginLeft: 8 }} title="super reaches every organization, and only super changes its access">super</span>}</td>
                 <td>
                   {editable && m.status !== "deactivated" ? (
                     <select aria-label={`Access for ${m.email}`} value={m.access} onChange={(e) => void change(m, { access: e.target.value })} style={{ minHeight: 32, paddingTop: 2, paddingBottom: 2, paddingLeft: 8, maxWidth: 140 }}>
@@ -104,6 +110,12 @@ export function People() {
                   {/* Whether the invitation email actually went out, and a way to send it again */}
                   {m.status === "invited" && m.invite && <span className={`muted small invite-${m.invite.state}`} style={{ marginLeft: 8 }}>{INVITE_STATE[m.invite.state]}</span>}
                   {canAdmin && m.status === "invited" && <button className="linkish small" style={{ marginLeft: 10 }} onClick={() => void resend(m)}>Resend</button>}
+                  {/* A suspended account reads only. super suspends and lifts; the person, or an admin, asks for it back */}
+                  {m.suspended && <span className="tag warn" style={{ marginLeft: 8 }} title={m.suspended.note || (m.userId === me.user.id || access === "admin" ? suspendText(m.suspended) : undefined)}>suspended</span>}
+                  {me.operator && !m.neon1 && m.status !== "deactivated" && (m.suspended
+                    ? <button className="linkish small" style={{ marginLeft: 10 }} onClick={() => void act(`/orgs/${org.id}/members/${m.userId}/recommission`, `${m.name || m.email} is recommissioned`).catch(() => undefined)}>Recommission</button>
+                    : <button className="linkish small" style={{ marginLeft: 10 }} onClick={() => setSuspending(m)}>Suspend</button>)}
+                  {!me.operator && m.suspended && (m.userId === me.user.id || access === "admin") && <button className="linkish small" style={{ marginLeft: 10 }} onClick={() => setAsking(m)}>Ask to recommission</button>}
                   {/* Deactivate keeps the person's history; reactivate restores their access */}
                   {editable && (
                     <button className="linkish small" style={{ marginLeft: 10 }} onClick={() => void toggleActive(m)}>
@@ -117,6 +129,8 @@ export function People() {
           </tbody>
         </table>
       </div>}
+      <NoteDialog open={Boolean(suspending)} onClose={() => setSuspending(undefined)} title={`Suspend ${suspending?.name || suspending?.email || ""}`} go={(note) => act(`/orgs/${org.id}/members/${suspending!.userId}/suspend`, `${suspending!.name || suspending!.email} is suspended`, note ? { note } : {})} />
+      {asking && <AskDialog open onClose={() => setAsking(undefined)} tid={org.id} scope="account" userId={asking.userId} whose={asking.userId === me.user.id ? "your account" : `${asking.name || asking.email}'s account`} />}
       {/* Legend for the access levels */}
       <h2 className="section-h">What each access level can do</h2>
       <ul className="small muted">{Object.values(ACCESS).map((a) => <li key={a}>{a}</li>)}</ul>

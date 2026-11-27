@@ -33,6 +33,7 @@ import { Neo } from "./Neo.tsx";
 import { PublicTalk } from "./PublicTalk.tsx";
 import { ReportBug } from "./BugReport.tsx";
 import { usePreviewedMenu } from "../lib/preview.ts";
+import { SuspendBar } from "./Suspend.tsx";
 import { useProspectEverywhere } from "./Prospect.tsx";
 import { Palette } from "./Palette.tsx";
 import { SignOutButton } from "./SignOutButton.tsx";
@@ -544,10 +545,13 @@ export function OrgLayout() {
   const wait = gate([org]);
   if (wait || !org.data) return <Frame org={summary}>{wait}</Frame>;
   const access = org.data.access;
-  const value: OrgCtxValue = { ...org.data, summary, canWrite: access !== "viewer", canAdmin: access === "admin", prospect: limitedProspect(org.data.org, me.operator) };
+  // A suspended person reads only (the API refuses the rest), so nothing offers a change
+  const s = org.data.suspension;
+  const held = Boolean(s) && !me.operator;
+  const value: OrgCtxValue = { ...org.data, summary, canWrite: access !== "viewer" && !held, canAdmin: access === "admin" && !held, prospect: limitedProspect(org.data.org, me.operator) };
   return (
     <OrgCtx.Provider value={value}>
-      <Frame org={summary} reads={[org]}>
+      <Frame org={summary} reads={[org]} banner={s && <SuspendBar tid={summary.id} name={summary.name} s={s} operator={me.operator} admin={access === "admin"} me={me.user.id} />}>
         <Outlet />
       </Frame>
     </OrgCtx.Provider>
@@ -621,11 +625,11 @@ function Item({ to, icon, label, sub, end, tour }: { to: string; icon: ReactNode
 
 /** Menu, top bar, phone tab bar, and content area shared by every signed-in page. `reads` are the
  * layout's own queries, marked like the session when a refresh fails */
-function Frame({ org, all, reads, children }: { org?: OrgSummary; all?: boolean; reads?: Read[]; children: ReactNode }) {
+function Frame({ org, all, reads, banner, children }: { org?: OrgSummary; all?: boolean; reads?: Read[]; banner?: ReactNode; children: ReactNode }) {
   const me = useSession();
   return (
     <HelpProvider me={me}>
-      <FrameBody org={org} all={all} reads={reads}>{children}</FrameBody>
+      <FrameBody org={org} all={all} reads={reads} banner={banner}>{children}</FrameBody>
     </HelpProvider>
   );
 }
@@ -745,7 +749,7 @@ function MenuThemeControls({ theme, kind }: { theme: string; kind: "mode" | "fam
 
 
 // The frame itself, inside the help context so the ? button and search can use it
-function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?: boolean; reads?: Read[]; children: ReactNode }) {
+function FrameBody({ org, all, reads = [], banner, children }: { org?: OrgSummary; all?: boolean; reads?: Read[]; banner?: ReactNode; children: ReactNode }) {
   const me = useSession();
   // The session query itself, for marking the frame when a background check of it fails
   const meRead = useMe();
@@ -1035,6 +1039,8 @@ function FrameBody({ org, all, reads = [], children }: { org?: OrgSummary; all?:
             <strong>All clients · read only.</strong> Open a client to make changes.
           </div>
         )}
+        {/* A suspension's banner (components/Suspend.tsx), on every page of the organization */}
+        {banner}
         {/* Top bar: the menu button (always: it costs no room), the page's crumbs, then search and help */}
         <header className="top">
           {/* The mark and name, Home's way in, before the menu button; in Mini the rail shows the mark instead */}

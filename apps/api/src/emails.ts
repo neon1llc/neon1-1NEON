@@ -116,7 +116,9 @@ export function factorRemovedEmail(opts: { url: string; what: string; how: "remo
 /** A short name for each kind of event, for the subject and the title */
 const LABELS: Record<string, string> = {
   "prospect.signedup": "Free account created", "prospect.kept": "Free account kept", "prospect.promoted": "Became a client",
-  "prospect.suspended": "Free account suspended", "prospect.resumed": "Free account resumed", "prospect.held": "Free account held", "prospect.released": "Free account released",
+  "prospect.suspended": "Free account suspended", "prospect.resumed": "Free account resumed", "prospect.held": "Free account held", "prospect.released": "Free account released", "prospect.downgraded": "Became a potential",
+  "access.suspended": "Organization suspended", "access.recommissioned": "Organization recommissioned", "account.suspended": "Account suspended", "account.recommissioned": "Account recommissioned",
+  "recommission.requested": "Recommission requested", "org.kept": "Kept active", "org.unkept": "Back on the activity clock",
   "member.invited": "Person invited", "member.joined": "Person joined", "member.updated": "Access changed", "member.signedin": "Signed in",
   "doc.uploaded": "File uploaded", "doc.moved": "File moved", "doc.deleted": "File removed",
   "decision.approved": "Decision approved", "decision.changed": "Decision changed", "option.quoted": "Quote issued",
@@ -217,8 +219,8 @@ export function noticeEmail(o: NoticeOpts) {
   const who = o.byEmail && o.by !== "You" ? `${o.by} <${o.byEmail}>` : o.by;
   const org = o.orgName;
   const why =
-    as === "reach" ? "You're a neon1 operator, and this is an important action in a free account."
-    : as === "alerts" ? "You're a neon1 operator, and this is a change in a client organization."
+    as === "reach" ? "You're super in 1NEON, and this is an important action in a free account."
+    : as === "alerts" ? "You're super in 1NEON, and this is a change in a client organization."
     : o.trial ? `You're a member of ${org}'s free account on 1NEON.`
     : `You're a member of ${org} on 1NEON.`;
   const mail = factMail({
@@ -278,7 +280,7 @@ export function requestEmail(o: { kind: "assessment" | "call"; what: string; upd
     blocks: o.note ? [["Their note", o.note]] : [],
     todo: "Reply to this email to answer them, or open their account.",
     action: { label: "Open the account", url: o.url },
-    why: `You're a neon1 operator, and someone in ${o.free ? "a free account" : "a client organization"} asked for the next step.`,
+    why: `You're super in 1NEON, and someone in ${o.free ? "a free account" : "a client organization"} asked for the next step.`,
     reply: "Reply to this email to answer them directly.",
   });
   return { subject: subjectOf(title, `${o.org}${o.ref ? ` (${o.ref})` : ""}`), ...mail, as: (o.free ? "reach" : "alerts") as SenderKind, replyTo: o.email };

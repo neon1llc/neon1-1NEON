@@ -1,6 +1,7 @@
 // apps/api/src/lib/chatguard.ts - Protection against abuse for the chat with neon1, all counted in the table so it costs
 // nothing: a pause (mute or ban) neon1 or the strikes set, a cooldown, a duplicate check, a stricter start for a brand
 // new account, per-person and per-network-address allowances, and flags on what gets through. neon1's own lead is never held to any of it.
+import { countAbuse } from "../routes/suspensions.ts";
 import { CHAT_AUTO_MUTE_HOURS, CHAT_COOLDOWN_MS, CHAT_DUPLICATE_MS, CHAT_IP_LIMITS, CHAT_LIMITS, CHAT_NEW_ACCOUNT, CHAT_OFFENSIVE_STRIKES, CHAT_STRIKES_TO_MUTE, blockActive, blockMessage, chatJunk, chatProblem, linkCount, offensive, type ChatBlock, type ChatFlag, type Tenant, type User } from "@1neon/domain";
 import type { Context } from "hono";
 import { fail, now, type Env } from "./http.ts";
@@ -62,6 +63,8 @@ export async function strike(k: Pick<Kit, "repo" | "d" | "drainNow">, tenant: Pi
   const n = await k.repo.table.increment("COUNTER", `CHATSTRIKE#${user.id}#${hour()}`, weight, until());
   if (n >= CHAT_STRIKES_TO_MUTE && n - weight < CHAT_STRIKES_TO_MUTE) {
     await pause(k, tenant, user, { state: "muted", until: new Date(Date.now() + CHAT_AUTO_MUTE_HOURS * 3600_000).toISOString(), reason, by: "auto" });
+    // Repeated automatic mutes suspend the account for abuse (routes/suspensions.ts)
+    await countAbuse(k, tenant, user).catch(() => undefined);
   }
 }
 
