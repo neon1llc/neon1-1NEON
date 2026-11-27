@@ -1060,7 +1060,7 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 .toc-head > span b { font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--accent); }
 .toc-head:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
 /* The arrow turns down as the list opens, on the list's own timing */
-.toc-head .arr, .vm-btn .arr, .ag-group.fold .arr { font-size: var(--arr-fs-sm, var(--fs-md)); }
+.toc-head .arr, .vm-btn .arr, .ag-group.fold .arr, .icon-btn .arr { font-size: var(--arr-fs-sm, var(--fs-md)); }
 .toc-head .arr { flex: none; transition: transform var(--t-open) var(--ease-open); }
 .toc-bar[data-open] .toc-head .arr { transform: rotate(-90deg); }
 .toc-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--t-open) var(--ease-open); }
