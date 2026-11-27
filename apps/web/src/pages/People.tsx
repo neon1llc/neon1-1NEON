@@ -107,7 +107,7 @@ export function People() {
                 <td className="mono small">{m.email}{m.neon1 && <span className="tag client" style={{ marginLeft: 8 }} title="super reaches every organization, and only super changes its access">super</span>}</td>
                 <td>
                   {editable && m.status !== "deactivated" ? (
-                    <select aria-label={`Access for ${m.email}`} value={m.access} onChange={(e) => void change(m, { access: e.target.value })} style={{ minHeight: 32, paddingTop: 2, paddingBottom: 2, paddingLeft: 8, maxWidth: 140 }}>
+                    <select aria-label={`Access for ${m.email}`} value={m.access} onChange={(e) => void change(m, { access: e.target.value })} className="sel-sm">
                       <option value="viewer">Viewer</option><option value="editor">Editor</option><option value="admin">Admin</option>
                     </select>
                   ) : <span className="tag">{m.neon1 ? "super" : m.access}</span>}

@@ -22,12 +22,14 @@ import { keyFirstEntry } from "./lib/scrollmemory.ts";
 import { offline } from "./lib/reads.ts";
 import "./styles/app.css";
 import "./styles/sentinel.css";
+import { keyboardSemantics } from "./lib/keys.ts";
 
 
 // iPhone browsers: the body scrolls and the page stays still, so nothing scrolls by under their bars
 keepEdgeStill();
 // Phones: what's being typed stays in view above the keyboard
 keepTypingInView();
+keyboardSemantics();
 // iPhone browsers apply :active (a pressed row's highlight) only once a page listens for touches
 document.addEventListener("touchstart", () => {}, { passive: true });
 // Quick tab changes cut a slide short; that is expected, never an error

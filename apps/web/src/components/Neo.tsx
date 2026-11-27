@@ -334,10 +334,14 @@ export function Neo({ open, setOpen, org, me, neo = true, trin = false }: { open
         {canTalk && !neo && !withTrin ? (
           <strong className="n1chat-title"><Mark />{me.operator ? "Chat" : "neon1"}</strong>
         ) : canTalk ? (
-          <span className="talk-tabs" role="tablist">
-            {neo && <button type="button" role="tab" aria-selected={tab === "neo"} className="n1chat-title talk-tab" onClick={() => setTab("neo")}><Mark />Neo</button>}
-            {withTrin && <button type="button" role="tab" aria-selected={tab === "trin"} className="n1chat-title talk-tab" onClick={() => setTab("trin")}>Trin</button>}
-            <button type="button" role="tab" aria-selected={tab === "pradeep"} className="n1chat-title talk-tab" onClick={() => setTab("pradeep")}>{me.operator ? "Chat" : "neon1"}{unread > 0 && tab !== "pradeep" && <b className="talk-badge">{unread}</b>}</button>
+          // One neon1 mark for the whole window, then the names as tabs; only the selected name is underlined
+          <span className="n1chat-tabs">
+            <Mark />
+            <span className="n1chat-tablist" role="tablist">
+              {neo && <button type="button" role="tab" aria-selected={tab === "neo"} className="n1chat-title n1chat-tab" onClick={() => setTab("neo")}><span className="n1chat-tab-name">Neo</span></button>}
+              {withTrin && <button type="button" role="tab" aria-selected={tab === "trin"} className="n1chat-title n1chat-tab" onClick={() => setTab("trin")}><span className="n1chat-tab-name">Trin</span></button>}
+              <button type="button" role="tab" aria-selected={tab === "pradeep"} className="n1chat-title n1chat-tab" onClick={() => setTab("pradeep")}><span className="n1chat-tab-name">{me.operator ? "Chat" : "neon1"}</span>{unread > 0 && tab !== "pradeep" && <b className="talk-badge">{unread}</b>}</button>
+            </span>
           </span>
         ) : (
           <strong className="n1chat-title"><Mark />Neo</strong>
@@ -400,7 +404,8 @@ export function Neo({ open, setOpen, org, me, neo = true, trin = false }: { open
     <>
       <button ref={launcher} type="button" className={`n1chat-launch n1chat-right n1neo${look}${open ? " n1chat-hidden" : ""}${peek ? " n1chat-peek" : ""}`} aria-expanded={open} aria-label={unread > 0 ? `Ask Neo or message Pradeep, ${unread} new` : canTalk ? (neo ? "Ask Neo or message Pradeep" : withTrin ? "Ask Trin or message Pradeep" : "Message Pradeep") : "Ask Neo, your 1NEON assistant"} onClick={() => setOpen(true)} data-tour="neo">
         <Mark />
-        <span className="n1chat-label" aria-hidden="true">{!canTalk ? "ask Neo" : neo ? "ask Neo or neon1" : withTrin ? "ask Trin or neon1" : "message neon1"}</span>
+        {/* With more than one conversation the launcher is the mark alone: everything to talk to here */}
+        {!canTalk && <span className="n1chat-label" aria-hidden="true">ask Neo</span>}
         {unread > 0 && <b className="talk-badge talk-badge-launch" aria-hidden="true">{unread > 9 ? "9+" : unread}</b>}
       </button>
       {body}

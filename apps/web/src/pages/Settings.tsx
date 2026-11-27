@@ -76,8 +76,9 @@ export function Settings() {
           the stages need the full width, so they follow below. Every group is a titled section, in the order people look for them */}
       <div className="cols2">
         <div className="stack">
-          <h2 className="section-h">Organization</h2>
-          <dl className="card facts">
+          <section className="card">
+          <h2 className="card-h">Organization</h2>
+          <dl className="facts">
             <div><dt>Name</dt><dd>{org.name}</dd></div>
             <div><dt>Client ID</dt><dd className="mono">{org.clientId}</dd></div>
             <div><dt>Address</dt><dd className="mono">neon1.tech/1NEON/o/{org.slug}</dd></div>
@@ -87,15 +88,14 @@ export function Settings() {
             {/* neon1's service agreement: who signed it, or a way to read and sign it */}
             <div hidden={prospect}><dt>Service agreement</dt><dd>{org.agreements?.length ? <>Signed by {org.agreements.at(-1)!.typedName}, edition {org.agreements.at(-1)!.ref}. Case studies: {choiceLabel("caseStudies", (org.choices?.at(-1) ?? UNCHOSEN).caseStudies)}. Client list: {choiceLabel("naming", (org.choices?.at(-1) ?? UNCHOSEN).naming)}. </> : "Not signed yet. "}<Link to={`/o/${summary.slug}/agreement`}>{org.agreements?.length ? "Read it" : "Read and sign"}</Link></dd></div>
           </dl>
+          </section>
         </div>
         <div className="stack">
           {/* The organization's own copy of everything, any time, without asking neon1 */}
-          <h2 className="section-h" id="your-data">Your data</h2>
           <ExportData />
           {/* Same entry as the menu and the profile, where people look for it */}
-          <h2 className="section-h">Something not working?</h2>
           <div className="card stack-tight">
-            <span className="helper">Tell me what happened, or what you think, on a page that opens in a new tab.</span>
+            <header className="card-top"><h2 className="card-h">Something not working?</h2><p>Tell me what happened, or what you think, on a page that opens in a new tab.</p></header>
             <ReportBug kind="buttons" />
           </div>
           <SuperControls />
@@ -155,7 +155,7 @@ function ExportData() {
   const [ask, setAsk] = useState<{ warning: string; answer: (go: boolean) => void }>();
   // A zip left in the browser's storage by an earlier export (a closed tab, a crash) is removed here
   useEffect(() => void clearStaleExports(), []);
-  if (!canAdmin) return <p className="helper">An admin of {org.name} can download a copy of everything here at any time.</p>;
+  if (!canAdmin) return <section className="card"><header className="card-top"><h2 className="card-h" id="your-data">Your data</h2><p>An admin of {org.name} can download a copy of everything here at any time.</p></header></section>;
   const confirmLarge = (warning: string) => new Promise<boolean>((answer) => setAsk({ warning, answer: (go) => { setAsk(undefined); answer(go); } }));
   const run = async () => {
     setBusy(true);
@@ -177,6 +177,7 @@ function ExportData() {
   const SHOWN = 20;
   return (
     <div className="card" style={{ display: "grid", gap: 10, maxWidth: 620 }}>
+      <h2 className="card-h" id="your-data">Your data</h2>
       <p className="small" style={{ margin: 0 }}>A copy of everything in {org.name}, as one zip file: every project's records, decisions and signatures, proposals, invoices and payments, and handover steps as JSON and CSV (spreadsheets open the CSV files), every comment, the activity history, every uploaded file as it was uploaded, and projects in Trash. manifest.json in the zip lists every file with its size and checksum, and README.txt says what each file holds and what isn't included.</p>
       <div className="actions" style={{ marginTop: 0 }}>
         <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void run()}>{busy ? "Preparing…" : "Download everything"}</button>
@@ -250,8 +251,9 @@ function SuperControls() {
   };
   return (
     <>
-      <h2 className="section-h" id="super">super</h2>
-      <dl className="card facts">
+      <section className="card">
+      <h2 className="card-h" id="super">super</h2>
+      <dl className="facts">
         <div><dt>Standing</dt><dd>{s ? <>Suspended {s.why === "super" ? "" : `(${s.why === "inactive" ? "inactivity" : "abuse"}) `}<span className="helper">{suspendText(s)}</span></> : potential ? "Potential" : "Client"}</dd></div>
         <div><dt>Inactivity</dt><dd>{org.test ? "A test organization: never suspended for inactivity" : org.keptAt ? "Kept: never suspended for inactivity" : potential && !org.prospect?.fromClient ? "Free-account clock" : org.dormant ? `${plural(org.dormant.notices, "reminder")} sent` : `Suspended after ${INACTIVE_DAYS} quiet days`}</dd></div>
         <div><dt className="sr">Organization actions</dt><dd><div className="actions">
@@ -263,6 +265,7 @@ function SuperControls() {
           {(!potential || org.prospect?.fromClient) && <button className="btn btn-ghost btn-sm" onClick={() => void act(`/orgs/${org.id}/keep`, org.keptAt ? `${org.name} is back on the inactivity clock` : `${org.name} is kept`, { keep: !org.keptAt }).catch(() => undefined)}>{org.keptAt ? "Stop keeping" : "Keep active"}</button>}
         </div></dd></div>
       </dl>
+      </section>
       <DeleteOrgDialog open={deleting} onClose={() => setDeleting(false)} name={org.name} go={(body) => act(`/orgs/${org.id}/delete`, `${org.name} is being deleted`, body)} />
       <NoteDialog scope="org" open={suspending} onClose={() => setSuspending(false)} title={`Suspend ${org.name}`} go={(note) => act(`/orgs/${org.id}/suspend`, `${org.name} is suspended`, note ? { note } : {})} />
     </>

@@ -48,5 +48,5 @@ export function Act({ icon: Icon, label, run, tone, disabled, title, className }
 
 /** A row of actions, kept on one line and ending at the row's end */
 export function Acts({ children }: { children: ReactNode }) {
-  return <span className="acts">{children}</span>;
+  return <span className="act-row">{children}</span>;
 }

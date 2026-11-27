@@ -947,7 +947,8 @@ function FrameBody({ org, all, reads = [], banner, pen, children }: { org?: OrgS
   useEffect(() => { if (org) prefs.set(LAST_ORG, org.slug); }, [org]);
   const navOrg = org ?? (all ? undefined : lastOrg(me.orgs));
   // The signed-in panel: Neo where a model is wired, Trin inside an organization where it is
-  const signedPanel = Boolean(me.neo || (me.trin && navOrg));
+  // The signed-in Neo's own panel only where it is wired; elsewhere the public Neo window carries Trin and the chat as tabs after Neo
+  const signedPanel = Boolean(me.neo);
   const base = navOrg ? `/o/${navOrg.slug}` : "";
   // Home: the organization's Home, All clients' board for an operator there, or the app's landing
   const home = navOrg ? `${base}/workspace` : all ? "/all/workflow" : "/";
@@ -1096,7 +1097,7 @@ function FrameBody({ org, all, reads = [], banner, pen, children }: { org?: OrgS
       {/* Neo for signed-in people, where a model is wired; elsewhere the public Neo stays */}
       {/* The signed-in Neo (two tabs, and plans it can run) where it's on; everywhere else the public Neo, with the chat as a second tab */}
       {!IN_DEMO && newAccount !== undefined && signedPanel && newAccount === false && <Neo open={neoOpen} setOpen={setNeoOpen} org={navOrg ? { id: navOrg.id, name: navOrg.name, slug: navOrg.slug } : undefined} me={{ id: me.user.id, operator: me.operator }} neo={Boolean(me.neo)} trin={Boolean(me.trin)} />}
-      {(IN_DEMO || (newAccount !== undefined && !(signedPanel && newAccount === false))) && (navOrg || me.operator) && <PublicTalk org={navOrg ? { id: navOrg.id, name: navOrg.name, slug: navOrg.slug } : undefined} me={{ id: me.user.id, operator: me.operator }} demo={IN_DEMO} />}
+      {(IN_DEMO || (newAccount !== undefined && !(signedPanel && newAccount === false))) && (navOrg || me.operator) && <PublicTalk org={navOrg ? { id: navOrg.id, name: navOrg.name, slug: navOrg.slug } : undefined} me={{ id: me.user.id, operator: me.operator }} demo={IN_DEMO} trin={Boolean(me.trin) && !IN_DEMO} />}
     </div>
   );
 }

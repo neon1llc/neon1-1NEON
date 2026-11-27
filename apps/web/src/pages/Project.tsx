@@ -1725,7 +1725,7 @@ function PurchaseRow({ item, path, project, receipts, onStatus }: { item: Item; 
       </div>
       <span className="item-meta">
         {canWrite ? (
-          <select aria-label={`Where ${item.title} stands`} value={item.status} onChange={(e) => onStatus(e.target.value)} disabled={waitsOnAgreement && item.status === "open"} style={{ width: "auto", minHeight: 32, padding: "2px 8px" }}>
+          <select aria-label={`Where ${item.title} stands`} value={item.status} onChange={(e) => onStatus(e.target.value)} disabled={waitsOnAgreement && item.status === "open"} className="sel-sm">
             {["open", "bought", "done", "returned"].map((s) => <option key={s} value={s}>{statusWord("purchase", s)}</option>)}
           </select>
         ) : <span className="tag">{statusWord("purchase", item.status)}</span>}

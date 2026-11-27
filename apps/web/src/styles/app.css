@@ -102,7 +102,10 @@ textarea { min-height: 96px; resize: vertical; }
    the accent, so it suits both themes and never floats far off to the side */
 /* A dropdown's arrow sits well inside its box (room on both sides), in the accent. Browsers that can style
    the open list get neon1's own arrow instead (Motion, at the end of this file) */
-select { appearance: none; -webkit-appearance: none; width: auto; max-width: 100%; padding-right: var(--sp-7); cursor: pointer; text-overflow: ellipsis; --arr-color: var(--accent); }
+/* A select's arrow sits as far in from its right edge as its text sits from its left: one inset, --sel-in, sets both, and
+   a smaller select (.sel-sm, a board card's stage) changes only that */
+select { --sel-in: var(--sp-3); appearance: none; -webkit-appearance: none; width: auto; max-width: 100%; padding-left: var(--sel-in); padding-right: calc(var(--sel-in) * 2 + var(--arr-fs) * .95); cursor: pointer; text-overflow: ellipsis; --arr-color: var(--accent); }
+select.sel-sm { --sel-in: var(--sp-2); min-height: 32px; padding-block: var(--sp-0); max-width: 160px; }
 select:disabled { cursor: default; opacity: .7; }
 /* Placeholders: muted in awake, the shared faint text (Lc 62) in matrix */
 ::placeholder { color: var(--faint); opacity: 1; }
@@ -382,7 +385,12 @@ dialog h2 { font-size: var(--fs-lg); margin-bottom: var(--sp-2); }
 .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 50; font: var(--fs-sm) var(--mono); color: var(--accent-ink); background: var(--accent); border-radius: var(--r-sm); padding: var(--sp-2) var(--sp-4); box-shadow: var(--shadow-pop); }
 .notice { display: flex; gap: var(--sp-3); align-items: center; padding: var(--sp-2) var(--sp-3); border: 1px solid var(--amber); border-radius: var(--r-sm); background: color-mix(in srgb, var(--amber) 10%, transparent); font-size: var(--fs-ui); margin-bottom: var(--sp-4); }
 /* People table */
-table.people { width: 100%; border-collapse: collapse; font-size: var(--fs-ui); }
+/* Each row keeps its content on one line; the table is as wide as its widest row (never narrower than the page) and
+   scrolls sideways in its box, so a status, its pills, and an opened action button lengthen the row instead of wrapping it */
+table.people { width: max-content; min-width: 100%; border-collapse: collapse; font-size: var(--fs-ui); }
+table.people :is(th, td) { white-space: nowrap; }
+table.people :is(th, td):last-child { padding-right: var(--sp-3); }
+table.people .act-row { flex-wrap: nowrap; }
 table.people th { text-align: left; font: var(--fs-xs) var(--mono); color: var(--muted); font-weight: 400; padding: var(--sp-2); border-bottom: 1px solid var(--line-strong); }
 .own-links > a { white-space: nowrap; }
 .own-links { display: flex; flex-wrap: wrap; gap: var(--sp-0) var(--sp-3); font-size: var(--fs-sm); }
@@ -520,6 +528,8 @@ html:has(.signin), html:has(.signin) body { background: var(--void); color-schem
 /* Phones, upright or sideways: action buttons and the notes beside them sit centered at the end of a page */
 @media (max-width: 900px) {
   .actions { justify-content: center; text-align: center; }
+  /* Inside a card or a row, actions start where the content starts, like the rest of the card */
+  :is(.card, .settings-row) .actions { justify-content: flex-start; text-align: start; }
   .actions .muted { flex-basis: 100%; }
 }
 
@@ -613,7 +623,7 @@ dialog:not(.palette, .sheet, .item-panel) .dlg > :is(h2, .card-top):first-child 
 .act-dlg .dlg > * { min-width: 0; }
 .act-dlg .field { display: grid; gap: var(--sp-1); }
 .act-dlg select { width: 100%; min-width: 0; max-width: 100%; text-overflow: ellipsis; }
-table.people .acts { margin-left: var(--sp-2); vertical-align: middle; }
+table.people .act-row { margin-left: var(--sp-2); vertical-align: middle; }
 .eyebrow { font: var(--fs-xs) var(--mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin: 0 0 var(--sp-1); }
 .howto { margin: var(--sp-3) 0 var(--sp-4); padding-left: var(--sp-4); display: grid; gap: var(--sp-2); }
 /* Help sheet: from the right on wide screens, from the bottom on phones */
@@ -715,7 +725,7 @@ button.link:is(:hover, :focus-visible) { text-decoration-color: currentColor; }
 .pcard { position: relative; }
 .pcard .name::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
 .pcard .move { position: relative; z-index: 1; display: inline-block; margin-top: var(--sp-2); }
-.pcard .move select { min-height: 28px; padding: var(--sp-0) var(--sp-5) var(--sp-0) var(--sp-2); font: var(--fs-xs) var(--mono); border-radius: 99px; color: var(--muted); background-color: transparent; background-position: calc(100% - 17px) calc(50% + 1px), calc(100% - 12px) calc(50% + 1px); padding-right: var(--sp-6); }
+.pcard .move select { --sel-in: var(--sp-2); min-height: 28px; padding-block: var(--sp-0); font: var(--fs-xs) var(--mono); border-radius: 99px; color: var(--muted); background-color: transparent; }
 /* On a phone the board is one surface the finger pans freely, any direction at once, like a map: it scrolls both
    ways inside itself (no column snapping, which pinned a drag to one axis) and is no taller than the section's
    viewport, so all of it is reachable. At its top or bottom edge the same swipe moves the page */
@@ -790,7 +800,7 @@ details.history summary { cursor: pointer; font: var(--fs-xs) var(--mono); color
 /* An option's ratings: one titled group spanning the row, three across at every width */
 .props fieldset.ratings { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-2); margin: var(--sp-0) 0 0; padding: var(--sp-2) var(--sp-3) var(--sp-3); border: 1px solid var(--line); border-radius: 10px; }
 .props fieldset.ratings legend { padding: 0 var(--sp-1); font: var(--fs-xs) var(--mono); color: var(--muted); }
-@media (max-width: 520px) { .props fieldset.ratings { gap: var(--sp-1); padding: var(--sp-2); } .props fieldset.ratings select { padding-left: var(--sp-2); padding-right: var(--sp-5); font-size: var(--fs-ui); } .props label.check { grid-column: 1 / -1; } }
+@media (max-width: 520px) { .props fieldset.ratings { gap: var(--sp-1); padding: var(--sp-2); } .props fieldset.ratings select { --sel-in: var(--sp-2); font-size: var(--fs-ui); } .props label.check { grid-column: 1 / -1; } }
 .comment-box textarea { min-height: 44px; }
 .title-input { resize: none; min-height: 0; line-height: 1.35; }
 .trend { width: 100%; height: 48px; display: block; margin: var(--sp-2) 0 var(--sp-1); }
@@ -1416,7 +1426,7 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 .cal-head .section-h { margin: 0; }
 .cal-nav { display: flex; align-items: center; gap: var(--sp-1); }
 .cal-nav .icon-btn { width: 32px; height: 32px; }
-.cal-jump { width: auto; height: 32px; padding: 0 var(--sp-2); font: var(--fs-xs) var(--mono); border-radius: 99px; }
+.cal-jump { --sel-in: var(--sp-2); width: auto; height: 32px; padding-block: 0; min-width: 112px; font: var(--fs-xs) var(--mono); border-radius: 99px; }
 .cal-late { margin: var(--sp-1) 0 0; }
 .strip.month { margin-top: var(--sp-3); }
 .strip.month .day { font: inherit; color: inherit; cursor: pointer; min-height: 48px; }
@@ -1498,8 +1508,6 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 /* A stage section a link arrived at is marked for a moment */
 .stage-sec { scroll-margin-top: calc(var(--top-h) + 16px); border-radius: var(--r-sm); transition: background .6s ease; }
 .stage-sec.is-target { background: var(--accent-soft); }
-.cal-jump { padding-left: var(--sp-2); padding-right: var(--sp-5); min-width: 112px; }
-@supports (appearance: base-select) { .cal-jump { padding-right: var(--sp-2); } }
 .cal .ag-group li { grid-template-columns: 76px minmax(0, 1fr) auto; }
 @media (max-width: 520px) { .cal .ag-group li { grid-template-columns: 64px minmax(0, 1fr); } }
 /* A long name stays on one line and the list beside its dates scrolls sideways, with the dates held in place */
@@ -2020,10 +2028,10 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
 /* neon1's dropdown arrow, where the browser lets a page style the open list: the arrow points left, like
    "send me your use case" on neon1.tech, and turns down as the list opens. Elsewhere the same arrow sits still on the box, and the browser's own list opens */
 @supports (appearance: base-select) {
-  select { appearance: base-select; background-image: none; padding-right: var(--sp-3); display: inline-flex; align-items: center; gap: var(--sp-3); }
+  select { appearance: base-select; background-image: none; padding-right: var(--sel-in); display: inline-flex; align-items: center; gap: var(--sel-in); }
   /* The same drawn arrow as .arr, centered on the line beside sentence-case choices */
   /* No padding: the clip runs to the border box, so the browser's own padding stretched the shaft and made the arrow long */
-  select::picker-icon { content: ""; padding: 0; border: 0; width: .95em; height: .8em; font: var(--arr-fs-sm, var(--fs-md)) var(--sans); background: var(--accent); clip-path: var(--arr-shape, polygon(0 50%, 31% 12%, 40% 20%, 24% 43%, 100% 43%, 100% 57%, 24% 57%, 40% 80%, 31% 88%)); align-self: center; margin-left: auto; margin-right: var(--sp-0); transition: rotate var(--t-base) var(--ease); }
+  select::picker-icon { content: ""; padding: 0; border: 0; width: .95em; height: .8em; font: var(--arr-fs-sm, var(--fs-md)) var(--sans); background: var(--accent); clip-path: var(--arr-shape, polygon(0 50%, 31% 12%, 40% 20%, 24% 43%, 100% 43%, 100% 57%, 24% 57%, 40% 80%, 31% 88%)); align-self: center; margin-left: auto; margin-right: 0; transition: rotate var(--t-base) var(--ease); }
   select:open::picker-icon { rotate: -90deg; }
   /* A select that can't open (read-only for this person) shows no arrow, so it never promises a list */
   select:disabled::picker-icon { visibility: hidden; }
@@ -2048,7 +2056,6 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
   .signin select option:checked { color: #00FF41; }
   .signin select option:first-child { background-image: linear-gradient(var(--neon, #00FF41), var(--neon, #00FF41)); }
   /* The board card's small stage menu keeps its compact size */
-  .pcard .move select { padding-right: var(--sp-2); gap: var(--sp-1); }
   .pcard .move select::picker-icon { font-size: var(--arr-fs-sm, var(--fs-md)); }
 }
 
@@ -2057,7 +2064,7 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
    which an iPhone renders with a thin head; an image can't take currentColor, so each look names its accent */
 @supports not (appearance: base-select) {
   select:not([multiple]):not([size]) { --sel-arr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 95 80'%3E%3Cpolygon points='0,40 37,3 48.03,14.03 29.86,32.2 95,32.2 95,47.8 29.86,47.8 48.03,65.97 37,77' fill='%23035704'/%3E%3C/svg%3E"); background-image: var(--sel-arr); background-size: calc(var(--arr-fs) * .95) calc(var(--arr-fs) * .8);
-    background-position: right var(--sp-3) center; padding-right: calc(var(--sp-3) * 2 + var(--arr-fs)); }
+    background-position: right var(--sel-in) center; padding-right: calc(var(--sel-in) * 2 + var(--arr-fs) * .95); }
   :root[data-theme="matrix"] select { --sel-arr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 95 80'%3E%3Cpolygon points='0,40 37,3 48.03,14.03 29.86,32.2 95,32.2 95,47.8 29.86,47.8 48.03,65.97 37,77' fill='%236CFFA8'/%3E%3C/svg%3E"); }
   :root[data-style="sentinel"][data-theme="awake"] select { --sel-arr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 95 80'%3E%3Cpolygon points='0,40 37,3 48.03,14.03 29.86,32.2 95,32.2 95,47.8 29.86,47.8 48.03,65.97 37,77' fill='%23246F38'/%3E%3C/svg%3E"); }
   :root[data-style="sentinel"][data-theme="matrix"] select { --sel-arr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 95 80'%3E%3Cpolygon points='0,40 37,3 48.03,14.03 29.86,32.2 95,32.2 95,47.8 29.86,47.8 48.03,65.97 37,77' fill='%2379CF91'/%3E%3C/svg%3E"); }
@@ -2588,9 +2595,6 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 
 /* Chat with Pradeep, inside Neo's panel (components/Talk.tsx): Neo's own log, bubbles and composer, plus the tab switch,
    author and edit marks, the unread badge, and neon1's inbox rows */
-.talk-tabs { display: inline-flex; align-items: center; gap: var(--sp-3); }
-.talk-tab { background: none; border: 0; padding: 0 0 2px; cursor: pointer; opacity: .6; display: inline-flex; align-items: center; gap: var(--sp-1); border-bottom: 2px solid transparent; }
-.talk-tab[aria-selected="true"] { opacity: 1; border-bottom-color: var(--accent); }
 .talk-badge { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent); color: var(--accent-ink, #0d0208); font: 700 var(--fs-xs) var(--mono); display: inline-grid; place-items: center; }
 .talk-badge-launch { position: absolute; top: -6px; right: -6px; }
 .talk-hint { margin: 0; padding: var(--sp-1) var(--sp-3); color: var(--muted); font-size: var(--fs-xs); border-bottom: 1px solid var(--soft); }
@@ -2626,7 +2630,7 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 .settings-rows { display: grid; gap: var(--sp-3); }
 .settings-row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); flex-wrap: wrap; }
 .settings-row + .settings-row { border-top: 1px solid var(--line); padding-top: var(--sp-3); }
-.settings-row > .actions { margin: 0; }
+.settings-row > .actions { margin: 0; justify-content: flex-start; }
 .settings-main [id] { scroll-margin-top: calc(var(--topbar-h, 4rem) + var(--sp-4)); }
 @media (max-width: 760px) {
   .settings { grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); }
@@ -2805,7 +2809,7 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 /* Round actions: an icon in a circle that opens leftward to its name; pressed again, it acts */
 /* The action button (components/Act.tsx): a round icon that opens sideways to its name on the first press and acts
    on the second. Danger actions (suspend, deactivate) take red once open. --act-h is its one size */
-.vm-acts, .acts { display: inline-flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.vm-acts, .act-row { display: inline-flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
 .act { --act-h: 34px; display: inline-flex; align-items: center; height: var(--act-h); min-width: var(--act-h); padding: 0 9px; border: 1px solid var(--line-strong); border-radius: 99px; background: var(--panel); color: var(--muted); cursor: pointer; flex: none; }
 .act:hover, .act:focus-visible { color: var(--accent); border-color: var(--accent); }
 .act.open { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }

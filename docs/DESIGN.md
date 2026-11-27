@@ -20,6 +20,8 @@ What the portal adds for them:
 - `components/Act.tsx` is the action button for a record's controls, and `components/MemberActs.tsx` holds the people dialogs a major one opens. `Arr` in `ui.tsx` is the one arrow.
 - Control padding tokens `--ctl-px`, `--ctl-px-sm`, `--ctl-inset`, and `--t-hover` for highlight fades.
 - On a phone the board pans in any direction inside itself (`.board`, `.lens-board`).
+- `lib/keys.ts`: focus rings only while moving by keyboard (html[data-keys]), F6 between regions, `[` for the menu.
+- `--sel-in`: a select's text and arrow insets, equal. Where Neo's signed-in model is off, the public Neo window carries Trin and the chat as tabs (`PublicTalk.tsx`).
 
 The look is `data-style` (sentinel, or absent for Matrix), `data-theme` (`awake`, `matrix`, or `device`), and `data-look`, painted by `lib/themepaint.ts` from the saved choice.
 

@@ -10,14 +10,17 @@ import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router";
 import { usePublicNeo, type PublicTab } from "../lib/publicNeo.ts";
 import { Talk, useUnread, type ChatOrg } from "./Talk.tsx";
+import { TrinChat } from "./Trin.tsx";
 
 
-export function PublicTalk({ org, me, demo }: { org?: ChatOrg; me: { id: string; operator: boolean }; demo: boolean }) {
+export function PublicTalk({ org, me, demo, trin = false }: { org?: ChatOrg; me: { id: string; operator: boolean }; demo: boolean; trin?: boolean }) {
   const neo = usePublicNeo();
   const loc = useLocation();
   const [tab, setTab] = useState<PublicTab>();
   // True while the neon1 tab is the one in view, so the conversation is read (and marked seen) only then
   const [active, setActive] = useState(false);
+  // Trin's tab, when this organization has Trin
+  const [trinTab, setTrinTab] = useState<PublicTab>();
   // Each organization's chat lives on its own page, so super picking one from the inbox goes there, and each
   // browser tab keeps its own organization (Pradeep, 2026-11-27); everyone else has their own
   const navigate = useNavigate();
@@ -27,13 +30,21 @@ export function PublicTalk({ org, me, demo }: { org?: ChatOrg; me: { id: string;
   const only = loc.pathname.startsWith("/all/prospects") ? ("potential" as const) : undefined;
   const canTalk = me.operator || Boolean(org);
 
-  // Add the tab to the window while this is mounted, and take it away after
+  // Add the tabs while this is mounted, in their order after Neo: Trin (inside one organization), then the chat
+  const withTrin = trin && Boolean(org);
+  const aria = `Chat: Neo${withTrin ? ", Trin," : ""} or ${me.operator ? "members" : "neon1"}`;
+  useEffect(() => {
+    if (!neo || !withTrin) return;
+    const t = neo.addTab({ id: "trin", label: "Trin", hint: "Answers from this organization's work", launcher: { label: "", aria }, });
+    setTrinTab(t);
+    return () => { t.remove(); setTrinTab(undefined); };
+  }, [neo, withTrin, aria]);
   useEffect(() => {
     if (!neo || !canTalk) return;
-    const t = neo.addTab({ id: "pradeep", label: me.operator ? "Chat" : "neon1", hint: me.operator ? "Members write here" : "Replies by email", launcher: { label: "ask Neo or neon1", aria: "Ask Neo or message neon1" }, onselect: setActive });
+    const t = neo.addTab({ id: "pradeep", label: me.operator ? "Chat" : "neon1", hint: me.operator ? "Members write here" : "Replies by email", launcher: { label: "", aria }, onselect: setActive });
     setTab(t);
     return () => { t.remove(); setTab(undefined); setActive(false); };
-  }, [neo, canTalk, me.operator]);
+  }, [neo, canTalk, me.operator, trinTab, aria]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // The count of what is new, on the tab and the launcher, read now and then without marking anything seen
   const unread = useUnread(chatOrg, me.operator, active);
@@ -49,5 +60,8 @@ export function PublicTalk({ org, me, demo }: { org?: ChatOrg; me: { id: string;
   }, [neo, tab, loc.search]);
 
   if (!tab) return null;
-  return createPortal(<Talk org={chatOrg} me={me.id} operator={me.operator} active={active} pick={pick} only={only} note={demo ? "This is the demo: messages stay in your browser." : undefined} />, tab.el);
+  return <>
+    {trinTab && org && createPortal(<TrinChat org={org} />, trinTab.el)}
+    {createPortal(<Talk org={chatOrg} me={me.id} operator={me.operator} active={active} pick={pick} only={only} note={demo ? "This is the demo: messages stay in your browser." : undefined} />, tab.el)}
+  </>;
 }
