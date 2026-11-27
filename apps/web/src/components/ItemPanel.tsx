@@ -257,6 +257,26 @@ export function ItemPanel({ item, label, path, open, onClose }: { item: Item; la
     }
     refresh();
   });
+  // Status, owner, and due date save the moment they change, as Linear's properties do: only that field, from
+  // the saved record, so a half-typed title or details stays a draft for Save
+  type Prop = "status" | "assigneeId" | "dueDate";
+  const setProp = (field: Prop, value: string) => {
+    setDraft((d) => ({ ...d, [field]: value }));
+    void runSave(async () => {
+      const body = changesFrom({ ...draftOf(base), [field]: value }, base);
+      if (!Object.keys(body).length) return;
+      try {
+        const saved = await api<Item>(`${path}/items/${item.id}`, { method: "PATCH", body: { version: base.version, ...body } });
+        if (saved && typeof saved === "object" && "version" in saved) setBase(saved);
+        toast("Saved");
+      } catch (e) {
+        const theirs = e instanceof HttpError && e.status === 409 ? (e.body.current as Item | undefined) : undefined;
+        if (theirs?.id === item.id) setConflict(theirs);
+        else toast(problem(e));
+      }
+      refresh();
+    });
+  };
   // Delete after the are-you-sure, against the version the panel opened with
   const remove = async () => {
     if (await deleteItem(base, label)) onClose();
@@ -305,18 +325,18 @@ export function ItemPanel({ item, label, path, open, onClose }: { item: Item; la
       {/* Status, owner, and due date in one compact grid */}
       <div className="props">
         <label>Status
-          <select value={draft.status} disabled={!canWrite || base.status === "approved"} onChange={(e) => setDraft({ ...draft, status: e.target.value })}>
+          <select value={draft.status} disabled={!canWrite || base.status === "approved"} onChange={(e) => setProp("status", e.target.value)}>
             {[...new Set([draft.status, ...choices])].map((s) => <option key={s} value={s}>{statusWord(base.kind, s)}</option>)}
           </select>
         </label>
         <label>Owner
-          <select value={draft.assigneeId} disabled={!canWrite} onChange={(e) => setDraft({ ...draft, assigneeId: e.target.value })}>
+          <select value={draft.assigneeId} disabled={!canWrite} onChange={(e) => setProp("assigneeId", e.target.value)}>
             <option value="">No one yet</option>
             {active.map((m) => <option key={m.userId} value={m.userId}>{m.name || m.email}</option>)}
           </select>
         </label>
         <label>Due
-          <input type="date" value={draft.dueDate} disabled={!canWrite} onChange={(e) => setDraft({ ...draft, dueDate: e.target.value })} />
+          <input type="date" value={draft.dueDate} disabled={!canWrite} onChange={(e) => setProp("dueDate", e.target.value)} />
         </label>
       </div>
       {canWrite ? (
