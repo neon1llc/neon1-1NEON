@@ -25,7 +25,8 @@ export type StreamEntry =
   | { type: "event"; id: string; at: string; by: string; summary: string; action: string; target: string };
 
 // Changes that already appear as their own entries, or that say nothing about the work
-const QUIET = new Set(["comment.created", "message.created", "update.created", "member.signedin"]);
+const QUIET = new Set(["message.created", "update.created", "member.signedin"]);
+const quiet = (action: string) => QUIET.has(action) || action.startsWith("comment.");
 
 
 /** Everything said and changed on one project, newest first, at most `limit` entries */
@@ -44,7 +45,7 @@ export async function projectStream(repo: Repo, p: Project, limit = 80): Promise
     ...thread.map((c): StreamEntry => ({ type: "message", id: c.id, at: c.at, by: c.authorName, authorId: c.authorId, body: c.body, ...(c.via ? { via: c.via } : {}) })),
     ...live.filter((i) => i.kind === "update").map((i): StreamEntry => ({ type: "update", id: i.id, at: i.createdAt, by: name(i.updatedBy) || "Someone", title: i.title, body: i.body, health: i.fields.health ? String(i.fields.health) : undefined })),
     ...onItems.map((c): StreamEntry => ({ type: "comment", id: c.id, at: c.at, by: c.authorName, body: c.body, itemId: c.itemId, itemTitle: byId.get(c.itemId)?.title ?? "", itemKind: byId.get(c.itemId)?.kind ?? "" })),
-    ...audit.filter((e: AuditEvent) => !QUIET.has(e.action) && (e.summary.startsWith(prefix) || ids.has(e.target) || e.target === p.id))
+    ...audit.filter((e: AuditEvent) => !quiet(e.action) && (e.summary.startsWith(prefix) || ids.has(e.target) || e.target === p.id))
       .map((e): StreamEntry => ({ type: "event", id: e.id, at: e.at, by: name(e.actorId), summary: e.summary.startsWith(prefix) ? e.summary.slice(prefix.length) : e.summary, action: e.action, target: e.target })),
   ];
   return out.sort((a, b) => b.at.localeCompare(a.at)).slice(0, limit);
