@@ -19,7 +19,7 @@
     "jszip.min": 97147,
     "LayerPage": 3015,
     "Legal": 33794,
-    "Lenses": 6871,
+    "Lenses": 7877,
     "lifecycle": 2343,
     "LiveBar": 11999,
     "Markdown": 2905,
@@ -28,7 +28,7 @@
     "OrgFace": 4748,
     "PageEditor": 450194,
     "PageIndex": 576,
-    "People": 7290,
+    "People": 12088,
     "player": 23838,
     "plural": 83,
     "printer": 353,
@@ -36,7 +36,6 @@
     "Projects": 9554,
     "Proposal": 17150,
     "Prospects": 9611,
-    "rotate": 464,
     "scenarios": 62930,
     "seed": 2362,
     "Settings": 28933,
@@ -46,6 +45,8 @@
     "where": 45012,
     "Workflow": 2318,
     "Workspace": 56974,
-    "yjs": 86311
+    "yjs": 86311,
+    "pencil": 310,
+    "play": 224
   }
 }
