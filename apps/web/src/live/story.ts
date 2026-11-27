@@ -325,13 +325,9 @@ export const STORY: Section[] = [
       await s.waitFor({ sel: ".settings-head [role=status]", text: "All changes saved." });
       if (small) {
         await s.say("The mini menu keeps every page one tap away");
-        await s.click(".top .menu-btn", 900);
+        // Upright phones have Menu at the end of the tab bar, in reach of a thumb; turned sideways it's in the top bar
+        await s.click(matchMedia("(max-width: 640px)").matches ? ".tabbar .menu-btn" : ".top .menu-btn", 900);
         await s.click(".scrim", 500);
-        // Upright phones also have Menu at the end of the tab bar, in reach of a thumb
-        if (await s.has(".tabbar .menu-btn")) {
-          await s.click(".tabbar .menu-btn", 900);
-          await s.click(".scrim", 500);
-        }
       }
     },
   },
@@ -395,7 +391,9 @@ export const STORY: Section[] = [
       const n = S.needs;
       await s.say("In Needs, she builds her request from a few taps");
       await s.click({ sel: "nav.tabs a", text: "Needs" }, 900);
-      await s.click({ sel: "button", text: "+ Add request" }, 600);
+      // An action button: the first press opens its name, the second adds
+      await s.click('button.act[title="Add request"]', 500);
+      await s.click('button.act[title="Add request"]', 600);
       const one = "form.sentence fieldset:nth-of-type(1)";
       for (const g of n.goals) await s.click({ sel: `${one} button`, text: g }, 280);
       await s.type(`${one} input[aria-label="Who or what it's for"]`, n.who);
@@ -420,7 +418,9 @@ export const STORY: Section[] = [
       await s.type('textarea[aria-label^="Answer:"]', n.answer);
       await s.click({ sel: "button", text: "Save answer" }, 900);
       await s.think(S.voice.requirementThink);
-      await s.click({ sel: "button", text: "+ Add requirement" }, 500);
+      // An action button: the first press opens its name, the second adds
+      await s.click('button.act[title="Add requirement"]', 500);
+      await s.click('button.act[title="Add requirement"]', 500);
       await s.click({ sel: ".starters .chip", text: n.requirement }, 300);
       await s.click({ sel: ".pick label", text: "must have" }, 300);
       await s.click({ sel: "form.add-form button", text: /^Add$/ }, 900);
@@ -671,7 +671,9 @@ export const STORY: Section[] = [
       await s.type('input[aria-label^="New reading"]', S.measures[0]!.newReading);
       await s.key("Enter");
       await s.wait(900);
-      await s.go(`${base}/workspace#insights`, "Home");
+      // These two cards wait under View until asked for; their addresses show them
+      await s.go(`${base}/workspace`, "Home");
+      await s.open(`${base}/workspace#insights`);
       await s.wait(1400);
       await s.hover({ sel: "h2.section-h", text: "Finished per week" }, 1200);
     },
@@ -718,7 +720,9 @@ export const STORY: Section[] = [
       await s.hover(".accepted-note", 900);
       await s.say("Accepting the handover drafts the final invoice for Pradeep to check and send");
       await s.say("And adds ongoing care from a suggestion");
-      await s.click({ sel: "button", text: "+ Add care item" }, 500);
+      // An action button: the first press opens its name, the second adds
+      await s.click('button.act[title="Add care item"]', 500);
+      await s.click('button.act[title="Add care item"]', 500);
       await s.click({ sel: ".starters .chip", text: care }, 300);
       await s.click({ sel: "form.add-form button", text: /^Add$/ }, 900);
     },
@@ -767,6 +771,7 @@ export const STORY: Section[] = [
       // The history is Home's Activity log: who did what, newest first, the same feed a
       // client reaches from the menu (each item's panel keeps its own History too)
       await s.go(`${base}/workspace`, "Home");
+      await s.open(`${base}/workspace#activity`);
       await s.say("And every change, kept as history");
       await s.hover('[data-tour="activity"]', 1800);
       await s.say("From a first request to a measured result, all in one place");

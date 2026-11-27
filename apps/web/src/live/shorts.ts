@@ -444,7 +444,8 @@ const calendar: Show = {
         await s.type("#ce-title", `${owner} away`, 300);
         await s.choose("#ce-end", back, 500);
         await s.click({ sel: ".cal-form button", text: "Add" }, 1200);
-        await s.say("Both days carry a band, and Home lists who's away this week");
+        await s.say("Both days carry a band, and Home can list who's away this week");
+        await s.open(`${base}/workspace#away`);
         await s.hover({ sel: ".away h2" }, 1100);
         await s.think("There. Pradeep will see I'm out.");
       },
@@ -468,6 +469,7 @@ const calendar: Show = {
         await s.click({ sel: ".ag-group summary", text: "Repeated" }, 900);
         await s.hover({ sel: ".ag-group li", text: "Monthly check-in" }, 1200);
         await s.say("Each change goes in the activity record, saying exactly what was added");
+        await s.open(`${base}/workspace#activity`);
         await s.hover({ sel: "[data-tour=activity] li", text: "calendar" }, 1600);
       },
     },

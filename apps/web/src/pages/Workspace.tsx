@@ -247,7 +247,7 @@ export function WorkspacePage() {
   // A link to a hidden card (#next-step from a notification) shows it again
   const { hash } = useLocation();
   useEffect(() => {
-    const id = ({ "#next-step": "next", "#coming-up": "coming", "#activity": "activity", "#insights": "pace" } as Record<string, string>)[hash];
+    const id = ({ "#next-step": "next", "#coming-up": "coming", "#activity": "activity", "#insights": "pace", "#away": "away" } as Record<string, string>)[hash];
     const x = id ? offered.find((y) => y.id === id) : undefined;
     if (x && !isShown(x)) setShown(x.id, true);
   }, [hash]); // eslint-disable-line react-hooks/exhaustive-deps

@@ -57,7 +57,9 @@ export const PREVIEW: Show = {
       title: "Ask for something",
       run: async (s) => {
         await s.say("She asks neon1 for help in one sentence");
-        await s.click({ sel: "button", text: "+ Add request" }, 500);
+        // An action button: the first press opens its name, the second adds
+        await s.click('button.act[title="Add request"]', 500);
+        await s.click('button.act[title="Add request"]', 500);
         const one = "form.sentence fieldset:nth-of-type(1)";
         await s.click({ sel: `${one} button`, text: S.needs.goals[0]! }, 250);
         await s.type(`${one} input[aria-label="Who or what it's for"]`, S.needs.who);

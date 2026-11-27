@@ -56,6 +56,7 @@
 - The privacy policy and terms describe the chat with neon1, and the legal pages show when they were last updated.
 
 ### Fixed
+- In the walkthroughs, closing an item no longer leaves the walkthrough, and their steps follow the new Home and action buttons, so every story reaches its end again.
 - Deleting a quiet free account now also removes its pending file checks, its reply-by-email addresses, and Trin's index of its work.
 - On a phone, the organization list and Home's View menu end on screen, above the tab bar or keyboard, and scroll inside themselves. A tap outside closes them and a swipe scrolls the page. View is narrower on phones, and opening the organization list on touch no longer opens the keyboard.
 - On phones the footer keeps the backslashes between its links.
