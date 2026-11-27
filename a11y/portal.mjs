@@ -167,7 +167,7 @@ async function openRoute(page, meta, route) {
 async function auditKeyboardAndTargets(page, meta) {
   await page.evaluate(() => { document.activeElement instanceof HTMLElement && document.activeElement.blur(); document.body.focus(); });
   const expected = await page.evaluate(() => [...document.querySelectorAll("a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex='-1'])")]
-    .filter((el) => { const box = el.getBoundingClientRect(); const style = getComputedStyle(el); return box.width > 0 && box.height > 0 && style.visibility !== "hidden" && style.display !== "none" && !el.closest("[inert]"); })
+    .filter((el) => { const box = el.getBoundingClientRect(); const style = getComputedStyle(el); return box.width > 0 && box.height > 0 && style.visibility !== "hidden" && style.display !== "none" && style.pointerEvents !== "none" && !el.closest("[inert]") && !el.closest('[aria-hidden="true"]'); })
     .map((el) => ({ tag: el.tagName, name: el.getAttribute("aria-label") || el.innerText || el.getAttribute("title") || el.getAttribute("name") || "", id: el.id })));
   const found = [];
   let missingFocusStyle = 0;
@@ -199,13 +199,13 @@ async function auditKeyboardAndTargets(page, meta) {
 
   const smallTargets = await page.evaluate(() => [...document.querySelectorAll("button,a[href],input,select,textarea,[role=button],[role=tab],[role=menuitem]")]
     .filter((el) => !el.classList.contains("sr") && !el.closest(".sr"))
-    .filter((el) => { const target = el.closest("label") ?? el; const box = target.getBoundingClientRect(); const style = getComputedStyle(target); return box.width > 0 && box.height > 0 && style.visibility !== "hidden" && style.display !== "none" && (box.width < 24 || box.height < 24); })
+    .filter((el) => { const target = el.closest("label") ?? el; const box = target.getBoundingClientRect(); const style = getComputedStyle(target); return box.width > 0 && box.height > 0 && style.visibility !== "hidden" && style.display !== "none" && style.pointerEvents !== "none" && !el.closest("[inert]") && !el.closest('[aria-hidden="true"]') && (box.width < 24 || box.height < 24); })
     .map((el) => {
       const target = el.closest("label") ?? el;
       const box = target.getBoundingClientRect();
-      return { name: el.getAttribute("aria-label") || el.innerText || el.getAttribute("title") || "", selector: el.id ? `#${el.id}` : `${el.tagName.toLowerCase()}${el.className && typeof el.className === "string" ? `.${el.className.trim().replace(/\s+/g, ".")}` : ""}`, html: el.outerHTML.slice(0, 240), width: Math.round(box.width), height: Math.round(box.height), inlineLink: el.matches("a[href]") && Boolean(el.closest("p,li,td,dd")), ignored: style.pointerEvents === "none" || Boolean(el.closest('[aria-hidden="true"]')) };
+      return { name: el.getAttribute("aria-label") || el.innerText || el.getAttribute("title") || "", selector: el.id ? `#${el.id}` : `${el.tagName.toLowerCase()}${el.className && typeof el.className === "string" ? `.${el.className.trim().replace(/\s+/g, ".")}` : ""}`, html: el.outerHTML.slice(0, 240), width: Math.round(box.width), height: Math.round(box.height), inlineLink: el.matches("a[href]") && Boolean(el.closest("p,li,td,dd")) };
     })
-    .filter((target) => !target.inlineLink && !target.ignored));
+    .filter((target) => !target.inlineLink));
   if (smallTargets.length) failures.push({ type: "target-size-under-24", ...meta, targets: smallTargets.slice(0, 20) });
   return { expected: expected.length, visited: found.length, smallTargets: smallTargets.length };
 }
