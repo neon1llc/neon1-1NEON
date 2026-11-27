@@ -144,6 +144,16 @@ describe("authorization coverage from the registered router", () => {
       return { route, role: persona.role, status: response.status };
     })));
     // Trin is intentionally unavailable in this offline fixture; its 503 is the configured no-model response.
-    expect(results.filter((x) => x.status === 401 || x.status === 500 || (x.status >= 500 && x.route !== "POST /t/:tid/trin"))).toEqual([]);
+    expect(results.filter((x) => x.status === 401 || (x.status >= 500 && x.route !== "POST /t/:tid/trin"))).toEqual([]);
+
+    // A deactivated person gets nothing. Suspended people only read. Viewers and free accounts change nothing but these
+    const allowed = results.filter((x) => x.status < 300);
+    expect(allowed.filter((x) => x.role === "deactivated")).toEqual([]);
+    const writes = (roles: string[]) => [...new Set(allowed.filter((x) => roles.includes(x.role) && !x.route.startsWith("GET ")).map((x) => x.route))].sort();
+    const READ_MARKS = ["POST /t/:tid/notifications/:id/read", "POST /t/:tid/notifications/read-all"];
+    expect(writes(["suspended"])).toEqual(READ_MARKS);
+    // Clearing an "editing now" mark succeeds for anyone who can read the project
+    expect(writes(["viewer"])).toEqual(["DELETE /t/:tid/projects/:pid/edits/:recordId", ...READ_MARKS]);
+    expect(writes(["free"])).toEqual(["DELETE /t/:tid/projects/:pid/edits/:recordId", "POST /t/:tid/keep", ...READ_MARKS]);
   });
 });
