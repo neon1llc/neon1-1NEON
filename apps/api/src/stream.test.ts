@@ -66,7 +66,7 @@ describe("project updates", () => {
     // Each person's address is their own, and names them
     expect(mails.find((m) => m.to === OP)!.replyTo).not.toBe(tomas.replyTo);
     const token = tomas.replyTo!.split(".")[1]!;
-    expect(tomas.replyTo!.split(".")[2]!.split("@")[0]).toBe(sign(replies.secret, "p", token));
+    expect(tomas.replyTo!.split(".")[2]!.split("@")[0]).toBe(await sign(replies.secret, "p", token));
     expect(await readToken(repo, token)).toEqual({ tenantId: s.acme.id, projectId: p.id, userId: s.dana.id });
   });
 });
@@ -76,7 +76,7 @@ describe("replies by email", () => {
   const tokenOf = async () => {
     const p = await firstProject();
     await as(PRIYA, `/t/${s.acme.id}/projects/${p.id}/stream`, "POST", { body: "Question for Tomas" });
-    return { p, token: tokenFor(replies.secret, s.acme.id, p.id, s.dana.id) };
+    return { p, token: await tokenFor(replies.secret, s.acme.id, p.id, s.dana.id) };
   };
 
   it("posts as the person the address was made for, marked as by email", async () => {
