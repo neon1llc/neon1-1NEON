@@ -5,6 +5,7 @@
 
 import { useEffect, useId, useRef } from "react";
 import { useLocation, useNavigate } from "react-router";
+import { LIVE } from "./api.ts";
 
 // The first row on the page for an item opens its panel; another copy of the same item (a summary elsewhere
 // on the page) never opens a second one
@@ -27,7 +28,8 @@ export function useItemRoute(itemId: string): [boolean, (open: boolean) => void]
       pushed.current = true;
       navigate({ pathname, search, hash: `item-${itemId}` }, { preventScrollReset: true, state: { ...(state as object | null), itemPanel: itemId } });
     } else if (!next && open) {
-      if (pushed.current && (state as { itemPanel?: string } | null)?.itemPanel === itemId) navigate(-1);
+      // A walkthrough never adds to the history (main.tsx), so going Back there would leave the demo
+      if (!LIVE && pushed.current && (state as { itemPanel?: string } | null)?.itemPanel === itemId) navigate(-1);
       else navigate({ pathname, search, hash: "" }, { replace: true, preventScrollReset: true });
       pushed.current = false;
     }
