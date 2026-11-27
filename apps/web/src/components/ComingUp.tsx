@@ -9,7 +9,7 @@
 
 import { KIND_LAYER, type CalEvent, type ItemKind } from "@1neon/domain";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router";
 import { api } from "../lib/api.ts";
@@ -106,12 +106,12 @@ export function ComingUp({ tid, base }: { tid: string; base: string }) {
         <h2 className="section-h" aria-live="polite">{monthName(shown)}</h2>
         <div className="cal-nav">
           {!thisMonth && <button type="button" className="btn btn-ghost btn-sm" onClick={() => go(today.slice(0, 7))}>Today</button>}
-          <button type="button" className="icon-btn" onClick={() => go(shiftMonth(shown, -1))} aria-label={`Previous month, ${monthName(shiftMonth(shown, -1))}`} title="Previous month"><ChevronLeft size={16} aria-hidden="true" /></button>
+          <button type="button" className="icon-btn" onClick={() => go(shiftMonth(shown, -1))} aria-label={`Previous month, ${monthName(shiftMonth(shown, -1))}`} title="Previous month"><span className="arr arr-mixed" aria-hidden="true" /></button>
           <select className="cal-jump" value={shown} onChange={(e) => go(e.target.value)} aria-label="Go to a month">
             <option key="current-month-default" value={currentMonth}>{monthName(currentMonth, "short")}</option>
             {jumps.map((m) => <option key={m} value={m}>{monthName(m, "short")}</option>)}
           </select>
-          <button type="button" className="icon-btn" onClick={() => go(shiftMonth(shown, 1))} aria-label={`Next month, ${monthName(shiftMonth(shown, 1))}`} title="Next month"><ChevronRight size={16} aria-hidden="true" /></button>
+          <button type="button" className="icon-btn" onClick={() => go(shiftMonth(shown, 1))} aria-label={`Next month, ${monthName(shiftMonth(shown, 1))}`} title="Next month"><span className="arr arr-mixed arr-next" aria-hidden="true" /></button>
         </div>
       </div>
       {overdue.length > 0 && <p className="cal-late"><span className="tag warn">{overdue.length} overdue</span></p>}

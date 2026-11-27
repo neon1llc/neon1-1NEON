@@ -104,7 +104,7 @@ export function NewProject() {
           </div>
         </fieldset>
         {/* Optional details, folded until asked for */}
-        <details className="np-more" open={more} onToggle={(e) => setMore((e.target as HTMLDetailsElement).open)}>
+        <details className="np-more n1-fold n1-more" open={more} onToggle={(e) => setMore((e.target as HTMLDetailsElement).open)}>
           <summary>More about it</summary>
           <div className="np-more-body">
             <fieldset className="np-q">

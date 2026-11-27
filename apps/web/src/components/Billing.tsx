@@ -351,7 +351,7 @@ export function PriceBasis({ terms, open = false }: { terms: Priced; open?: bool
   const basis = terms.basis ?? [];
   const sum = basis.reduce((n, b) => n + b.hours, 0);
   return (
-    <details className="basis" open={open}>
+    <details className="basis n1-fold n1-more" open={open}>
       <summary>How this adds up</summary>
       <p className="small">{priceMeaning(p, !DEMO)}</p>
       {basis.length > 0 && (

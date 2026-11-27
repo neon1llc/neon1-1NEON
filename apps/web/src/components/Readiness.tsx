@@ -47,7 +47,7 @@ export function Readiness({ project: p, items, orgId, slug, canWrite, prospect, 
       <p className="small muted">Before work starts, a project goes from an outline to one agreed option. Everything here is optional, and each part sharpens the assessment and our call.</p>
       <ol className="ready-steps">
         <li className={r.steps.outline ? "done" : ""}>
-          <details open={!r.steps.outline && canWrite}>
+          <details className="n1-fold" open={!r.steps.outline && canWrite}>
             <summary>{tick(r.steps.outline)}<span><b>Outline</b> <span className="muted small">{n} of {OUTLINE_PARTS.length}</span></span></summary>
             <ul className="ready-parts">
               {OUTLINE_PARTS.map((part) => {

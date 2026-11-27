@@ -354,7 +354,7 @@ export function ItemPanel({ item, label, path, open, onClose }: { item: Item; la
       </form>
       {/* What happened to it and who did it, newest first, worded like Home's recent activity */}
       {(thread.data?.history.length ?? 0) > 0 && (
-        <details className="history">
+        <details className="history n1-fold n1-more">
           <summary>History</summary>
           <ul className="feed">{thread.data!.history.map((h) => <li key={h.id}><span>{h.summary} <small className="by">{nameOf(h.actorId)}</small><Changes e={h} /></span><time>{ago(h.at)}</time></li>)}</ul>
         </details>

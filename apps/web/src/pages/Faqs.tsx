@@ -81,7 +81,7 @@ export function Faqs() {
         <section key={t.name}>
           <h2 className="section-h">{t.name}</h2>
           {t.items.map((i) => (
-            <details key={i.id} id={i.id} className="faq" open={Boolean(q.trim()) || i.id === target}>
+            <details key={i.id} id={i.id} className="faq n1-fold" open={Boolean(q.trim()) || i.id === target}>
               <summary><span>{marked(i.q, mark)}</span></summary>
               <Markdown source={i.a} mark={mark} />
               <CopyLink item={i} />

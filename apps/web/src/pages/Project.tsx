@@ -1544,8 +1544,8 @@ function OptionStory({ option, all, quick = false }: { option: Item; all: Item[]
   if (moments.length < 2) return null;
   const last = moments.at(-1)!;
   return (
-    <details className="history option-story">
-      <summary>History · {last.text.split(". Why:")[0]}, {dateLabel(last.at.slice(0, 10))}</summary>
+    <details className="history option-story n1-fold n1-more">
+      <summary><span>History · {last.text.split(". Why:")[0]}, {dateLabel(last.at.slice(0, 10))}</span></summary>
       <ol className="story">
         {moments.map((m, i) => <li key={i} className={`is-${m.tone}`}><time dateTime={m.at}>{new Date(m.at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</time><span>{m.text}</span></li>)}
       </ol>

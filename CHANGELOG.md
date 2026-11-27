@@ -29,6 +29,7 @@
 - New project asks how the work runs first (Workbench, Quick fix, Build a proposal, NEON), then for a proposal or NEON what kind of work it is. Clients start on Workbench and neon1 on NEON. A proposal starts at Propose and opens on its options.
 
 ### Changed
+- Every arrow that opens or closes something is now one short, bold arrow in two sizes, including questions, dropdowns, and Safari and iPhone dropdowns.
 - neon1's role is named super everywhere it shows: People, your profile, and the emails it receives.
 - A suspended free account can now sign in and read, as other suspensions do, instead of being turned away.
 - New project's choices run from lightest to most involved, each with four boxes for how involved it is and the path it follows.
@@ -41,6 +42,7 @@
 - The privacy policy and terms describe the chat with neon1, and the legal pages show when they were last updated.
 
 ### Fixed
+- On phones the footer keeps the backslashes between its links.
 - Home's cards keep their padding below the last line, and "Not now" on the business question can be undone from View.
 - Booking links go to calendly.com/book-neon1/initial. The old link stopped working.
 - neon1's own person, added to an organization automatically, shows a name instead of "No name yet".

@@ -5,7 +5,7 @@
 // card at the end. Space plays or pauses; the arrow keys step between chapters.
 
 
-import { ChevronDown, ChevronLeft, ChevronRight, Gauge, Pause, Play, RotateCcw } from "lucide-react";
+import { Gauge, Pause, Play, RotateCcw } from "lucide-react";
 import { OutLink } from "../components/OutLink.tsx";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -132,7 +132,7 @@ export function LiveBar({ player }: { player: Player }) {
         <div className="live-row">
           {/* Back and on name the neighbouring chapters; at either end the button steps aside */}
           <button className={`live-step back${prev ? "" : " none"}`} onClick={() => jump(v.index - 1)} disabled={!prev} aria-label={prev ? `Back to ${prev.title}` : undefined}>
-            <ChevronLeft size={16} aria-hidden="true" /><span>{prev?.title}</span>
+            <span className="arr arr-mixed live-arr" aria-hidden="true" /><span>{prev?.title}</span>
           </button>
           <div className="live-mid">
             {/* Before it starts the one button says Start, as the card below it does */}
@@ -160,11 +160,11 @@ export function LiveBar({ player }: { player: Player }) {
             <button className="live-now" onClick={openList} aria-expanded={list} aria-controls="live-list">
               <span className="live-title">{v.idle || (v.skipping && player.focused) ? show.title : v.done ? `${show.title} · the end` : `${v.index + 1}/${player.sections.length} · ${v.title}`}</span>
               {v.note && !v.idle && !v.done && !v.skipping && <span className="live-note">{v.note}</span>}
-              <ChevronDown className="live-caret" size={14} aria-hidden="true" />
+              <span className="arr arr-mixed live-caret" aria-hidden="true" />
             </button>
           </div>
           <button className={`live-step fwd${next ? "" : " none"}`} onClick={() => jump(v.index + 1)} disabled={!next} aria-label={next ? `On to ${next.title}` : undefined}>
-            <span>{next?.title}</span><ChevronRight size={16} aria-hidden="true" />
+            <span>{next?.title}</span><span className="arr arr-mixed arr-next live-arr" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -274,9 +274,9 @@ export function LiveBar({ player }: { player: Player }) {
         </ol>
         {(short || SHORTS.length > 0) && <p className="live-list-h">{short ? "Other walkthroughs" : "Short walkthroughs"}</p>}
         <ul>
-          {short && <li><a href="/1NEON/live?play=full"><span className="n">▸</span><span>The full story<small>A whole project, from a first sign-in to ongoing care · {FULL_LENGTH}</small></span></a></li>}
+          {short && <li><a href="/1NEON/live?play=full"><span className="n"><span className="arr arr-mixed arr-next" aria-hidden="true" /></span><span>The full story<small>A whole project, from a first sign-in to ongoing care · {FULL_LENGTH}</small></span></a></li>}
           {SHORTS.filter((s) => s.id !== show.id).map((s) => (
-            <li key={s.id}><a href={`/1NEON/live?play=${s.id}`}><span className="n">▸</span><span>{s.title}<small>{s.blurb}{s.length ? ` · ${s.length}` : ""}</small></span></a></li>
+            <li key={s.id}><a href={`/1NEON/live?play=${s.id}`}><span className="n"><span className="arr arr-mixed arr-next" aria-hidden="true" /></span><span>{s.title}<small>{s.blurb}{s.length ? ` · ${s.length}` : ""}</small></span></a></li>
           ))}
         </ul>
       </div>

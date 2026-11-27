@@ -94,13 +94,11 @@ label.field { display: grid; gap: var(--sp-1); font-size: var(--fs-sm); color: v
 label.field > span { font-family: var(--mono); font-size: var(--fs-xs); }
 input, textarea, select { font: var(--fs-md) var(--sans); color: var(--text); background: var(--panel); border: 1px solid var(--field-line); border-radius: var(--r-sm); padding: var(--sp-2) var(--sp-3); min-height: 40px; width: 100%; }
 textarea { min-height: 96px; resize: vertical; }
-/* Dropdowns: as wide as their choices (not the whole row), with a small chevron drawn in the text's
-   own color right after the words, so it suits both themes and never floats far off to the side */
+/* Dropdowns: as wide as their choices (not the whole row), with the shared arrow (shared/neon1.css) in
+   the accent, so it suits both themes and never floats far off to the side */
 /* A dropdown's arrow sits well inside its box (room on both sides), in the accent. Browsers that can style
    the open list get neon1's own arrow instead (Motion, at the end of this file) */
-select { appearance: none; -webkit-appearance: none; width: auto; max-width: 100%; padding-right: var(--sp-7); cursor: pointer; text-overflow: ellipsis;
-  background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%), linear-gradient(135deg, var(--accent) 50%, transparent 50%);
-  background-position: calc(100% - 23px) calc(50% + 1px), calc(100% - 18px) calc(50% + 1px); background-size: 5px 5px; background-repeat: no-repeat; }
+select { appearance: none; -webkit-appearance: none; width: auto; max-width: 100%; padding-right: var(--sp-7); cursor: pointer; text-overflow: ellipsis; --arr-color: var(--accent); }
 select:disabled { cursor: default; opacity: .7; }
 /* Placeholders: muted in awake, the shared faint text (Lc 62) in matrix */
 ::placeholder { color: var(--faint); opacity: 1; }
@@ -690,8 +688,8 @@ button.link:is(:hover, :focus-visible) { text-decoration-color: currentColor; }
 .faq-search { margin: var(--sp-2) 0 var(--sp-2); }
 details.faq { border-top: 1px solid var(--line); padding: var(--sp-1) 0; }
 details.faq summary { cursor: pointer; padding: var(--sp-3) 0; font-weight: 600; list-style: none; display: flex; justify-content: space-between; gap: var(--sp-3); }
-details.faq summary::after { content: "+"; font: var(--fs-lg) var(--mono); color: var(--accent); }
-details.faq[open] summary::after { content: "−"; }
+details.faq { --fold-arrow: var(--accent); }
+details.faq summary { align-items: center; }
 details.faq summary::-webkit-details-marker { display: none; }
 details.faq p { margin: 0 0 var(--sp-3); }
 /* A search's words, marked as the Knowledge Center marks its hits */
@@ -1046,8 +1044,8 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 .pub-foot .legal a.out, .pub-foot .legal a.out:hover { color: var(--glow); font-weight: 600; text-decoration: none; }
 .pub-foot .report-links .bug-glyph { margin: 0; vertical-align: 0; width: 14px; height: 14px; }
 @media (max-width: 599px) { .pub-foot .legal .pub-links { flex: 0 0 100%; justify-content: flex-start; flex-direction: column; } .pub-foot .pub-join { display: none; } }
-/* The copyright line is too long for a phone, so it stacks without its backslash, as on the site */
-@media (max-width: 599px) { .pub-foot .legal .owner .sep { display: none; } .pub-foot .legal .owner { flex: 0 0 100%; } }
+/* The copyright line takes its own row on a phone, keeping its backslash */
+@media (max-width: 599px) { .pub-foot .legal .owner { flex: 0 0 100%; } .pub-foot .legal :is(.owner, .policies) { column-gap: var(--sp-1); } }
 @media (max-width: 359px) { .pub-foot .legal .policies { flex-wrap: wrap; } }
 /* On touch the two link rows sit far enough apart, with tap areas short enough, that no row takes the other's taps */
 @media (pointer: coarse) { .pub-foot .legal .pub-links { row-gap: var(--sp-5); } .pub-foot .legal :is(.owner, .policies) a::after { inset: -7px -4px; } }
@@ -1062,6 +1060,7 @@ html.body-scrolls body:has(.demo-bar) #root { padding-top: var(--demo-h); }
 .toc-head > span b { font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--accent); }
 .toc-head:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
 /* The arrow turns down as the list opens, on the list's own timing */
+.toc-head .arr, .vm-btn .arr, .ag-group.fold .arr { font-size: var(--arr-fs-sm, var(--fs-md)); }
 .toc-head .arr { flex: none; transition: transform var(--t-open) var(--ease-open); }
 .toc-bar[data-open] .toc-head .arr { transform: rotate(-90deg); }
 .toc-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--t-open) var(--ease-open); }
@@ -1404,7 +1403,7 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 .ag-group.fold > summary::-webkit-details-marker { display: none; }
 .ag-group.fold > summary h3 { margin: 0; }
 .ag-group.fold > summary h3 small { margin-left: var(--sp-1); font: var(--fs-xs) var(--mono); color: var(--muted); }
-.ag-group.fold .arr { color: var(--muted); transition: transform var(--t-open) var(--ease-open); }
+.ag-group.fold .arr { color: var(--accent); transition: transform var(--t-open) var(--ease-open); }
 .ag-group.fold[open] > summary .arr { transform: rotate(-90deg); }
 .ag-group.fold > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 4px; }
 .ag-group.fold .fold-body { padding-top: var(--sp-0); }
@@ -1744,7 +1743,8 @@ input[type="date"]::-webkit-date-and-time-value, input[type="time"]::-webkit-dat
 
 /* An option's history: a quiet fold under the card, each moment with its time and a colored mark */
 .option-story { margin-top: var(--sp-2); border-top: 1px solid var(--line); padding-top: var(--sp-1); }
-.option-story summary { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.option-story.n1-more > summary { width: auto; }
+.option-story summary > span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 ol.story { list-style: none; margin: var(--sp-1) 0 0; padding: 0 0 0 var(--sp-3); border-left: 2px solid var(--line); display: grid; gap: var(--sp-2); }
 ol.story li { position: relative; display: grid; gap: 1px; font-size: var(--fs-sm); }
 ol.story li::before { content: ""; position: absolute; left: -18px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--panel); border: 2px solid var(--line-strong); }
@@ -1908,7 +1908,7 @@ a.out:hover .out-arrow, a.out:focus-visible .out-arrow { transform: translate(1p
 :root { interpolate-size: allow-keywords; }
 /* The drawn left arrow, as shared/neon1.css draws it (fallback with no weight): .arr beside lowercase,
    .arr-mixed beside sentence case */
-:where(.arr) { --arr-xc: .2575em; display: inline-block; position: relative; top: calc(.375em - var(--arr-xc)); width: .95em; height: .75em; background: currentColor; flex: none;
+:where(.arr) { --arr-xc: .2575em; display: inline-block; position: relative; top: calc(.375em - var(--arr-xc)); width: .95em; height: .8em; background: currentColor; flex: none;
   clip-path: var(--arr-shape, polygon(0 50%, 31% 12%, 40% 20%, 24% 43%, 100% 43%, 100% 57%, 24% 57%, 40% 80%, 31% 88%)); }
 :where(.arr-mixed) { --arr-xc: .35em; }
 @keyframes pop { from { opacity: 0; transform: translateY(4px) scale(.98); } }
@@ -1943,13 +1943,11 @@ details.faq[open] > summary, .ag-group.fold[open] > summary { border-bottom: 1.5
 html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new(root) { animation-duration: var(--t-base); animation-timing-function: var(--ease); }
 
 /* neon1's dropdown arrow, where the browser lets a page style the open list: the arrow points left, like
-   "send me your use case" on neon1.tech, and turns down as the list opens. Elsewhere the plain arrow above
-   stays, and the browser's own list opens */
+   "send me your use case" on neon1.tech, and turns down as the list opens. Elsewhere the same arrow sits still on the box, and the browser's own list opens */
 @supports (appearance: base-select) {
   select { appearance: base-select; background-image: none; padding-right: var(--sp-3); display: inline-flex; align-items: center; gap: var(--sp-3); }
   /* The same drawn arrow as .arr, centered on the line beside sentence-case choices */
-  /* --arr-t: the stroke of regular-weight text, so the arrow matches the choice beside it */
-  select::picker-icon { --arr-t: .156em; content: ""; width: .95em; height: .75em; font: var(--fs-md) var(--sans); background: var(--accent); clip-path: var(--arr-shape, polygon(0 50%, 31% 12%, 40% 20%, 24% 43%, 100% 43%, 100% 57%, 24% 57%, 40% 80%, 31% 88%)); align-self: center; margin-left: auto; margin-right: var(--sp-0); transition: rotate var(--t-base) var(--ease); }
+  select::picker-icon { content: ""; width: .95em; height: .8em; font: var(--arr-fs-sm, var(--fs-md)) var(--sans); background: var(--accent); clip-path: var(--arr-shape, polygon(0 50%, 31% 12%, 40% 20%, 24% 43%, 100% 43%, 100% 57%, 24% 57%, 40% 80%, 31% 88%)); align-self: center; margin-left: auto; margin-right: var(--sp-0); transition: rotate var(--t-base) var(--ease); }
   select:open::picker-icon { rotate: -90deg; }
   ::picker(select) { appearance: base-select; border: 1px solid var(--line-strong); border-radius: var(--r-sm); background: var(--panel); color: var(--text); box-shadow: var(--shadow-pop); padding: var(--sp-1); margin-top: var(--sp-1); max-height: var(--picker-max, min(320px, 60vh)); position-try-fallbacks: none; }
   /* The list unrolls in the same time the arrow takes to turn, so both finish together */
@@ -1973,7 +1971,7 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
   .signin select option:first-child { background-image: linear-gradient(var(--neon, #00FF41), var(--neon, #00FF41)); }
   /* The board card's small stage menu keeps its compact size */
   .pcard .move select { padding-right: var(--sp-2); gap: var(--sp-1); }
-  .pcard .move select::picker-icon { font-size: var(--fs-xs); }
+  .pcard .move select::picker-icon { font-size: var(--arr-fs-sm, var(--fs-md)); }
 }
 
 /* The profile's "Reduced" motion turns everything off, the same as the device setting */
@@ -2323,7 +2321,7 @@ body:has(.shell.mini) .n1chat.n1chat-right { left: auto; right: max(16px, env(sa
 .side .org-full .org { height: var(--box); border-radius: 7px; } /* the icon boxes' corner */
 .side .org-full .org { background-clip: padding-box; } /* the border shows the menu behind it, as the icon boxes' do, so it reads the same colour in both themes */
 .side .org-full .org:not(.all) { border-color: var(--line-strong); }
-.side .org-full .org .arr { color: var(--accent); font-size: var(--fs-sm); transition: rotate var(--t-base) var(--ease); }
+.side .org-full .org .arr { color: var(--accent); font-size: var(--arr-fs-sm, var(--fs-md)); transition: rotate var(--t-base) var(--ease); }
 .side .org-full .org[aria-expanded="true"] .arr { rotate: -90deg; }
 .side .org-full .menu { animation: unroll var(--t-base) var(--ease); }
 :root.flick-on .side .org-full .org .arr { animation: soft-on 2.23s linear both; --lo-soft: .5; }
@@ -2398,8 +2396,9 @@ dialog:has(.ns-quote), dialog:has(#call-note) { max-width: min(560px, calc(100vw
 .ready-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-2); }
 .ready-steps > li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-2); align-items: start; }
 .ready-steps > li:first-child { display: block; }
-.ready-steps summary { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-2); cursor: pointer; list-style: none; }
+.ready-steps summary { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--sp-2); cursor: pointer; list-style: none; }
 .ready-steps summary::-webkit-details-marker { display: none; }
+.ready-steps summary::after { font-size: var(--arr-fs-sm, var(--fs-md)); color: var(--accent); }
 .readiness .tick { width: 20px; height: 20px; border-radius: 99px; border: 1.5px solid var(--line-strong); display: grid; place-items: center; color: var(--accent-ink); margin-top: 1px; }
 .readiness .tick.on { background: var(--accent); border-color: var(--accent); }
 .ready-parts { list-style: none; margin: var(--sp-2) 0 0 var(--sp-6); padding: 0; display: grid; gap: var(--sp-2); }

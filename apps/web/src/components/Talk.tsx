@@ -103,7 +103,7 @@ function Bubble({ m, me, operator, who, edit, mod }: { m: ChatMessage; me: strin
         ))}
       </small>
       {operator && m.history?.length ? (
-        <details className="talk-history">
+        <details className="talk-history n1-fold n1-more">
           <summary>earlier ({m.history.length})</summary>
           {m.history.map((h, i) => <p key={i}>{h.body}</p>)}
         </details>

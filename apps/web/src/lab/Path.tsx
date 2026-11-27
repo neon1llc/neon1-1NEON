@@ -113,7 +113,7 @@ function PathPage({ p, save, as, open }: { p: Project } & Pick<LabProps, "save" 
       {p.workflow.id === "neon" && (
         <div className="folds">
           {(SECTIONS[shown.id] ?? []).map(([name, rows], i) => (
-            <details key={shown.id + name} className="fold" open={shown.id === "needs" && now.id === "decide" && i === 2}>
+            <details key={shown.id + name} className="fold n1-fold" open={shown.id === "needs" && now.id === "decide" && i === 2}>
               <summary><span>{name}</span><small>{rows.length}</small></summary>
               <ul>{rows.map((r) => <li key={r}>{r}</li>)}</ul>
             </details>

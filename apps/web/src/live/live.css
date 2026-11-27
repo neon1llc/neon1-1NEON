@@ -42,7 +42,7 @@
 /* Back, the middle, and on */
 .live-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr); gap: var(--sp-2); align-items: center; }
 .live-step { display: inline-flex; align-items: center; gap: var(--sp-1); min-height: 34px; padding: 0 var(--sp-3); border-radius: 99px; border: 1px solid var(--live-line); background: transparent; color: var(--live-hi); font: inherit; cursor: pointer; max-width: 100%; }
-.live-step span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.live-step span:not(.arr) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .live-step.back { justify-self: start; }
 .live-step.fwd { justify-self: end; }
 .live-step:hover:not(:disabled) { background: rgba(108, 255, 168, .12); }
@@ -59,7 +59,8 @@
 /* The player's own state (paused, skipping ahead), under the chapter's name; absent while it plays */
 .live-note { grid-column: 1; color: var(--live-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: var(--sans, inherit); font-size: var(--fs-xs); }
 .live-caret { grid-column: 2; grid-row: 1 / span 2; align-self: center; color: #2e7d32; filter: drop-shadow(0 0 4px rgba(108, 255, 168, .5)); transition: transform .25s ease; }
-.live-now[aria-expanded="true"] .live-caret { transform: rotate(180deg); }
+.live-arr, .live-caret { font-size: var(--arr-fs-sm, var(--fs-md)); }
+.live-now[aria-expanded="true"] .live-caret { transform: rotate(-90deg); }
 
 /* Speed */
 .live-speed-wrap { position: relative; flex: none; }
@@ -73,7 +74,7 @@
 @media (max-width: 640px) {
   .live-inner { padding: 0 var(--sp-2); }
   .live-row { grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--sp-1); }
-  .live-step span { display: none; }
+  .live-step span:not(.arr) { display: none; }
   .live-step { padding: 0 var(--sp-2); }
   .live-speed span { display: none; }
   .live-speed { padding: 0 var(--sp-2); }
