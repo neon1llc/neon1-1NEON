@@ -52,7 +52,7 @@ export function toMarkdown(node: JSONContent, depth = 0): string {
 
 
 /** The formats a touch screen can't type as shortcuts, as one row of icon buttons */
-function Bar({ editor }: { editor: Editor }) {
+function Bar({ editor, aside }: { editor: Editor; aside?: ReactNode }) {
   const on = useEditorState({ editor, selector: ({ editor: e }) => ({
     h: e.isActive("heading", { level: 2 }), b: e.isActive("bold"), i: e.isActive("italic"),
     ul: e.isActive("bulletList"), ol: e.isActive("orderedList"), todo: e.isActive("taskList"), q: e.isActive("blockquote"),
@@ -71,13 +71,14 @@ function Bar({ editor }: { editor: Editor }) {
       {btn("Numbered list", on.ol, () => c().toggleOrderedList().run(), <ListOrdered size={16} aria-hidden="true" />)}
       {btn("Checklist", on.todo, () => c().toggleTaskList().run(), <ListChecks size={16} aria-hidden="true" />)}
       {btn("Quote", on.q, () => c().toggleBlockquote().run(), <Quote size={16} aria-hidden="true" />)}
+      {aside}
     </div>
   );
 }
 
 
 /** The editor proper, made once the document has loaded so it never starts from a blank copy */
-function Surface({ doc, canEdit, placeholder, onEditor }: { doc: Y.Doc; canEdit: boolean; placeholder: string; onEditor: (e: Editor) => void }) {
+function Surface({ doc, canEdit, placeholder, onEditor, aside }: { doc: Y.Doc; canEdit: boolean; placeholder: string; onEditor: (e: Editor) => void; aside?: ReactNode }) {
   const editor = useEditor({
     // Undo comes from the shared document's history, so StarterKit's own is off
     extensions: [
@@ -95,7 +96,8 @@ function Surface({ doc, canEdit, placeholder, onEditor }: { doc: Y.Doc; canEdit:
   if (!editor) return null;
   return (
     <>
-      {canEdit && <Bar editor={editor} />}
+      {/* Who else is here sits at the end of the format bar, or alone for a reader */}
+      {canEdit ? <Bar editor={editor} aside={aside} /> : aside && <div className="page-bar">{aside}</div>}
       <EditorContent editor={editor} />
     </>
   );
@@ -112,16 +114,16 @@ function Present({ here }: { here: Here[] }) {
 
 /**
  * A shared page at `path` (its API path). `head` sits above the text (a title, actions) and gets the
- * editor once there is one, for download and saving
+ * editor once there is one, for download and saving. Who else is here shows at the end of the format bar
  */
-export function PageEditor({ path, canEdit, placeholder = "Write anything: notes, ideas, what you need, links.", head }: { path: string; canEdit: boolean; placeholder?: string; head?: (x: { editor?: Editor; meta?: PageMeta; here: ReactNode }) => ReactNode }) {
+export function PageEditor({ path, canEdit, placeholder = "Write anything: notes, ideas, what you need, links.", head }: { path: string; canEdit: boolean; placeholder?: string; head?: (x: { editor?: Editor; meta?: PageMeta }) => ReactNode }) {
   const [editor, setEditor] = useState<Editor>();
   const { doc, ready, here, trouble, meta } = usePageSync(path, () => (editor && !editor.isDestroyed ? editor.getText({ blockSeparator: "\n\n" }) : ""));
   return (
     <div className="page-doc">
-      {head?.({ editor, meta, here: <Present here={here} /> })}
+      {head?.({ editor, meta })}
       {trouble && <p className="helper warn" role="status">{trouble}</p>}
-      {ready ? <Surface doc={doc} canEdit={canEdit} placeholder={placeholder} onEditor={setEditor} /> : !trouble && <p className="helper" role="status">Opening…</p>}
+      {ready ? <Surface doc={doc} canEdit={canEdit} placeholder={placeholder} onEditor={setEditor} aside={here.length ? <Present here={here} /> : undefined} /> : !trouble && <p className="helper" role="status">Opening…</p>}
     </div>
   );
 }

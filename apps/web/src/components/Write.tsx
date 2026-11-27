@@ -127,7 +127,7 @@ function OpenPage({ tid, at, canWrite, onBack }: { tid: string; at: Open; canWri
       key={path}
       path={path}
       canEdit={canWrite}
-      head={({ editor, meta, here }) => {
+      head={({ editor, meta }) => {
         const name = meta?.title ?? "";
         const md = async () => (editor ? markdown(editor.getJSON()) : "");
         const download = async () => {
@@ -148,7 +148,6 @@ function OpenPage({ tid, at, canWrite, onBack }: { tid: string; at: Open; canWri
             {canWrite && at.id !== "main"
               ? <input className="page-title" aria-label="Page name" value={title ?? name} maxLength={120} onChange={(e) => setTitle(e.target.value)} onBlur={(e) => void rename(e.target.value, name)} onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }} />
               : <h2 className="page-title">{name || "Page"}</h2>}
-            {here}
             <button type="button" className="icon-act" onClick={() => void download()} disabled={!editor} aria-label="Download as Markdown" title="Download as Markdown"><Download size={16} aria-hidden="true" /></button>
             {canWrite && <button type="button" className="icon-act" onClick={() => void save()} disabled={!editor} aria-label="Save a copy to Files" title="Save a copy to Files"><FileUp size={16} aria-hidden="true" /></button>}
             {canWrite && at.id !== "main" && <button type="button" className="icon-act del" onClick={() => void remove(name)} aria-label="Delete page" title="Delete page"><Trash2 size={16} aria-hidden="true" /></button>}

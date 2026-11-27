@@ -68,7 +68,7 @@ export function PageLens({ project: p }: { project: Project }) {
   const { org, canWrite } = useOrg();
   return (
     <section className="lens-page" aria-label="Project page">
-      <PageEditor path={`${pagesPath(org.id, p.id)}/main`} canEdit={canWrite && !p.archived} placeholder="Write anything about this project: what you need, notes from a call, ideas, links. Everyone on it sees your words as you type." head={({ here }) => here} />
+      <PageEditor path={`${pagesPath(org.id, p.id)}/main`} canEdit={canWrite && !p.archived} placeholder="Write anything about this project: what you need, notes from a call, ideas, links. Everyone on it sees your words as you type." />
     </section>
   );
 }

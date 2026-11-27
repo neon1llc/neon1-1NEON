@@ -2872,9 +2872,9 @@ dialog.write-sheet section .section-h { margin: var(--sp-4) 0 var(--sp-2); }
 .page-head { display: flex; align-items: center; gap: var(--sp-1); min-width: 0; }
 .page-head .page-title { flex: 1; min-width: 0; margin: 0; font-size: var(--fs-xl); font-weight: 600; border: 0; background: none; color: var(--text); padding: var(--sp-1); border-radius: var(--r-sm); }
 .page-head input.page-title:hover, .page-head input.page-title:focus { background: var(--accent-soft); outline: none; }
-.page-here { display: inline-flex; margin-right: var(--sp-1); }
+.page-here { display: inline-flex; align-items: center; margin-left: auto; padding-right: var(--sp-1); }
 .page-here > * + * { margin-left: calc(-1 * var(--sp-1)); }
-.page-bar { display: flex; flex-wrap: wrap; gap: var(--sp-0); position: sticky; top: calc(-1 * var(--sp-5)); z-index: 1; background: var(--panel); padding: var(--sp-1) 0; border-bottom: 1px solid var(--line); }
+.page-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-0); position: sticky; top: calc(-1 * var(--sp-5)); z-index: 1; background: var(--panel); padding: var(--sp-1) 0; border-bottom: 1px solid var(--line); }
 .page-bar .icon-act.on { color: var(--accent); background: var(--accent-soft); }
 .page-text { min-height: 40vh; outline: none; font-size: var(--fs-base); line-height: 1.6; color: var(--text); padding: var(--sp-2) 0 var(--sp-6); overflow-wrap: anywhere; }
 .page-text > * + * { margin-top: var(--sp-2); }
@@ -2902,7 +2902,6 @@ dialog.write-sheet section .section-h { margin: var(--sp-4) 0 var(--sp-2); }
 .lens-page { margin-top: var(--sp-3); max-width: 760px; padding: var(--sp-3) var(--sp-5) 0; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); }
 @media (max-width: 640px) { .lens-page { padding: var(--sp-2) var(--sp-3) 0; } }
 .lens-page .page-bar { top: var(--chrome-top, 0); }
-.lens-page .page-here { justify-self: end; }
 .lens-board { display: grid; grid-template-columns: repeat(4, minmax(220px, 1fr)); gap: var(--sp-3); margin-top: var(--sp-3); overflow-x: auto; padding-bottom: var(--sp-2); }
 @media (max-width: 760px) { .lens-board { grid-template-columns: repeat(4, 82%); scroll-snap-type: x mandatory; } .lens-col { scroll-snap-align: start; } }
 .lens-col { display: grid; gap: var(--sp-2); align-content: start; padding: var(--sp-3); border-radius: var(--r); background: var(--accent-soft); min-height: 120px; }
