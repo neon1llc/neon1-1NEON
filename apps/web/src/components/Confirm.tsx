@@ -109,7 +109,7 @@ export function ConfirmDialog({ me }: { me: Me }) {
         {f?.passkey && <button className="btn btn-primary" disabled={busy} onClick={() => void byPasskey()}>Use my passkey</button>}
         {f?.totp && (
           <form className="actions" onSubmit={(e) => { e.preventDefault(); void byCode(); }}>
-            <input aria-label="Code from your authenticator app" inputMode="numeric" autoComplete="one-time-code" placeholder="6-digit code" value={code} onChange={(e) => setCode(cleanCode(e.target.value))} style={{ maxWidth: 160 }} />
+            <input name="totp" aria-label="Code from your authenticator app" inputMode="numeric" autoComplete="one-time-code" placeholder="6-digit code" value={code} onChange={(e) => setCode(cleanCode(e.target.value))} style={{ maxWidth: 160 }} />
             <button className="btn btn-ghost" disabled={busy || code.length < 6}>Confirm code</button>
           </form>
         )}
@@ -117,7 +117,7 @@ export function ConfirmDialog({ me }: { me: Me }) {
           ? <button className="btn btn-ghost" disabled={busy} onClick={() => void sendText()}>Text me a code</button>
           : (
             <form className="actions" onSubmit={(e) => { e.preventDefault(); void byText(); }}>
-              <input aria-label="Code from the text" inputMode="numeric" autoComplete="one-time-code" placeholder="Code from the text" value={texted} onChange={(e) => setTexted(cleanCode(e.target.value))} style={{ maxWidth: 180 }} autoFocus />
+              <input name="sms-code" aria-label="Code from the text" inputMode="numeric" autoComplete="one-time-code" placeholder="Code from the text" value={texted} onChange={(e) => setTexted(cleanCode(e.target.value))} style={{ maxWidth: 180 }} autoFocus />
               <button className="btn btn-ghost" disabled={busy || texted.length < 6}>Confirm code</button>
               <button className="linkish small" type="button" disabled={busy} onClick={() => void sendText()}>Send another</button>
             </form>
@@ -188,7 +188,7 @@ export function TotpSetup({ open, onClose, onDone }: { open: boolean; onClose: (
       {/* A submit here stops at this form: React bubbles events through portals, so without the stop
           an enclosing form (the profile) would submit too */}
       <form className="actions" onSubmit={(e) => { e.preventDefault(); e.stopPropagation(); void confirm(); }}>
-        <input aria-label="6-digit code" inputMode="numeric" autoComplete="one-time-code" placeholder="6-digit code" value={code} onChange={(e) => setCode(cleanCode(e.target.value))} style={{ maxWidth: 160 }} aria-invalid={error ? true : undefined} aria-describedby={error ? "totp-error" : undefined} />
+        <input name="totp" aria-label="6-digit code" inputMode="numeric" autoComplete="one-time-code" placeholder="6-digit code" value={code} onChange={(e) => setCode(cleanCode(e.target.value))} style={{ maxWidth: 160 }} aria-invalid={error ? true : undefined} aria-describedby={error ? "totp-error" : undefined} />
         <button className="btn btn-primary" disabled={!setup || code.length < 6 || busy}>{busy ? "Checking…" : "Turn on"}</button>
         <button className="btn btn-ghost" type="button" onClick={onClose}>Cancel</button>
       </form>

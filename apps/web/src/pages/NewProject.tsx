@@ -210,7 +210,7 @@ export function NewProject() {
         {step === 1 && (
           <>
             <p className="small muted" style={{ margin: 0 }}><sup className="req" aria-hidden="true">*</sup> Required. The rest can wait, and the project will remind you.</p>
-            <div><label htmlFor="n">Name<sup className="req" aria-hidden="true">*</sup></label><input id="n" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} required autoFocus placeholder={quick ? "e.g. printer won't print from the front desk" : "e.g. move the file server to the cloud"} /></div>
+            <div><label htmlFor="n">Name<sup className="req" aria-hidden="true">*</sup></label><input id="n" autoComplete="off" value={name} onChange={(e) => setName(e.target.value)} maxLength={120} required autoFocus placeholder={quick ? "e.g. printer won't print from the front desk" : "e.g. move the file server to the cloud"} /></div>
             <div><label htmlFor="s">{quick ? "What's wrong, in a sentence or two?" : bench ? "What's it about?" : "In one or two sentences, what is this?"}</label><textarea id="s" value={projectSummary} onChange={(e) => setSummary(e.target.value)} maxLength={500} rows={2} placeholder={quick ? "e.g. since Tuesday's update, jobs sit in the queue and nothing prints" : "e.g. patients email forms to one inbox, and staff retype them into the record"} /></div>
             {/* A quick fix is done when it works, and has no example to collect: those two are for projects */}
             {!light && <div><label htmlFor="o">What will be true when it's done?</label><textarea id="o" value={outcome} onChange={(e) => setOutcome(e.target.value)} maxLength={500} rows={2} placeholder="e.g. patients upload once, and the front desk sees what's missing at a glance" /></div>}

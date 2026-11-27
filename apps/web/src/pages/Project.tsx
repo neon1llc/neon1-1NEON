@@ -487,7 +487,7 @@ function Overview({ project: p, items, docs }: { project: Project; items: Item[]
         {editing ? (
           <form className="form" onSubmit={(e) => { e.preventDefault(); if (draft.name.trim()) void save(editBase, { name: draft.name.trim(), summary: draft.summary, outcome: draft.outcome, targetDate: draft.targetDate || null }); }}>
             {newerWhileEditing && <p className="notice newer" role="status">{names.get(p.updatedBy) ?? "Someone"} saved a newer version while you were editing. Your text is kept; Save asks which version to keep.</p>}
-            <div><label htmlFor="pn">Name<sup className="req" aria-hidden="true">*</sup></label><input id="pn" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} maxLength={120} required /></div>
+            <div><label htmlFor="pn">Name<sup className="req" aria-hidden="true">*</sup></label><input id="pn" autoComplete="off" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} maxLength={120} required /></div>
             <div><label htmlFor="ps">In one or two sentences, what is this?</label><textarea id="ps" value={draft.summary} onChange={(e) => setDraft({ ...draft, summary: e.target.value })} maxLength={500} rows={2} /></div>
             <div><label htmlFor="po">What will be true when it's done?</label><textarea id="po" value={draft.outcome} onChange={(e) => setDraft({ ...draft, outcome: e.target.value })} maxLength={500} rows={2} /></div>
             <div><label htmlFor="pd">Target date</label><input id="pd" type="date" value={draft.targetDate} onChange={(e) => setDraft({ ...draft, targetDate: e.target.value })} style={{ maxWidth: 220 }} /></div>

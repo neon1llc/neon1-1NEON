@@ -217,7 +217,7 @@ export function SignUp({ info: known, email: start, remember, onStep, onBack, lo
       <p className="fine face-hint" id="su-face-hint"><span>Helps me see who I'd be working with. <span className="whole">You can add these later.</span></span></p>
       {/* Off-screen, not display:none, since some bots skip hidden fields; people and screen readers never reach it */}
       <div className="hp" aria-hidden="true">
-        <input name="website" type="text" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
+        <input name="website" type="text" tabIndex={-1} autoComplete="off" data-1p-ignore data-lpignore="true" data-bwignore value={website} onChange={(e) => setWebsite(e.target.value)} />
       </div>
       {/* The portal's terms, opened in a new tab so what's typed here stays */}
       <label className="remember agree su-terms">
