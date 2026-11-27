@@ -20,7 +20,7 @@ export const qk = {
 
 /** Every project in the organization (archived included; pages filter) */
 export function useProjects(tid: string) {
-  return useQuery({ queryKey: qk.projects(tid), queryFn: () => read<Project[]>(`/t/${tid}/projects`, "array") });
+  return useQuery({ queryKey: qk.projects(tid), queryFn: () => read<Project[]>(`/t/${tid}/projects`, "array"), enabled: Boolean(tid) });
 }
 
 

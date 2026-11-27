@@ -5,6 +5,7 @@
 ## Unreleased
 
 ### Added
+- MATRIS, Inc., a made-up returning client on dev that holds every state the portal knows: projects at the start, middle, and end of each way of working, overdue decisions, disputed invoices, files in every state, chat flags, and a suspended account. `npx tsx src/scripts/matris.ts --yes` puts it on dev or resets it; docs/matris.md maps each feature to where it lives.
 - Suspensions. super can suspend an organization or one person's account, with an optional message for their banner. A suspended person can still sign in, read everything, edit their profile, and (unless suspended for abuse) write in the chat; every other change is refused. Nothing is deleted.
 - Ask to recommission, on the banner and on People: anyone suspended can ask for their own account, and an admin can also ask for a colleague's or the whole organization. A reason is required, and super sees it in Potentials, with Recommission or Set aside.
 - An organization nobody opens for 60 days is suspended automatically, after emails to its admins at 30, 45, and 53 days. Signing in counts. super can keep an organization off this clock. Free accounts keep their own clock.
