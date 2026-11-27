@@ -34,7 +34,11 @@ export async function tokenFor(secret: string, tenantId: string, projectId: stri
 /** The Reply-To for one person's copy of a project message, recording what its token names */
 export async function replyAddress(repo: Repo, r: Replies, tenantId: string, projectId: string, userId: string) {
   const token = await tokenFor(r.secret, tenantId, projectId, userId);
-  await repo.table.write([{ put: { ...keys.replyToken(token), type: "replyToken", tenantId, projectId, userId }, guard: { always: true } }]);
+  await repo.table.write([
+    { put: { ...keys.replyToken(token), type: "replyToken", tenantId, projectId, userId }, guard: { always: true } },
+    // The organization's own list of its tokens, so a purge can find the global rows
+    { put: { ...keys.replyPointer(tenantId, token) }, guard: { always: true } },
+  ]);
   return `p.${token}.${await sign(r.secret, "p", token)}@${r.domain}`;
 }
 

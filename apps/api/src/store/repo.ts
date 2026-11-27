@@ -36,6 +36,7 @@ export const keys = {
   smsInbound: (id: string) => ({ PK: "SMSINBOUND", SK: id }),
   // A reply-by-email token: which person, organization, and project an emailed reply posts as (lib/reply.ts)
   replyToken: (token: string) => ({ PK: `REPLY#${token}`, SK: "META" }),
+  replyPointer: (tid: string, token: string) => ({ PK: `T#${tid}`, SK: `REPLY#${token}` }),
   // The person's recent code texts (time, number, purpose), kept apart from the codes themselves so
   // using or replacing a code never resets the hourly limit; expires an hour after the latest send
   smsSent: (uid: string) => ({ PK: `USER#${uid}`, SK: "SMSSENT" }),

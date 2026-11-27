@@ -80,8 +80,8 @@ interface Inventory {
   slug: string;
   // Every partition of the organization's rows
   pks: string[];
-  // File sweep rows share a global partition, so keep their exact keys
-  watchRows?: { PK: string; SK: string }[];
+  // Rows in global partitions (file sweeps, reply-by-email tokens) are found by exact key
+  globalRows?: { PK: string; SK: string }[];
   // Every stored file's key
   files: string[];
   // People who belonged nowhere else when it was taken
@@ -132,12 +132,20 @@ export async function startPurge(k: PurgeKit, tid: string, opts: { quiet?: boole
 
 
 /** Every partition, file, and leaving person of an organization, as it is now */
+// The organization's rows outside its own partitions
+async function globalRowsOf(repo: PurgeKit["repo"], tid: string): Promise<{ PK: string; SK: string }[]> {
+  const watch = (await repo.table.query("DOCWATCH", `${tid}#`)).map((r) => ({ PK: String(r.PK), SK: String(r.SK) }));
+  const replies = (await repo.table.query(`T#${tid}`, "REPLY#")).map((r) => keys.replyToken(String(r.SK).slice("REPLY#".length)));
+  return [...watch, ...replies];
+}
+
+
 async function take(k: PurgeKit, t: Tenant): Promise<Inventory> {
   const { repo, cfg } = k;
   const tid = t.id;
   const projects = await repo.listProjectsWithTrash(tid);
-  const pks = [`T#${tid}`, `T#${tid}#AUDIT`, `T#${tid}#P#_`, ...projects.map((p) => `T#${tid}#P#${p.id}`), keys.chat(tid).PK];
-  const watchRows = (await repo.table.query("DOCWATCH", `${tid}#`)).map((r) => ({ PK: String(r.PK), SK: String(r.SK) }));
+  const pks = [`T#${tid}`, `T#${tid}#AUDIT`, `T#${tid}#P#_`, `T#${tid}#TRIN`, ...projects.map((p) => `T#${tid}#P#${p.id}`), keys.chat(tid).PK];
+  const globalRows = await globalRowsOf(repo, tid);
   const files: string[] = [];
   for (const pid of [undefined, ...projects.map((p) => p.id)]) files.push(...(await repo.listDocs(tid, pid)).map((x) => x.key));
   const accounts: Inventory["accounts"] = [];
@@ -145,7 +153,7 @@ async function take(k: PurgeKit, t: Tenant): Promise<Inventory> {
     if (cfg.operatorEmails.includes(m.email.toLowerCase())) continue;
     if (!(await repo.membershipsOf(m.userId)).some((x) => x.tenantId !== tid)) accounts.push({ uid: m.userId, email: m.email });
   }
-  return { slug: t.slug, pks, watchRows, files, accounts };
+  return { slug: t.slug, pks, globalRows, files, accounts };
 }
 
 
@@ -204,13 +212,13 @@ export async function finishPurge(k: PurgeKit, tid: string, at = new Date()): Pr
     const now = await take(k, t);
     const pks = [...new Set([...inv.pks, ...now.pks])];
     const files = [...new Set([...inv.files, ...now.files])];
-    const watchRows = [...new Map([...(inv.watchRows ?? []), ...(now.watchRows ?? [])].map((r) => [`${r.PK}\u0000${r.SK}`, r])).values()];
-    if (pks.length > inv.pks.length || files.length > inv.files.length || watchRows.length > (inv.watchRows ?? []).length) {
-      job = await saveJob(k, job, { inventory: { ...inv, pks, watchRows, files } });
+    const globalRows = [...new Map([...(inv.globalRows ?? []), ...(now.globalRows ?? [])].map((r) => [`${r.PK}\u0000${r.SK}`, r])).values()];
+    if (pks.length > inv.pks.length || files.length > inv.files.length || globalRows.length > (inv.globalRows ?? []).length) {
+      job = await saveJob(k, job, { inventory: { ...inv, pks, globalRows, files } });
     }
   }
   const { pks, files, accounts, slug } = job.inventory!;
-  const watchRows = job.inventory!.watchRows ?? [];
+  const globalRows = job.inventory!.globalRows ?? [];
   const failed: string[] = [];
 
   // Files first, so no stored bytes outlive their records
@@ -241,7 +249,7 @@ export async function finishPurge(k: PurgeKit, tid: string, at = new Date()): Pr
     const out: { PK: string; SK: string }[] = [];
     for (const pk of pks) out.push(...(await repo.table.query(pk)).map((r) => ({ PK: String(r.PK), SK: String(r.SK) })));
     for (const p of leaving) out.push(...(await repo.table.query(`USER#${p.uid}`)).map((r) => ({ PK: String(r.PK), SK: String(r.SK) })));
-    for (const r of watchRows) if (await repo.table.get(r.PK, r.SK)) out.push(r);
+    for (const r of globalRows) if (await repo.table.get(r.PK, r.SK)) out.push(r);
     return out.filter((r) => !(r.PK === `T#${tid}` && r.SK === "META"));
   };
   const extra = async () => {
@@ -255,6 +263,7 @@ export async function finishPurge(k: PurgeKit, tid: string, at = new Date()): Pr
 
   // Check every step before the receipt: no rows left, no files left
   const left = [...(await rowsOf()), ...(await extra())];
+  // rowsOf checked the inventoried global rows; a sweep row queued since then counts too
   left.push(...(await repo.table.query("DOCWATCH", `${tid}#`)).map((r) => ({ PK: String(r.PK), SK: String(r.SK) })));
   for (const key of files) {
     const seen = await d.storage.inspect(key);
