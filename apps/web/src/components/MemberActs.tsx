@@ -14,6 +14,7 @@ import { ago, Avatar, Dialog } from "./ui.tsx";
 export type MemberAct = "deactivate" | "reactivate" | "suspend" | "recommission";
 
 const ACCESS_WORD: Record<AccessLevel, string> = { viewer: "Viewer", editor: "Editor", admin: "Admin" };
+const ACCESS_HINT: Record<AccessLevel, string> = { viewer: "Reads, comments, and approves when named decision maker.", editor: "Also adds and changes work.", admin: "Also manages people and settings." };
 
 
 /** One dialog for the four actions; `go` does it and resolves once saved, or throws (the toast says why) */
@@ -75,10 +76,11 @@ export function MemberActDialog({ kind, m, org, admins, onClose, go }: {
         <label className="field">
           <span>Access</span>
           <select value={access} onChange={(e) => setAccess(e.target.value as AccessLevel)}>
-            <option value="viewer">Viewer: reads, comments, approves when named</option>
-            <option value="editor">Editor: also adds and changes work</option>
-            <option value="admin">Admin: also manages people and settings</option>
+            <option value="viewer">Viewer</option>
+            <option value="editor">Editor</option>
+            <option value="admin">Admin</option>
           </select>
+          <small className="muted">{ACCESS_HINT[access]}</small>
         </label>
       )}
 

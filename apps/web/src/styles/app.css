@@ -609,6 +609,10 @@ dialog:not(.palette, .sheet, .item-panel) .dlg > :is(h2, .card-top):first-child 
 .act-facts { margin: 0; padding-left: var(--sp-5); display: grid; gap: var(--sp-1); font-size: var(--fs-sm); }
 .act-stop { margin: 0; padding: var(--sp-2) var(--sp-3); border-left: 3px solid var(--red); background: color-mix(in srgb, var(--red) 8%, transparent); font-size: var(--fs-sm); }
 .act-dlg .actions { margin-top: var(--sp-2); }
+/* A dialog never grows past the window: a select takes the field's width, and its long choices are cut in the closed box, not the dialog */
+.act-dlg .dlg > * { min-width: 0; }
+.act-dlg .field { display: grid; gap: var(--sp-1); }
+.act-dlg select { width: 100%; min-width: 0; max-width: 100%; text-overflow: ellipsis; }
 table.people .acts { margin-left: var(--sp-2); vertical-align: middle; }
 .eyebrow { font: var(--fs-xs) var(--mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin: 0 0 var(--sp-1); }
 .howto { margin: var(--sp-3) 0 var(--sp-4); padding-left: var(--sp-4); display: grid; gap: var(--sp-2); }
@@ -1499,6 +1503,7 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 .cal .ag-group li { grid-template-columns: 76px minmax(0, 1fr) auto; }
 @media (max-width: 520px) { .cal .ag-group li { grid-template-columns: 64px minmax(0, 1fr); } }
 /* A long name stays on one line and the list beside its dates scrolls sideways, with the dates held in place */
+.cal .agenda > *, .cal .ag-group, .cal .ag-group .fold-body { min-width: 0; } /* a grid item would otherwise widen to its longest line and push the card sideways */
 .cal .ag-group ul { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; }
 .cal .ag-group li { min-width: 100%; width: max-content; grid-template-columns: 64px max-content auto; }
 .cal .ag-group li > :is(a, .t) { white-space: nowrap; }
@@ -2827,7 +2832,8 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 /* A card holding more than its size scrolls inside, up and down and, for a long line, sideways. Its title stays
    at the top while the rest moves under it. At either end the page takes over the same swipe (overscroll
    chains), so a card never traps the page; a fade at the bottom edge shows there's more until the end is reached */
-.tile-body > :is(section, nav, .card):last-of-type { overflow: auto; overscroll-behavior: auto; scrollbar-width: thin; }
+.tile-body > :is(section, nav, .card):last-of-type { overflow-x: hidden; overflow-y: auto; overscroll-behavior: auto; scrollbar-width: thin; }
+/* Sideways scrolling belongs to a long line's own list (Coming up), never to the whole card, so a card's edges and dates stay put */
 .tile-body > .card > :is(.card-top, .card-head, .section-h, .card-h, .cal-head):first-child { position: sticky; top: calc(-1 * var(--pad-card, var(--sp-4))); left: 0; z-index: 2; background: var(--panel); }
 @supports (animation-timeline: scroll()) {
   .tile-body > .card:last-of-type { animation: more-below linear both; animation-timeline: scroll(self block); }
@@ -3034,6 +3040,8 @@ dialog.write-sheet section .section-h { margin: var(--sp-4) 0 var(--sp-2); }
 .lens-updates .say { display: grid; gap: var(--sp-2); margin: 0 0 var(--sp-5); }
 .lens-updates .say textarea { min-height: 88px; resize: vertical; }
 .lens-updates .say .btn { justify-self: end; }
+/* On a phone Neo's launcher holds the bottom right corner, so Send sits at the start of its row */
+@media (max-width: 640px) { .lens-updates .say .btn { justify-self: start; } }
 .stream { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-4); }
 .stream > li { display: grid; grid-template-columns: auto minmax(0, 1fr) var(--sp-6); gap: var(--sp-3); align-items: start; }
 .stream .s-head { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1); }

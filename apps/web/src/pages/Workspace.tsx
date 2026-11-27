@@ -232,11 +232,22 @@ export function WorkspacePage() {
   const [fitH, setFitH] = useState<Record<string, number>>({});
   const need = (id: string) => fitH[`${bp}.${id}`];
   const tallest = (x: Card) => Math.max(...x.sizes[bp].map((s) => s.h));
+  // No card is taller than the section area (the window less the top bar and the phone tab bar), so a card's
+  // own scroll always fits on screen beside the page's. A row is 24px plus the grid gap (.hg in app.css)
+  const [winH, setWinH] = useState(() => window.visualViewport?.height ?? window.innerHeight);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    const on = () => setWinH(vv?.height ?? window.innerHeight);
+    (vv ?? window).addEventListener("resize", on);
+    return () => (vv ?? window).removeEventListener("resize", on);
+  }, []);
+  const topH = bp === "wide" ? 64 : 60, gapPx = bp === "wide" ? 16 : 12;
+  const capRows = Math.max(6, Math.floor((winH - topH * (bp === "wide" ? 1 : 2) - 32 + gapPx) / (24 + gapPx)));
   const cells = compact(reconcile(layout[bp], visible.map((x) => {
     const s = x.sizes[bp][0]!;
     const h = need(x.id);
     return { id: x.id, w: s.w, h: h === undefined ? s.h : Math.min(h, tallest(x)) };
-  }), COLS[bp]));
+  }), COLS[bp]).map((c) => ({ ...c, h: Math.min(c.h, capRows) })));
 
   const setShown = (id: string, show: boolean) => {
     const x = offered.find((y) => y.id === id);
