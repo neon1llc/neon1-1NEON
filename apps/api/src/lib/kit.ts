@@ -38,7 +38,7 @@ export interface Deps {
   // Optional: Neo for signed-in people (Bedrock in production). Without it, /neo answers 503
   neo?: { model: NeoModel; modelId: string; budget?: NeoBudget };
   // Optional: Trin, the project assistant (Bedrock in production), with the month's spend cap. Without it, /trin answers 503
-  trin?: { model: TrinModel; monthlyUsd: number };
+  trin?: { model: TrinModel; modelId: string; monthlyUsd: number };
   // Optional: Stripe for card and bank payments. Without it, invoices are paid by check, Zelle, or wire
   payments?: Payments;
   // Optional: locked, write-once copies of signed and issued records (S3 Object Lock in production)

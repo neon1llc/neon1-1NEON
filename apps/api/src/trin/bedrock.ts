@@ -1,5 +1,5 @@
-// apps/api/src/trin/bedrock.ts - Trin's models in production: an Amazon Nova model through Bedrock's Converse
-// API to answer, and Titan Text Embeddings V2 (256 numbers per piece) to search. Signed with the function's
+// apps/api/src/trin/bedrock.ts - Trin's models in production: a chat model (Qwen3 Next 80B on dev) through
+// Bedrock's Converse API to answer, and Titan Text Embeddings V2 (256 numbers per piece) to search. Signed with the function's
 // own role, which may call only these two (infra/modules/api, and the neon1-boundary-1neon ceiling). Imported
 // only by the Lambda handler.
 

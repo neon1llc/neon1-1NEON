@@ -36,7 +36,7 @@ beforeEach(async () => {
   s = await seed(repo, OP);
   seen = [];
   embedded = 0;
-  app = createApp({ cfg: { env: "local", publicUrl: "https://example.invalid", operatorEmails: [OP], devAuth: true }, repo, directory: new MemoryDirectory(), mailer: new MemoryMailer(), texter: new MemoryTexter(), storage: new MemoryStorage(), trin: { model: fake, monthlyUsd: 5 } });
+  app = createApp({ cfg: { env: "local", publicUrl: "https://example.invalid", operatorEmails: [OP], devAuth: true }, repo, directory: new MemoryDirectory(), mailer: new MemoryMailer(), texter: new MemoryTexter(), storage: new MemoryStorage(), trin: { model: fake, modelId: "qwen.qwen3-next-80b-a3b", monthlyUsd: 5 } });
 });
 
 /** Call the API as someone */

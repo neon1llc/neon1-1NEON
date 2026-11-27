@@ -10,8 +10,9 @@ import type { App, Kit } from "../lib/kit.ts";
 import { cite, gather, material, nudges, RULES, search } from "../trin/trin.ts";
 
 
-// Prices in dollars per million tokens: Nova Lite in and out, and Titan V2 embeddings (about four characters a token)
-const PRICE = { input: 0.06, output: 0.24, embed: 0.02 };
+// Prices in dollars per million tokens (AWS Price List, us-east-1, 2026-11-26): the answering model in and out, and
+// Titan V2 embeddings (about four characters a token). Qwen3 Next 80B unless the model is Nova Lite
+const priceFor = (modelId: string) => (/nova-lite/.test(modelId) ? { input: 0.06, output: 0.24, embed: 0.02 } : { input: 0.14, output: 1.2, embed: 0.02 });
 const DAILY_PER_PERSON = 40;
 
 
@@ -41,7 +42,8 @@ export function trinRoutes(app: App, k: Kit) {
       const question = `${material(top, nudges(projects, items, today), today)}\n\n${inView ? `Project in view: ${inView.key} ${inView.name}\n\n` : ""}Question: ${ask.question}`;
       const r = await d.trin.model.answer(RULES, [...ask.history.map((h) => ({ role: h.role, text: h.text })), { role: "user" as const, text: question }]);
       // Millionths of a dollar: tokens times dollars per million tokens
-      const micros = Math.ceil(r.inputTokens * PRICE.input + r.outputTokens * PRICE.output + (embedChars / 4) * PRICE.embed);
+      const price = priceFor(d.trin.modelId);
+      const micros = Math.ceil(r.inputTokens * price.input + r.outputTokens * price.output + (embedChars / 4) * price.embed);
       await repo.table.increment("COUNTER", `TRIN#${month}`, micros);
       // Each [n] becomes a link to its piece; the cited pieces come back as the sources
       const { answer, sources } = cite(r.text.trim(), top);

@@ -138,7 +138,7 @@ const deps: Deps = {
   humanCheck,
   // The form checks that look outside: mail domains, websites, and places
   vetting: new RealVetting(),
-  trin: cfg.trinModel ? { model: bedrockTrin(cfg.trinModel, cfg.trinEmbed ?? "amazon.titan-embed-text-v2:0"), monthlyUsd: cfg.trinMonthlyUsd ?? 5 } : undefined,
+  trin: cfg.trinModel ? { model: bedrockTrin(cfg.trinModel, cfg.trinEmbed ?? "amazon.titan-embed-text-v2:0"), modelId: cfg.trinModel, monthlyUsd: cfg.trinMonthlyUsd ?? 5 } : undefined,
   neo: cfg.neoModel ? { model: bedrockNeo(), modelId: cfg.neoModel, budget: { ...DEFAULT_BUDGET, price: priceFor(cfg.neoModel), monthlyUsd: cfg.neoMonthlyUsd ?? DEFAULT_BUDGET.monthlyUsd } } : undefined,
 };
 const app = createApp(deps);

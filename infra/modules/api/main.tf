@@ -55,7 +55,7 @@ variable "neo_monthly_usd" {
   type    = number
   default = 8
 }
-# Trin, the project assistant: its answering model (an inference profile ID, such as us.amazon.nova-lite-v1:0) and
+# Trin, the project assistant: its answering model (a model or inference profile ID, such as qwen.qwen3-next-80b-a3b) and
 # the embedding model it searches an organization's own work with. Empty keeps Trin off
 variable "trin_model" {
   type    = string
