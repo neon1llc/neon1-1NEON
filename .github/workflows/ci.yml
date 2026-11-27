@@ -133,7 +133,8 @@ jobs:
     steps:
       # The shards passed, or were skipped on a proof from an earlier run of the same inputs
       - run: |
-          test "${{ needs.walkthrough-shard.result }}" = success || { test "${{ needs.walkthrough-shard.result }}" = skipped && test "${{ needs.proof.outputs.skip }}" = true; }
+          # bash -e ignores a failed || list, so exit explicitly or a failed shard still writes a proof
+          { test "${{ needs.walkthrough-shard.result }}" = success || { test "${{ needs.walkthrough-shard.result }}" = skipped && test "${{ needs.proof.outputs.skip }}" = true; }; } || exit 1
           printf '{"fingerprint":"%s","site":"%s"}\n' "${{ needs.proof.outputs.fingerprint }}" "${{ needs.proof.outputs.site }}" > walkthrough-proof.json
       # What a later run reads as proof; written only after the line above passed
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
