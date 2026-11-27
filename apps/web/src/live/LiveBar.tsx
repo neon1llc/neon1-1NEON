@@ -13,6 +13,7 @@ import type { Player, View } from "./player.ts";
 import { SHORTS } from "./shorts.ts";
 import { FULL_LENGTH, PROJECT } from "./where.ts";
 import "./live.css";
+import { Arr } from "../components/ui.tsx";
 
 
 // Typing in a field, or a focused control that already answers Space, keeps its own keys
@@ -132,7 +133,7 @@ export function LiveBar({ player }: { player: Player }) {
         <div className="live-row">
           {/* Back and on name the neighbouring chapters; at either end the button steps aside */}
           <button className={`live-step back${prev ? "" : " none"}`} onClick={() => jump(v.index - 1)} disabled={!prev} aria-label={prev ? `Back to ${prev.title}` : undefined}>
-            <span className="arr arr-mixed live-arr" aria-hidden="true" /><span>{prev?.title}</span>
+            <Arr mixed className="live-arr" /><span>{prev?.title}</span>
           </button>
           <div className="live-mid">
             {/* Before it starts the one button says Start, as the card below it does */}
@@ -160,11 +161,11 @@ export function LiveBar({ player }: { player: Player }) {
             <button className="live-now" onClick={openList} aria-expanded={list} aria-controls="live-list">
               <span className="live-title">{v.idle || (v.skipping && player.focused) ? show.title : v.done ? `${show.title} · the end` : `${v.index + 1}/${player.sections.length} · ${v.title}`}</span>
               {v.note && !v.idle && !v.done && !v.skipping && <span className="live-note">{v.note}</span>}
-              <span className="arr arr-mixed live-caret" aria-hidden="true" />
+              <Arr mixed className="live-caret" />
             </button>
           </div>
           <button className={`live-step fwd${next ? "" : " none"}`} onClick={() => jump(v.index + 1)} disabled={!next} aria-label={next ? `On to ${next.title}` : undefined}>
-            <span>{next?.title}</span><span className="arr arr-mixed arr-next live-arr" aria-hidden="true" />
+            <span>{next?.title}</span><Arr dir="right" mixed className="live-arr" />
           </button>
         </div>
       </div>
@@ -274,9 +275,9 @@ export function LiveBar({ player }: { player: Player }) {
         </ol>
         {(short || SHORTS.length > 0) && <p className="live-list-h">{short ? "Other walkthroughs" : "Short walkthroughs"}</p>}
         <ul>
-          {short && <li><a href="/1NEON/live?play=full"><span className="n"><span className="arr arr-mixed arr-next" aria-hidden="true" /></span><span>The full story<small>A whole project, from a first sign-in to ongoing care · {FULL_LENGTH}</small></span></a></li>}
+          {short && <li><a href="/1NEON/live?play=full"><span className="n"><Arr dir="right" mixed /></span><span>The full story<small>A whole project, from a first sign-in to ongoing care · {FULL_LENGTH}</small></span></a></li>}
           {SHORTS.filter((s) => s.id !== show.id).map((s) => (
-            <li key={s.id}><a href={`/1NEON/live?play=${s.id}`}><span className="n"><span className="arr arr-mixed arr-next" aria-hidden="true" /></span><span>{s.title}<small>{s.blurb}{s.length ? ` · ${s.length}` : ""}</small></span></a></li>
+            <li key={s.id}><a href={`/1NEON/live?play=${s.id}`}><span className="n"><Arr dir="right" mixed /></span><span>{s.title}<small>{s.blurb}{s.length ? ` · ${s.length}` : ""}</small></span></a></li>
           ))}
         </ul>
       </div>

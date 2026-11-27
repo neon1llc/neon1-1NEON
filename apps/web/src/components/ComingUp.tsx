@@ -19,7 +19,7 @@ import { read } from "../lib/reads.ts";
 import type { CalEntry, CalendarMonth } from "../lib/types.ts";
 import { gate } from "./Reads.tsx";
 import { useOrg } from "./Shell.tsx";
-import { layerSlug, useAsk, useToast } from "./ui.tsx";
+import { Arr, layerSlug, useAsk, useToast } from "./ui.tsx";
 
 
 // Short names for the kinds that show up here: work, targets, and the organization's own events
@@ -106,12 +106,12 @@ export function ComingUp({ tid, base }: { tid: string; base: string }) {
         <h2 className="section-h" aria-live="polite">{monthName(shown)}</h2>
         <div className="cal-nav">
           {!thisMonth && <button type="button" className="btn btn-ghost btn-sm" onClick={() => go(today.slice(0, 7))}>Today</button>}
-          <button type="button" className="icon-btn" onClick={() => go(shiftMonth(shown, -1))} aria-label={`Previous month, ${monthName(shiftMonth(shown, -1))}`} title="Previous month"><span className="arr arr-mixed" aria-hidden="true" /></button>
+          <button type="button" className="icon-btn" onClick={() => go(shiftMonth(shown, -1))} aria-label={`Previous month, ${monthName(shiftMonth(shown, -1))}`} title="Previous month"><Arr mixed /></button>
           <select className="cal-jump" value={shown} onChange={(e) => go(e.target.value)} aria-label="Go to a month">
             <option key="current-month-default" value={currentMonth}>{monthName(currentMonth, "short")}</option>
             {jumps.map((m) => <option key={m} value={m}>{monthName(m, "short")}</option>)}
           </select>
-          <button type="button" className="icon-btn" onClick={() => go(shiftMonth(shown, 1))} aria-label={`Next month, ${monthName(shiftMonth(shown, 1))}`} title="Next month"><span className="arr arr-mixed arr-next" aria-hidden="true" /></button>
+          <button type="button" className="icon-btn" onClick={() => go(shiftMonth(shown, 1))} aria-label={`Next month, ${monthName(shiftMonth(shown, 1))}`} title="Next month"><Arr dir="right" mixed /></button>
         </div>
       </div>
       {overdue.length > 0 && <p className="cal-late"><span className="tag warn">{overdue.length} overdue</span></p>}
@@ -190,7 +190,7 @@ function nextIn(r: CalEvent, today: string) {
 function Fold({ name, count, open, late, children }: { name: string; count: number; open?: boolean; late?: boolean; children: ReactNode }) {
   return (
     <details className={`ag-group fold${late ? " late" : ""}`} open={open}>
-      <summary><h3>{name} <small>{count}</small></h3><span className="arr arr-mixed" aria-hidden="true" /></summary>
+      <summary><h3>{name} <small>{count}</small></h3><Arr mixed /></summary>
       <div className="fold-body">{children}</div>
     </details>
   );

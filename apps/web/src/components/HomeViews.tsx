@@ -10,6 +10,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useMenuFit, useTapOutside } from "../lib/menufit.ts";
 import { CountPills, type Counts } from "./HomeGrid.tsx";
 import { hiddenHeld } from "../lib/homeCounts.ts";
+import { Arr } from "./ui.tsx";
 
 
 export type Group = "todo" | "movement" | "visuals" | "shortcuts";
@@ -65,7 +66,7 @@ export function HomeViews({ rows, ready = true, arranging, onToggle, onArrange, 
   return (
     <div className="vm" ref={box} data-open={open || undefined}>
       <button ref={btn} type="button" className="vm-btn" aria-expanded={open} aria-controls={panelId} onClick={() => setOpen(!open)}>
-        <span className="arr arr-mixed" aria-hidden="true" />
+        <Arr mixed />
         <span>View</span>
         {/* Totals wait until every count has loaded, so they never show a wrong number first */}
         {ready && <Totals rows={rows} />}

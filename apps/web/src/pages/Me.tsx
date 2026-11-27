@@ -333,8 +333,7 @@ export function MePage() {
       </form>
         {/* Each notification kind keeps its email and text choices together */}
         <div className="card small notify" id="notifications">
-          <b>Notifications</b>
-          <span className="muted">Everything shows under the bell. Choose what also reaches you by email or text. Important ones email you by default.</span>
+          <header className="card-top"><h2 className="card-h">Notifications</h2><p>Everything shows under the bell. Choose what also reaches you by email or text. Important ones email you by default.</p></header>
           <div className="notify-table-scroll" role="region" aria-label="Notification delivery preferences" tabIndex={0}>
             <table className="notify-table">
               <thead><tr><th scope="col">When</th><th scope="col">Email</th><th scope="col">Text</th></tr></thead>
@@ -387,8 +386,7 @@ export function MePage() {
       {/* Everything below takes effect right away, so it sits outside the profile form */}
         {/* Two-step verification: any one of these confirms it's you before admin actions */}
         <div className="card small security" data-tour="passkey" id="security">
-          <b>Two-step verification</b>
-          <span className="muted">Any one works. Add a second as a backup.</span>
+          <header className="card-top"><h2 className="card-h">Two-step verification</h2><p>Any one works. Add a second as a backup.</p></header>
           <ul className="factors">
             <li>
               <span><b>Passkey</b><br /><span className="muted">Your face, fingerprint, or device PIN. Works on iPhone, Android, Mac, and Windows.</span></span>
@@ -423,7 +421,7 @@ export function MePage() {
         </div>
         {/* Help: replay the welcome tour, read the FAQs, or tell neon1 what broke */}
         <div className="card small settings-rows" id="help">
-          <b>Help</b>
+          <h2 className="card-h">Help</h2>
           <div className="settings-row">
             <span><b>Tutorial</b><br /><span className="muted">Each page also has its own guide under ?.</span></span>
             <span className="actions">

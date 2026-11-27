@@ -95,7 +95,12 @@ export function Board({
       const sc = document.documentElement.classList.contains("body-scrolls") ? document.body : (document.scrollingElement ?? document.documentElement);
       if (e.clientY > innerHeight - 56) sc.scrollTop += 12; else if (e.clientY < 110) sc.scrollTop -= 12;
       const board = document.querySelector<HTMLElement>(".board");
-      if (board) { const r = board.getBoundingClientRect(); if (e.clientX > r.right - 40) board.scrollLeft += 14; else if (e.clientX < r.left + 40) board.scrollLeft -= 14; }
+      if (board) {
+        const r = board.getBoundingClientRect();
+        if (e.clientX > r.right - 40) board.scrollLeft += 14; else if (e.clientX < r.left + 40) board.scrollLeft -= 14;
+        // On a phone the board pans both ways inside itself, so near its top or bottom it scrolls too
+        if (board.scrollHeight > board.clientHeight) { if (e.clientY > r.bottom - 40) board.scrollTop += 12; else if (e.clientY < r.top + 40) board.scrollTop -= 12; }
+      }
       setShift({ x: e.clientX - h.x, y: e.clientY - h.y });
       const s1 = slotAt(e.clientX, e.clientY, h.id);
       setSlot(s1 ? { ...s1, h: h.h } : undefined);

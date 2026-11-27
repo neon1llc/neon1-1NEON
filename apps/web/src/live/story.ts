@@ -764,7 +764,7 @@ export const STORY: Section[] = [
       await s.say("Every file in one place");
       await s.go(`${base}/documents`, "Files");
       await s.wait(1200);
-      // The history is Home's Recent activity: who did what, newest first, the same feed a
+      // The history is Home's Activity log: who did what, newest first, the same feed a
       // client reaches from the menu (each item's panel keeps its own History too)
       await s.go(`${base}/workspace`, "Home");
       await s.say("And every change, kept as history");

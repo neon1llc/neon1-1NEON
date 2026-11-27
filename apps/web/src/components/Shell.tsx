@@ -41,7 +41,7 @@ import { Palette } from "./Palette.tsx";
 import { SignOutButton } from "./SignOutButton.tsx";
 import { SignUp } from "./SignUp.tsx";
 import { gate, Stale, type Read } from "./Reads.tsx";
-import { Avatar, Icon, initials, LayerBadge, LAYERS, layerHint, layerName, layerSlug, Rings, useAsk } from "./ui.tsx";
+import { Arr, Avatar, Icon, initials, LayerBadge, LAYERS, layerHint, layerName, layerSlug, Rings, useAsk } from "./ui.tsx";
 import { prefs } from "../lib/prefs.ts";
 import type { SignUpInfo } from "../lib/signup.ts";
 import { Wm } from "./Wordmark.tsx";
@@ -1153,7 +1153,7 @@ function OrgChooser({ current, all, shown }: { current?: OrgSummary; all?: boole
         <Link className="org" to={`/o/${only.slug}/workspace`}><b><span className="nm">{label}</span></b><small>{sub}</small></Link>
       ) : (
         <button ref={toggle} className={`org${all ? " all" : ""}`} onClick={() => many && setOpen(!open)} aria-expanded={many ? open : undefined} aria-controls={many ? "org-list" : undefined} disabled={!many && !current}>
-          <b><span className="nm">{label}</span>{many && <span className="arr" aria-hidden="true" />}</b>
+          <b><span className="nm">{label}</span>{many && <Arr />}</b>
           <small>{sub}</small>
         </button>
       )}

@@ -53,7 +53,7 @@ export const GUIDES: Record<PageKey, Guide> = {
       { at: "weekly", title: "Finished per week", text: "Items finished each week for the last eight weeks." },
       { at: "get-to-know", title: "Get to know 1NEON", text: "A way to message me, a sample project, a walkthrough, the demo, and the FAQs. Hide it when you're done." },
       { at: "get-started", title: "Get started", text: "A short setup checklist. It goes away when done." },
-      { at: "activity", title: "Recent activity", text: "What people did lately, newest first, with each edit's changes." },
+      { at: "activity", title: "Activity log", text: "What people did lately, newest first, with each edit's changes. Scroll inside it for more." },
     ],
   },
   board: {

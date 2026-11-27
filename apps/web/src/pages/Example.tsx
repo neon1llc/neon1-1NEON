@@ -10,7 +10,7 @@ import { EXAMPLE_TITLE, OUTLINE_CARRIES, OUTLINE_PARTS, readinessOf, type Layer,
 import { OutLink } from "../components/OutLink.tsx";
 import { PublicFooter } from "../components/PublicFooter.tsx";
 import { ThemeSwitch } from "../components/PublicBar.tsx";
-import { LayerBadge, LAYERS, layerHint, layerName, Rings } from "../components/ui.tsx";
+import { Arr, LayerBadge, LAYERS, layerHint, layerName, Rings } from "../components/ui.tsx";
 import { VLANS, type Table } from "../lib/artifacts.ts";
 import { useDocumentScroll } from "../lib/edge.ts";
 import { fade } from "../lib/motion.ts";
@@ -376,7 +376,7 @@ export function Example() {
             <button type="button" className="toc-head" aria-expanded={tocOpen} aria-controls="toc-list" onClick={() => setTocOpen((o) => !o)}>
               <b>On this page</b>
               <span>{TOC.findIndex((t) => t.id === here) + 1} of {TOC.length} · <b>{TOC.find((t) => t.id === here)?.name}</b>{subName ? <> / {subName}</> : null}</span>
-              <i className="arr" aria-hidden="true" />
+              <Arr />
             </button>
             <div className="toc-body" id="toc-list">
               {tocList(tocOpen)}

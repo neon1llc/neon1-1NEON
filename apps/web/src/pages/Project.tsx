@@ -4,7 +4,7 @@
 
 import { benchStage, isBench, isQuickFix, QUICK_FIX_HOURS, QUICK_FIX_MAX_HOURS, quoteFields, priceLine, type QuoteInput, balanceOf, billedOn, depositLines, hoursLogged, hoursText, lineage, lineCents, dollars as wholeDollars, failedOn, invoiceState, InvoiceFields, money as dollars, payableOn, paymentPlan, priceMeaning, priceOf, betterWhen, canApprove, changedSince, currentDecision, todayIn, isClosed, isOwnOrg, KIND_LAYER, metricProgress, MetricFields, OptionFields, priceCheckDue, ProjectRole, proposalRef, PurchaseFields, HandoffFields, optionHistory, revisions, type DocumentRecord, type Item, type ItemKind, type Layer, type Project, type Stage } from "@1neon/domain";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, ExternalLink, Pencil, Trash2 } from "lucide-react";
+import { ExternalLink, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
 import { FileList, UploadButton } from "../components/Files.tsx";
 import { GUIDE, Pick, RequestBuilder, Starters } from "../components/Guide.tsx";
@@ -17,7 +17,7 @@ import { gate, Stale } from "../components/Reads.tsx";
 import { Link, NavLink, useNavigate, useParams } from "react-router";
 import { Readiness } from "../components/Readiness.tsx";
 import { useOrg, useSession, useTopBar } from "../components/Shell.tsx";
-import { Avatar, ConflictDialog, Dialog, Empty, Health, HEALTH_LABEL, Standing, LayerBadge, LAYERS, layerHint, layerName, layerProgress, OnionProgress, Trend, ago, dateLabel, daysSince, inStageFor, layerFromSlug, layerSlug, useAsk, useToast } from "../components/ui.tsx";
+import { Arr, Avatar, ConflictDialog, Dialog, Empty, Health, HEALTH_LABEL, Standing, LayerBadge, LAYERS, layerHint, layerName, layerProgress, OnionProgress, Trend, ago, dateLabel, daysSince, inStageFor, layerFromSlug, layerSlug, useAsk, useToast } from "../components/ui.tsx";
 import { api, BASE_PATH, DEMO, HttpError, NEW_TAB } from "../lib/api.ts";
 import { AgreementNeeded, AgreeFields, agreeBody, agreeReady, emptyAgree, type AgreeValue, QuoteFields, quoteInput, type QuoteValue, Hours, Invoices, PriceBasis, SignBox, signReady, useAgreementSigned, type Priced, type SignValue } from "../components/Billing.tsx";
 import { firstYear, money, parseCost, type Recurring } from "../lib/cost.ts";
@@ -372,8 +372,8 @@ function NextStep({ project: p, items, stage, base }: { project: Project; items:
     <div className="next-step" data-tour="next-step" role="status">
       <span className="eyebrow">Next step</span>
       <p>{text}</p>
-      {action && <Link className="btn btn-primary btn-sm" to={action.to}>{action.label} <ArrowRight size={14} aria-hidden="true" /></Link>}
-      {move && <button className={`btn ${action ? "btn-ghost" : "btn-primary"} btn-sm`} onClick={() => void moveTo(move, "moved to")}>{isBench(p) ? "Mark done" : <>Move to {move.name}</>} <ArrowRight size={14} aria-hidden="true" /></button>}
+      {action && <Link className="btn btn-primary btn-sm" to={action.to}>{action.label} <Arr dir="right" mixed /></Link>}
+      {move && <button className={`btn ${action ? "btn-ghost" : "btn-primary"} btn-sm`} onClick={() => void moveTo(move, "moved to")}>{isBench(p) ? "Mark done" : <>Move to {move.name}</>} <Arr dir="right" mixed /></button>}
     </div>
   );
 }

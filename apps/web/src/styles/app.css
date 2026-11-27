@@ -75,15 +75,19 @@ h1, h2, h3 { font-family: var(--mono); font-weight: 600; letter-spacing: .01em; 
 .small { font-size: var(--fs-sm); }
 
 /* Buttons: one system (primary, ghost, chip, danger), same as the site */
+/* Control padding, one rule for every pressable thing: --ctl-px inside a full-size control (a button), --ctl-px-sm
+   inside a small one (a small button, a chip, a segment), and --ctl-inset between a group's edge and the control it
+   holds (a segmented switch), the same on every side so the pressed segment sits evenly in its track */
+:root { --ctl-px: var(--sp-4); --ctl-px-sm: var(--sp-3); --ctl-inset: var(--sp-1); }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2); min-height: 36px; font: 500 var(--fs-sm) var(--mono); letter-spacing: .02em;
-  border-radius: var(--r-sm); padding: var(--sp-2) var(--sp-4); text-decoration: none; cursor: pointer; border: 1px solid var(--accent); transition: box-shadow .2s, background .2s, color .2s; }
+  border-radius: var(--r-sm); padding: var(--sp-2) var(--ctl-px); text-decoration: none; cursor: pointer; border: 1px solid var(--accent); transition: box-shadow .2s, background .2s, color .2s; }
 .btn-primary { background: var(--accent); color: var(--accent-ink); }
 .btn-primary:hover { box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 25%, transparent); }
 .btn-ghost { background: transparent; color: var(--accent); }
 .btn-ghost:hover { background: var(--accent-soft); }
 .btn-danger { background: transparent; color: var(--red); border-color: var(--red); }
 .btn:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
-.chip { font: var(--fs-xs) var(--mono); color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 99px; padding: var(--sp-1) var(--sp-3); cursor: pointer; min-height: 26px; }
+.chip { font: var(--fs-xs) var(--mono); color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: 99px; padding: var(--sp-1) var(--ctl-px-sm); cursor: pointer; min-height: 26px; }
 .chip:hover, .chip[aria-pressed="true"] { color: var(--accent); border-color: var(--line-strong); }
 .linkish { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; cursor: pointer; text-decoration-line: underline; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, currentColor 55%, transparent); }
 .linkish:is(:hover, :focus-visible) { text-decoration-color: currentColor; }
@@ -623,6 +627,12 @@ dialog.palette .dlg { padding: 0; }
 /* --- Home --- */
 .home { margin-top: var(--sp-2); }
 .card .section-h:first-child { margin-top: 0; }
+/* A card's head: its title, and its description when it has one (.card-top wraps the two), over a rule that runs
+   from edge to edge of the card. Rules inside the card stay inset, so the head's line reads as the card's own */
+.card > :is(.card-top, .card-head, .section-h, .card-h, .cal-head):first-child { margin: calc(-1 * var(--pad-card, var(--sp-4))) calc(-1 * var(--pad-card, var(--sp-4))) var(--sp-3);
+  padding: var(--pad-card, var(--sp-4)) var(--pad-card, var(--sp-4)) var(--sp-3); border-bottom: 1px solid var(--line); }
+.card-top > :is(h2, h3, .card-h, .section-h) { margin: 0; }
+.card-top > p { margin: var(--sp-1) 0 0; color: var(--muted); }
 /* A linked part of a page (#security, #options) lands clear of the sticky top bar */
 .card[id], section[id], .item[id], .decision[id] { scroll-margin-top: 90px; }
 .todo, .checklist, .feed { list-style: none; margin: 0; padding: 0; }
@@ -634,7 +644,7 @@ dialog.palette .dlg { padding: 0; }
 .todo-t small .mono { font: var(--fs-xs) var(--mono); margin-right: var(--sp-1); }
 @media (max-width: 520px) { .todo li { grid-template-columns: auto minmax(0, 1fr); } .todo li .btn { grid-column: 2; justify-self: start; } }
 .empty-line { display: flex; gap: var(--sp-2); align-items: center; color: var(--ok); margin: var(--sp-1) 0; }
-.btn.btn-sm { min-height: 32px; padding: var(--sp-1) var(--sp-3); font-size: var(--fs-sm); }
+.btn.btn-sm { min-height: 32px; padding: var(--sp-1) var(--ctl-px-sm); font-size: var(--fs-sm); }
 button.link { border: 0; background: none; padding: 0; color: var(--accent); text-decoration-line: underline; text-decoration-color: color-mix(in srgb, currentColor 55%, transparent); cursor: pointer; font: inherit; }
 button.link:is(:hover, :focus-visible) { text-decoration-color: currentColor; }
 .checklist li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--sp-2); align-items: center; padding: var(--sp-2) 0; }
@@ -683,9 +693,12 @@ button.link:is(:hover, :focus-visible) { text-decoration-color: currentColor; }
 .pcard .name::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
 .pcard .move { position: relative; z-index: 1; display: inline-block; margin-top: var(--sp-2); }
 .pcard .move select { min-height: 28px; padding: var(--sp-0) var(--sp-5) var(--sp-0) var(--sp-2); font: var(--fs-xs) var(--mono); border-radius: 99px; color: var(--muted); background-color: transparent; background-position: calc(100% - 17px) calc(50% + 1px), calc(100% - 12px) calc(50% + 1px); padding-right: var(--sp-6); }
+/* On a phone the board is one surface the finger pans freely, any direction at once, like a map: it scrolls both
+   ways inside itself (no column snapping, which pinned a drag to one axis) and is no taller than the section's
+   viewport, so all of it is reachable. At its top or bottom edge the same swipe moves the page */
 @media (max-width: 640px) {
-  .board { scroll-snap-type: x mandatory; }
-  .board .col { scroll-snap-align: start; flex-basis: 82vw; }
+  .board, .lens-board { overflow: auto; overscroll-behavior: auto; scroll-snap-type: none; max-height: calc(100dvh - 2 * var(--top-h) - env(safe-area-inset-bottom) - var(--sp-4)); }
+  .board .col { flex-basis: 82vw; }
 }
 
 /* --- FAQs --- */
@@ -762,8 +775,8 @@ details.history summary { cursor: pointer; font: var(--fs-xs) var(--mono); color
 /* --- Projects: list and timeline --- */
 .page-head { display: flex; gap: var(--sp-3); align-items: center; flex-wrap: wrap; }
 .page-head .page-title { margin-right: auto; }
-.switch { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 99px; padding: var(--sp-0); background: var(--panel); }
-.switch button { border: 0; background: none; padding: var(--sp-1) var(--sp-3); border-radius: 99px; font: var(--fs-sm) var(--mono); color: var(--muted); cursor: pointer; }
+.switch { display: inline-flex; gap: var(--ctl-inset); border: 1px solid var(--line-strong); border-radius: 99px; padding: var(--ctl-inset); background: var(--panel); }
+.switch button { border: 0; background: none; padding: var(--sp-1) var(--ctl-px-sm); border-radius: 99px; font: var(--fs-sm) var(--mono); color: var(--muted); cursor: pointer; }
 .switch button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
 .filters { display: flex; gap: var(--sp-2); flex-wrap: wrap; align-items: center; margin: var(--sp-3) 0 var(--sp-4); }
 .filters input[type="search"] { max-width: 240px; }
@@ -794,6 +807,8 @@ details.history summary { cursor: pointer; font: var(--fs-xs) var(--mono); color
 @media (max-width: 640px) {
   .ptr { grid-template-columns: minmax(0, 1fr) auto 36px; }
   .ptr.head { display: none; }
+  /* With the column names hidden, the first project is the table's top: no rule over it, its corners rounded */
+  .ptr.head + .ptr { border-top: 0; border-radius: var(--r) var(--r) 0 0; }
   .ptr > span:nth-child(5) { grid-column: 3; grid-row: 1 / span 2; }
   .ptr > span:nth-child(2) { grid-column: 1; grid-row: 2; }
   .ptr > span:nth-child(3) { grid-column: 2; grid-row: 1; }
@@ -850,6 +865,8 @@ details.history summary { cursor: pointer; font: var(--fs-xs) var(--mono); color
 .updates a { color: inherit; text-decoration-line: underline; font-weight: 500; }
 .updates a:hover { color: var(--accent); }
 .updates .s { font: var(--fs-xs) var(--mono); color: var(--muted); }
+/* A project's key never breaks across lines, here or anywhere it leads a name */
+:is(.updates, .glance, .todo, .feed) .s, .todo-t small .mono { white-space: nowrap; }
 .updates .u-line { display: flex; gap: var(--sp-2); align-items: center; font: var(--fs-xs) var(--mono); color: var(--muted); }
 .updates p { margin: 0; font-size: var(--fs-ui); }
 
@@ -897,10 +914,14 @@ details.history summary { cursor: pointer; font: var(--fs-xs) var(--mono); color
 .charts + .chart { margin-top: var(--sp-4); }
 .chart .section-h { margin-top: 0; }
 .cols { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: var(--sp-2); height: 160px; align-items: end; }
-.cols .wk { display: grid; grid-template-rows: auto 1fr auto; height: 100%; align-items: end; justify-items: center; gap: var(--sp-1); }
+.cols .wk { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr auto; height: 100%; align-items: end; justify-items: center; gap: var(--sp-1); }
 .cols .bar { width: 70%; min-height: 2px; border-radius: 4px 4px 0 0; background: var(--l2); align-self: end; }
 .cols .bar.now { background: var(--accent); }
 .cols .v { font: var(--fs-xs) var(--mono); color: var(--muted); }
+/* A week with nothing finished still says so, quieter than the weeks that did */
+.cols .v.zero { opacity: .45; }
+/* Every week's bar is the same width; a date label wider than its week spills over its neighbors evenly */
+.cols .x { white-space: nowrap; justify-self: center; }
 .cols .x { font: var(--fs-xs) var(--mono); color: var(--muted); white-space: nowrap; }
 .split { display: flex; height: 18px; border-radius: 99px; overflow: hidden; gap: var(--sp-0); background: var(--line); }
 .split .empty-bar { flex: 1; }
@@ -1168,9 +1189,11 @@ body:has(.shell.example) { scroll-behavior: smooth; }
   .notify-table th { overflow-wrap: anywhere; }
   .notify-table td, .notify-table thead th + th { overflow-wrap: normal; }
 }
+/* On touch the box is a step larger than on a desktop and its label is the 44px target, so a tap lands without
+   the box outweighing the text beside it (iOS and Material keep a small box in a large hit area the same way) */
 @media (pointer: coarse) {
   .notify-table .notify-hit { min-width: 44px; min-height: 44px; }
-  .notify-table .notify-hit input { width: 31.5px; height: 31.5px; }
+  input[type="checkbox"]:not(.sr), input[type="radio"]:not(.sr) { width: 22px; height: 22px; }
 }
 
 /* The yes to texts: a checkbox with the carrier wording beside it */
@@ -1447,6 +1470,12 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 @supports (appearance: base-select) { .cal-jump { padding-right: var(--sp-2); } }
 .cal .ag-group li { grid-template-columns: 76px minmax(0, 1fr) auto; }
 @media (max-width: 520px) { .cal .ag-group li { grid-template-columns: 64px minmax(0, 1fr); } }
+/* A long name stays on one line and the list beside its dates scrolls sideways, with the dates held in place */
+.cal .ag-group ul { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; }
+.cal .ag-group li { min-width: 100%; width: max-content; grid-template-columns: 64px max-content auto; }
+.cal .ag-group li > :is(a, .t) { white-space: nowrap; }
+.cal .ag-group li > time { position: sticky; left: 0; z-index: 1; align-self: stretch; background: var(--panel); }
+@media (max-width: 520px) { .cal .ag-group li { grid-template-columns: 64px max-content; } }
 .cal-day-head { flex-wrap: wrap; }
 .cal-day-head .btn { white-space: nowrap; }
 
@@ -1915,6 +1944,15 @@ a.out:hover .out-arrow, a.out:focus-visible .out-arrow { transform: translate(1p
 :where(.arr) { --arr-xc: .2575em; display: inline-block; position: relative; top: calc(.375em - var(--arr-xc)); width: .95em; height: .8em; background: currentColor; flex: none;
   clip-path: var(--arr-shape, polygon(0 50%, 31% 12%, 40% 20%, 24% 43%, 100% 43%, 100% 57%, 24% 57%, 40% 80%, 31% 88%)); }
 :where(.arr-mixed) { --arr-xc: .35em; }
+/* One arrow, one size (the landing's code and resources folds): every disclosure, pager, and card open or close
+   arrow is this shape at --arr-fs. components/ui.tsx Arr turns it with the rotate property, leaving transform free
+   for an opening turn. The outbound link's northeast arrow (OutLink, a.ext) is its own mark and size */
+:root { --arr-fs-sm: var(--arr-fs); }
+.arr-right { rotate: 180deg; }
+.arr-down { rotate: -90deg; }
+.arr-up { rotate: 90deg; }
+.arr-ne { rotate: 135deg; }
+.arr-sw { rotate: -45deg; }
 @keyframes pop { from { opacity: 0; transform: translateY(4px) scale(.98); } }
 @keyframes fade-in { from { opacity: 0; } }
 @keyframes sheet-in { from { transform: translateX(24px); opacity: 0; } }
@@ -1951,7 +1989,8 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
 @supports (appearance: base-select) {
   select { appearance: base-select; background-image: none; padding-right: var(--sp-3); display: inline-flex; align-items: center; gap: var(--sp-3); }
   /* The same drawn arrow as .arr, centered on the line beside sentence-case choices */
-  select::picker-icon { content: ""; width: .95em; height: .8em; font: var(--arr-fs-sm, var(--fs-md)) var(--sans); background: var(--accent); clip-path: var(--arr-shape, polygon(0 50%, 31% 12%, 40% 20%, 24% 43%, 100% 43%, 100% 57%, 24% 57%, 40% 80%, 31% 88%)); align-self: center; margin-left: auto; margin-right: var(--sp-0); transition: rotate var(--t-base) var(--ease); }
+  /* No padding: the clip runs to the border box, so the browser's own padding stretched the shaft and made the arrow long */
+  select::picker-icon { content: ""; padding: 0; border: 0; width: .95em; height: .8em; font: var(--arr-fs-sm, var(--fs-md)) var(--sans); background: var(--accent); clip-path: var(--arr-shape, polygon(0 50%, 31% 12%, 40% 20%, 24% 43%, 100% 43%, 100% 57%, 24% 57%, 40% 80%, 31% 88%)); align-self: center; margin-left: auto; margin-right: var(--sp-0); transition: rotate var(--t-base) var(--ease); }
   select:open::picker-icon { rotate: -90deg; }
   /* A select that can't open (read-only for this person) shows no arrow, so it never promises a list */
   select:disabled::picker-icon { visibility: hidden; }
@@ -1978,6 +2017,22 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
   /* The board card's small stage menu keeps its compact size */
   .pcard .move select { padding-right: var(--sp-2); gap: var(--sp-1); }
   .pcard .move select::picker-icon { font-size: var(--arr-fs-sm, var(--fs-md)); }
+}
+
+/* Where the browser draws its own select (every iPhone browser, Safari, Firefox), the closed box shows the
+   arrow as the same polygon as .arr, at the one arrow size. shared/neon1.css paints it from three gradients,
+   which an iPhone renders with a thin head; an image can't take currentColor, so each look names its accent */
+@supports not (appearance: base-select) {
+  select:not([multiple]):not([size]) { --sel-arr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 95 80'%3E%3Cpolygon points='0,40 37,3 48.03,14.03 29.86,32.2 95,32.2 95,47.8 29.86,47.8 48.03,65.97 37,77' fill='%23035704'/%3E%3C/svg%3E"); background-image: var(--sel-arr); background-size: calc(var(--arr-fs) * .95) calc(var(--arr-fs) * .8);
+    background-position: right var(--sp-3) center; padding-right: calc(var(--sp-3) * 2 + var(--arr-fs)); }
+  :root[data-theme="matrix"] select { --sel-arr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 95 80'%3E%3Cpolygon points='0,40 37,3 48.03,14.03 29.86,32.2 95,32.2 95,47.8 29.86,47.8 48.03,65.97 37,77' fill='%236CFFA8'/%3E%3C/svg%3E"); }
+  :root[data-style="sentinel"][data-theme="awake"] select { --sel-arr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 95 80'%3E%3Cpolygon points='0,40 37,3 48.03,14.03 29.86,32.2 95,32.2 95,47.8 29.86,47.8 48.03,65.97 37,77' fill='%23246F38'/%3E%3C/svg%3E"); }
+  :root[data-style="sentinel"][data-theme="matrix"] select { --sel-arr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 95 80'%3E%3Cpolygon points='0,40 37,3 48.03,14.03 29.86,32.2 95,32.2 95,47.8 29.86,47.8 48.03,65.97 37,77' fill='%2379CF91'/%3E%3C/svg%3E"); }
+  .signin select { --sel-arr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 95 80'%3E%3Cpolygon points='0,40 37,3 48.03,14.03 29.86,32.2 95,32.2 95,47.8 29.86,47.8 48.03,65.97 37,77' fill='%2300FF41'/%3E%3C/svg%3E"); }
+  select:disabled { background-image: none; }
+}
+@media (prefers-color-scheme: dark) {
+  @supports not (appearance: base-select) { :root[data-theme="device"]:not([data-style="sentinel"]) select { --sel-arr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 95 80'%3E%3Cpolygon points='0,40 37,3 48.03,14.03 29.86,32.2 95,32.2 95,47.8 29.86,47.8 48.03,65.97 37,77' fill='%236CFFA8'/%3E%3C/svg%3E"); } }
 }
 
 /* The profile's "Reduced" motion turns everything off, the same as the device setting */
@@ -2581,7 +2636,8 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
   .item-check { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: -13px; cursor: pointer; }
   /* Real controls reach 44px: chips, the List and Timeline switch, tabs, selects and date fields, summaries, and the plain text buttons and links that stand alone in a row */
   .chip { min-height: 44px; }
-  .switch button { min-height: 44px; }
+  /* The track and its segment together make the 44px target */
+  .switch button { min-height: calc(44px - 2 * var(--ctl-inset) - 2px); }
   .tabs a, .tabs button { min-height: 44px; }
   .props input[type="date"], .props select, .props input { min-height: 44px; }
   .page select, .content select { min-height: 44px; }
@@ -2595,7 +2651,10 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
   :root:root :is(.ag-group.fold, details.history) > summary { padding-block: 11px; min-height: 44px; box-sizing: border-box; }
   .ag-group li a, .ag-group li button.linkish, .guide-links li > a, .guide-links li > button.linkish, .glance li > a { display: inline-flex; align-items: center; min-height: 44px; }
   .row-menu-btn, .icon-act { width: 44px; min-width: 44px; height: 44px; }
-  .glance .g-meta a, .updates li > a { display: flex; align-items: center; min-height: 44px; }
+  .glance .g-meta a { display: flex; align-items: center; min-height: 44px; }
+  /* A project's key and name run as one line of text (a flex link split them into columns and broke the key);
+     the padding makes a single line 44px tall */
+  .updates li > a { display: block; padding-block: max(0px, calc((44px - 1lh) / 2)); }
   .chip, .linkish.small, .linkish.helper, button.link.small { min-width: 44px; justify-content: center; }
   /* A few fields and buttons carry a smaller height inline for dense rows; a touch screen overrides it */
   :root:root :is(input, select, .btn)[style*="min-height"] { min-height: 44px !important; }
@@ -2679,7 +2738,7 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 .home-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: var(--sp-3); margin-bottom: var(--sp-1); }
 .home-head .page-title { margin: 0; overflow-wrap: anywhere; }
 .vm { position: relative; }
-.vm-btn { display: inline-flex; align-items: center; gap: var(--sp-2); min-height: 44px; padding: 0 var(--sp-3); border: 1px solid var(--line-strong); border-radius: var(--r); background: var(--panel); color: var(--accent); font: 500 var(--fs-sm) var(--mono); cursor: pointer; }
+.vm-btn { display: inline-flex; align-items: center; gap: var(--sp-2); min-height: 44px; padding: 0 var(--ctl-px-sm); border: 1px solid var(--line-strong); border-radius: var(--r); background: var(--panel); color: var(--accent); font: 500 var(--fs-sm) var(--mono); cursor: pointer; }
 .vm-btn:hover, .vm-btn:focus-visible { border-color: var(--accent); background: var(--accent-soft); }
 .vm-btn .arr { transition: transform var(--t-open) var(--ease-open), translate var(--t-fast) var(--ease); }
 /* The arrow leans left on hover, as an outbound arrow leans out, and turns down while the menu is open */
@@ -2732,6 +2791,15 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 /* No inner scroll: a card is always as tall as its content, so the page scrolls, never the card */
 .tile-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-4); }
 .tile-body > :is(section, nav, .card) { margin: 0; flex: 0 0 auto; overflow: hidden; }
+/* A card holding more than its size scrolls inside, up and down and, for a long line, sideways. Its title stays
+   at the top while the rest moves under it. At either end the page takes over the same swipe (overscroll
+   chains), so a card never traps the page; a fade at the bottom edge shows there's more until the end is reached */
+.tile-body > :is(section, nav, .card):last-of-type { overflow: auto; overscroll-behavior: auto; scrollbar-width: thin; }
+.tile-body > .card > :is(.card-top, .card-head, .section-h, .card-h, .cal-head):first-child { position: sticky; top: calc(-1 * var(--pad-card, var(--sp-4))); left: 0; z-index: 2; background: var(--panel); }
+@supports (animation-timeline: scroll()) {
+  .tile-body > .card:last-of-type { animation: more-below linear both; animation-timeline: scroll(self block); }
+  @keyframes more-below { from, 96% { mask-image: linear-gradient(#000 calc(100% - 28px), transparent); } to { mask-image: none; } }
+}
 .tile-body > :is(section, nav, .card):last-of-type { flex: 1 1 auto; }
 /* Measuring (HomeGrid.tsx): the body at the height its cards need, for one synchronous read */
 .tile-body.measuring { flex: none; width: 100%; height: max-content; align-self: flex-start; }
@@ -2878,9 +2946,10 @@ dialog.write-sheet section .section-h { margin: var(--sp-4) 0 var(--sp-2); }
 .page-new { display: flex; gap: var(--sp-2); margin-top: var(--sp-2); }
 .page-new input { flex: 1; min-width: 0; font-size: var(--fs-input); }
 .page-doc { display: grid; gap: var(--sp-2); align-content: start; }
-.page-head { display: flex; align-items: center; gap: var(--sp-1); min-width: 0; }
-.page-head .page-title { flex: 1; min-width: 0; margin: 0; font-size: var(--fs-xl); font-weight: 600; border: 0; background: none; color: var(--text); padding: var(--sp-1); border-radius: var(--r-sm); }
-.page-head input.page-title:hover, .page-head input.page-title:focus { background: var(--accent-soft); outline: none; }
+.doc-head { display: flex; align-items: center; gap: var(--sp-1); min-width: 0; }
+/* Scoped to a page's own head: unscoped, it squeezed every page title beside its controls (Projects) */
+.doc-head .page-title { flex: 1; min-width: 0; margin: 0; font-size: var(--fs-xl); font-weight: 600; border: 0; background: none; color: var(--text); padding: var(--sp-1); border-radius: var(--r-sm); }
+.doc-head input.page-title:hover, .doc-head input.page-title:focus { background: var(--accent-soft); outline: none; }
 .page-here { display: inline-flex; align-items: center; margin-left: auto; padding-right: var(--sp-1); }
 .page-here > * + * { margin-left: calc(-1 * var(--sp-1)); }
 .page-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-0); position: sticky; top: calc(-1 * var(--sp-5)); z-index: 1; background: var(--panel); padding: var(--sp-1) 0; border-bottom: 1px solid var(--line); }
@@ -2927,7 +2996,7 @@ dialog.write-sheet section .section-h { margin: var(--sp-4) 0 var(--sp-2); }
 @media (max-width: 640px) { .lens-page { padding: var(--sp-2) var(--sp-3) 0; } }
 .lens-page .page-bar { top: var(--chrome-top, 0); }
 .lens-board { display: grid; grid-template-columns: repeat(4, minmax(220px, 1fr)); gap: var(--sp-3); margin-top: var(--sp-3); overflow-x: auto; padding-bottom: var(--sp-2); }
-@media (max-width: 760px) { .lens-board { grid-template-columns: repeat(4, 82%); scroll-snap-type: x mandatory; } .lens-col { scroll-snap-align: start; } }
+@media (max-width: 760px) { .lens-board { grid-template-columns: repeat(4, 82%); } }
 .lens-col { display: grid; gap: var(--sp-2); align-content: start; padding: var(--sp-3); border-radius: var(--r); background: var(--accent-soft); min-height: 120px; }
 .lens-col.over { outline: 2px dashed var(--accent); outline-offset: -2px; }
 .lens-col .section-h { margin: 0; }

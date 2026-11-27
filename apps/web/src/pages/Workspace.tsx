@@ -214,7 +214,7 @@ export function WorkspacePage() {
       sizes: { wide: [sz("S", 3, 4), sz("M", 6, 4)], narrow: [sz("S", 2, 5), sz("M", 4, 5)] }, body: () => awayWeek() },
     { id: "updates", title: "Project updates", group: "movement", when: true, counts: cnt(0, 0, ws.data?.updates?.length ?? 0),
       sizes: { wide: [sz("M", 6, 7), sz("T", 4, 9), sz("L", 6, 11)], narrow: [sz("T", 4, 9), sz("L", 4, 13)] }, body: (v) => projectUpdates(v) },
-    { id: "activity", title: "Recent activity", group: "movement", when: true, off: true, counts: cnt(0, 0, recentActs),
+    { id: "activity", title: "Activity log", group: "movement", when: true, off: true, counts: cnt(0, 0, recentActs),
       sizes: { wide: [sz("M", 6, 8), sz("T", 4, 12), sz("L", 6, 12)], narrow: [sz("M", 4, 10), sz("T", 4, 12), sz("L", 4, 15)] }, body: (v) => recent(v) },
     { id: "pace", title: "Finished per week", group: "visuals", when: true, off: true, counts: none,
       sizes: { wide: [sz("M", 6, 6), sz("W", 12, 6)], narrow: [sz("L", 4, 8)] }, body: () => pace() },
@@ -226,14 +226,16 @@ export function WorkspacePage() {
   const offered = cards.filter((x) => x.when);
   const isShown = (x: Card) => x.shown ?? (x.off ? (layout.shown ?? []).includes(x.id) : !layout.hidden.includes(x.id));
   const visible = offered.filter(isShown);
-  // Each card is at least as tall as its content: a card the person hasn't placed takes exactly that
-  // height (at its first preset's width); a placed one keeps its size unless the content outgrows it
+  // A card's size bounds it and anything more scrolls inside it (the page keeps scrolling past it). A card
+  // the person hasn't placed fits its content, up to its tallest preset; a placed one keeps the size it was given
   const [fitH, setFitH] = useState<Record<string, number>>({});
   const need = (id: string) => fitH[`${bp}.${id}`];
+  const tallest = (x: Card) => Math.max(...x.sizes[bp].map((s) => s.h));
   const cells = compact(reconcile(layout[bp], visible.map((x) => {
     const s = x.sizes[bp][0]!;
-    return { id: x.id, w: s.w, h: need(x.id) ?? s.h };
-  }), COLS[bp]).map((c) => ({ ...c, h: Math.max(c.h, need(c.id) ?? 0) })));
+    const h = need(x.id);
+    return { id: x.id, w: s.w, h: h === undefined ? s.h : Math.min(h, tallest(x)) };
+  }), COLS[bp]));
 
   const setShown = (id: string, show: boolean) => {
     const x = offered.find((y) => y.id === id);
@@ -469,15 +471,15 @@ export function WorkspacePage() {
     );
   }
 
-  // What happened lately: six when medium, twelve when large or tall; tall and narrow drops who and what changed
+  // What happened lately, newest first: all of it, scrolling inside the card; tall and narrow drops who and what changed
   function recent(view: string) {
     const brief = view === "T";
     return (
       <section className="card" id="activity" data-tour="activity">
-        <h2 className="section-h">Recent activity</h2>
+        <h2 className="section-h">Activity log</h2>
         {ws.data && ws.data.activity.length === 0 && <p className="muted small">No activity yet.</p>}
         <ul className="feed">
-          {ws.data?.activity.slice(0, view === "M" ? 6 : 12).map((a) => (
+          {ws.data?.activity.map((a) => (
             <li key={a.id}><span>{a.summary}{!brief && a.by && !a.summary.includes(a.by) && <small className="by">{a.by}</small>}{!brief && <Changes e={a} />}</span><time dateTime={a.at}>{ago(a.at)}</time></li>
           ))}
         </ul>
@@ -502,7 +504,7 @@ export function WorkspacePage() {
           <div className="cols" role="img" aria-label={weeks.map((w) => `Week of ${w.week}: ${w.done}`).join(", ")}>
             {weeks.map((w, i) => (
               <div key={w.week} className="wk">
-                <span className="v">{w.done || ""}</span>
+                <span className={`v${w.done ? "" : " zero"}`}>{w.done}</span>
                 <span className={`bar${i === weeks.length - 1 ? " now" : ""}`} style={{ height: `${(w.done / max) * 100}%` }} />
                 <span className="x">{i % 2 === 1 ? new Date(w.week + "T12:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "\u00a0"}</span>
               </div>

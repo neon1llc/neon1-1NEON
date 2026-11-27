@@ -6,7 +6,7 @@
 
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Download, FilePlus2, FileUp, Maximize2, Minimize2, PenLine, Trash2, X } from "lucide-react";
+import { Download, FilePlus2, FileUp, PenLine, Trash2, X } from "lucide-react";
 import type { JSONContent } from "@tiptap/react";
 import { createContext, lazy, Suspense, useContext, useState, type ReactNode } from "react";
 import { useLocation } from "react-router";
@@ -19,7 +19,7 @@ import { uploadFiles } from "./Files.tsx";
 const PageEditor = lazy(() => import("./PageEditor.tsx").then((m) => ({ default: m.PageEditor })));
 const markdown = async (json: JSONContent) => (await import("./PageEditor.tsx")).toMarkdown(json);
 import { gate } from "./Reads.tsx";
-import { ago, Dialog, useAsk, useToast } from "./ui.tsx";
+import { ago, Arr, Dialog, useAsk, useToast } from "./ui.tsx";
 
 
 /** Which page is open: a project's (or the organization's, without one) */
@@ -143,8 +143,8 @@ function OpenPage({ tid, at, canWrite, onBack }: { tid: string; at: Open; canWri
           void qc.invalidateQueries({ queryKey: ["project", tid] });
         };
         return (
-          <div className="page-head">
-            <button type="button" className="icon-act" onClick={onBack} aria-label="All pages" title="All pages"><ArrowLeft size={18} aria-hidden="true" /></button>
+          <div className="doc-head">
+            <button type="button" className="icon-act" onClick={onBack} aria-label="All pages" title="All pages"><Arr mixed /></button>
             {canWrite && at.id !== "main"
               ? <input className="page-title" aria-label="Page name" value={title ?? name} maxLength={120} onChange={(e) => setTitle(e.target.value)} onBlur={(e) => void rename(e.target.value, name)} onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }} />
               : <h2 className="page-title">{name || "Page"}</h2>}
@@ -191,7 +191,7 @@ export function WriteProvider({ org, children }: { org?: WriteOrg; children: (pe
           <div className="panel-head">
             <p className="eyebrow">Pages</p>
             <span>
-              {at && <button className="icon-act hide-sm" onClick={() => setWide(!wide)} aria-label={wide ? "Narrower" : "Full width"} title={wide ? "Narrower" : "Full width"}>{wide ? <Minimize2 size={16} aria-hidden="true" /> : <Maximize2 size={16} aria-hidden="true" />}</button>}
+              {at && <button className="icon-act hide-sm" onClick={() => setWide(!wide)} aria-label={wide ? "Narrower" : "Full width"} title={wide ? "Narrower" : "Full width"}><Arr dir={wide ? "sw" : "ne"} mixed /></button>}
               <button className="icon-act" onClick={() => setShown(false)} aria-label="Close"><X size={18} aria-hidden="true" /></button>
             </span>
           </div>

@@ -7,6 +7,7 @@
 
 import { Link } from "react-router";
 import type { SiteTheme } from "../lib/sitetheme.ts";
+import { Arr } from "./ui.tsx";
 
 
 export function ThemeSwitch({ theme, onChange }: { theme: SiteTheme; onChange: (t: SiteTheme) => void }) {
@@ -37,7 +38,7 @@ export function PublicBar({ theme, onChange, back = false }: { theme: SiteTheme;
           <span><span className="ne">neon</span><span className="one">1</span></span>
         </a>
         <ThemeSwitch theme={theme} onChange={onChange} />
-        {back && <Link className="pub-back" to="/" viewTransition><span className="arr" aria-hidden="true" />1NEON</Link>}
+        {back && <Link className="pub-back" to="/" viewTransition><Arr />1NEON</Link>}
       </div>
     </header>
   );

@@ -42,6 +42,12 @@ export const HEALTH_LABEL: Record<HealthT, string> = { on_track: "On track", at_
 
 
 /** Health as a colored dot plus its label */
+/** The shared drawn arrow (shared/neon1.css .arr): left by default, turned to point right, down, up, or to a
+ * corner. Decorative; the control around it carries the name */
+export function Arr({ dir = "left", mixed, className }: { dir?: "left" | "right" | "down" | "up" | "ne" | "sw"; mixed?: boolean; className?: string }) {
+  return <span className={`arr${dir === "left" ? "" : ` arr-${dir}`}${mixed ? " arr-mixed" : ""}${className ? ` ${className}` : ""}`} aria-hidden="true" />;
+}
+
 export function Health({ value }: { value: HealthT }) {
   return (
     <span className={`health h-${value}`}>
