@@ -32,6 +32,7 @@ import { gateRoutes } from "./lib/formgate.ts";
 import { requestRoutes } from "./routes/requests.ts";
 import { devFileRoutes, docRoutes } from "./routes/docs.ts";
 import { pageRoutes } from "./routes/pages.ts";
+import { trinRoutes } from "./routes/trin.ts";
 import { exportRoutes } from "./routes/export.ts";
 import { factorRoutes } from "./routes/factors.ts";
 import { editRoutes, itemRoutes } from "./routes/items.ts";
@@ -222,6 +223,7 @@ export function createApp(d: Deps) {
   editRoutes(app, k);
   docRoutes(app, k);
   pageRoutes(app, k);
+  trinRoutes(app, k);
   billingRoutes(app, k, pay);
   contractRoutes(app, k);
   // Asking neon1 for an assessment or a call, from any account

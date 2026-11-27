@@ -1086,7 +1086,7 @@ function FrameBody({ org, all, reads = [], banner, pen, children }: { org?: OrgS
       <ConfirmDialog me={me} />
       {/* Neo for signed-in people, where a model is wired; elsewhere the public Neo stays */}
       {/* The signed-in Neo (two tabs, and plans it can run) where it's on; everywhere else the public Neo, with the chat as a second tab */}
-      {!IN_DEMO && newAccount !== undefined && me.neo && newAccount === false && <Neo open={neoOpen} setOpen={setNeoOpen} org={navOrg ? { id: navOrg.id, name: navOrg.name, slug: navOrg.slug } : undefined} me={{ id: me.user.id, operator: me.operator }} />}
+      {!IN_DEMO && newAccount !== undefined && me.neo && newAccount === false && <Neo open={neoOpen} setOpen={setNeoOpen} org={navOrg ? { id: navOrg.id, name: navOrg.name, slug: navOrg.slug } : undefined} me={{ id: me.user.id, operator: me.operator }} trin={Boolean(me.trin)} />}
       {(IN_DEMO || (newAccount !== undefined && !(me.neo && newAccount === false))) && (navOrg || me.operator) && <PublicTalk org={navOrg ? { id: navOrg.id, name: navOrg.name, slug: navOrg.slug } : undefined} me={{ id: me.user.id, operator: me.operator }} demo={IN_DEMO} />}
     </div>
   );

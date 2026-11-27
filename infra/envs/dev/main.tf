@@ -128,6 +128,8 @@ module "api" {
   notify_function_arn = "arn:aws:lambda:us-east-1:${data.aws_caller_identity.current.account_id}:function:neon1-notify-dev"
   neo_model           = var.neo_model
   neo_monthly_usd     = 2
+  # Trin on Amazon's low-cost models; its month is capped at $5 like Neo's
+  trin_model = "us.amazon.nova-lite-v1:0"
   # Prospect sign-up, tried here first with Cloudflare's invisible always-pass test key
   signup             = true
   turnstile_site_key = "1x00000000000000000000BB"

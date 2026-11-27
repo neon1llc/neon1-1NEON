@@ -23,8 +23,13 @@ const RENEW_MS = 8_000;
 // A merge that loses a version race tries again this many times
 const TRIES = 4;
 
-const b64 = (s: string) => new Uint8Array(Buffer.from(s, "base64"));
-const enc = (u: Uint8Array) => Buffer.from(u).toString("base64");
+// Base64 without Buffer, so the browser demo's copy of the API runs it too
+const b64 = (s: string) => Uint8Array.from(atob(s), (ch) => ch.charCodeAt(0));
+const enc = (u: Uint8Array) => {
+  let s = "";
+  for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode(...u.subarray(i, i + 0x8000));
+  return btoa(s);
+};
 const same = (a: Uint8Array, b: Uint8Array) => a.length === b.length && a.every((x, i) => x === b[i]);
 
 const Base64 = z.string().max(400_000).regex(/^[A-Za-z0-9+/]*={0,2}$/);

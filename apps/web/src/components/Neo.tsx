@@ -15,6 +15,7 @@ import { askNeo, blocks, fit, keep, runStep, type Piece, type Turn } from "../li
 import { navigate, refreshAll } from "../lib/nav.ts";
 import { api } from "../lib/api.ts";
 import { Talk, useUnread, type ChatOrg } from "./Talk.tsx";
+import { TrinChat } from "./Trin.tsx";
 
 
 // Starting points, shown until the first question
@@ -69,7 +70,7 @@ function Line({ parts }: { parts: Piece[] }) {
   );
 }
 
-function Reply({ text }: { text: string }) {
+export function Reply({ text }: { text: string }) {
   return (
     <>
       {blocks(text).map((b, i) =>
@@ -207,12 +208,14 @@ function Plan({ plan }: { plan: NeoPlan }) {
 // --- The window -------------------------------------------------------------------------
 
 /** Neo's panel, with a second conversation in it: the organization's chat with Pradeep (components/Talk.tsx). Opened from anywhere, so nobody leaves the page */
-export function Neo({ open, setOpen, org, me, neo = true }: { open: boolean; setOpen: (open: boolean) => void; org?: ChatOrg; me: { id: string; operator: boolean }; neo?: boolean }) {
+export function Neo({ open, setOpen, org, me, neo = true, trin = false }: { open: boolean; setOpen: (open: boolean) => void; org?: ChatOrg; me: { id: string; operator: boolean }; neo?: boolean; trin?: boolean }) {
   const light = useLight();
   const loc = useLocation();
   // Without Neo (no model set up) the panel is only the conversation with Pradeep
-  const [tabWas, setTab] = useState<"neo" | "pradeep">("neo");
-  const tab = neo ? tabWas : "pradeep";
+  const [tabWas, setTab] = useState<"neo" | "pradeep" | "trin">("neo");
+  // Trin works inside one organization, so its tab shows only in one
+  const withTrin = trin && Boolean(org);
+  const tab = tabWas === "trin" && !withTrin ? "neo" : neo || tabWas === "trin" ? tabWas : "pradeep";
   // Each organization's chat lives on its own page, so super picking one from the inbox goes there, and each
   // browser tab keeps its own organization (Pradeep, 2026-11-27); everyone else has their own
   const navigate = useNavigate();
@@ -332,6 +335,7 @@ export function Neo({ open, setOpen, org, me, neo = true }: { open: boolean; set
         ) : canTalk ? (
           <span className="talk-tabs" role="tablist">
             <button type="button" role="tab" aria-selected={tab === "neo"} className="n1chat-title talk-tab" onClick={() => setTab("neo")}><Mark />Neo</button>
+            {withTrin && <button type="button" role="tab" aria-selected={tab === "trin"} className="n1chat-title talk-tab" onClick={() => setTab("trin")}>Trin</button>}
             <button type="button" role="tab" aria-selected={tab === "pradeep"} className="n1chat-title talk-tab" onClick={() => setTab("pradeep")}>{me.operator ? "Chat" : "neon1"}{unread > 0 && tab !== "pradeep" && <b className="talk-badge">{unread}</b>}</button>
           </span>
         ) : (
@@ -342,7 +346,9 @@ export function Neo({ open, setOpen, org, me, neo = true }: { open: boolean; set
           <button type="button" className="n1chat-tool" onClick={() => close()} aria-label="Close">close</button>
         </span>
       </div>
-      {tab === "pradeep" && canTalk ? (
+      {tab === "trin" && withTrin && org ? (
+        <TrinChat org={org} />
+      ) : tab === "pradeep" && canTalk ? (
         <Talk org={chatOrg} me={me.id} operator={me.operator} active={open && tab === "pradeep"} pick={pick} only={only} />
       ) : (
         <>

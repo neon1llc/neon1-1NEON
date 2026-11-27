@@ -38,6 +38,10 @@ export interface Config {
   neoModel?: string;
   /** The month's ceiling for Neo's model spend, in US dollars */
   neoMonthlyUsd?: number;
+  // Trin, the project assistant: its answering model (a Bedrock inference profile), embedding model, and month's cap
+  trinModel?: string;
+  trinEmbed?: string;
+  trinMonthlyUsd?: number;
   /** SSM SecureString names holding the Stripe secret key and webhook secret; unset means no online payments */
   stripeKeyParam?: string;
   stripeWebhookParam?: string;
@@ -115,5 +119,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     originSecret: env.ORIGIN_SECRET || undefined,
     originLock: env.ORIGIN_LOCK?.trim().toLowerCase() === "on",
     neoMonthlyUsd: Number(env.NEO_MONTHLY_USD) > 0 ? Math.min(Number(env.NEO_MONTHLY_USD), 50) : 8,
+    trinModel: env.TRIN_MODEL || undefined,
+    trinEmbed: env.TRIN_EMBED || undefined,
+    trinMonthlyUsd: Number(env.TRIN_MONTHLY_USD) > 0 ? Math.min(Number(env.TRIN_MONTHLY_USD), 20) : 5,
   };
 }

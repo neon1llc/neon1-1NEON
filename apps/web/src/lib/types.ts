@@ -26,6 +26,8 @@ export interface Me {
   sms?: { state: SmsState };
   // Neo for signed-in people is available here (a model is wired)
   neo?: boolean;
+  // Trin, the project assistant, is wired here
+  trin?: boolean;
   orgs: OrgSummary[];
 }
 

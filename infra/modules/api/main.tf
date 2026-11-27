@@ -50,6 +50,21 @@ variable "neo_monthly_usd" {
   type    = number
   default = 8
 }
+# Trin, the project assistant: its answering model (an inference profile ID, such as us.amazon.nova-lite-v1:0) and
+# the embedding model it searches an organization's own work with. Empty keeps Trin off
+variable "trin_model" {
+  type    = string
+  default = ""
+}
+variable "trin_embed" {
+  type    = string
+  default = "amazon.titan-embed-text-v2:0"
+}
+# The month's ceiling for Trin's estimated model spend, in dollars
+variable "trin_monthly_usd" {
+  type    = number
+  default = 5
+}
 # neon1's Pushover app token and user key (SecureStrings kept outside this stack, in /neon1-notify/<env>/), which
 # the API reads at cold start to push chat alerts to neon1's phone. Empty keeps chat alerts to email only
 # neon1's alert service function (neon1-notify). When set, alerts to neon1 go through it and this role may invoke it
@@ -242,6 +257,19 @@ data "aws_iam_policy_document" "api" {
     actions   = ["ses:SendEmail", "ses:SendRawEmail"]
     resources = [var.ses_identity_arn, "arn:aws:ses:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:identity/neon1.tech", "arn:aws:ses:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:identity/*@neon1.tech", "arn:aws:ses:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:configuration-set/${var.ses_configuration_set}"]
   }
+  # Trin: its answering model through its US profile, and the embedding model it searches with
+  dynamic "statement" {
+    for_each = var.trin_model == "" ? [] : [var.trin_model]
+    content {
+      sid     = "Trin"
+      actions = ["bedrock:InvokeModel"]
+      resources = [
+        "arn:aws:bedrock:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:inference-profile/${statement.value}",
+        "arn:aws:bedrock:us-*::foundation-model/${replace(statement.value, "/^(us|global)\\./", "")}",
+        "arn:aws:bedrock:${data.aws_region.current.region}::foundation-model/${var.trin_embed}",
+      ]
+    }
+  }
   # Neo: one model through one cross-region inference profile, which routes to the model in any US region
   dynamic "statement" {
     for_each = var.neo_model == "" ? [] : [var.neo_model]
@@ -386,6 +414,9 @@ resource "aws_lambda_function" "api" {
       OPERATOR_EMAILS                     = var.operator_emails
       NEO_MODEL                           = var.neo_model
       NEO_MONTHLY_USD                     = tostring(var.neo_monthly_usd)
+      TRIN_MODEL                          = var.trin_model
+      TRIN_EMBED                          = var.trin_embed
+      TRIN_MONTHLY_USD                    = tostring(var.trin_monthly_usd)
       RECORDS_BUCKET                      = var.records_bucket
       STRIPE_KEY_PARAM                    = aws_ssm_parameter.stripe_key.name
       STRIPE_WEBHOOK_PARAM                = aws_ssm_parameter.stripe_webhook.name

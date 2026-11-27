@@ -112,9 +112,9 @@ export const GUIDES: Record<PageKey, Guide> = {
   },
   newproject: {
     title: "New project",
-    purpose: "Start a project with a few questions.",
-    howto: ["First pick how the work runs, lightest first: a Workbench, a quick fix, a proposal, or NEON. The four boxes show how involved each is.", "A proposal or NEON then asks what kind of work it is. That sets the key and the starter items, all editable.", "Only the name is required.", "Add a measure, with where it is now and where it should be, to show the before and after."],
-    tour: [{ at: "wizard", title: "A few questions", text: "You can change everything later." }],
+    purpose: "Start a project on one screen.",
+    howto: ["Only the name is required.", "Pick how you like to see the work: Page, Board, Timeline, or Steps. Anyone can switch later.", "More about it holds the kind of work (Quick fix among them), what done looks like, an example, a target date, and measures.", "Ask for a quote or a proposal from inside the project."],
+    tour: [{ at: "wizard", title: "One screen", text: "A name and how you like to see the work. You can change everything later." }],
   },
   layer: {
     title: "Layer",

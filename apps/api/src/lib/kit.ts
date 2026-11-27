@@ -10,6 +10,7 @@ import type { Directory, HumanCheck, Mailer, Notifier, Pusher, Storage, Texter }
 import type { Repo } from "../store/repo.ts";
 import type { NeoModel } from "../neo/agent.ts";
 import type { NeoBudget } from "../routes/neo.ts";
+import type { TrinModel } from "../trin/trin.ts";
 import type { WriteOp } from "../store/types.ts";
 import type { Vetting } from "../vetting/types.ts";
 import type { Payments, Records } from "../payments.ts";
@@ -36,6 +37,8 @@ export interface Deps {
   outbox?: "inline" | "worker";
   // Optional: Neo for signed-in people (Bedrock in production). Without it, /neo answers 503
   neo?: { model: NeoModel; modelId: string; budget?: NeoBudget };
+  // Optional: Trin, the project assistant (Bedrock in production), with the month's spend cap. Without it, /trin answers 503
+  trin?: { model: TrinModel; monthlyUsd: number };
   // Optional: Stripe for card and bank payments. Without it, invoices are paid by check, Zelle, or wire
   payments?: Payments;
   // Optional: locked, write-once copies of signed and issued records (S3 Object Lock in production)

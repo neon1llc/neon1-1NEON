@@ -142,19 +142,18 @@ export const JOURNEY: Show = {
         await s.say("She writes down one project: what happens now, what she wants, and a real example");
         await s.go(`${await shop()}/projects`, "Projects");
         await s.click({ sel: "a, button", text: "New project" }, 700);
-        await s.click({ sel: "label.option", text: "Security readiness" }, 500);
-        await s.click({ sel: "button", text: /^Next$/ }, 700);
         await s.type("#n", PROJECT.name);
         await s.type("#s", PROJECT.today);
+        await s.click({ sel: "label.np-lens", text: "Steps" }, 500);
+        await s.click({ sel: "summary", text: "More about it" }, 600);
+        await s.click({ sel: "label.option", text: "Security readiness" }, 500);
         await s.type("#o", PROJECT.outcome);
         await s.think("The backup question is the best example.");
         await s.type("#x", PROJECT.example);
-        await s.click({ sel: "button", text: /^Next$/ }, 700);
         await s.type("#mt0", "Form questions we can't answer");
         await s.type("#mu0", "questions");
         await s.type("#mb0", "16");
         await s.type("#mg0", "2");
-        await s.click({ sel: "button", text: /^Next$/ }, 900);
         await s.click({ sel: "button", text: "Create project" }, 1600);
       },
     },

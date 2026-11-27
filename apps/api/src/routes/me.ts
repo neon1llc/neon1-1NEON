@@ -52,6 +52,7 @@ export function meRoutes(app: App, k: Kit) {
       sms: { state: smsState(user, Boolean(d.texter) && (d.cfg.env !== "dev" || Boolean(d.cfg.smsAllowedDestinations?.length)), d.cfg.smsAllowedDestinations) },
       // Whether Neo for signed-in people is wired here; without it the window stays the public one
       neo: Boolean(d.neo),
+      trin: Boolean(d.trin),
       orgs: tenants
         .filter((t) => t.status === "active")
         .map((t) => ({ id: t.id, slug: t.slug, name: t.name, clientId: t.clientId, access: actor.operator ? "admin" : accessBy.get(t.id) }))

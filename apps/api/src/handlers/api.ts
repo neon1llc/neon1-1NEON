@@ -23,6 +23,7 @@ import { chatReplyByEmail } from "../routes/chat.ts";
 import { DynamoTable } from "../store/dynamo.ts";
 import { Repo } from "../store/repo.ts";
 import { bedrockNeo } from "../neo/bedrock.ts";
+import { bedrockTrin } from "../trin/bedrock.ts";
 import { DEFAULT_BUDGET, priceFor } from "../routes/neo.ts";
 import { RealVetting } from "../vetting/real.ts";
 import { guardDirectory, guardMailer } from "../dev-guard.ts";
@@ -137,6 +138,7 @@ const deps: Deps = {
   humanCheck,
   // The form checks that look outside: mail domains, websites, and places
   vetting: new RealVetting(),
+  trin: cfg.trinModel ? { model: bedrockTrin(cfg.trinModel, cfg.trinEmbed ?? "amazon.titan-embed-text-v2:0"), monthlyUsd: cfg.trinMonthlyUsd ?? 5 } : undefined,
   neo: cfg.neoModel ? { model: bedrockNeo(), modelId: cfg.neoModel, budget: { ...DEFAULT_BUDGET, price: priceFor(cfg.neoModel), monthlyUsd: cfg.neoMonthlyUsd ?? DEFAULT_BUDGET.monthlyUsd } } : undefined,
 };
 const app = createApp(deps);

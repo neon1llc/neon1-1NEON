@@ -2932,3 +2932,12 @@ dialog.write-sheet section .section-h { margin: var(--sp-4) 0 var(--sp-2); }
 .lens-mark { position: relative; font-size: var(--fs-sm); font-weight: 600; color: var(--accent); }
 .lens-mark::before { content: ""; position: absolute; left: calc(-1 * var(--sp-4) - 7px); top: 50%; width: 12px; height: 2px; background: var(--accent); }
 .lens-undated { display: grid; gap: var(--sp-2); }
+
+/* New project (pages/NewProject.tsx): the lens cards in a row of four, two on a phone; More folds the rest */
+.np-lenses { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sp-2); }
+@media (max-width: 760px) { .np-lenses { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.np-lens { cursor: pointer; display: grid; gap: var(--sp-1); align-content: start; padding: var(--sp-3); }
+.np-lens-head { display: inline-flex; align-items: center; gap: var(--sp-2); color: var(--accent); }
+.np-lens-head b { color: var(--text); font-size: var(--fs-md); }
+.np-more > summary { cursor: pointer; font-size: var(--fs-sm); color: var(--accent); padding: var(--sp-1) 0; }
+.np-more-body { display: grid; gap: var(--sp-4); padding-top: var(--sp-3); }
