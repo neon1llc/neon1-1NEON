@@ -1953,6 +1953,8 @@ html[data-fade]::view-transition-old(root), html[data-fade]::view-transition-new
   /* The same drawn arrow as .arr, centered on the line beside sentence-case choices */
   select::picker-icon { content: ""; width: .95em; height: .8em; font: var(--arr-fs-sm, var(--fs-md)) var(--sans); background: var(--accent); clip-path: var(--arr-shape, polygon(0 50%, 31% 12%, 40% 20%, 24% 43%, 100% 43%, 100% 57%, 24% 57%, 40% 80%, 31% 88%)); align-self: center; margin-left: auto; margin-right: var(--sp-0); transition: rotate var(--t-base) var(--ease); }
   select:open::picker-icon { rotate: -90deg; }
+  /* A select that can't open (read-only for this person) shows no arrow, so it never promises a list */
+  select:disabled::picker-icon { visibility: hidden; }
   ::picker(select) { appearance: base-select; border: 1px solid var(--line-strong); border-radius: var(--r-sm); background: var(--panel); color: var(--text); box-shadow: var(--shadow-pop); padding: var(--sp-1); margin-top: var(--sp-1); max-height: var(--picker-max, min(320px, 60vh)); position-try-fallbacks: none; }
   /* The list unrolls in the same time the arrow takes to turn, so both finish together */
   select:open::picker(select) { animation: unroll var(--t-base) var(--ease); }

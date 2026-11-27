@@ -29,6 +29,7 @@
 - New project asks how the work runs first (Workbench, Quick fix, Build a proposal, NEON), then for a proposal or NEON what kind of work it is. Clients start on Workbench and neon1 on NEON. A proposal starts at Propose and opens on its options.
 
 ### Changed
+- A dropdown someone can't change (read-only for them) no longer shows its arrow, so it never promises a list that won't open.
 - Home starts with three cards: Needs you, Coming up, and Project updates, plus Next step, setup, and suggestions while they apply. The rest (overdue and blocked, projects at a glance, by layer, numbers, quick links, who's away, recent activity, the charts, Get to know 1NEON) wait under View. Reset under View returns to these three.
 - The View button counts only what hidden cards hold, once, so it no longer adds up the same item from several cards. Cards that repeat another card's items don't count.
 - Get started goes once the tour, a first project, and inviting the team are done; a missing second sign-in step alone no longer keeps it (Security on your profile still asks).
