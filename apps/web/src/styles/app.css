@@ -660,11 +660,13 @@ dialog.palette .dlg { padding: 0; }
 .card .section-h:first-child { margin-top: 0; }
 /* A card's head: its title, and its description when it has one (.card-top wraps the two), over a rule that runs
    from edge to edge of the card. Rules inside the card stay inset, so the head's line reads as the card's own */
-.card > :is(.card-top, .card-head, .section-h, .card-h, .cal-head):first-child { margin: calc(-1 * var(--pad-card, var(--sp-4))) calc(-1 * var(--pad-card, var(--sp-4))) var(--sp-3);
-  padding: var(--pad-card, var(--sp-4)) var(--pad-card, var(--sp-4)) var(--sp-3); border-bottom: 1px solid var(--line); }
+.card > :is(.card-top, .card-head, .section-h, .card-h, .cal-head):first-child { margin: calc(-1 * var(--pad-card, var(--sp-4))) calc(-1 * var(--pad-card, var(--sp-4))) var(--pad-card, var(--sp-4));
+  padding: var(--sp-3) var(--pad-card, var(--sp-4)); border-bottom: 1px solid var(--line); }
+/* (A head is a band: the same inset above and below its title, and the card's own inset at its sides and under its rule) */
 .card-top > :is(h2, h3, .card-h, .section-h) { margin: 0; }
 .card-top > p { margin: var(--sp-1) 0 0; color: var(--muted); }
 /* A list right under the head starts on the head's rule, not a second one of its own */
+.card > :is(.card-top, .card-head, .section-h, .card-h, .cal-head):first-child:has(+ :is(ul, ol, .factors, .rows, .feed, .updates, .todo)) { margin-bottom: 0; } /* its rows bring their own inset */
 .card > :is(.card-top, .card-head, .section-h, .card-h, .cal-head):first-child + :is(ul, ol, .factors, .rows, .feed, .updates, .todo) > :first-child { border-top: 0; }
 /* A linked part of a page (#security, #options) lands clear of the sticky top bar */
 .card[id], section[id], .item[id], .decision[id] { scroll-margin-top: 90px; }
@@ -823,7 +825,7 @@ details.history summary { cursor: pointer; font: var(--fs-xs) var(--mono); color
 .ptable { display: grid; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); }
 .ptr:first-child { border-radius: var(--r) var(--r) 0 0; }
 .ptr:last-child { border-radius: 0 0 var(--r) var(--r); }
-.ptr { position: relative; display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, .8fr) 32px; gap: var(--sp-3); align-items: center; padding: var(--sp-3) var(--sp-2) var(--sp-3) var(--sp-4); border-top: 1px solid var(--line); color: inherit; text-decoration: none; }
+.ptr { position: relative; display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, .8fr) 32px; gap: var(--sp-3); align-items: center; padding: var(--sp-3) var(--sp-4); border-top: 1px solid var(--line); color: inherit; text-decoration: none; }
 /* The project's link stretches over its whole row, so the row opens it anywhere; the menu sits above it */
 .ptr-link { color: inherit; text-decoration: none; }
 .ptr-link::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
@@ -2738,7 +2740,7 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 /* New project gallery: the form widens to the page on the template step so cards fill the desktop */
 .form.wide { max-width: none; }
 .tpl-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); }
-.option.tpl { cursor: pointer; padding: var(--sp-4); gap: var(--sp-1); }
+.option.tpl { cursor: pointer; padding: var(--pad-card, var(--sp-4)); gap: var(--sp-1); }
 .option.tpl h4 { margin: var(--sp-1) 0 0; }
 .tpl-row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
 /* Involvement: four steps, each filled one stronger than the last */
@@ -2844,6 +2846,8 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
   @keyframes more-below { from, 96% { mask-image: linear-gradient(#000 calc(100% - 28px), transparent); } to { mask-image: none; } }
 }
 .tile-body > :is(section, nav, .card):last-of-type { flex: 1 1 auto; }
+/* A card nobody has sized ends where its content ends, so its bottom inset matches its top; the grid's row step stays below it */
+.tile.fit .tile-body > :is(section, nav, .card):last-of-type { flex: 0 1 auto; }
 /* Measuring (HomeGrid.tsx): the body at the height its cards need, for one synchronous read */
 .tile-body.measuring { flex: none; width: 100%; height: max-content; align-self: flex-start; }
 .tile-body.measuring > * { flex: none; }
@@ -3057,8 +3061,8 @@ dialog.write-sheet section .section-h { margin: var(--sp-4) 0 var(--sp-2); }
 .stream time { white-space: nowrap; }
 @media (pointer: coarse) { .lens-bar a { min-height: 44px; } }
 /* The project page reads as a document: one card at a reading measure */
-.lens-page { margin-top: var(--sp-3); max-width: 760px; padding: var(--sp-3) var(--sp-5) 0; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); }
-@media (max-width: 640px) { .lens-page { padding: var(--sp-2) var(--sp-3) 0; } }
+.lens-page { margin-top: var(--sp-3); max-width: 760px; padding: var(--sp-3) var(--sp-5); border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); }
+@media (max-width: 640px) { .lens-page { padding: var(--sp-3); } }
 .lens-page .page-bar { top: var(--chrome-top, 0); }
 .lens-board { display: grid; grid-template-columns: repeat(4, minmax(220px, 1fr)); gap: var(--sp-3); margin-top: var(--sp-3); overflow-x: auto; padding-bottom: var(--sp-2); }
 @media (max-width: 760px) { .lens-board { grid-template-columns: repeat(4, 82%); } }

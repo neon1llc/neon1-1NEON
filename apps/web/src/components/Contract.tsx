@@ -53,8 +53,9 @@ export function ContractStates({ project, items, path }: { project: Project; ite
   const op = me.operator;
   return (
     <section className="kind-group contract" id="contract" aria-labelledby="contract-h">
-      <h2 id="contract-h" className="section-h">Delivery and review</h2>
-      <dl className="card facts contract-lines">
+      <div className="card">
+      <h2 id="contract-h" className="card-h">Delivery and review</h2>
+      <dl className="facts contract-lines">
         <div><dt>Handover</dt><dd>{s.handover ? <>{dateLabel(s.handover.at.slice(0, 10))}: {s.handover.note}</> : "Not handed over yet"}</dd></div>
         {s.handover && <div><dt>Review</dt><dd>{s.acceptance === "accepted" ? "Accepted" : <>{acceptance}. Review by {dateLabel(s.reviewDue)}{s.reviewLate ? ". The review is past its date; payment isn't affected" : ""}</>}</dd></div>}
         {s.handover && <div><dt>Defects fixed free</dt><dd>Reported by {dateLabel(s.defectsUntil)}</dd></div>}
@@ -63,6 +64,7 @@ export function ContractStates({ project, items, path }: { project: Project; ite
         {s.paused && <div><dt>Paused</dt><dd>Since {dateLabel(s.paused.at.slice(0, 10))}{s.paused.note ? `: ${s.paused.note}` : ""}</dd></div>}
         {s.ended && <div><dt>Ended</dt><dd>{dateLabel(s.ended.at.slice(0, 10))}: {s.ended.note}</dd></div>}
       </dl>
+      </div>
       {op && !s.ended && !form && (
         <div className="actions">
           <button type="button" className="btn btn-sm" onClick={() => setForm({ kind: "handover", text: "", reason: "" })}>{s.handover ? "Record handover again" : "Record handover"}</button>

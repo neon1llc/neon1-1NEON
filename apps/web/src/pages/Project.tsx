@@ -547,8 +547,8 @@ function Overview({ project: p, items, docs }: { project: Project; items: Item[]
       </section>
       {/* Side column: health, dates, latest update, flags, people, measures, project level files, and archiving */}
       <aside>
-        <h2 className="section-h" style={{ marginTop: 0 }}>Status</h2>
         <div className="card" style={{ display: "grid", gap: 10 }}>
+          <h2 className="card-h">Status</h2>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
             <span className="small muted">Health</span>
             {canWrite ? (

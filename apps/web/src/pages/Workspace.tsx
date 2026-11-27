@@ -585,7 +585,7 @@ export function WorkspacePage() {
       <div ref={wrap} className="home">
         {/* The grid waits for every read behind its cards, so it appears once, in place, and never reshuffles */}
         {blocked ? <Problem error={ws.error} reads={[ws]} /> : !ready ? <div className="hg-wait" aria-busy="true" /> : (
-          <HomeGrid tiles={visible.map((x) => ({ ...x, sizes: x.sizes[bp], counts: ready ? x.counts : undefined }))} cells={cells} bp={bp} arranging={arranging}
+          <HomeGrid tiles={visible.map((x) => ({ ...x, sizes: x.sizes[bp], counts: ready ? x.counts : undefined, fit: !arranging && !layout[bp]?.some((c) => c.id === x.id) }))} cells={cells} bp={bp} arranging={arranging}
             onFit={(rows) => setFitH((f) => ({ ...f, ...Object.fromEntries(Object.entries(rows).map(([id, h]) => [`${bp}.${id}`, h])) }))}
             onChange={(next) => change((l) => ({ ...l, [bp]: next }))} onHide={(id) => setShown(id, false)} />
         )}

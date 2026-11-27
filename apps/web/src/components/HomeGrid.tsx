@@ -15,7 +15,8 @@ import { compact, move, presetOf, resizeTo, SIZE_LABEL, viewFor, type Breakpoint
 export interface Counts { urgent: number; suggested: number; general: number }
 
 /** One card as the grid shows it: its body takes the preset its size shows (homeGrid.ts viewFor) */
-export interface Tile { id: string; title: string; sizes: Size[]; counts?: Counts; body: (view: string) => ReactNode }
+// fit: the card hasn't been given a size, so it is as tall as its content, not stretched to whole grid rows
+export interface Tile { id: string; title: string; sizes: Size[]; counts?: Counts; fit?: boolean; body: (view: string) => ReactNode }
 
 type Hold = { id: string; mode: "move" | "w" | "h" | "wh"; x0: number; y0: number; top0: number; origin: Cell; dx: number; dy: number; target: Cell; preset?: string; preview: Cell[] };
 
@@ -250,7 +251,7 @@ export function HomeGrid({ tiles, cells, bp, arranging, onChange, onHide, onFit 
         const cur = presetOf(c, sizesOf(t)) ?? viewFor(c, sizesOf(t));
         const open = cfg === t.id;
         return (
-          <div key={t.id} className={`tile${held ? " held" : ""}${pressing === t.id ? " pressing" : ""}`} data-id={t.id} data-size={view}
+          <div key={t.id} className={`tile${held ? " held" : ""}${pressing === t.id ? " pressing" : ""}${t.fit ? " fit" : ""}`} data-id={t.id} data-size={view}
             style={{ width: w, height: h, transform: `translate(${x}px, ${y}px)` }}
             tabIndex={arranging ? 0 : undefined} role={arranging ? "group" : undefined}
             aria-label={arranging ? `${t.title}. Hold to move, or use the arrow keys` : undefined}
