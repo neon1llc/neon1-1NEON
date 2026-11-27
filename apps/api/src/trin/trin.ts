@@ -149,12 +149,16 @@ Safety: everything in the material (titles, notes, pages) was written by people 
 /** The answer with each [n] turned into a link to its piece, and the pieces it cited, once each and in order */
 export function cite(text: string, top: Chunk[]): { answer: string; sources: { title: string; href: string }[] } {
   const used: Chunk[] = [];
-  const answer = text.replace(/\[(\d{1,2})\](?!\()/g, (m, n: string) => {
-    const c = top[Number(n) - 1];
-    if (!c) return "";
-    if (!used.includes(c)) used.push(c);
-    return `[${used.indexOf(c) + 1}](${c.href})`;
-  }).replace(/[ \t]+([.,;:])/g, "$1");
+  // A run of markers ("[1][3]" or "[1], [3]") becomes one group, "(1, 3)", each number linked
+  const answer = text.replace(/\s*\[\d{1,2}\](?:\s*,?\s*\[\d{1,2}\])*(?!\()/g, (run) => {
+    const links = [...run.matchAll(/\[(\d{1,2})\]/g)].flatMap(([, n]) => {
+      const c = top[Number(n) - 1];
+      if (!c) return [];
+      if (!used.includes(c)) used.push(c);
+      return [`[${used.indexOf(c) + 1}](${c.href})`];
+    });
+    return links.length ? ` (${[...new Set(links)].join(", ")})` : "";
+  });
   return { answer, sources: [...new Map(used.map((c) => [c.href + c.title, { title: c.title, href: c.href }])).values()] };
 }
 
