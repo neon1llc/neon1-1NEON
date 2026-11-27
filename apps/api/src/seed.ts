@@ -22,7 +22,7 @@ export async function seed(repo: Repo, operatorEmail = "pradeep@neon1.tech") {
     id: newId("u"), email, name, title, phone: "", operator: false, strongAuth: strong, theme: "awake", menu: "default", version: 1, createdAt: t0, updatedAt: t0, updatedBy: "seed",
   });
   // People: the operator, an Harborline admin and editor, and a Ridgeview contact who hasn't joined yet
-  const pradeep = user(operatorEmail, "Pradeep", "Lead engineer", true);
+  const pradeep = user(operatorEmail, "Pradeep", "Engineer", true);
   const dana = user("tomas@harborlineoutfitters.example", "Tomas Greer", "Inventory lead");
   const raj = user("priya@harborlineoutfitters.example", "Priya Raman", "Operations director", true);
   const lee = user("lee@ridgeviewauto.example", "Lee Moreno", "Operations lead");

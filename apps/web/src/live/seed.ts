@@ -34,7 +34,7 @@ export async function liveSeed(repo: Repo, mailer: MemoryMailer): Promise<LiveSe
     strongAuth: !short, theme: "awake", menu: "default", tour: fresh ? undefined : "done",
     version: 1, createdAt: t0, updatedAt: t0, updatedBy: "seed",
   });
-  const pradeep = { ...user(PRADEEP, "Pradeep", "Lead engineer"), strongAuth: true };
+  const pradeep = { ...user(PRADEEP, "Pradeep", "Engineer"), strongAuth: true };
   // Starting a free account: only neon1 exists, so the sign-up makes the visitor's account from nothing and
   // Pradeep joins it as he does in real use. Nobody is signed in
   if (PLAY.show === "free") {
