@@ -34,6 +34,7 @@ const THEMES = {
   "matrix-dark": { style: "matrix", mode: "dark", colorScheme: "dark" },
 };
 const VIEWPORTS = { desktop: { width: 1280, height: 900 }, phone: { width: 390, height: 844 } };
+const MAX_ROUTE_ADDRESSES = 160;
 const ARG = (name, fallback) => {
   const inline = process.argv.find((arg) => arg.startsWith(`--${name}=`));
   if (inline) return inline.slice(name.length + 3);
@@ -338,7 +339,7 @@ async function runVariant(browser, roleName, role, themeName, theme, viewportNam
   const queue = [...routes];
   let audited = 0;
   for (let index = 0; index < queue.length; index++) {
-    if (queue.length > 80) throw new Error(`Route discovery exceeded its 80-address safety limit (${queue.length} queued)`);
+    if (queue.length > MAX_ROUTE_ADDRESSES) throw new Error(`Route discovery exceeded its ${MAX_ROUTE_ADDRESSES}-address safety limit (${queue.length} queued)`);
     const route = queue[index];
     if (visited.has(route)) continue;
     visited.add(route);
