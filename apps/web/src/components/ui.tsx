@@ -5,6 +5,7 @@
 import { LAYER_LETTER, LAYER_NAMES, RECORD_KINDS, type Health as HealthT, type Layer } from "@1neon/domain";
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { firstControl, needsInitialFocus } from "../lib/dialogfocus.ts";
+import "../lib/page-index-a11y.ts";
 
 
 // Avatar colors: brand greens and calm accents, all readable with white initials
@@ -314,9 +315,9 @@ export function AskProvider({ children }: { children: ReactNode }) {
 
 // --- Dialog ------------------------------------------------------------------
 
+const DIALOG_FOCUSABLE = "a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])";
 
-/** A native modal dialog: focus trapping, Escape, and the backdrop come from the browser. Its content mounts once the dialog is
- * showing, so a box with `autoFocus` takes focus (a closed dialog can't hold it); content that asks for nothing gets its first control */
+/** A native modal dialog with an explicit Tab boundary for browser support; content mounts while open so `autoFocus` works */
 export function Dialog({ open, onClose, children, label, className }: { open: boolean; onClose: () => void; children: ReactNode; label: string; className?: string }) {
   const ref = useRef<HTMLDialogElement>(null);
   const [shown, setShown] = useState(false);
@@ -337,7 +338,39 @@ export function Dialog({ open, onClose, children, label, className }: { open: bo
   return (
     // A tap on the backdrop (the dialog element itself, outside its content) closes it. React passes a
     // nested dialog's close and cancel up to this one, so only this dialog's own events count
-    <dialog ref={ref} aria-label={label} className={className} onClose={(e) => e.target === e.currentTarget && onClose()} onCancel={(e) => e.target === e.currentTarget && onClose()} onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <dialog
+      ref={ref}
+      aria-label={label}
+      className={className}
+      onKeyDown={(e) => {
+        // A nested dialog keeps its own Tab
+        if (e.key !== "Tab" || (e.target as Element).closest("dialog") !== e.currentTarget) return;
+        const dialog = ref.current;
+        if (!dialog) return;
+        const controls = [...dialog.querySelectorAll<HTMLElement>(DIALOG_FOCUSABLE)].filter((el) => {
+          const style = getComputedStyle(el);
+          return el.getClientRects().length > 0 && style.visibility !== "hidden" && style.display !== "none" && !el.closest("[inert]");
+        });
+        const first = controls[0];
+        const last = controls.at(-1);
+        if (!first || !last) {
+          e.preventDefault();
+          dialog.focus();
+        } else if (!dialog.contains(document.activeElement)) {
+          e.preventDefault();
+          (e.shiftKey ? last : first).focus();
+        } else if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }}
+      onClose={(e) => e.target === e.currentTarget && onClose()}
+      onCancel={(e) => e.target === e.currentTarget && onClose()}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
       {open && shown && <div className="dlg">{children}</div>}
     </dialog>
   );

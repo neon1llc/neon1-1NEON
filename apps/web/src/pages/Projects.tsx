@@ -101,7 +101,7 @@ export function Projects() {
         <input type="search" aria-label="Search projects" placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} />
         <div className="chips" role="group" aria-label="Layer">
           <button className={`chip${layer === "all" ? " on" : ""}`} aria-pressed={layer === "all"} onClick={() => setLayer("all")}>All</button>
-          {LAYERS.map((l) => <button key={l} className={`chip${layer === l ? " on" : ""}`} aria-pressed={layer === l} aria-label={layerName(l)} onClick={() => setLayer(l)} title={layerName(l)}><LayerBadge layer={l} /> <span className="hide-sm">{layerName(l)}</span></button>)}
+          {LAYERS.map((l) => <button key={l} className={`chip${layer === l ? " on" : ""}`} aria-pressed={layer === l} onClick={() => setLayer(l)} title={layerName(l)}><LayerBadge layer={l} /> <span className="hide-sm">{layerName(l)}</span></button>)}
         </div>
         {view === "list" && (
           <select aria-label="Sort by" value={sort} onChange={(e) => order(e.target.value as Sort)}>

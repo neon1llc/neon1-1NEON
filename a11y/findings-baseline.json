@@ -1,0 +1,400 @@
+{
+  "format": 1,
+  "findings": [
+    {
+      "key": "label-content-name-mismatch|a[aria-label=\"Needs: 2\"]",
+      "id": "label-content-name-mismatch",
+      "impact": "serious",
+      "selector": "a[aria-label=\"Needs: 2\"]",
+      "reason": "The layer summary links are in protected Workspace.tsx. Their expanded aria-label omits the visible layer abbreviation and count; this remains a known serious issue for the protected-path follow-up."
+    },
+    {
+      "key": "label-content-name-mismatch|a[aria-label=\"Execute: 1\"]",
+      "id": "label-content-name-mismatch",
+      "impact": "serious",
+      "selector": "a[aria-label=\"Execute: 1\"]",
+      "reason": "The layer summary links are in protected Workspace.tsx. Their expanded aria-label omits the visible layer abbreviation and count; this remains a known serious issue for the protected-path follow-up."
+    },
+    {
+      "key": "label-content-name-mismatch|a[aria-label=\"Observe: 0\"]",
+      "id": "label-content-name-mismatch",
+      "impact": "serious",
+      "selector": "a[aria-label=\"Observe: 0\"]",
+      "reason": "The layer summary links are in protected Workspace.tsx. Their expanded aria-label omits the visible layer abbreviation and count; this remains a known serious issue for the protected-path follow-up."
+    },
+    {
+      "key": "label-content-name-mismatch|a[aria-label=\"Normalize: 0\"]",
+      "id": "label-content-name-mismatch",
+      "impact": "serious",
+      "selector": "a[aria-label=\"Normalize: 0\"]",
+      "reason": "The layer summary links are in protected Workspace.tsx. Their expanded aria-label omits the visible layer abbreviation and count; this remains a known serious issue for the protected-path follow-up."
+    },
+    {
+      "key": "target-size|p > .linkish:nth-child(1)",
+      "id": "target-size",
+      "impact": "serious",
+      "selector": "p > .linkish:nth-child(1)",
+      "reason": "Existing project action targets measure below 24 CSS px. Resizing them requires changes to protected app.css or page layout, beyond this lane’s no-redesign scope. Keep these known findings visible and fail on new rule/selector pairs."
+    },
+    {
+      "key": "target-size|.linkish:nth-child(3)",
+      "id": "target-size",
+      "impact": "serious",
+      "selector": ".linkish:nth-child(3)",
+      "reason": "Existing project action targets measure below 24 CSS px. Resizing them requires changes to protected app.css or page layout, beyond this lane’s no-redesign scope. Keep these known findings visible and fail on new rule/selector pairs."
+    },
+    {
+      "key": "target-size|.small:nth-child(9) > .linkish:nth-child(1)",
+      "id": "target-size",
+      "impact": "serious",
+      "selector": ".small:nth-child(9) > .linkish:nth-child(1)",
+      "reason": "Existing project action targets measure below 24 CSS px. Resizing them requires changes to protected app.css or page layout, beyond this lane’s no-redesign scope. Keep these known findings visible and fail on new rule/selector pairs."
+    },
+    {
+      "key": "target-size|p:nth-child(9) > .linkish:nth-child(1)",
+      "id": "target-size",
+      "impact": "serious",
+      "selector": "p:nth-child(9) > .linkish:nth-child(1)",
+      "reason": "Existing project action targets measure below 24 CSS px. Resizing them requires changes to protected app.css or page layout, beyond this lane’s no-redesign scope. Keep these known findings visible and fail on new rule/selector pairs."
+    },
+    {
+      "key": "target-size|.chip[type=\"button\"]:nth-child(4)",
+      "id": "target-size",
+      "impact": "serious",
+      "selector": ".chip[type=\"button\"]:nth-child(4)",
+      "reason": "The starter chip has only 19.6 CSS px of safe spacing from its nearest neighbor. Correcting the spacing requires a visual change to protected app.css, outside this lane's no-redesign scope; retain this known issue and fail on new rule/selector pairs."
+    },
+    {
+      "key": "target-size|input[aria-label=\"Limit for Hand over\"]",
+      "id": "target-size",
+      "impact": "serious",
+      "selector": "input[aria-label=\"Limit for Hand over\"]",
+      "reason": "The handover limit field measures below the target-size threshold. Its control height comes from protected app.css; retain this known issue and fail on new rule/selector pairs."
+    },
+    {
+      "key": "target-size|section:nth-child(3) > .add-row > .linkish.small",
+      "id": "target-size",
+      "impact": "serious",
+      "selector": "section:nth-child(3) > .add-row > .linkish.small",
+      "reason": "The Add change action is below the WCAG 2.2 target-size spacing threshold. Its shared small-control hit area is in protected app.css; retain this known issue and fail on new rule/selector pairs."
+    },
+    {
+      "key": "target-size|input[aria-label=\"Limit for Verify\"]",
+      "id": "target-size",
+      "impact": "serious",
+      "selector": "input[aria-label=\"Limit for Verify\"]",
+      "reason": "The Verify limit field measures below the WCAG 2.2 target-size threshold. Its control height comes from protected app.css; retain this known issue and fail on new rule/selector pairs."
+    },
+    {
+      "key": "target-size|section:nth-child(3) > .add-row > .chips.starters[aria-label=\"Suggestions\"] > .chip[type=\"button\"]:nth-child(3)",
+      "id": "target-size",
+      "impact": "serious",
+      "selector": "section:nth-child(3) > .add-row > .chips.starters[aria-label=\"Suggestions\"] > .chip[type=\"button\"]:nth-child(3)",
+      "reason": "The Short how-to video starter chip has insufficient safe target spacing. Its dimensions are set by protected app.css; retain this known issue and fail on new rule/selector pairs."
+    },
+    {
+      "key": "target-size|section:nth-child(4) > .add-row > .linkish.small",
+      "id": "target-size",
+      "impact": "serious",
+      "selector": "section:nth-child(4) > .add-row > .linkish.small",
+      "reason": "The Add update action measures below the WCAG 2.2 target-size threshold. Its shared small-control hit area is in protected app.css; retain this known issue and fail on new rule/selector pairs."
+    }
+  ],
+  "manualFindings": [
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/workspace|a,button.linkish",
+      "type": "target-size-under-24",
+      "reason": "This route has one or more clickable targets under 24 CSS px at desktop size. The global app.css that controls shared target geometry is protected by the handoff; target expansion would change layout outside this semantics and focus lane. Keep as a known finding and fail on new route/selector combinations."
+    },
+    {
+      "key": "reflow-320|/1NEON/demo/o/:org/workspace",
+      "type": "reflow-320",
+      "reason": "At 320 CSS px, this route exceeds the viewport width. Correcting the wrap or overflow requires responsive layout changes in protected app.css and is outside the no-redesign scope; retain the measured route as a known finding."
+    },
+    {
+      "key": "text-spacing|/1NEON/demo/o/:org/workspace",
+      "type": "text-spacing",
+      "reason": "Applying WCAG text-spacing overrides makes this route wider than the 320 CSS px viewport. The needed wrapping/layout rules live in protected shared styles; retain the measured route and fail on new route patterns."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/workflow|a.name,a.name",
+      "type": "target-size-under-24",
+      "reason": "This route has one or more clickable targets under 24 CSS px at desktop size. The global app.css that controls shared target geometry is protected by the handoff; target expansion would change layout outside this semantics and focus lane. Keep as a known finding and fail on new route/selector combinations."
+    },
+    {
+      "key": "text-spacing|/1NEON/demo/o/:org/workflow",
+      "type": "text-spacing",
+      "reason": "Applying WCAG text-spacing overrides makes this route wider than the 320 CSS px viewport. The needed wrapping/layout rules live in protected shared styles; retain the measured route and fail on new route patterns."
+    },
+    {
+      "key": "text-spacing|/1NEON/demo/o/:org/projects",
+      "type": "text-spacing",
+      "reason": "Applying WCAG text-spacing overrides makes this route wider than the 320 CSS px viewport. The needed wrapping/layout rules live in protected shared styles; retain the measured route and fail on new route patterns."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/new|a",
+      "type": "target-size-under-24",
+      "reason": "This route has one or more clickable targets under 24 CSS px at desktop size. The global app.css that controls shared target geometry is protected by the handoff; target expansion would change layout outside this semantics and focus lane. Keep as a known finding and fail on new route/selector combinations."
+    },
+    {
+      "key": "text-spacing|/1NEON/demo/o/:org/projects/new",
+      "type": "text-spacing",
+      "reason": "Applying WCAG text-spacing overrides makes this route wider than the 320 CSS px viewport. The needed wrapping/layout rules live in protected shared styles; retain the measured route and fail on new route patterns."
+    },
+    {
+      "key": "reflow-320|/1NEON/demo/o/:org/agreement",
+      "type": "reflow-320",
+      "reason": "At 320 CSS px, this route exceeds the viewport width. Correcting the wrap or overflow requires responsive layout changes in protected app.css and is outside the no-redesign scope; retain the measured route as a known finding."
+    },
+    {
+      "key": "text-spacing|/1NEON/demo/o/:org/agreement",
+      "type": "text-spacing",
+      "reason": "Applying WCAG text-spacing overrides makes this route wider than the 320 CSS px viewport. The needed wrapping/layout rules live in protected shared styles; retain the measured route and fail on new route patterns."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/people|button.linkish.small",
+      "type": "target-size-under-24",
+      "reason": "This route has one or more clickable targets under 24 CSS px at desktop size. The global app.css that controls shared target geometry is protected by the handoff; target expansion would change layout outside this semantics and focus lane. Keep as a known finding and fail on new route/selector combinations."
+    },
+    {
+      "key": "text-spacing|/1NEON/demo/o/:org/people",
+      "type": "text-spacing",
+      "reason": "Applying WCAG text-spacing overrides makes this route wider than the 320 CSS px viewport. The needed wrapping/layout rules live in protected shared styles; retain the measured route and fail on new route patterns."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/documents|a",
+      "type": "target-size-under-24",
+      "reason": "This route has one or more clickable targets under 24 CSS px at desktop size. The global app.css that controls shared target geometry is protected by the handoff; target expansion would change layout outside this semantics and focus lane. Keep as a known finding and fail on new route/selector combinations."
+    },
+    {
+      "key": "text-spacing|/1NEON/demo/o/:org/documents",
+      "type": "text-spacing",
+      "reason": "Applying WCAG text-spacing overrides makes this route wider than the 320 CSS px viewport. The needed wrapping/layout rules live in protected shared styles; retain the measured route and fail on new route patterns."
+    },
+    {
+      "key": "text-spacing|/1NEON/demo/o/:org/settings",
+      "type": "text-spacing",
+      "reason": "Applying WCAG text-spacing overrides makes this route wider than the 320 CSS px viewport. The needed wrapping/layout rules live in protected shared styles; retain the measured route and fail on new route patterns."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project|a,button.linkish,button.linkish",
+      "type": "target-size-under-24",
+      "reason": "This route has one or more clickable targets under 24 CSS px at desktop size. The global app.css that controls shared target geometry is protected by the handoff; target expansion would change layout outside this semantics and focus lane. Keep as a known finding and fail on new route/selector combinations."
+    },
+    {
+      "key": "text-spacing|/1NEON/demo/o/:org/projects/:project",
+      "type": "text-spacing",
+      "reason": "Applying WCAG text-spacing overrides makes this route wider than the 320 CSS px viewport. The needed wrapping/layout rules live in protected shared styles; retain the measured route and fail on new route patterns."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project/needs|a,button.item-open,button.item-open",
+      "type": "target-size-under-24",
+      "reason": "This route has one or more clickable targets under 24 CSS px at desktop size. The global app.css that controls shared target geometry is protected by the handoff; target expansion would change layout outside this semantics and focus lane. Keep as a known finding and fail on new route/selector combinations."
+    },
+    {
+      "key": "reflow-320|/1NEON/demo/o/:org/projects/:project/needs",
+      "type": "reflow-320",
+      "reason": "At 320 CSS px, this route exceeds the viewport width. Correcting the wrap or overflow requires responsive layout changes in protected app.css and is outside the no-redesign scope; retain the measured route as a known finding."
+    },
+    {
+      "key": "text-spacing|/1NEON/demo/o/:org/projects/:project/needs",
+      "type": "text-spacing",
+      "reason": "Applying WCAG text-spacing overrides makes this route wider than the 320 CSS px viewport. The needed wrapping/layout rules live in protected shared styles; retain the measured route and fail on new route patterns."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project/execute|a",
+      "type": "target-size-under-24",
+      "reason": "This route has one or more clickable targets under 24 CSS px at desktop size. The global app.css that controls shared target geometry is protected by the handoff; target expansion would change layout outside this semantics and focus lane. Keep as a known finding and fail on new route/selector combinations."
+    },
+    {
+      "key": "text-spacing|/1NEON/demo/o/:org/projects/:project/execute",
+      "type": "text-spacing",
+      "reason": "Applying WCAG text-spacing overrides makes this route wider than the 320 CSS px viewport. The needed wrapping/layout rules live in protected shared styles; retain the measured route and fail on new route patterns."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project/observe|a",
+      "type": "target-size-under-24",
+      "reason": "This route has one or more clickable targets under 24 CSS px at desktop size. The global app.css that controls shared target geometry is protected by the handoff; target expansion would change layout outside this semantics and focus lane. Keep as a known finding and fail on new route/selector combinations."
+    },
+    {
+      "key": "text-spacing|/1NEON/demo/o/:org/projects/:project/observe",
+      "type": "text-spacing",
+      "reason": "Applying WCAG text-spacing overrides makes this route wider than the 320 CSS px viewport. The needed wrapping/layout rules live in protected shared styles; retain the measured route and fail on new route patterns."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project/normalize|a",
+      "type": "target-size-under-24",
+      "reason": "This route has one or more clickable targets under 24 CSS px at desktop size. The global app.css that controls shared target geometry is protected by the handoff; target expansion would change layout outside this semantics and focus lane. Keep as a known finding and fail on new route/selector combinations."
+    },
+    {
+      "key": "text-spacing|/1NEON/demo/o/:org/projects/:project/normalize",
+      "type": "text-spacing",
+      "reason": "Applying WCAG text-spacing overrides makes this route wider than the 320 CSS px viewport. The needed wrapping/layout rules live in protected shared styles; retain the measured route and fail on new route patterns."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project/proposal|a,a",
+      "type": "target-size-under-24",
+      "reason": "This route has one or more clickable targets under 24 CSS px at desktop size. The global app.css that controls shared target geometry is protected by the handoff; target expansion would change layout outside this semantics and focus lane. Keep as a known finding and fail on new route/selector combinations."
+    },
+    {
+      "key": "text-spacing|/1NEON/demo/o/:org/projects/:project/proposal",
+      "type": "text-spacing",
+      "reason": "Applying WCAG text-spacing overrides makes this route wider than the 320 CSS px viewport. The needed wrapping/layout rules live in protected shared styles; retain the measured route and fail on new route patterns."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project/needs|a,button.item-open",
+      "type": "target-size-under-24",
+      "reason": "This route has one or more clickable targets under 24 CSS px at desktop size. The global app.css that controls shared target geometry is protected by the handoff; target expansion would change layout outside this semantics and focus lane. Keep as a known finding and fail on new route/selector combinations."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project/needs|a",
+      "type": "target-size-under-24",
+      "reason": "This route has one or more clickable targets under 24 CSS px at desktop size. The global app.css that controls shared target geometry is protected by the handoff; target expansion would change layout outside this semantics and focus lane. Keep as a known finding and fail on new route/selector combinations."
+    },
+    {
+      "key": "text-spacing|/1NEON/demo/o/:org/layer/needs",
+      "type": "text-spacing",
+      "reason": "Applying WCAG text-spacing overrides makes this route wider than the 320 CSS px viewport. The needed wrapping/layout rules live in protected shared styles; retain the measured route and fail on new route patterns."
+    },
+    {
+      "key": "text-spacing|/1NEON/demo/o/:org/layer/execute",
+      "type": "text-spacing",
+      "reason": "Applying WCAG text-spacing overrides makes this route wider than the 320 CSS px viewport. The needed wrapping/layout rules live in protected shared styles; retain the measured route and fail on new route patterns."
+    },
+    {
+      "key": "text-spacing|/1NEON/demo/o/:org/layer/observe",
+      "type": "text-spacing",
+      "reason": "Applying WCAG text-spacing overrides makes this route wider than the 320 CSS px viewport. The needed wrapping/layout rules live in protected shared styles; retain the measured route and fail on new route patterns."
+    },
+    {
+      "key": "text-spacing|/1NEON/demo/o/:org/layer/normalize",
+      "type": "text-spacing",
+      "reason": "Applying WCAG text-spacing overrides makes this route wider than the 320 CSS px viewport. The needed wrapping/layout rules live in protected shared styles; retain the measured route and fail on new route patterns."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project/invoices/:invoice|a,a",
+      "type": "target-size-under-24",
+      "reason": "This route has one or more clickable targets under 24 CSS px at desktop size. The global app.css that controls shared target geometry is protected by the handoff; target expansion would change layout outside this semantics and focus lane. Keep as a known finding and fail on new route/selector combinations."
+    },
+    {
+      "key": "text-spacing|/1NEON/demo/o/:org/projects/:project/invoices/:invoice",
+      "type": "text-spacing",
+      "reason": "Applying WCAG text-spacing overrides makes this route wider than the 320 CSS px viewport. The needed wrapping/layout rules live in protected shared styles; retain the measured route and fail on new route patterns."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project/page|a",
+      "type": "target-size-under-24",
+      "reason": "This route has one or more clickable targets under 24 CSS px at desktop size. The global app.css that controls shared target geometry is protected by the handoff; target expansion would change layout outside this semantics and focus lane. Keep as a known finding and fail on new route/selector combinations."
+    },
+    {
+      "key": "text-spacing|/1NEON/demo/o/:org/projects/:project/page",
+      "type": "text-spacing",
+      "reason": "Applying WCAG text-spacing overrides makes this route wider than the 320 CSS px viewport. The needed wrapping/layout rules live in protected shared styles; retain the measured route and fail on new route patterns."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project/board|a,button.item-open",
+      "type": "target-size-under-24",
+      "reason": "This route has one or more clickable targets under 24 CSS px at desktop size. The global app.css that controls shared target geometry is protected by the handoff; target expansion would change layout outside this semantics and focus lane. Keep as a known finding and fail on new route/selector combinations."
+    },
+    {
+      "key": "text-spacing|/1NEON/demo/o/:org/projects/:project/board",
+      "type": "text-spacing",
+      "reason": "Applying WCAG text-spacing overrides makes this route wider than the 320 CSS px viewport. The needed wrapping/layout rules live in protected shared styles; retain the measured route and fail on new route patterns."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project/timeline|a,button.item-open,button.item-open,button.item-open,button.item-open",
+      "type": "target-size-under-24",
+      "reason": "This route has one or more clickable targets under 24 CSS px at desktop size. The global app.css that controls shared target geometry is protected by the handoff; target expansion would change layout outside this semantics and focus lane. Keep as a known finding and fail on new route/selector combinations."
+    },
+    {
+      "key": "text-spacing|/1NEON/demo/o/:org/projects/:project/timeline",
+      "type": "text-spacing",
+      "reason": "Applying WCAG text-spacing overrides makes this route wider than the 320 CSS px viewport. The needed wrapping/layout rules live in protected shared styles; retain the measured route and fail on new route patterns."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project/overview|a,button.linkish,button.linkish",
+      "type": "target-size-under-24",
+      "reason": "This route has one or more clickable targets under 24 CSS px at desktop size. The global app.css that controls shared target geometry is protected by the handoff; target expansion would change layout outside this semantics and focus lane. Keep as a known finding and fail on new route/selector combinations."
+    },
+    {
+      "key": "text-spacing|/1NEON/demo/o/:org/projects/:project/overview",
+      "type": "text-spacing",
+      "reason": "Applying WCAG text-spacing overrides makes this route wider than the 320 CSS px viewport. The needed wrapping/layout rules live in protected shared styles; retain the measured route and fail on new route patterns."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project/timeline|a,button.item-open,button.item-open",
+      "type": "target-size-under-24",
+      "reason": "This route has one or more clickable targets under 24 CSS px at desktop size. The global app.css that controls shared target geometry is protected by the handoff; target expansion would change layout outside this semantics and focus lane. Keep as a known finding and fail on new route/selector combinations."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project/board|a",
+      "type": "target-size-under-24",
+      "reason": "This route has one or more clickable targets under 24 CSS px at desktop size. The global app.css that controls shared target geometry is protected by the handoff; target expansion would change layout outside this semantics and focus lane. Keep as a known finding and fail on new route/selector combinations."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project/timeline|a",
+      "type": "target-size-under-24",
+      "reason": "This route has one or more clickable targets under 24 CSS px at desktop size. The global app.css that controls shared target geometry is protected by the handoff; target expansion would change layout outside this semantics and focus lane. Keep as a known finding and fail on new route/selector combinations."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/workspace|button.linkish",
+      "type": "target-size-under-24",
+      "reason": "The workspace monthly check-in action measures under 24 CSS px at desktop size. Its shared hit-area styles are in protected app.css; changing them would alter the protected Home layout outside this lane’s no-redesign scope. Keep this known finding and fail on new route/selector combinations."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/workspace|button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past,button.day.past",
+      "type": "target-size-under-24",
+      "reason": "Past-day buttons in the monthly check-in calendar are below the target-size threshold. Workspace and shared hit-area geometry are protected; retain this known route/selector group and fail on new route/selector combinations."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/workflow|a.name",
+      "type": "target-size-under-24",
+      "reason": "The workflow route has a small name link below the target-size threshold. Its hit area uses protected app.css; retain this known route/selector group and fail on new route/selector combinations."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/people|button.linkish.small,button.linkish.small,button.linkish.small,button.linkish.small",
+      "type": "target-size-under-24",
+      "reason": "The people route has four small linkish action buttons below the target-size threshold. Their hit areas use protected app.css; retain this known route/selector group and fail on new route/selector combinations."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/people|button.linkish.small,button.linkish.small,button.linkish.small",
+      "type": "target-size-under-24",
+      "reason": "The operator route exposes this exact target-size group, whose hit areas use protected app.css geometry. Keep this known route and selector combination visible and fail on any new combination."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project|a,button.linkish,button.linkish,button.linkish.small,button.linkish.small",
+      "type": "target-size-under-24",
+      "reason": "The operator route exposes this exact target-size group, whose hit areas use protected app.css geometry. Keep this known route and selector combination visible and fail on any new combination."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/all/workflow|a.name,a.name,a.name,a.name,a.name",
+      "type": "target-size-under-24",
+      "reason": "The operator route exposes this exact target-size group, whose hit areas use protected app.css geometry. Keep this known route and selector combination visible and fail on any new combination."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/all/prospects|a",
+      "type": "target-size-under-24",
+      "reason": "The operator route exposes this exact target-size group, whose hit areas use protected app.css geometry. Keep this known route and selector combination visible and fail on any new combination."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project/observation|a",
+      "type": "target-size-under-24",
+      "reason": "The operator route exposes this exact target-size group, whose hit areas use protected app.css geometry. Keep this known route and selector combination visible and fail on any new combination."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project/overview|a,button.linkish,button.linkish,button.linkish.small,button.linkish.small",
+      "type": "target-size-under-24",
+      "reason": "The operator route exposes this exact target-size group, whose hit areas use protected app.css geometry. Keep this known route and selector combination visible and fail on any new combination."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/people|button.linkish.small,button.linkish.small",
+      "type": "target-size-under-24",
+      "reason": "The operator route exposes this exact target-size group, whose hit areas use protected app.css geometry. Keep this known route and selector combination visible and fail on any new combination."
+    },
+    {
+      "key": "target-size-under-24|/1NEON/demo/o/:org/projects/:project/timeline|a,button.item-open",
+      "type": "target-size-under-24",
+      "reason": "The operator route exposes this exact target-size group, whose hit areas use protected app.css geometry. Keep this known route and selector combination visible and fail on any new combination."
+    }
+  ]
+}

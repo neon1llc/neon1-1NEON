@@ -234,13 +234,13 @@ function SuperControls() {
       <dl className="card facts">
         <div><dt>Standing</dt><dd>{s ? <>Suspended {s.why === "super" ? "" : `(${s.why === "inactive" ? "inactivity" : "abuse"}) `}<span className="helper">{suspendText(s)}</span></> : potential ? "Potential" : "Client"}</dd></div>
         <div><dt>Inactivity</dt><dd>{org.test ? "A test organization: never suspended for inactivity" : org.keptAt ? "Kept: never suspended for inactivity" : potential && !org.prospect?.fromClient ? "Free-account clock" : org.dormant ? `${plural(org.dormant.notices, "reminder")} sent` : `Suspended after ${INACTIVE_DAYS} quiet days`}</dd></div>
-        <div className="actions">
+        <div><dt className="sr">Organization actions</dt><dd><div className="actions">
           {s
             ? <button className="btn btn-ghost btn-sm" onClick={() => void act(`/orgs/${org.id}/recommission`, `${org.name} is recommissioned`).catch(() => undefined)}>Recommission</button>
             : <button className="btn btn-ghost btn-sm" onClick={() => setSuspending(true)}>Suspend</button>}
           {!potential && <button className="btn btn-ghost btn-sm" onClick={() => void downgrade()}>Make potential</button>}
           {(!potential || org.prospect?.fromClient) && <button className="btn btn-ghost btn-sm" onClick={() => void act(`/orgs/${org.id}/keep`, org.keptAt ? `${org.name} is back on the inactivity clock` : `${org.name} is kept`, { keep: !org.keptAt }).catch(() => undefined)}>{org.keptAt ? "Stop keeping" : "Keep active"}</button>}
-        </div>
+        </div></dd></div>
       </dl>
       <NoteDialog scope="org" open={suspending} onClose={() => setSuspending(false)} title={`Suspend ${org.name}`} go={(note) => act(`/orgs/${org.id}/suspend`, `${org.name} is suspended`, note ? { note } : {})} />
     </>

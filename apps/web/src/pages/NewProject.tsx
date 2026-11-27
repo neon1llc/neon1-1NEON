@@ -116,7 +116,7 @@ export function NewProject() {
                 {KINDS.map((x) => (
                   <label key={x.id} className={`card option tpl${kind === x.id ? " rec" : ""}`}>
                     <input type="radio" name="kind" value={x.id} checked={kind === x.id} onChange={() => setKind(x.id)} className="sr" />
-                    <span className="tpl-row"><h4>{x.name}</h4><span className="tag">{x.keyPrefix}</span></span>
+                    <span className="tpl-row"><h4 aria-level={2}>{x.name}</h4><span className="tag">{x.keyPrefix}</span></span>
                     <span className="muted small">{x.summary}</span>
                   </label>
                 ))}

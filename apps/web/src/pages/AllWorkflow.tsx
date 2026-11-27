@@ -55,7 +55,7 @@ export function AllWorkflow() {
             const counts = [mine.length - closed > 0 && `${mine.length - closed} open`, closed > 0 && `${closed} closed`].filter(Boolean).join(" · ");
             return (
               <section className="lane" key={o.id}>
-                <h3>{o.name} <span className="tag client">{o.clientId}</span> <span className="muted small">{counts}</span></h3>
+                <h3 aria-level={2}>{o.name} <span className="tag client">{o.clientId}</span> <span className="muted small">{counts}</span></h3>
                 <Board stages={o.stages} projects={mine} hrefFor={(p) => href(p.tenantId, p.key)} />
               </section>
             );

@@ -111,6 +111,9 @@ input:focus, textarea:focus, select:focus, select:open { outline: 2px solid var(
 /* Boxes and dots keep the brand color, and show a ring only for keyboard focus, never a square on click */
 /* Checkboxes and radios keep their own size: the full-width rule above is for text fields */
 input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); width: 18px; height: 18px; min-height: 0; padding: 0; flex: none; }
+/* A date field puts focus on its inner parts, which some browsers don't count as :focus on the field */
+input[type="date"]:focus-within, .page-text:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.lens-bar a:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
 input[type="checkbox"]:focus, input[type="radio"]:focus { outline: none; }
 input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
 
