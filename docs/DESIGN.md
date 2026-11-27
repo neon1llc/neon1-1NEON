@@ -12,6 +12,15 @@
 - The shell: side rail, a 53px mini rail on a phone, sticky top bar, and a phone bottom tab bar. Rows shorten with the window's height so the open menu fits without scrolling. Neo docks beside the rail (`.n1chat-right`).
 - Cards, the board, and forms.
 
+Words for a screen (window, section, section area, card, card head, card group) are defined in the site's `docs/design/patterns.md`; use them in reviews and issues.
+
+What the portal adds for them:
+
+- Home's cards keep the size they're given and scroll inside it, head held at the top (`.tile-body`); a card not yet placed fits its content up to its tallest preset (`pages/Workspace.tsx`).
+- `components/Act.tsx` is the action button for a record's controls, and `components/MemberActs.tsx` holds the people dialogs a major one opens. `Arr` in `ui.tsx` is the one arrow.
+- Control padding tokens `--ctl-px`, `--ctl-px-sm`, `--ctl-inset`, and `--t-hover` for highlight fades.
+- On a phone the board pans in any direction inside itself (`.board`, `.lens-board`).
+
 The look is `data-style` (sentinel, or absent for Matrix), `data-theme` (`awake`, `matrix`, or `device`), and `data-look`, painted by `lib/themepaint.ts` from the saved choice.
 
 A component here overrides a step only where it must, with a comment saying why. `layout-contract.test.ts` fails when this stylesheet defines a base step of its own, uses a step that does not exist, or writes a text size as a number.
