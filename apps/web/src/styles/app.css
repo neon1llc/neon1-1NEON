@@ -2308,6 +2308,8 @@ body:has(.shell.mini) .n1chat.n1chat-right { left: auto; right: max(16px, env(sa
 .readonly-bar > strong { flex: none; }
 .readonly-bar { padding-left: calc(var(--gut) + var(--inl)); padding-right: calc(var(--gut) + env(safe-area-inset-right)); }
 @media (max-width: 480px) { .readonly-bar { font-size: var(--fs-xs); flex-wrap: wrap; align-content: center; gap: 0 var(--sp-1); } }
+/* A suspension's banner carries super's own words, so it grows to fit them instead of clipping at the top bar's height */
+.readonly-bar.suspend-bar { height: auto; min-height: var(--top-h); padding-top: var(--sp-2); padding-bottom: var(--sp-2); overflow: visible; }
 
 /* --- The organization picker follows the menu's rhythm (2026-11-17) ---
    The picker is an icon box tall (the box inside a menu row), and the space from the rule above it to the picker,
