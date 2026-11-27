@@ -56,6 +56,22 @@ jobs:
       - run: npm ci
       - run: npm run check
 
+  # Keep route and shared JavaScript chunks close to today's built sizes
+  web-budget:
+    name: ci-web-budget
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build --workspace @1neon/web
+      - run: node scripts/web-build-budget.mjs
+
   # Whether these exact inputs already passed the walkthroughs in CI (scripts/walkthroughs-proof.mjs): a release commit that
   # only moves the changelog, the API, the docs or the release number is the dev commit that passed, so it needn't play them
   # again. Any other difference, an error, or a changed live site runs the whole suite
