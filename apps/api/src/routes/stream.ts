@@ -92,6 +92,14 @@ export function streamRoutes(app: App, k: Kit) {
 }
 
 
+/** Whether a reply's sender is the person's own mailbox: their address, or it without a "+tag" (mail to
+ * name+tag@ lands in name@, so someone who signed up with a tagged address replies from the plain one) */
+export function sameMailbox(account: string, from: string) {
+  const a = account.trim().toLowerCase(), f = from.trim().toLowerCase();
+  return a === f || a.replace(/\+[^@]*@/, "@") === f;
+}
+
+
 /** A reply to a project message's email, passed on by neon1-notify once its signature and the mail's
  * authentication checked out. It posts only as the person the address was made for, from their own
  * address, while they can still comment there */
@@ -100,7 +108,7 @@ export async function projectReplyByEmail(k: Pick<Kit, "repo">, token: string, t
   const t = await readToken(repo, token);
   if (!t) return { posted: false as const, reason: "unknown_token" };
   const [user, tenant, project, members] = await Promise.all([repo.getUser(t.userId), repo.getTenant(t.tenantId), repo.getProject(t.tenantId, t.projectId), repo.listMembers(t.tenantId)]);
-  if (!user || user.email.toLowerCase() !== from.toLowerCase()) return { posted: false as const, reason: "not_sender" };
+  if (!user || !sameMailbox(user.email, from)) return { posted: false as const, reason: "not_sender" };
   const member = members.find((m) => m.userId === user.id && m.status === "joined");
   if (!tenant || !project || project.deletedAt || project.archived) return { posted: false as const, reason: "no_project" };
   if (!member || !can({ operator: false, strongSession: false } as Parameters<typeof can>[0], "comment", member.access).ok) return { posted: false as const, reason: "not_allowed" };

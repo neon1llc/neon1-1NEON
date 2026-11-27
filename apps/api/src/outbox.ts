@@ -314,6 +314,8 @@ async function eventTargets(d: OutboxDeps, e: AuditEvent, clock: Clock): Promise
     if (/^option\.(created|updated|deleted|quoted)$/.test(e.action) && !cfg.operatorEmails.includes(u.email.toLowerCase())) continue;
     // A project message carries its words and a Reply-To of this person's own, so answering the email posts back
     if (e.action === "message.created" && wants(u.notify, e.action, "email")) {
+      // As with every notice, a test organization's messages stay out of neon1's inbox
+      if (tenant?.test && cfg.operatorEmails.includes(u.email.toLowerCase())) continue;
       const project = key ? (await io(repo.listProjects(e.tenantId))).find((p) => p.key === key) : undefined;
       const msg = project ? (await io(repo.listComments(e.tenantId, project.id, THREAD))).find((c) => c.id === e.target) : undefined;
       if (project && msg) {
