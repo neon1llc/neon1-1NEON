@@ -13,6 +13,8 @@ MATRIS, Inc. is a made-up client on dev that holds every state 1NEON knows, so a
 
 Sign in at `/1NEON/` with "Email me a code". Codes arrive in neon1llc@gmail.com; match the address in the To line.
 
+In neon1llc@gmail.com, the label neon1/MATRIS holds all MATRIS mail: a filter matches `deliveredto:` each address below. Sign-in codes keep the neon1/Codes label and stay in the inbox. When you add a person, add their address to that filter.
+
 | Person | Access | Role in the story | Sign-in |
 |---|---|---|---|
 | super (Pradeep) | operator | neon1 | neon1llc@gmail.com, pradeep@neon1.tech |
