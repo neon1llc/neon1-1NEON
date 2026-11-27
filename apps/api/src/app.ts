@@ -24,6 +24,7 @@ import { keepRoutes, prospectRoutes } from "./routes/prospects.ts";
 import { suspensionRoutes } from "./routes/suspensions.ts";
 import { QUOTA_SK, accountGuard, prospectGuard, suspensionGuard } from "./lib/guards.ts";
 import { commentRoutes } from "./routes/comments.ts";
+import { streamRoutes } from "./routes/stream.ts";
 import { contactRoutes } from "./routes/contact.ts";
 import { chatInboxRoutes, chatRoutes } from "./routes/chat.ts";
 import { bugRoutes } from "./routes/bug.ts";
@@ -216,6 +217,7 @@ export function createApp(d: Deps) {
   projectRoutes(app, k);
   itemRoutes(app, k);
   commentRoutes(app, k);
+  streamRoutes(app, k);
   // The organization's shared chat with neon1
   chatRoutes(app, k);
   // Suspensions, downgrades, and recommission requests (super's routes sit outside /t/:tid)

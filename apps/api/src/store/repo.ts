@@ -34,6 +34,8 @@ export const keys = {
   smsOwner: (phone: string) => ({ PK: `SMSPHONE#${phone}`, SK: "OWNER" }),
   // Duplicate SNS deliveries must not confirm a number or queue another acknowledgment
   smsInbound: (id: string) => ({ PK: "SMSINBOUND", SK: id }),
+  // A reply-by-email token: which person, organization, and project an emailed reply posts as (lib/reply.ts)
+  replyToken: (token: string) => ({ PK: `REPLY#${token}`, SK: "META" }),
   // The person's recent code texts (time, number, purpose), kept apart from the codes themselves so
   // using or replacing a code never resets the hourly limit; expires an hour after the latest send
   smsSent: (uid: string) => ({ PK: `USER#${uid}`, SK: "SMSSENT" }),
@@ -98,6 +100,8 @@ export interface Comment {
   authorId: string;
   authorName: string;
   body: string;
+  // A project message that arrived as a reply to its email
+  via?: "email";
 }
 
 

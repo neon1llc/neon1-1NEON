@@ -195,7 +195,7 @@ describe("notification groups", () => {
     const { groupOf, wants } = await import("./notify.ts");
     const { KIND_LAYER } = await import("./model.ts");
     const expected: Record<string, string> = {
-      "comment.created": "comments", "decision.approved": "decisions", "doc.uploaded": "files", "doc.deleted": "files",
+      "comment.created": "comments", "message.created": "messages", "decision.approved": "decisions", "doc.uploaded": "files", "doc.deleted": "files",
       "member.invited": "access", "member.joined": "access", "member.updated": "access", "member.signedin": "signins",
       "org.created": "updates", "org.stages": "workflow", "project.created": "workflow", "project.moved": "workflow",
       "project.trashed": "workflow", "project.updated": "updates",

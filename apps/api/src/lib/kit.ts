@@ -13,6 +13,7 @@ import type { NeoBudget } from "../routes/neo.ts";
 import type { TrinModel } from "../trin/trin.ts";
 import type { WriteOp } from "../store/types.ts";
 import type { Vetting } from "../vetting/types.ts";
+import type { Replies } from "./reply.ts";
 import type { Payments, Records } from "../payments.ts";
 import { actorId, check, fail, who, type Env } from "./http.ts";
 
@@ -31,6 +32,8 @@ export interface Deps {
   // Optional: neon1's alert service. When set, mail only neon1 receives and phone pushes go through it; without it
   // (local runs, tests, production until its service exists) they are sent here directly
   notifier?: Notifier;
+  // Optional: reply-by-email for project messages (lib/reply.ts)
+  replies?: Replies;
   auth?: CognitoAuth;
   // "worker": a scheduled worker sends queued messages (production). "inline" (the default): sent
   // right after the change, for local runs, tests, and the browser demo

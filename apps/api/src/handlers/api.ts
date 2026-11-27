@@ -20,6 +20,7 @@ import { beforeDeadline, drainOutbox } from "../outbox.ts";
 import { sweepFiles } from "../files.ts";
 import { sweepBugs } from "../routes/bug.ts";
 import { chatReplyByEmail } from "../routes/chat.ts";
+import { projectReplyByEmail } from "../routes/stream.ts";
 import { DynamoTable } from "../store/dynamo.ts";
 import { Repo } from "../store/repo.ts";
 import { bedrockNeo } from "../neo/bedrock.ts";
@@ -114,6 +115,18 @@ async function pushover() {
   return token && user ? new PushoverPusher(token, user) : undefined;
 }
 const pusher = await pushover();
+// The reply-by-email secret for project messages, shared with neon1-notify, read once at cold start. Without
+// it (or when unreadable) project message emails go out without a Reply-To
+async function replySetup() {
+  if (!cfg.replyDomain || !cfg.replySecretParam) return undefined;
+  const r = await new SSMClient({}).send(new GetParametersCommand({ Names: [cfg.replySecretParam], WithDecryption: true })).catch((e: unknown) => {
+    console.error(JSON.stringify({ level: "error", message: "reply secret unreadable; project emails without Reply-To", error: (e as Error).name || "Error" }));
+    return undefined;
+  });
+  const secret = r?.Parameters?.[0]?.Value;
+  return secret && secret !== "unset" ? { domain: cfg.replyDomain, secret } : undefined;
+}
+const replies = await replySetup();
 // neon1's own alerts go through the neon1-notify function where one is set up
 const notifier = cfg.notifyFunction ? new LambdaNotifier(cfg.notifyFunction) : undefined;
 
@@ -127,6 +140,7 @@ const deps: Deps = {
   texter,
   pusher,
   notifier,
+  replies,
   auth: new CognitoAuth({ userPoolId: cfg.userPoolId, clientId: cfg.clientId, authDomain: cfg.authDomain, publicUrl: cfg.publicUrl }),
   // Messages wait in the outbox for the scheduled worker below, never inside a request
   outbox: "worker",
@@ -170,7 +184,13 @@ export const handler = async (event: Parameters<typeof http>[0] | { source?: str
   // neon1-notify posting an emailed reply into a chat. A direct invoke needs IAM permission on this function, and no
   // browser request has this top-level shape, so it cannot be forged from the internet
   if ((event as { source?: string }).source === "neon1-notify") {
-    const e = event as unknown as { op?: string; tenantId?: string; text?: string; from?: string };
+    const e = event as unknown as { op?: string; tenantId?: string; ref?: string; text?: string; from?: string };
+    // A reply to a project message's email posts in that project's Updates, as the person it was sent to
+    if (e.op === "project-reply" && e.ref && e.text && e.from) {
+      const result = await projectReplyByEmail({ repo }, e.ref, e.text, e.from);
+      console.log(JSON.stringify({ level: "info", message: "project reply by email", posted: result.posted, ...(result.posted ? {} : { reason: result.reason }) }));
+      return result;
+    }
     if (e.op !== "chat-reply" || !e.tenantId || !e.text || !e.from) throw new Error("bad neon1-notify event");
     const result = await chatReplyByEmail({ repo, d: deps, cfg, drainNow: async () => undefined }, e.tenantId, e.text, e.from);
     console.log(JSON.stringify({ level: "info", message: "chat reply by email", posted: result.posted, ...(result.posted ? {} : { reason: result.reason }) }));
@@ -181,7 +201,7 @@ export const handler = async (event: Parameters<typeof http>[0] | { source?: str
     // return). The outbox gets up to seven seconds of it and the file sweep the rest
     const left = typeof context?.getRemainingTimeInMillis === "function" ? context.getRemainingTimeInMillis() : 15_000;
     const end = Date.now() + Math.max(0, left - 2_000);
-    const result = await drainOutbox({ repo, mailer, texter, pusher, notifier, cfg }, { deadline: Math.min(end - 2_000, Date.now() + 7_000) });
+    const result = await drainOutbox({ repo, mailer, texter, pusher, notifier, replies, cfg }, { deadline: Math.min(end - 2_000, Date.now() + 7_000) });
     // Then files whose scan finished since the last pass become ready (or rejected) without a re-upload
     const files = await beforeDeadline(sweepFiles({ repo, storage }, { deadline: end - 500 }), end).catch((e) => ({ watched: 0, settled: 0, error: (e as Error).name }));
     // Bug reports waiting for their screenshots to scan go out, with the clean ones attached

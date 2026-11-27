@@ -63,6 +63,9 @@ export interface Config {
   /** SSM SecureStrings holding neon1's Pushover app token and user key; unset means chat alerts go by email only */
   pushoverTokenParam?: string;
   pushoverUserParam?: string;
+  /** Reply-by-email for project messages: neon1-notify's reply domain and the SSM SecureString with its signing secret */
+  replyDomain?: string;
+  replySecretParam?: string;
   /** The neon1-notify function that sends neon1's own alerts; unset means they are sent directly */
   notifyFunction?: string;
   /** The secret CloudFront adds to every request (x-origin-verify), and whether requests without it are refused */
@@ -115,6 +118,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     turnstileSecretParam: env.TURNSTILE_SECRET_PARAM || undefined,
     pushoverTokenParam: env.PUSHOVER_TOKEN_PARAM || undefined,
     pushoverUserParam: env.PUSHOVER_USER_PARAM || undefined,
+    replyDomain: env.REPLY_DOMAIN || undefined,
+    replySecretParam: env.REPLY_SECRET_PARAM || undefined,
     notifyFunction: env.NOTIFY_FUNCTION || undefined,
     originSecret: env.ORIGIN_SECRET || undefined,
     originLock: env.ORIGIN_LOCK?.trim().toLowerCase() === "on",

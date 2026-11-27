@@ -9,6 +9,8 @@
 // "Accepted" means the provider took the message; it is not proof that it was delivered.
 
 
+import { messageMail } from "./lib/messagemail.ts";
+import { replyAddress, THREAD, type Replies } from "./lib/reply.ts";
 import { replyOpen, actorHears, groupOf, isOwnOrg, isProspect, isQuickFix, neon1Only, accountNotice, noticeSummary, wants, type AuditEvent, type Member, type User, askedToDecide, revisions } from "@1neon/domain";
 import type { Config } from "./config.ts";
 import { inviteEmail, noticeEmail, prospectFacts } from "./emails.ts";
@@ -78,6 +80,8 @@ export interface OutboxDeps {
   pusher?: Pusher;
   // Optional: neon1's alert service, which then carries chat alerts to neon1
   notifier?: Notifier;
+  // Optional: reply-by-email for project messages; without it their emails carry no Reply-To
+  replies?: Replies;
   cfg: Config;
   // Per-call provider time limit; tests shorten it
   sendTimeoutMs?: number;
@@ -308,7 +312,16 @@ async function eventTargets(d: OutboxDeps, e: AuditEvent, clock: Clock): Promise
     if (accountNotice(e.action) && m.userId !== e.target && m.access !== "admin") continue;
     // Options reach the client when the proposal is issued, in one email, not one per edit
     if (/^option\.(created|updated|deleted|quoted)$/.test(e.action) && !cfg.operatorEmails.includes(u.email.toLowerCase())) continue;
-    if (wants(u.notify, e.action, "email")) {
+    // A project message carries its words and a Reply-To of this person's own, so answering the email posts back
+    if (e.action === "message.created" && wants(u.notify, e.action, "email")) {
+      const project = key ? (await io(repo.listProjects(e.tenantId))).find((p) => p.key === key) : undefined;
+      const msg = project ? (await io(repo.listComments(e.tenantId, project.id, THREAD))).find((c) => c.id === e.target) : undefined;
+      if (project && msg) {
+        const replyTo = d.replies ? await io(replyAddress(repo, d.replies, e.tenantId, project.id, u.id)) : undefined;
+        const mail = messageMail({ by: msg.authorName, org: tenant?.name ?? "1NEON", projectKey: project.key, projectName: project.name, body: msg.body, url: `${home}/projects/${project.key}/updates`, replyTo, at: new Date(msg.at), zone: u.timeZone });
+        targets.push({ key: u.id, channel: "email", send: (signal) => d.mailer.send(u.email, mail.subject, mail.text, mail.html, mail.replyTo, signal, undefined, mail.as) });
+      }
+    } else if (wants(u.notify, e.action, "email")) {
       const operator = cfg.operatorEmails.includes(u.email.toLowerCase());
       // neon1 already got the request itself, with the person as Reply-To (routes/requests.ts)
       if (operator && e.action.startsWith("request.")) continue;

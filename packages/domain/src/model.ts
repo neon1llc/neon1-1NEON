@@ -311,7 +311,7 @@ export const Project = z.object({
   workflow: z.enum(["neon", "bench"]).optional(),
   // The picture the project opens on: its shared page, a board of cards, dated work, or NEON's steps.
   // Unset: steps for NEON, the page for a Workbench. Anyone may look through another lens for themselves
-  lens: z.enum(["page", "board", "timeline", "steps"]).optional(),
+  lens: z.enum(["page", "updates", "board", "timeline", "steps"]).optional(),
   stageId: id,
   stageEnteredAt: isoDate,
   health: Health,

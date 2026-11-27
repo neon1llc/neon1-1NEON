@@ -99,7 +99,7 @@ export const CreateProjectInput = z.object({
   workflow: z.enum(["neon", "bench"]).default("neon"),
   start: z.enum(["intake", "proposal"]).default("intake"),
   // The picture the project opens on (Project.lens)
-  lens: z.enum(["page", "board", "timeline", "steps"]).optional(),
+  lens: z.enum(["page", "updates", "board", "timeline", "steps"]).optional(),
   summary: z.string().max(500).default(""),
   outcome: z.string().max(500).default(""),
   example: z.string().max(2000).default(""),
@@ -124,7 +124,7 @@ export const UpdateProjectInput = z.object({
   archived: z.boolean().optional(),
   people: z.array(z.object({ userId: id, role: ProjectRole })).max(50).optional(),
   workflow: z.enum(["neon", "bench"]).optional(),
-  lens: z.enum(["page", "board", "timeline", "steps"]).optional(),
+  lens: z.enum(["page", "updates", "board", "timeline", "steps"]).optional(),
 });
 
 

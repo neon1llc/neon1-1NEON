@@ -78,6 +78,16 @@ variable "notify_function_arn" {
   default = ""
 }
 
+# Reply-by-email for project messages: neon1-notify's reply domain and the SSM SecureString holding its signing
+# secret, which the API uses to sign each person's Reply-To. Empty leaves those emails without one
+variable "reply_domain" {
+  type    = string
+  default = ""
+}
+variable "reply_secret_parameter" {
+  type    = string
+  default = ""
+}
 variable "pushover_token_parameter" {
   type    = string
   default = ""
@@ -218,6 +228,15 @@ data "aws_iam_policy_document" "api" {
       sid       = "NotifyInvoke"
       actions   = ["lambda:InvokeFunction"]
       resources = [statement.value]
+    }
+  }
+  # neon1-notify's reply secret, to sign project messages' Reply-To addresses
+  dynamic "statement" {
+    for_each = var.reply_secret_parameter == "" ? [] : [var.reply_secret_parameter]
+    content {
+      sid       = "ReplySecret"
+      actions   = ["ssm:GetParameters"]
+      resources = ["arn:aws:ssm:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:parameter${statement.value}"]
     }
   }
   # The Pushover keys for chat alerts, when this environment has them
@@ -431,6 +450,8 @@ resource "aws_lambda_function" "api" {
       NOTIFY_FUNCTION                     = var.notify_function_arn
       PUSHOVER_TOKEN_PARAM                = var.pushover_token_parameter
       PUSHOVER_USER_PARAM                 = var.pushover_user_parameter
+      REPLY_DOMAIN                        = var.reply_domain
+      REPLY_SECRET_PARAM                  = var.reply_secret_parameter
       ORIGIN_SECRET                       = random_password.origin_secret.result
       ORIGIN_LOCK                         = var.origin_lock ? "on" : "off"
       NODE_OPTIONS                        = "--enable-source-maps"

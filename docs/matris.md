@@ -52,6 +52,7 @@ In neon1llc@gmail.com, the label neon1/MATRIS holds all MATRIS mail: a filter ma
 | | Waiting on the client (contract state) | MORPH-1 |
 | | Paused, with a draft invoice | CYPH-1 |
 | | Tasks in every status, blocked with comments, change request, sign-off, health update | MORPH-1, TANK-1 |
+| | Updates: messages to everyone, one answered by email reply | MORPH-1 |
 | | neon1 buys: awaiting initials (a decision) and bought with a receipt | MORPH-1 |
 | | Late milestones and a passed target date | APOC-1 |
 | Observe | Measures past target, one without readings, a failing check, a resolved incident | SENT-1, ORA-1, ZION-1 |

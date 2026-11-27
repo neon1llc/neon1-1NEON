@@ -9,6 +9,7 @@ import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type R
 import { FileList, UploadButton } from "../components/Files.tsx";
 import { GUIDE, Pick, RequestBuilder, Starters } from "../components/Guide.tsx";
 import { BoardLens, LensBar, lensFor, PageLens, TimelineLens, type Lens } from "./Lenses.tsx";
+import { UpdatesLens } from "../components/Updates.tsx";
 import { ItemPanel, STATUS_WORDS, statusWord, useDeleteItem, useMayDelete } from "../components/ItemPanel.tsx";
 import { downloadDocx, FICTIONAL } from "../lib/docx.ts";
 import { MarkupList } from "../components/Markup.tsx";
@@ -102,7 +103,7 @@ export function ProjectPage() {
   const { project: p, items } = detail.data;
   // The lens in the address, else the one this person (or the project) opens on. Steps is NEON's
   // Overview and layer tabs
-  const lens: Lens = tabParam === "page" || tabParam === "board" || tabParam === "timeline" ? tabParam : tabParam ? "steps" : lensFor(p);
+  const lens: Lens = tabParam === "page" || tabParam === "updates" || tabParam === "board" || tabParam === "timeline" ? tabParam : tabParam ? "steps" : lensFor(p);
   const tab = lens === "steps" ? (tabParam ?? "overview") : lens;
   const kindLabel = (k: ItemKind) => KIND_LABEL[k][0];
   // Stage progress: earlier stages are done, the current one is lit
@@ -145,6 +146,7 @@ export function ProjectPage() {
       {/* What's waiting on someone shows the same above every lens */}
       {lens !== "steps" && <NextStep project={p} items={items} stage={org.stages[stageAt]} base={base} />}
       {lens === "page" && <PageLens project={p} />}
+      {lens === "updates" && <UpdatesLens project={p} base={base} />}
       {lens === "board" && <BoardLens project={p} items={items} kindLabel={kindLabel} />}
       {lens === "timeline" && <TimelineLens project={p} items={items} kindLabel={kindLabel} />}
       {lens === "steps" && <>

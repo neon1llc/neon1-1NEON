@@ -9,6 +9,7 @@
 
 
 import * as Y from "yjs";
+import { THREAD } from "../lib/reply.ts";
 import { getSchema } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import { TaskItem, TaskList } from "@tiptap/extension-list";
@@ -23,7 +24,7 @@ import type { Repo } from "../store/repo.ts";
 
 
 /** Bumped with every change to the story or its coverage, and printed on each run */
-export const MATRIS_VERSION = "1.0.0";
+export const MATRIS_VERSION = "1.1.0";
 export const MATRIS_SLUG = "matris";
 
 // A made-up hourly rate for estimates (never neon1's rate)
@@ -367,6 +368,16 @@ export async function seedMatris(repo: Repo, o: { operators: string[]; tenantId?
   for (const [s, st, u, due] of tasks) { const i = await item(morph, "task", s, { status: st, assigneeId: u.id, dueDate: date(due), ago: -27 }); if (st === "blocked") blocked = i; }
   await comment(morph, blocked!.id, neon1, -3, "Blocked on the VPN account; I can't reach the billing database without it.");
   await comment(morph, blocked!.id, neil!, -2, "Requested from our firewall vendor. Their SLA is 5 business days.");
+  // Updates: messages to everyone on MORPH-1, one answered by replying to its email
+  const message = async (p: Project, by: User, ago: number, body: string, hour: number, via?: "email") => {
+    const at = day(ago, hour);
+    const name = by.id === neon1.id ? "neon1" : by.name;
+    await repo.table.write([repo.commentOp({ tenantId: tid, projectId: p.id, itemId: THREAD, id: idAt(at, "c"), at, authorId: by.id, authorName: name, body, ...(via ? { via } : {}) }),
+      repo.auditOp({ tenantId: tid, actorId: by.id, action: "message.created", target: idAt(at, "c"), summary: `${p.key}: ${name} wrote: ${body.slice(0, 160)}` }, at)]);
+  };
+  await message(morph, neon1, -4, "Screens are ready for a look on staging. The write-back still needs the VPN account before the pilot.", 10);
+  await message(morph, felicity!, -4, "Looks good. Can the plan-change screen say the new price before they confirm?", 16, "email");
+  await message(morph, neon1, -3, "Yes, added. It shows the new monthly price and the date it starts.", 9);
   await item(morph, "milestone", "Pilot live for 50 customers", { dueDate: date(18), ago: -30 });
   await item(morph, "update", "Waiting on database access", { ago: -3, body: "Screens are done. The write-back waits on a VPN account; the pilot date holds if access arrives this week.", fields: { health: "at_risk" } });
   await item(morph, "change", "Add Spanish to customer screens", { ago: -8, body: "Felicity asked for Spanish. About 10 more hours; needs approval before work starts." });

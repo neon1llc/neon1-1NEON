@@ -23,6 +23,7 @@ const KINDS = [...TEMPLATES].sort((a, b) => (a.id === "blank" ? -1 : b.id === "b
 // One line under each lens: what you'd do there
 const LENS_LINE: Record<Lens, string> = {
   page: "One shared page everyone writes in. Notes, needs, ideas, links.",
+  updates: "Messages to everyone on it, answered here or by email, beside what changed.",
   board: "Cards in To do, In progress, Done. Move them as work happens.",
   timeline: "Work placed on dates, with today and the target marked.",
   steps: "NEON, step by step: needs, options, the work, results, handover.",

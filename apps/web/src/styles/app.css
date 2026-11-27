@@ -2906,6 +2906,21 @@ dialog.write-sheet section .section-h { margin: var(--sp-4) 0 var(--sp-2); }
 .lens-bar a { display: inline-flex; align-items: center; gap: var(--sp-1); padding: var(--sp-1) var(--sp-3); border-radius: calc(var(--r-sm) - 2px); color: var(--muted); font-size: var(--fs-sm); text-decoration: none; white-space: nowrap; min-height: 32px; }
 .lens-bar a:hover, .lens-bar a:focus-visible { color: var(--accent); }
 .lens-bar a.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+/* Updates: the box to write in, then the stream, newest first. Messages, status updates, and comments are
+   rows with an avatar; changes are single muted lines between them, as in GitHub's timeline */
+.lens-updates { max-width: 760px; }
+.lens-updates .say { display: grid; gap: var(--sp-2); margin: 0 0 var(--sp-5); }
+.lens-updates .say textarea { min-height: 88px; resize: vertical; }
+.lens-updates .say .btn { justify-self: end; }
+.stream { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-4); }
+.stream > li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--sp-3); align-items: start; }
+.stream .s-head { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1); }
+.stream .s-title { margin: var(--sp-1) 0 0; font-weight: 600; }
+.stream .s-body .pre { margin: var(--sp-1) 0 0; }
+.stream .s-message .s-body, .stream .s-update .s-body { padding: var(--sp-2) var(--sp-3); border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--panel); }
+.stream .s-event { grid-template-columns: minmax(0, 1fr) auto; padding-left: calc(28px + var(--sp-3)); color: var(--muted); font-size: var(--fs-sm); }
+.stream .s-event b { color: var(--text); font-weight: 600; }
+.stream time { white-space: nowrap; }
 @media (pointer: coarse) { .lens-bar a { min-height: 44px; } }
 /* The project page reads as a document: one card at a reading measure */
 .lens-page { margin-top: var(--sp-3); max-width: 760px; padding: var(--sp-3) var(--sp-5) 0; border: 1px solid var(--line); border-radius: var(--r); background: var(--panel); }

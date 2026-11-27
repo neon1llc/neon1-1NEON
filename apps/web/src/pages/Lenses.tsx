@@ -1,5 +1,5 @@
 // apps/web/src/pages/Lenses.tsx - Ways to look at one project, for people who think differently: the
-// shared Page (write it down), the Board (move cards), the Timeline (plan by dates), and NEON's Steps
+// shared Page (write it down), Updates (talk it through, components/Updates.tsx), the Board (move cards), the Timeline (plan by dates), and NEON's Steps
 // (in Project.tsx). Every lens shows the same items, files, and decisions, so switching loses nothing;
 // what's waiting on someone (the quote, the approval, the handover) shows above every lens the same
 // way. References: Notion's and Asana's views over one set of rows, Basecamp's Docs and Schedule,
@@ -7,7 +7,7 @@
 
 
 import { RECORD_KINDS, todayIn, type Item, type ItemKind, type Project } from "@1neon/domain";
-import { CalendarDays, FileText, Kanban, ListChecks, Plus } from "lucide-react";
+import { CalendarDays, FileText, Kanban, ListChecks, MessagesSquare, Plus } from "lucide-react";
 import { useState, type DragEvent } from "react";
 import { NavLink } from "react-router";
 import { ItemPanel, STATUS_WORDS } from "../components/ItemPanel.tsx";
@@ -20,9 +20,10 @@ import { problem, useMembers, useRefresh } from "../lib/hooks.ts";
 import { prefs } from "../lib/prefs.ts";
 
 
-/** The four lenses, in the order the switch shows them */
+/** The lenses, in the order the switch shows them. Updates is the project's conversation and what changed */
 export const LENSES = [
   { id: "page", label: "Page", hint: "Write it down", icon: FileText },
+  { id: "updates", label: "Updates", hint: "Talk it through", icon: MessagesSquare },
   { id: "board", label: "Board", hint: "Move cards", icon: Kanban },
   { id: "timeline", label: "Timeline", hint: "Plan by dates", icon: CalendarDays },
   { id: "steps", label: "Steps", hint: "Follow NEON", icon: ListChecks },
