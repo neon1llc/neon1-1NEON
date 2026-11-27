@@ -5,12 +5,14 @@
 
 
 import { suspendText, type Suspension, type SuspendWhy } from "@1neon/domain";
+import { ShieldCheck, RotateCcw } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "../lib/api.ts";
 import { problem } from "../lib/hooks.ts";
 import { read } from "../lib/reads.ts";
-import { ago, Dialog, useToast } from "./ui.tsx";
+import { ago, Dialog, useAsk, useToast } from "./ui.tsx";
+import { Act } from "./Act.tsx";
 
 
 /** One open request, as the organization sees it */
@@ -113,13 +115,19 @@ export function SuspendBar({ tid, name, s, operator, admin, me }: { tid: string;
   const mine = (asks.data?.requests ?? []).find((r) => (s.scope === "org" ? r.scope === "org" : r.scope === "account" && r.userId === me));
   // Who can ask: anyone for their own account, an admin for the organization
   const can = s.scope === "account" || admin;
+  // super lifts it from the banner after a confirmation that says what changes
+  const ask = useAsk();
+  const recommission = async () => {
+    if (!(await ask({ title: `Recommission ${name}?`, body: `${suspendText(s)} Lifting it lets ${s.scope === "org" ? "everyone in it" : "them"} make changes again, and any open request to come back closes as done.`, yes: "Recommission" }))) return;
+    await act(`/orgs/${tid}/recommission`, `${name} is recommissioned`).catch(() => undefined);
+  };
   return (
     <div className="readonly-bar suspend-bar" role="status">
       <strong>Suspended.</strong>
       <span>{suspendText(s)}</span>
-      {operator && <button type="button" className="linkish" onClick={() => void act(`/orgs/${tid}/recommission`, `${name} is recommissioned`).catch(() => undefined)}>Recommission</button>}
+      {operator && <Act icon={ShieldCheck} label="Recommission" run={() => void recommission()} />}
       {!operator && mine && <span>Asked {ago(mine.at)}.</span>}
-      {!operator && !mine && can && <button type="button" className="linkish" onClick={() => setAsking(true)}>Ask to recommission</button>}
+      {!operator && !mine && can && <Act icon={RotateCcw} label="Ask to recommission" run={() => setAsking(true)} />}
       {!operator && !mine && !can && <span>An admin can ask to recommission it.</span>}
       {!operator && <AskDialog open={asking} onClose={() => setAsking(false)} tid={tid} scope={s.scope} whose={s.scope === "org" ? name : "your account"} />}
     </div>

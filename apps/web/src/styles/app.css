@@ -593,6 +593,17 @@ fieldset legend { font: var(--fs-xs) var(--mono); color: var(--muted); }
 /* Dialog content carries the padding, so a tap on the backdrop (the dialog element) can close it */
 dialog { padding: 0; }
 dialog .dlg { padding: var(--sp-5); }
+/* A dialog's head, like a card's: the title (and its one line of what happens) over a rule from edge to edge */
+dialog:not(.palette, .sheet, .item-panel) .dlg > :is(h2, .card-top):first-child { margin: calc(-1 * var(--sp-5)) calc(-1 * var(--sp-5)) var(--sp-4); padding: var(--sp-5) var(--sp-5) var(--sp-3); border-bottom: 1px solid var(--line); }
+/* An action's dialog (components/MemberActs.tsx): who it's for, what happens, its choices, then the buttons */
+.act-dlg .dlg { display: grid; gap: var(--sp-3); }
+.act-dlg .dlg > .card-top:first-child { margin-bottom: var(--sp-1); }
+.act-who { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-1) var(--sp-3); align-items: center; padding: var(--sp-3); border: 1px solid var(--line); border-radius: var(--r-sm); }
+.act-who > :last-child { grid-column: 2; }
+.act-facts { margin: 0; padding-left: var(--sp-5); display: grid; gap: var(--sp-1); font-size: var(--fs-sm); }
+.act-stop { margin: 0; padding: var(--sp-2) var(--sp-3); border-left: 3px solid var(--red); background: color-mix(in srgb, var(--red) 8%, transparent); font-size: var(--fs-sm); }
+.act-dlg .actions { margin-top: var(--sp-2); }
+table.people .acts { margin-left: var(--sp-2); vertical-align: middle; }
 .eyebrow { font: var(--fs-xs) var(--mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin: 0 0 var(--sp-1); }
 .howto { margin: var(--sp-3) 0 var(--sp-4); padding-left: var(--sp-4); display: grid; gap: var(--sp-2); }
 /* Help sheet: from the right on wide screens, from the bottom on phones */
@@ -1440,6 +1451,15 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 .ag-group .linkish:hover { color: var(--accent); }
 .agenda { gap: var(--sp-1); }
 :root { interpolate-size: allow-keywords; }
+/* A highlight eases in and out (Smooth motion): whatever a pointer rests on or a finger presses shifts its background,
+   text, and border over --t-hover, quick but seen. Low weight (:where), so a control with its own transition keeps it;
+   Reduced motion turns it off with everything else */
+:root { --t-hover: .2s; }
+/* On touch, a row a finger presses takes the same highlight a pointer gives it */
+@media (hover: none) { :where(.ptr:not(.head), .vm-row, .todo li, .feed li, .updates li, .ag-group li, .q-t, .quick li, .pcard, .settings-row):active { background-color: var(--accent-soft); } }
+:where(a, button, summary, label, select, input, textarea, [role="button"], [role="menuitem"], [role="option"], [role="row"], [role="tab"], option,
+  .ptr, .vm-row, .chip, .icon-btn, .icon-act, .card, .pcard, .todo li, .feed li, .updates li, .ag-group li, .settings-row, .factors li) {
+  transition-property: background-color, color, border-color, box-shadow, opacity, text-decoration-color; transition-duration: var(--t-hover); transition-timing-function: var(--ease); }
 /* The arrow turns in exactly the time the group takes to open */
 .ag-group.fold::details-content { height: 0; overflow: clip; transition: height var(--t-open) var(--ease-open), content-visibility var(--t-open) allow-discrete; }
 .ag-group.fold[open]::details-content { height: auto; }
@@ -2770,13 +2790,18 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 .kdot { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--k); background: color-mix(in srgb, var(--k) 25%, var(--panel)); }
 .kdot.urgent { --k: var(--k-urgent); } .kdot.suggested { --k: var(--k-suggested); } .kdot.general { --k: var(--k-general); }
 /* Round actions: an icon in a circle that opens leftward to its name; pressed again, it acts */
-.vm-acts { display: flex; align-items: center; gap: var(--sp-2); }
-.vm-act { display: inline-flex; align-items: center; height: 34px; min-width: 34px; padding: 0 9px; border: 1px solid var(--line-strong); border-radius: 99px; background: var(--panel); color: var(--muted); cursor: pointer; }
-.vm-act:hover, .vm-act:focus-visible { color: var(--accent); border-color: var(--accent); }
-.vm-act.open { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
-.vm-act-l { display: grid; grid-template-columns: 0fr; transition: grid-template-columns var(--t-base) var(--ease); }
-.vm-act-l > span { min-width: 0; overflow: hidden; white-space: nowrap; font: 500 var(--fs-xs) var(--mono); }
-.vm-act.open .vm-act-l { grid-template-columns: 1fr; margin-right: 6px; }
+/* The action button (components/Act.tsx): a round icon that opens sideways to its name on the first press and acts
+   on the second. Danger actions (suspend, deactivate) take red once open. --act-h is its one size */
+.vm-acts, .acts { display: inline-flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+.act { --act-h: 34px; display: inline-flex; align-items: center; height: var(--act-h); min-width: var(--act-h); padding: 0 9px; border: 1px solid var(--line-strong); border-radius: 99px; background: var(--panel); color: var(--muted); cursor: pointer; flex: none; }
+.act:hover, .act:focus-visible { color: var(--accent); border-color: var(--accent); }
+.act.open { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.act.danger.open { color: var(--red); border-color: var(--red); background: color-mix(in srgb, var(--red) 8%, transparent); }
+.act:disabled { opacity: .45; cursor: not-allowed; }
+.act-l { display: grid; grid-template-columns: 0fr; transition: grid-template-columns var(--t-base) var(--ease), margin var(--t-base) var(--ease); }
+.act-l > span { min-width: 0; overflow: hidden; white-space: nowrap; font: 500 var(--fs-xs) var(--mono); }
+.act.open .act-l { grid-template-columns: 1fr; margin-right: 6px; }
+@media (pointer: coarse) { .act { --act-h: 44px; padding: 0 14px; } }
 
 /* The grid: 12 columns (4 on a phone), rows of 24px, and the gap between cards, read by HomeGrid.tsx.
    Cards are placed by transform (react-grid-layout's way), so making room is one CSS glide, never a jump */
@@ -2912,8 +2937,8 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 .tile .chart .cols { height: 140px; }
 
 /* Reduced motion, from the device or the profile: cards snap into place, nothing glides, turns, or pops */
-@media (prefers-reduced-motion: reduce) { .vm-btn .arr, .hg .tile, .tile-ghost, .hg, .tile-cfg-items, .tile-gear svg, .vm-act-l, .tile.pressing .tile-body > * { transition: none !important; } .vm-panel { animation: none; } .vm-btn:hover .arr { translate: none; } .tile.held, .pcard.dragging { scale: none; } }
-:root[data-motion="off"] :is(.vm-btn .arr, .hg .tile, .tile-ghost, .hg, .tile-cfg-items, .tile-gear svg, .vm-act-l, .tile.pressing .tile-body > *) { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .vm-btn .arr, .hg .tile, .tile-ghost, .hg, .tile-cfg-items, .tile-gear svg, .act-l, .tile.pressing .tile-body > * { transition: none !important; } .vm-panel { animation: none; } .vm-btn:hover .arr { translate: none; } .tile.held, .pcard.dragging { scale: none; } }
+:root[data-motion="off"] :is(.vm-btn .arr, .hg .tile, .tile-ghost, .hg, .tile-cfg-items, .tile-gear svg, .act-l, .tile.pressing .tile-body > *) { transition: none !important; }
 :root[data-motion="off"] :is(.tile.held, .pcard.dragging) { scale: none; }
 :root[data-motion="off"] .vm-panel { animation: none; }
 :root[data-motion="off"] .vm-btn:hover .arr { translate: none; }
@@ -3009,8 +3034,7 @@ dialog.write-sheet section .section-h { margin: var(--sp-4) 0 var(--sp-2); }
 .lens-meta:empty { display: none; }
 .lens-move { width: auto; font-size: var(--fs-xs); padding: var(--sp-0) var(--sp-1); border-radius: var(--r-sm); justify-self: start; color: var(--muted); }
 @media (pointer: coarse) { .lens-move { font-size: var(--fs-input); } }
-.lens-next { justify-self: start; padding: var(--sp-0) var(--sp-1); }
-@media (pointer: coarse) { .lens-next { min-height: 44px; } }
+.lens-next { justify-self: start; }
 .lens-add { display: flex; gap: var(--sp-1); align-items: center; }
 .lens-add input:not([type="date"]) { flex: 1; min-width: 0; font-size: var(--fs-input); }
 .lens-add input[type="date"] { flex: none; width: auto; }

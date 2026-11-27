@@ -5,6 +5,7 @@
 
 
 import { OptionFields, ProposalFields, proposalRef, type DocumentRecord, type Item } from "@1neon/domain";
+import { GitCompare } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api, openable } from "../lib/api.ts";
 import { blockParagraphs, docxParagraphs, proposalBlocks } from "../lib/docx.ts";
@@ -12,6 +13,7 @@ import { problem, useRefresh } from "../lib/hooks.ts";
 import { compare, suggest, words, type Change, type OptionUpdate } from "../lib/markup.ts";
 import { useOrg, useSession } from "./Shell.tsx";
 import { Dialog, useToast } from "./ui.tsx";
+import { Act } from "./Act.tsx";
 
 
 // Lines the issued copy prints for signing, and the acceptance block a later download adds: not changes
@@ -164,7 +166,7 @@ export function MarkupList({ docs, all, path }: { docs: DocumentRecord[]; all: I
       <ul>
         {list.map((d) => {
           const r = revOf(d);
-          return <li key={d.id}>{d.name} <span className="muted">of r{r.p.rev}, {new Date(d.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span> <button type="button" className="linkish" onClick={() => setOpen(d)}>See what changed</button></li>;
+          return <li key={d.id}>{d.name} <span className="muted">of r{r.p.rev}, {new Date(d.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span> <Act icon={GitCompare} label="See what changed" run={() => setOpen(d)} /></li>;
         })}
       </ul>
       {open && <MarkupReview doc={open} rev={revOf(open)} all={all} path={path} onClose={() => setOpen(undefined)} />}

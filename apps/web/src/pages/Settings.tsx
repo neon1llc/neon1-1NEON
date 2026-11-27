@@ -2,6 +2,7 @@
 
 
 import { plural } from "../lib/plural.ts";
+import { Pencil } from "lucide-react";
 import { INACTIVE_DAYS, UNCHOSEN, choiceLabel, isOwnOrg, isProspect, suspendText, suspensionOf, type Layer, type Stage, type Tenant } from "@1neon/domain";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
@@ -16,6 +17,7 @@ import { clearStaleExports } from "../lib/export-disk.ts";
 import { size, verdict } from "../lib/export-plan.ts";
 import { problem } from "../lib/hooks.ts";
 import { useQueryClient } from "@tanstack/react-query";
+import { Act } from "../components/Act.tsx";
 
 
 // Organization details for everyone; stage editing for admins
@@ -80,7 +82,7 @@ export function Settings() {
             <div><dt>Client ID</dt><dd className="mono">{org.clientId}</dd></div>
             <div><dt>Address</dt><dd className="mono">neon1.tech/1NEON/o/{org.slug}</dd></div>
             {/* Where the business can be seen from outside; any admin may change it */}
-            <div id="where"><dt>Where</dt><dd><FaceFacts place={org.place} link={org.link} linkedin={org.linkedin} />{admin && !editFace && <> <button className="linkish helper" onClick={() => setEditFace(true)}>Change</button></>}{editFace && <FaceForm onDone={() => setEditFace(false)} />}</dd></div>
+            <div id="where"><dt>Where</dt><dd><FaceFacts place={org.place} link={org.link} linkedin={org.linkedin} />{admin && !editFace && <> <Act icon={Pencil} label="Change" run={() => setEditFace(true)} /></>}{editFace && <FaceForm onDone={() => setEditFace(false)} />}</dd></div>
             <div><dt>Your access</dt><dd><span className="tag">{me.operator ? "super" : access}</span></dd></div>
             {/* neon1's service agreement: who signed it, or a way to read and sign it */}
             <div hidden={prospect}><dt>Service agreement</dt><dd>{org.agreements?.length ? <>Signed by {org.agreements.at(-1)!.typedName}, edition {org.agreements.at(-1)!.ref}. Case studies: {choiceLabel("caseStudies", (org.choices?.at(-1) ?? UNCHOSEN).caseStudies)}. Client list: {choiceLabel("naming", (org.choices?.at(-1) ?? UNCHOSEN).naming)}. </> : "Not signed yet. "}<Link to={`/o/${summary.slug}/agreement`}>{org.agreements?.length ? "Read it" : "Read and sign"}</Link></dd></div>

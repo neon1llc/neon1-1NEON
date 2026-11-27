@@ -3,6 +3,7 @@
 
 
 import { fileState, priceCheckDue, todayIn, type DocumentRecord, type Layer } from "@1neon/domain";
+import { RotateCw } from "lucide-react";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
@@ -12,6 +13,7 @@ import { useOrg, useTopBar } from "../components/Shell.tsx";
 import { LayerBadge, LAYERS, layerName } from "../components/ui.tsx";
 import { NEW_TAB } from "../lib/api.ts";
 import { read } from "../lib/reads.ts";
+import { Act } from "../components/Act.tsx";
 
 
 // What the hub reads: the finished uploads, and project names to show beside them
@@ -93,7 +95,7 @@ export function Documents() {
       {checking > 0 && (
         <p className="small muted" role="status">
           {checking} {checking === 1 ? "file is" : "files are"} still being checked for viruses; {checking === 1 ? "it opens" : "they open"} when the check finishes.{" "}
-          <button type="button" className="linkish" onClick={() => { polls.current = 0; void q.refetch(); }}>Check again</button>
+          <Act icon={RotateCw} label="Check again" run={() => { polls.current = 0; void q.refetch(); }} />
         </p>
       )}
       {/* Proposals: each issued revision, what was decided on it, and the markups filed with it */}

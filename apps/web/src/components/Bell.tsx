@@ -4,7 +4,7 @@
 // reads that one only; "Mark all read" reads the rest. Choices for email and text live in the profile.
 
 
-import { BellIcon } from "lucide-react";
+import { BellIcon, CheckCheck } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
@@ -15,6 +15,7 @@ import { gate, Stale } from "./Reads.tsx";
 import { useMembers } from "../lib/hooks.ts";
 import { ago, layerSlug } from "./ui.tsx";
 import { useSession } from "./Shell.tsx";
+import { Act } from "./Act.tsx";
 
 
 /** Where one leads, as the API says it (apps/api/src/lib/links.ts) */
@@ -97,7 +98,7 @@ export function Bell({ tid, slug }: { tid: string; slug: string }) {
         <div className="bell-list" role="dialog" aria-label="Notifications" tabIndex={-1}>
           <div className="bell-head">
             <b>Notifications{unread > 0 && <small className="bell-new"> {unread} unread</small>}</b>
-            {unread > 0 && <button type="button" className="linkish small" onClick={readAll}>Mark all read</button>}
+            {unread > 0 && <Act icon={CheckCheck} label="Mark all read" run={readAll} />}
           </div>
           {/* "Nothing yet" only when the list really answered empty; a failure says so instead */}
           <Stale reads={[q]} />

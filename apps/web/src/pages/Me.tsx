@@ -4,6 +4,7 @@
 
 
 import type { User } from "@1neon/domain";
+import { RotateCw } from "lucide-react";
 import type { SmsState } from "../lib/types.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
@@ -21,6 +22,7 @@ import { ReportBug } from "../components/BugReport.tsx";
 import { askToConfirm, TotpSetup } from "../components/Confirm.tsx";
 import { chosenLessMotion, deviceLessMotion, setLessMotion } from "../lib/motion.ts";
 import { useSignOut } from "../lib/signout.ts";
+import { Act } from "../components/Act.tsx";
 
 
 // What the profile says under the text consent for each state
@@ -258,7 +260,7 @@ export function MePage() {
         <span className="muted small" role="status" aria-live="polite">
           {status === "saving" ? "Saving…" : status === "failed" ? "Couldn't save your changes." : waiting ? (pendingQuick.current ? "Saving in a moment…" : "Saves when you leave the field.") : status === "saved" ? "All changes saved." : ""}
         </span>
-        {status === "failed" && <button className="linkish small" type="button" onClick={() => void flush()}>Retry</button>}
+        {status === "failed" && <Act icon={RotateCw} label="Retry" run={() => void flush()} />}
       </div>
       <p className="lead">{me.user.email}{me.operator ? " · super" : ""}</p>
       {/* Name, title, and mobile number */}

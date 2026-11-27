@@ -6,7 +6,7 @@
 import { BasisLine, DEFAULT_DEPOSIT_PERCENT, MetricFields, OptionFields, PurchaseFields, PurchaseLine, STATUSES, WORK_STATUSES, hoursRange, hoursText, paymentPlan, priceLine, priceOf, type AuditEvent, type Item, type ItemKind, type Price } from "@1neon/domain";
 import { numberProblem, optionalNumber } from "../lib/measures.ts";
 import { useQuery } from "@tanstack/react-query";
-import { Trash2, X } from "lucide-react";
+import { RotateCcw, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { api, DEMO, HttpError } from "../lib/api.ts";
 import { problem, useMembers, useRefresh, useSubmit } from "../lib/hooks.ts";
@@ -14,6 +14,7 @@ import { read } from "../lib/reads.ts";
 import { gate } from "./Reads.tsx";
 import { useOrg, useSession } from "./Shell.tsx";
 import { ago, Avatar, ConflictDialog, Dialog, Money, useAsk, useToast, Changes } from "./ui.tsx";
+import { Act } from "./Act.tsx";
 
 
 // Plain words for every status a person can pick
@@ -295,7 +296,7 @@ export function ItemPanel({ item, label, path, open, onClose }: { item: Item; la
       {canWrite && dirty && newer && (
         <div className="notice newer" role="status">
           <span>{nameOf(newer.updatedBy)} saved a newer version while you were editing. Your changes are kept; Save asks which version to keep.</span>
-          <button className="linkish small" type="button" onClick={() => takeTheirs(newer)}>Discard mine and load theirs</button>
+          <Act icon={RotateCcw} label="Discard mine and load theirs" tone="danger" run={() => takeTheirs(newer)} />
         </div>
       )}
       {canWrite ? (

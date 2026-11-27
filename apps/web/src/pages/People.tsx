@@ -5,11 +5,14 @@
 import type { AccessLevel } from "@1neon/domain";
 import { suspendText } from "@1neon/domain";
 import { OwnLinks } from "../components/OrgFace.tsx";
-import { AskDialog, NoteDialog, useSuperAct } from "../components/Suspend.tsx";
+import { AskDialog, useSuperAct } from "../components/Suspend.tsx";
+import { Act, Acts } from "../components/Act.tsx";
+import { MemberActDialog, type MemberAct } from "../components/MemberActs.tsx";
+import { Ban, MailPlus, RotateCcw, ShieldCheck, UserCheck, UserX } from "lucide-react";
 import { useState } from "react";
 import { gate, Stale } from "../components/Reads.tsx";
 import { useOrg, useSession, useTopBar } from "../components/Shell.tsx";
-import { ago, Avatar, useAsk, useToast } from "../components/ui.tsx";
+import { ago, Avatar, useToast } from "../components/ui.tsx";
 import { api } from "../lib/api.ts";
 import { problem, useMembers, useRefresh } from "../lib/hooks.ts";
 import type { MemberRow } from "../lib/types.ts";
@@ -31,8 +34,8 @@ const INVITE_STATE = { queued: "email on its way", sent: "email sent", failed: "
 export function People() {
   const { org, canAdmin: admin, prospect, access } = useOrg();
   const act = useSuperAct();
-  // The account super is suspending, and the one someone is asking back for
-  const [suspending, setSuspending] = useState<MemberRow>();
+  // The major action open in its dialog, and the account someone is asking back for
+  const [acting, setActing] = useState<{ kind: MemberAct; m: MemberRow }>();
   const [asking, setAsking] = useState<MemberRow>();
   // A new account can't invite people or change access; that opens once neon1 and it are working together
   const canAdmin = admin && !prospect;
@@ -53,17 +56,21 @@ export function People() {
     refresh();
   };
 
-  // Deactivating asks first: the person loses access at once. Reactivating restores it without asking
-  const ask = useAsk();
-  const toggleActive = async (m: MemberRow) => {
-    const off = m.status !== "deactivated";
-    if (off && !(await ask({
-      title: `Deactivate ${m.name || m.email}?`,
-      body: `They lose access to ${org.name}, its emails, and its texts, and any unaccepted invitation stops working. What they did here stays under their name. You can reactivate them any time.`,
-      yes: "Deactivate",
-      danger: true,
-    }))) return;
-    await change(m, { status: off ? "deactivated" : "joined" });
+  // A major action, from its dialog: deactivate or reactivate (with the access chosen), suspend (with super's note),
+  // or recommission. A failure toasts and rethrows, so the dialog stays open with its choices
+  const doAct = async (kind: MemberAct, m: MemberRow, o: { access?: AccessLevel; note?: string }) => {
+    const who = m.name || m.email;
+    if (kind === "suspend") return act(`/orgs/${org.id}/members/${m.userId}/suspend`, `${who} is suspended`, o.note ? { note: o.note } : {});
+    if (kind === "recommission") return act(`/orgs/${org.id}/members/${m.userId}/recommission`, `${who} is recommissioned`);
+    try {
+      await api(`/t/${org.id}/members/${m.userId}`, { method: "PATCH", body: { version: m.version, ...(kind === "deactivate" ? { status: "deactivated" } : { status: "joined", access: o.access }) } });
+      toast(kind === "deactivate" ? `${who} is deactivated` : `${who} is back, as ${o.access}`);
+    } catch (e) {
+      toast(problem(e));
+      throw e;
+    } finally {
+      refresh();
+    }
   };
 
   // Send someone's invitation again; the API limits how often, and the row shows how it went
@@ -109,19 +116,20 @@ export function People() {
                   {m.status === "invited" ? <span className="tag warn">invited {ago(m.invitedAt)}</span> : m.status === "deactivated" ? "deactivated" : <span className="muted">seen {ago(m.lastSeenAt)}</span>}
                   {/* Whether the invitation email actually went out, and a way to send it again */}
                   {m.status === "invited" && m.invite && <span className={`muted small invite-${m.invite.state}`} style={{ marginLeft: 8 }}>{INVITE_STATE[m.invite.state]}</span>}
-                  {canAdmin && m.status === "invited" && <button className="linkish small" style={{ marginLeft: 10 }} onClick={() => void resend(m)}>Resend</button>}
                   {/* A suspended account reads only. super suspends and lifts; the person, or an admin, asks for it back */}
                   {m.suspended && <span className="tag warn" style={{ marginLeft: 8 }} title={m.suspended.note || (m.userId === me.user.id || access === "admin" ? suspendText(m.suspended) : undefined)}>suspended</span>}
-                  {me.operator && !m.neon1 && m.status !== "deactivated" && (m.suspended
-                    ? <button className="linkish small" style={{ marginLeft: 10 }} onClick={() => void act(`/orgs/${org.id}/members/${m.userId}/recommission`, `${m.name || m.email} is recommissioned`).catch(() => undefined)}>Recommission</button>
-                    : <button className="linkish small" style={{ marginLeft: 10 }} onClick={() => setSuspending(m)}>Suspend</button>)}
-                  {!me.operator && m.suspended && (m.userId === me.user.id || access === "admin") && <button className="linkish small" style={{ marginLeft: 10 }} onClick={() => setAsking(m)}>Ask to recommission</button>}
-                  {/* Deactivate keeps the person's history; reactivate restores their access */}
-                  {editable && (
-                    <button className="linkish small" style={{ marginLeft: 10 }} onClick={() => void toggleActive(m)}>
-                      {m.status === "deactivated" ? "Reactivate" : "Deactivate"}
-                    </button>
-                  )}
+                  {/* The person's actions, each a two-press button; the major ones open their own dialog */}
+                  <Acts>
+                    {canAdmin && m.status === "invited" && <Act icon={MailPlus} label="Resend" run={() => void resend(m)} />}
+                    {me.operator && !m.neon1 && m.status !== "deactivated" && (m.suspended
+                      ? <Act icon={ShieldCheck} label="Recommission" run={() => setActing({ kind: "recommission", m })} />
+                      : <Act icon={Ban} label="Suspend" tone="danger" run={() => setActing({ kind: "suspend", m })} />)}
+                    {!me.operator && m.suspended && (m.userId === me.user.id || access === "admin") && <Act icon={RotateCcw} label="Ask to recommission" run={() => setAsking(m)} />}
+                    {/* Deactivate keeps the person's history; reactivate restores their access */}
+                    {editable && (m.status === "deactivated"
+                      ? <Act icon={UserCheck} label="Reactivate" run={() => setActing({ kind: "reactivate", m })} />
+                      : <Act icon={UserX} label={m.status === "invited" ? "Cancel invitation" : "Deactivate"} tone="danger" run={() => setActing({ kind: "deactivate", m })} />)}
+                  </Acts>
                 </td>
               </tr>
               );
@@ -129,7 +137,7 @@ export function People() {
           </tbody>
         </table>
       </div>}
-      <NoteDialog open={Boolean(suspending)} onClose={() => setSuspending(undefined)} title={`Suspend ${suspending?.name || suspending?.email || ""}`} go={(note) => act(`/orgs/${org.id}/members/${suspending!.userId}/suspend`, `${suspending!.name || suspending!.email} is suspended`, note ? { note } : {})} />
+      <MemberActDialog kind={acting?.kind} m={acting?.m} org={org.name} admins={list.filter((x) => x.access === "admin" && x.status !== "deactivated").length} onClose={() => setActing(undefined)} go={doAct} />
       {asking && <AskDialog open onClose={() => setAsking(undefined)} tid={org.id} scope="account" userId={asking.userId} whose={asking.userId === me.user.id ? "your account" : `${asking.name || asking.email}'s account`} />}
       {/* Legend for the access levels */}
       <h2 className="section-h">What each access level can do</h2>

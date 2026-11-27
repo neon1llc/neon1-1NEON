@@ -4,10 +4,12 @@
 
 
 import { useQueryClient, type UseQueryResult } from "@tanstack/react-query";
+import { RotateCw } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link, useLocation, useNavigate, useRouteError } from "react-router";
 import { failureOf, hidesData, offline } from "../lib/reads.ts";
 import { ago } from "./ui.tsx";
+import { Act } from "./Act.tsx";
 
 
 /** The parts of a query these pieces read; any useQuery result fits */
@@ -101,7 +103,7 @@ export function Stale({ reads }: { reads: Read[] }) {
   return (
     <p className="notice stale" role="status">
       <span>Couldn't refresh just now, so this may be out of date (loaded {ago(new Date(at).toISOString())}).</span>
-      <button className="linkish" type="button" onClick={() => { for (const q of failed) void q.refetch(); }} disabled={retrying}>{retrying ? "Trying again…" : "Try again"}</button>
+      <Act icon={RotateCw} label={retrying ? "Trying again…" : "Try again"} disabled={retrying} run={() => { for (const q of failed) void q.refetch(); }} />
     </p>
   );
 }

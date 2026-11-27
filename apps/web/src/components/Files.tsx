@@ -3,6 +3,7 @@
 
 
 import { fileLimitsLine } from "../lib/prospect.ts";
+import { X, RotateCw } from "lucide-react";
 import { fileState, PROSPECT_ACCEPT, proposalRef, revisions, VIEWABLE, type DocumentRecord, type FileState, type Item, type Layer } from "@1neon/domain";
 import { proposalRefOf } from "../lib/docx.ts";
 import { useRef, useState, type ReactNode } from "react";
@@ -10,6 +11,7 @@ import { api, HttpError, openable, send } from "../lib/api.ts";
 import { problem, useProjects, useRefresh } from "../lib/hooks.ts";
 import { useOrg, useSession } from "./Shell.tsx";
 import { ago, Dialog, LayerBadge, LAYERS, layerName, useAsk, useToast } from "./ui.tsx";
+import { Act } from "./Act.tsx";
 
 
 // Where an upload is filed: nothing is organization level, a project alone is project level, and a layer
@@ -152,12 +154,12 @@ export function useUpload(target: FileTarget, onDone?: () => void) {
 
 /** The status line under an upload control: Cancel while sending, Retry for what didn't make it */
 function UploadStatus({ busy, left, retry, cancel }: Pick<ReturnType<typeof useUpload>, "busy" | "left" | "retry" | "cancel">) {
-  if (busy) return <span className="small muted" role="status">Uploading… <button type="button" className="linkish" onClick={(e) => { e.stopPropagation(); cancel(); }}>Cancel</button></span>;
+  if (busy) return <span className="small muted" role="status">Uploading… <Act icon={X} label="Cancel" run={cancel} /></span>;
   if (!left.length) return null;
   return (
     <span className="small warn-text" role="status">
       {left.length === 1 ? `${left[0]!.file.name} didn't upload.` : `${left.length} files didn't upload.`}{" "}
-      <button type="button" className="linkish" onClick={(e) => { e.stopPropagation(); void retry(); }}>Retry</button>
+      <Act icon={RotateCw} label="Retry" run={() => void retry()} />
     </span>
   );
 }

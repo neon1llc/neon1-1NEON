@@ -4,7 +4,7 @@
 
 import { benchStage, isBench, isQuickFix, QUICK_FIX_HOURS, QUICK_FIX_MAX_HOURS, quoteFields, priceLine, type QuoteInput, balanceOf, billedOn, depositLines, hoursLogged, hoursText, lineage, lineCents, dollars as wholeDollars, failedOn, invoiceState, InvoiceFields, money as dollars, payableOn, paymentPlan, priceMeaning, priceOf, betterWhen, canApprove, changedSince, currentDecision, todayIn, isClosed, isOwnOrg, KIND_LAYER, metricProgress, MetricFields, OptionFields, priceCheckDue, ProjectRole, proposalRef, PurchaseFields, HandoffFields, optionHistory, revisions, type DocumentRecord, type Item, type ItemKind, type Layer, type Project, type Stage } from "@1neon/domain";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ExternalLink, Pencil, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, ExternalLink, Pencil, Plus, Shuffle, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
 import { FileList, UploadButton } from "../components/Files.tsx";
 import { GUIDE, Pick, RequestBuilder, Starters } from "../components/Guide.tsx";
@@ -27,6 +27,7 @@ import { numberProblem, optionalNumber } from "../lib/measures.ts";
 import { problem, useMembers, useProject, useProjects, useRefresh, useSubmit } from "../lib/hooks.ts";
 import { aimBetween, canSlide, lessMotion } from "../lib/motion.ts";
 import type { EditMarker } from "../lib/types.ts";
+import { Act } from "../components/Act.tsx";
 
 
 // Singular and plural labels for each kind of item
@@ -557,7 +558,7 @@ function Overview({ project: p, items, docs }: { project: Project; items: Item[]
           {p.flags.length > 0 && <div className="small"><span className="tag warn">sensitive data: {p.flags.join(", ")}</span></div>}
         </div>
         {/* Project roles, with a fallback for people who left the organization */}
-        <h2 className="section-h" id="people">People {canWrite && <button className="link small" onClick={() => setPeopleOpen(true)}>Edit</button>}</h2>
+        <h2 className="section-h" id="people">People {canWrite && <Act icon={Pencil} label="Edit people" run={() => setPeopleOpen(true)} />}</h2>
         {!p.people.some((x) => x.role === "decision_maker") && <p className="notice small">No decision maker yet. An admin of your organization can approve options{(me.operator ? isOwnOrg(org.slug) : access === "admin") ? ", or name a decision maker under People" : ""}.</p>}
         {p.people.length === 0 ? <p className="muted small">No one on this project yet.</p> : (
           <div className="rows">
@@ -582,8 +583,8 @@ function Overview({ project: p, items, docs }: { project: Project; items: Item[]
         {canWrite && (
           <p className="small" style={{ marginTop: 18 }}>
             {/* Archiving asks first, as deleting does: the project leaves every list and locks. Restoring doesn't need to */}
-            <button className="linkish" onClick={() => void archive()}>{p.archived ? "Restore from archive" : "Archive this project"}</button>
-            {!p.archived && !isQuickFix(p) && <><br /><button className="linkish" onClick={() => void switchWay()}>{isBench(p) ? "Run on NEON's stages" : "Run as a Workbench"}</button></>}
+            <Act icon={p.archived ? ArchiveRestore : Archive} label={p.archived ? "Restore from archive" : "Archive this project"} tone={p.archived ? undefined : "danger"} run={() => void archive()} />
+            {!p.archived && !isQuickFix(p) && <Act icon={Shuffle} label={isBench(p) ? "Run on NEON's stages" : "Run as a Workbench"} run={() => void switchWay()} />}
           </p>
         )}
       </aside>
@@ -982,7 +983,7 @@ function AddItem({ kind, path, taken, decided }: { kind: ItemKind; path: string;
   if (!open) {
     return (
       <div className="add-row">
-        <button className="linkish small" onClick={() => setOpen(true)}>+ Add {label.toLowerCase()}</button>
+        <Act icon={Plus} label={`Add ${label.toLowerCase()}`} run={() => setOpen(true)} />
         {guide && kind !== "request" && !taken.length && <Starters kind={kind} taken={taken} onPick={(s) => { setTitle(s); setOpen(true); }} />}
       </div>
     );

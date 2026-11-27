@@ -6,11 +6,12 @@
 
 import { OUTLINE_CARRIES, OUTLINE_PARTS, readinessOf, type Item, type OutlinePart, type Project } from "@1neon/domain";
 import { useQuery } from "@tanstack/react-query";
-import { Check } from "lucide-react";
+import { Check, Pencil } from "lucide-react";
 import { Link } from "react-router";
 import { read } from "../lib/reads.ts";
 import { useOrg } from "./Shell.tsx";
 import { dateLabel, layerSlug } from "./ui.tsx";
+import { Act } from "./Act.tsx";
 
 
 // Home's Next step answer (routes/requests.ts), for when this project was sent for assessment
@@ -33,7 +34,7 @@ export function Readiness({ project: p, items, orgId, slug, canWrite, prospect, 
   // Where each part is written: the basics on this page, the example and people in Needs, measures in Observe
   const where = (id: OutlinePart) => {
     if (!canWrite) return null;
-    if (id === "what" || id === "done" || id === "limits") return <button type="button" className="linkish small" onClick={onEditBasics}>{id === "limits" ? "Set a target date" : "Write it here"}</button>;
+    if (id === "what" || id === "done" || id === "limits") return <Act icon={Pencil} label={id === "limits" ? "Set a target date" : "Write it here"} run={onEditBasics} />;
     if (id === "measure") return <Link className="small" to={`${base}/${layerSlug("observation")}`}>Add in Observe</Link>;
     return <Link className="small" to={`${base}/${layerSlug("needs")}`}>Answer in Needs</Link>;
   };

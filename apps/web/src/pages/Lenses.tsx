@@ -7,7 +7,7 @@
 
 
 import { RECORD_KINDS, todayIn, type Item, type ItemKind, type Project } from "@1neon/domain";
-import { CalendarDays, FileText, Kanban, ListChecks, MessagesSquare, Plus } from "lucide-react";
+import { CalendarDays, Check, FileText, Kanban, ListChecks, MessagesSquare, Play, Plus } from "lucide-react";
 import { useState, type DragEvent } from "react";
 import { NavLink } from "react-router";
 import { ItemPanel, STATUS_WORDS } from "../components/ItemPanel.tsx";
@@ -18,6 +18,7 @@ import { Avatar, dateLabel, useToast } from "../components/ui.tsx";
 import { api, HttpError } from "../lib/api.ts";
 import { problem, useMembers, useRefresh } from "../lib/hooks.ts";
 import { prefs } from "../lib/prefs.ts";
+import { Act } from "../components/Act.tsx";
 
 
 /** The lenses, in the order the switch shows them. Updates is the project's conversation and what changed */
@@ -181,7 +182,7 @@ export function BoardLens({ project: p, items, kindLabel }: { project: Project; 
             {cards.map((i) => (
               <div key={i.id} className="lens-slot">
                 <Card item={i} path={path} kindLabel={kindLabel(i.kind)} onDrag={editable ? (e) => e.dataTransfer.setData("text/plain", i.id) : undefined} />
-                {editable && NEXT[col] && <button type="button" className="linkish small lens-next" onClick={() => void patch(i, { status: NEXT[col]!.to })}>{NEXT[col]!.label}</button>}
+                {editable && NEXT[col] && <Act icon={NEXT[col]!.to === "done" ? Check : Play} label={NEXT[col]!.label} className="lens-next" run={() => void patch(i, { status: NEXT[col]!.to })} />}
               </div>
             ))}
             {col === "open" && editable && <QuickAdd label="Add a card" onAdd={(t) => add(t)} />}

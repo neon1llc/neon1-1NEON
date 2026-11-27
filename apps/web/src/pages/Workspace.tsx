@@ -10,7 +10,7 @@
 import { GuideCard, KeepCard, NextStep, ProspectNote } from "../components/Prospect.tsx";
 import { KIND_LAYER, Layer, type ItemKind } from "@1neon/domain";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, CircleCheck, CircleHelp, FilePlus2, FileUp, Folder, FolderPlus, Kanban, ListTodo, MessageSquare, PenLine, Receipt, SlidersHorizontal, UserPlus } from "lucide-react";
+import { Check, CircleCheck, CircleHelp, FilePlus2, FileUp, Folder, FolderPlus, Kanban, ListTodo, MessageSquare, PenLine, Play, Receipt, SlidersHorizontal, UserPlus } from "lucide-react";
 import { Link, useLocation, useSearchParams } from "react-router";
 import { LinksCard, wantsLinks } from "../components/LinksCard.tsx";
 import { ComingUp } from "../components/ComingUp.tsx";
@@ -31,6 +31,7 @@ import { HomeViews, type Group, type ViewRow } from "../components/HomeViews.tsx
 import { useHomeLayout } from "../lib/homeLayout.ts";
 import { compact, reconcile, tidy, COLS, type Breakpoint, type Size } from "../lib/homeGrid.ts";
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { Act } from "../components/Act.tsx";
 
 
 // The words and icon for each kind of thing waiting on someone
@@ -131,7 +132,7 @@ export function WorkspacePage() {
 
   // Setup steps, each ticked off by the real state; the card goes once all are done
   const steps = [
-    { done: me.user.tour === "done", label: "Take the 1-minute tour", act: <button className="link" onClick={help.welcomeTour}>Start</button> },
+    { done: me.user.tour === "done", label: "Take the 1-minute tour", act: <Act icon={Play} label="Start" run={help.welcomeTour} /> },
     ...(canWrite ? [{ done: (c?.projects ?? 0) > 0, label: "Start your first project", act: <Link to={`${base}/projects/new`}>Start</Link> }] : []),
     ...(canAdmin ? [{ done: (c?.people ?? 0) > 1, label: "Invite your team", act: <Link to={`${base}/people`}>Invite</Link> }] : []),
     ...(canAdmin ? [{ done: Boolean(me.factors?.any), label: "Add a second step for admin actions", act: <Link to="/me#security">Add</Link> }] : []),

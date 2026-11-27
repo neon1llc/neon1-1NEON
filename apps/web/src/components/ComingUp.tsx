@@ -9,7 +9,7 @@
 
 import { KIND_LAYER, type CalEvent, type ItemKind } from "@1neon/domain";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, X } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router";
 import { api } from "../lib/api.ts";
@@ -20,6 +20,7 @@ import type { CalEntry, CalendarMonth } from "../lib/types.ts";
 import { gate } from "./Reads.tsx";
 import { useOrg } from "./Shell.tsx";
 import { Arr, layerSlug, useAsk, useToast } from "./ui.tsx";
+import { Act } from "./Act.tsx";
 
 
 // Short names for the kinds that show up here: work, targets, and the organization's own events
@@ -244,7 +245,7 @@ function DayPanel({ tid, base, day, entries, events, canWrite, close }: { tid: s
         <b>{dayName(day)}</b>
         <span className="spacer" />
         {canWrite && editing === undefined && <button type="button" className="btn btn-ghost btn-sm" onClick={() => setEditing("new")}>Add to this day</button>}
-        <button type="button" className="linkish small" onClick={close}>Close</button>
+        <button type="button" className="icon-act" onClick={close} aria-label="Close this day" title="Close"><X size={16} aria-hidden="true" /></button>
       </div>
       {entries.length > 0 && (
         <ul className="cal-day-list">

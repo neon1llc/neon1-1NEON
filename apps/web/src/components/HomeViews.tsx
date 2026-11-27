@@ -10,6 +10,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useMenuFit, useTapOutside } from "../lib/menufit.ts";
 import { CountPills, type Counts } from "./HomeGrid.tsx";
 import { hiddenHeld } from "../lib/homeCounts.ts";
+import { Act } from "./Act.tsx";
 import { Arr } from "./ui.tsx";
 
 
@@ -45,9 +46,6 @@ export function HomeViews({ rows, ready = true, arranging, onToggle, onArrange, 
   rows: ViewRow[]; ready?: boolean; arranging: boolean; onToggle: (id: string) => void; onArrange: () => void; onTidy: () => void; onReset: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  // Which round action is open, waiting for its second press
-  const [armed, setArmed] = useState<"tidy" | "reset" | null>(null);
-  useEffect(() => { if (!open) setArmed(null); }, [open]);
   const box = useRef<HTMLDivElement>(null);
   const btn = useRef<HTMLButtonElement>(null);
   const panelId = useId();
@@ -94,12 +92,8 @@ export function HomeViews({ rows, ready = true, arranging, onToggle, onArrange, 
           <button type="button" className="btn btn-ghost btn-sm" aria-pressed={arranging} onClick={() => { onArrange(); setOpen(false); }}><LayoutGrid size={15} aria-hidden="true" /> {arranging ? "Done arranging" : "Arrange"}</button>
           {/* Round buttons that open leftward to say what they do (one open at a time); a second press does it */}
           <span className="vm-acts">
-            {([["tidy", Sparkles, "Tidy up", () => { onTidy(); setOpen(false); }], ["reset", RotateCcw, "Reset", () => onReset()]] as const).map(([k, Icon, label, run]) => (
-              <button key={k} type="button" className={`vm-act${armed === k ? " open" : ""}`} aria-label={armed === k ? `${label}: press again` : label} title={label}
-                onClick={() => { if (armed === k) { setArmed(null); run(); } else setArmed(k); }}>
-                <span className="vm-act-l"><span>{label}</span></span><Icon size={15} aria-hidden="true" />
-              </button>
-            ))}
+            <Act icon={Sparkles} label="Tidy up" run={() => { onTidy(); setOpen(false); }} />
+            <Act icon={RotateCcw} label="Reset" run={() => onReset()} />
           </span>
         </div>
       </div>

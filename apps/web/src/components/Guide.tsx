@@ -4,7 +4,9 @@
 
 
 import { resolveTiming, type ItemKind } from "@1neon/domain";
+import { X } from "lucide-react";
 import { useId, useState } from "react";
+import { Act } from "./Act.tsx";
 
 
 /** What to write for one kind: a one-line hint, example title and details, and starters */
@@ -230,7 +232,7 @@ export function RequestBuilder({ onSubmit, onCancel, busy, timeZone }: { onSubmi
           {needs.length > 1 && (
             <legend className="need-h">
               <span>Need {i + 1}</span>
-              <button type="button" className="linkish small" onClick={() => setNeeds(needs.filter((_, j) => j !== i))}>Remove</button>
+              <Act icon={X} label="Remove" run={() => setNeeds(needs.filter((_, j) => j !== i))} />
             </legend>
           )}
           {/* Each line reads as part of one sentence; blanks are chips or short fields */}

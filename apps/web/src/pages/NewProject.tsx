@@ -7,6 +7,7 @@
 
 
 import { QUICK_FIX, TEMPLATES } from "@1neon/domain";
+import { X } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useOrg, useSession, useTopBar } from "../components/Shell.tsx";
@@ -16,6 +17,7 @@ import { checkMeasures, MEASURE_TITLE_MAX, MEASURE_UNIT_MAX, type MetricDraft } 
 import { problem, useRefresh } from "../lib/hooks.ts";
 import { keepLens, LENSES, type Lens } from "./Lenses.tsx";
 import type { Project } from "@1neon/domain";
+import { Act } from "../components/Act.tsx";
 
 
 // The kinds of work, Blank first, then lightest to most involved, Quick fix among them
@@ -143,7 +145,7 @@ export function NewProject() {
                       {field("unit", "mu", "Unit", { placeholder: "e.g. hours", maxLength: MEASURE_UNIT_MAX })}
                       {field("baseline", "mb", "Now", { inputMode: "decimal" })}
                       {field("target", "mg", "Target", { inputMode: "decimal" })}
-                      {metrics.length > 1 && <button type="button" className="linkish small rm" onClick={() => setMetrics(metrics.filter((_, j) => j !== i))} aria-label={`Remove measure ${i + 1}`}>Remove</button>}
+                      {metrics.length > 1 && <Act icon={X} label={`Remove measure ${i + 1}`} className="rm" run={() => setMetrics(metrics.filter((_, j) => j !== i))} />}
                     </div>
                   );
                 })}

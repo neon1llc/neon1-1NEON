@@ -28,6 +28,8 @@ import "./styles/sentinel.css";
 keepEdgeStill();
 // Phones: what's being typed stays in view above the keyboard
 keepTypingInView();
+// iPhone browsers apply :active (a pressed row's highlight) only once a page listens for touches
+document.addEventListener("touchstart", () => {}, { passive: true });
 // Quick tab changes cut a slide short; that is expected, never an error
 quietSkippedTransitions();
 // The profile's "Reduced" motion choice, kept in this browser, marks the page before anything draws
