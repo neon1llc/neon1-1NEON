@@ -590,7 +590,7 @@ fieldset legend { font: var(--fs-xs) var(--mono); color: var(--muted); }
   .search-btn { padding: 0; width: 36px; justify-content: center; }
   /* The tab bar has Menu under the thumb, so the top bar drops its own; the page name stays on one line */
   .top .menu-btn { display: none; }
-  .top .crumb { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .top .crumb { min-width: 0; flex: 1 1 auto; flex-wrap: nowrap; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
 }
 /* Dialog content carries the padding, so a tap on the backdrop (the dialog element) can close it */
