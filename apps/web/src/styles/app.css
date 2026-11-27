@@ -874,7 +874,7 @@ details.history summary { cursor: pointer; font: var(--fs-xs) var(--mono); color
 .ag-group .s { font: var(--fs-xs) var(--mono); color: var(--muted); white-space: nowrap; }
 @media (max-width: 520px) { .ag-group li { grid-template-columns: 52px minmax(0, 1fr); } .ag-group .s { grid-column: 2; } }
 
-/* --- Insights --- */
+/* --- Charts: Home's Visuals cards --- */
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr)); gap: var(--sp-3); margin: var(--sp-2) 0 var(--sp-4); }
 .kpi { display: grid; gap: var(--sp-0); padding: var(--sp-3) var(--sp-4); }
 .kpi b { font: 600 var(--fs-2xl) var(--mono); color: var(--accent); }
@@ -2811,6 +2811,17 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 .numbers .stats { border: 0; background: none; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .tile[data-size="S"] .numbers .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .numbers .stats a { border-left: 0; border-top: 1px solid var(--line); }
+/* Delivery: the same strip, read-only numbers in four cells (two by two inside its card) */
+.stats.delivery { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.stats.delivery > span { display: grid; justify-items: center; align-content: start; gap: var(--sp-0); padding: var(--sp-2) var(--sp-1); color: var(--muted); font-size: var(--fs-xs); text-align: center; border-left: 1px solid var(--line); }
+.stats.delivery > span:first-child { border-left: 0; }
+.stats.delivery b { color: var(--accent); font: 600 var(--fs-lg) var(--mono); }
+.stats.delivery small { font-size: var(--fs-xs); }
+.stats.delivery small.warn { color: var(--red); }
+.numbers .stats.delivery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.numbers .stats.delivery > span { border-left: 0; border-top: 1px solid var(--line); }
+/* Charts on Home: the weekly columns fit a card's height */
+.tile .chart .cols { height: 140px; }
 
 /* Reduced motion, from the device or the profile: cards snap into place, nothing glides, turns, or pops */
 @media (prefers-reduced-motion: reduce) { .vm-btn .arr, .hg .tile, .tile-ghost, .hg, .tile-cfg-items, .tile-gear svg, .vm-act-l, .tile.pressing .tile-body > * { transition: none !important; } .vm-panel { animation: none; } .vm-btn:hover .arr { translate: none; } .tile.held, .pcard.dragging { scale: none; } }

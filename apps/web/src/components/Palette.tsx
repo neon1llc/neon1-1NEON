@@ -76,7 +76,7 @@ export function Palette({ me, org, prospect, open, setOpen, onHelp, onTour }: { 
                 <Command.Item onSelect={go(() => nav(`${base}/workflow`))}>Board</Command.Item>
                 <Command.Item onSelect={go(() => nav(`${base}/projects`))}>Projects</Command.Item>
                 <Command.Item onSelect={go(() => nav(`${base}/documents`))}>Files</Command.Item>
-                <Command.Item onSelect={go(() => nav(`${base}/insights`))}>Insights</Command.Item>
+                
                 <Command.Item onSelect={go(() => nav(`${base}/people`))}>People</Command.Item>
                 <Command.Item onSelect={go(() => nav(`${base}/settings`))}>Settings</Command.Item>
               </>

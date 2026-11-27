@@ -90,8 +90,8 @@ Yes. For a fix of a few hours, I start a **Quick fix** with no proposal. I send 
 ### What is the calendar on Home?
 Due dates, milestones, project targets, and your organization's events, a month at a time. Choose a day to see them. Editors add leave, closures, meetings, or care plan dates, one-off or repeating. [Watch it](/1NEON/live?play=calendar).
 
-### What is Insights?
-Charts from your organization's data, such as open and overdue work, on-time finishes, and days to a decision. The page explains each number. [Watch it](/1NEON/live?play=observe).
+### Where are the charts?
+On Home, under Visuals in View: finished per week, project health, and delivery (open and overdue work, on-time finishes, days to a decision, measures at target), beside projects at a glance and by layer. Hover a number for how it's counted. [Watch it](/1NEON/live?play=observe).
 
 ## Proposals, decisions, and signing
 

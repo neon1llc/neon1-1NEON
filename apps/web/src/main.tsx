@@ -104,7 +104,8 @@ const router = createBrowserRouter(
             { path: "layer/:layer", lazy: page(() => import("./pages/LayerPage.tsx"), "LayerPage") },
             { path: "people", lazy: page(() => import("./pages/People.tsx"), "People") },
             { path: "documents", lazy: page(() => import("./pages/Documents.tsx"), "Documents") },
-            { path: "insights", lazy: page(() => import("./pages/Insights.tsx"), "Insights") },
+            // Insights now lives on Home as its Visuals cards; old links land on the charts
+            { path: "insights", element: <Navigate to="../workspace#insights" relative="path" replace /> },
             { path: "settings", lazy: page(() => import("./pages/Settings.tsx"), "Settings") },
           ] }],
         },

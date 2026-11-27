@@ -1,6 +1,6 @@
 // apps/web/src/components/HomeViews.tsx - Home's View menu, at the end of the greeting row: which cards
-// show, grouped like GitHub's and Linear's dashboard pickers, each with its urgent, suggested, and general
-// counts. The button totals each kind, as shown out of total once a card holding some is hidden. Arrange
+// show, grouped by kind like Jira's gadget picker and Grafana's panel rows (To do, Movement, Visuals,
+// Shortcuts), each with its urgent, suggested, and general counts. The button totals each kind, as shown out of total once a card holding some is hidden. Arrange
 // turns on moving and resizing; Tidy up repacks the cards. A drop-down with neon1's drawn arrow.
 
 
@@ -9,12 +9,14 @@ import { useEffect, useId, useRef, useState } from "react";
 import { CountPills, type Counts } from "./HomeGrid.tsx";
 
 
-export type Group = "urgent" | "suggested" | "general";
+export type Group = "todo" | "movement" | "visuals" | "shortcuts";
 export interface ViewRow { id: string; title: string; group: Group; shown: boolean; counts: Counts }
+// Grouped by what a card is, not how urgent: urgency is each card's own badges
 const GROUPS: { key: Group; label: string }[] = [
-  { key: "urgent", label: "Urgent" },
-  { key: "suggested", label: "Suggested" },
-  { key: "general", label: "General" },
+  { key: "todo", label: "To do" },
+  { key: "movement", label: "Movement" },
+  { key: "visuals", label: "Visuals" },
+  { key: "shortcuts", label: "Shortcuts" },
 ];
 const KINDS: (keyof Counts)[] = ["urgent", "suggested", "general"];
 

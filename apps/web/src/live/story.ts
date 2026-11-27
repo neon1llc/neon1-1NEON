@@ -667,9 +667,9 @@ export const STORY: Section[] = [
       await s.type('input[aria-label^="New reading"]', S.measures[0]!.newReading);
       await s.key("Enter");
       await s.wait(900);
-      await s.go(`${base}/insights`, "Insights");
+      await s.go(`${base}/workspace#insights`, "Home");
       await s.wait(1400);
-      await s.scroll(400, 1200);
+      await s.hover({ sel: "h2.section-h", text: "Finished per week" }, 1200);
     },
   },
   {

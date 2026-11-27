@@ -36,7 +36,7 @@ interface Guide {
 
 
 // The pages that have guidance; every signed-in route maps to one
-export type PageKey = "home" | "board" | "projects" | "project" | "newproject" | "layer" | "people" | "files" | "insights" | "settings" | "me" | "contact" | "all" | "proposal" | "invoice" | "agreement" | "prospects" | "needs" | "execute" | "observe" | "normalize";
+export type PageKey = "home" | "board" | "projects" | "project" | "newproject" | "layer" | "people" | "files" | "settings" | "me" | "contact" | "all" | "proposal" | "invoice" | "agreement" | "prospects" | "needs" | "execute" | "observe" | "normalize";
 
 
 // Plain words, one idea per line. The tours point at data-tour names that pages put on their elements
@@ -44,12 +44,13 @@ export const GUIDES: Record<PageKey, Guide> = {
   home: {
     title: "Home",
     purpose: "Your starting point: what needs you, and what changed lately.",
-    howto: ["Needs you lists what's waiting on you, most pressing first.", "While a decision waits on you, email reminds you after 3 and 7 business days.", "With projects waiting for an assessment, ask for one under Next step.", "On the calendar, choose a day to see it. Editors can add leave, closures, meetings, and care plan dates.", "Each card's badges count what it holds: red is urgent, amber suggested, green to know. View shows or hides any card; its badges total them, as shown out of total when some are hidden.", "Arrange, under View: hold a card to move it, drag its edge or corner to resize, or open its gear for its sizes and Hide. Tidy up repacks everything. Your layout follows you to any device."],
+    howto: ["Needs you lists what's waiting on you, most pressing first.", "While a decision waits on you, email reminds you after 3 and 7 business days.", "With projects waiting for an assessment, ask for one under Next step.", "On the calendar, choose a day to see it. Editors can add leave, closures, meetings, and care plan dates.", "View groups the cards: To do, Movement, Visuals, and Shortcuts. Each card's badges count what it holds: red is urgent, amber suggested, green to know. The View button totals them, as shown out of total when some are hidden.", "Visuals holds the charts: finished per week, project health, and delivery (open work, on-time rate, days to decide, measures at target). Hover a number for how it's counted.", "Arrange, under View: hold a card to move it, drag its edge or corner to resize, or open its gear for its sizes and Hide. Tidy up repacks everything. Your layout follows you to any device."],
     tour: [
       { at: "next-step-ask", title: "Next step", text: "Outline a project, then ask for an assessment of up to three. Add a note, then send. You can edit or withdraw it until it goes." },
       { at: "needs-you", title: "Needs you", text: "Things waiting on you: approvals, tasks, and files to send. Open one to act on it." },
       { at: "coming-up", title: "Calendar", text: "Work due, milestones, targets, and your events. Choose a day to see or add. Past, Overdue, Upcoming, and Repeated open below." },
       { at: "glance", title: "Projects at a glance", text: "Each project's stage, health, progress, late work, and what's next." },
+      { at: "weekly", title: "Finished per week", text: "Items finished each week for the last eight weeks." },
       { at: "get-to-know", title: "Get to know 1NEON", text: "A way to message me, a sample project, a walkthrough, the demo, and the FAQs. Hide it when you're done." },
       { at: "get-started", title: "Get started", text: "A short setup checklist. It goes away when done." },
       { at: "activity", title: "Recent activity", text: "What people did lately, newest first, with each edit's changes." },
@@ -135,16 +136,6 @@ export const GUIDES: Record<PageKey, Guide> = {
     howto: ["Choose where to file before you upload: the organization, a project, or one of its layers.", "Up to 100 MB each.", "Move refiles a file. Whoever uploaded it, or an admin, can delete it.", "To mark up a proposal, upload your edited Word copy here."],
     tour: [{ at: "upload", title: "Upload", text: "Drop a file here, or choose one." }],
   },
-  insights: {
-    title: "Insights",
-    purpose: "How work is going, in charts made from your own data.",
-    howto: ["How these are counted, at the bottom, explains the numbers."],
-    tour: [
-      { at: "kpis", title: "At a glance", text: "Open work, on-time rate, days to a decision, and measures at target." },
-      { at: "weekly", title: "Pace", text: "Items finished each week for the last eight weeks." },
-      { at: "by-layer", title: "Across the layers", text: "Where projects sit: Needs, Execute, Observe, or Normalize." },
-    ],
-  },
   settings: {
     title: "Settings",
     purpose: "Your organization: its details, agreement, data, and board stages.",
@@ -229,7 +220,6 @@ export function pageKey(path: string): PageKey {
   if (path.includes("/layer/")) return "layer";
   if (path.endsWith("/people")) return "people";
   if (path.endsWith("/documents")) return "files";
-  if (path.endsWith("/insights")) return "insights";
   if (path.endsWith("/settings")) return "settings";
   return "home";
 }

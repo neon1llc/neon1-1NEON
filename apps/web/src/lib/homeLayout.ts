@@ -10,7 +10,8 @@ import { prefs } from "./prefs.ts";
 import type { Cell } from "./homeGrid.ts";
 import type { Me } from "./types.ts";
 
-export interface Layout { hidden: string[]; wide?: Cell[]; narrow?: Cell[] }
+// hidden: cards turned off; shown: cards that start off and were turned on
+export interface Layout { hidden: string[]; shown?: string[]; wide?: Cell[]; narrow?: Cell[] }
 const EMPTY: Layout = { hidden: [] };
 const localKey = (userId: string, orgId: string) => `1neon.home.${userId}.${orgId}`;
 

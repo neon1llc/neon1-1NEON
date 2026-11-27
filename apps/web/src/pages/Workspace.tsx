@@ -1,21 +1,24 @@
 // apps/web/src/pages/Workspace.tsx - Home inside an organization: the greeting with the View menu, and
-// the cards on an arrangeable grid. Cards: what needs you, overdue and blocked work, the calendar, every
-// project at a glance, projects by layer, the headline numbers, shortcuts, who's away this week, project
-// updates, recent activity, and the setup and suggestion cards until they're done or put away. Each card
-// has its own preset sizes and shows more as it grows (components/HomeGrid.tsx).
+// the cards on an arrangeable grid, in four groups. To do: what needs you, overdue and blocked work, and
+// the setup and suggestion cards until they're done or put away. Movement: the calendar, project updates,
+// recent activity, who's away. Visuals: every project at a glance, projects by layer, the headline
+// numbers, and the charts (finished per week, project health, delivery). Shortcuts: quick links and the
+// guide. Every organization offers the same cards, each with its own empty state, so Home reads the same
+// everywhere; only setup and suggestion cards come and go. Each card has its own preset sizes and shows
+// more as it grows (components/HomeGrid.tsx).
 
 
 import { GuideCard, KeepCard, NextStep, ProspectNote } from "../components/Prospect.tsx";
 import { KIND_LAYER, Layer, type ItemKind } from "@1neon/domain";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChartColumn, Check, CircleCheck, CircleHelp, FilePlus2, FileUp, Folder, FolderPlus, Kanban, ListTodo, MessageSquare, PenLine, Receipt, SlidersHorizontal, UserPlus } from "lucide-react";
+import { Check, CircleCheck, CircleHelp, FilePlus2, FileUp, Folder, FolderPlus, Kanban, ListTodo, MessageSquare, PenLine, Receipt, SlidersHorizontal, UserPlus } from "lucide-react";
 import { Link, useLocation, useSearchParams } from "react-router";
 import { LinksCard, wantsLinks } from "../components/LinksCard.tsx";
 import { ComingUp } from "../components/ComingUp.tsx";
 import { Problem, Stale } from "../components/Reads.tsx";
 import { useHelp } from "../components/Help.tsx";
 import { useOrg, useSession, useTopBar } from "../components/Shell.tsx";
-import { ago, Changes, dateLabel, Health, LayerBadge, layerName, layerSlug, useToast } from "../components/ui.tsx";
+import { ago, Changes, dateLabel, Health, LAYERS, LayerBadge, layerName, layerSlug, useToast } from "../components/ui.tsx";
 import type { Project } from "@1neon/domain";
 type HealthT = Project["health"];
 import { api } from "../lib/api.ts";
@@ -48,8 +51,26 @@ const ACTION = {
 const sz = (key: string, w: number, h: number): Size => ({ key, w, h: Math.round(h * 1.4) });
 const none: Counts = { urgent: 0, suggested: 0, general: 0 };
 const cnt = (urgent = 0, suggested = 0, general = 0): Counts => ({ urgent, suggested, general });
-const RANK: Record<Group, number> = { urgent: 0, suggested: 1, general: 2 };
+const RANK: Record<Group, number> = { todo: 0, movement: 1, visuals: 2, shortcuts: 3 };
 type Keep = { free: boolean; held?: boolean; deleteOn?: string };
+
+// The charts' numbers (GET /t/:tid/insights)
+interface Charts {
+  projects: number;
+  byHealth: Record<string, number>;
+  weeks: { week: string; done: number }[];
+  // doneUnknown: finished before completion times were recorded (absent from older API versions)
+  work: { open: number; overdue: number; onTime: number; late: number; doneUnknown?: number };
+  decisions: { count: number; avgDays: number | null };
+  measures: { count: number; reached: number };
+}
+// Health words and their colors, in the order people read them
+const HEALTH = [
+  ["on_track", "On track", "var(--ok)"],
+  ["at_risk", "At risk", "var(--amber)"],
+  ["off_track", "Off track", "var(--red)"],
+  ["not_started", "Not assessed", "var(--muted)"],
+] as const;
 
 /** One card Home can show: what it is, where it groups in the View menu, what a hidden one holds */
 interface Card extends Omit<Tile, "sizes"> {
@@ -57,6 +78,8 @@ interface Card extends Omit<Tile, "sizes"> {
   sizes: Record<Breakpoint, Size[]>;
   group: Group;
   when: boolean;
+  // Offered in View but off until someone turns it on
+  off?: boolean;
   // A card put away somewhere of its own (the profile, or this browser) says whether it shows and how to toggle
   shown?: boolean;
   toggle?: (show: boolean) => void;
@@ -82,6 +105,8 @@ export function WorkspacePage() {
   const asked = useQuery({ queryKey: ["requests", org.id], queryFn: () => read<{ projects: { decided?: boolean; outline?: { missing: unknown[] } }[]; assessment?: { sentAt?: string } }>(`/t/${org.id}/requests`, { projects: "array" }), enabled: canWrite && !me.operator });
   // The calendar's month in view, shared with Coming up, for what's overdue and due this week
   const cal = useQuery({ queryKey: ["calendar", org.id, "now"], queryFn: () => read<CalendarMonth>(`/t/${org.id}/calendar`, { today: "string", entries: "array" }), refetchInterval: 60_000 });
+  // The charts' numbers, the same read Neo uses
+  const charts = useQuery({ queryKey: ["insights", org.id], queryFn: () => read<Charts>(`/t/${org.id}/insights`, { work: "object", decisions: "object", measures: "object", weeks: "array", byHealth: "object" }) });
   const keep = useQuery({ queryKey: ["keep", org.id], queryFn: () => read<Keep>(`/t/${org.id}/keep`, {}), enabled: prospect && !me.operator });
   useTopBar(<span>{org.name}</span>, [org.name]);
   const c = ws.data?.counts;
@@ -148,47 +173,53 @@ export function WorkspacePage() {
 
   // Every card this person could have here, in default reading order
   const cards: Card[] = [
-    { id: "next", title: "Next step", group: "suggested", when: canWrite && !me.operator && (prospect || nextList.length > 0 || Boolean(asked.data?.assessment)),
+    { id: "next", title: "Next step", group: "todo", when: canWrite && !me.operator && (prospect || nextList.length > 0 || Boolean(asked.data?.assessment)),
       counts: cnt(0, nextList.length ? outlineTips : 1, asked.data?.assessment ? 1 : 0),
       sizes: { wide: [sz("L", 6, 11), sz("M", 6, 8), sz("W", 12, 8)], narrow: [sz("M", 4, 13), sz("L", 4, 18)] }, body: () => <NextStep orgId={org.id} slug={summary.slug} prospect={prospect} /> },
-    { id: "keep", title: "Your account", group: "urgent", when: prospect && !me.operator && Boolean(k?.free && !k.held && k.deleteOn),
+    { id: "keep", title: "Your account", group: "todo", when: prospect && !me.operator && Boolean(k?.free && !k.held && k.deleteOn),
       counts: daysLeft !== undefined && daysLeft <= 7 ? cnt(1) : cnt(0, 0, 1),
       sizes: { wide: [sz("M", 6, 5), sz("T", 4, 7), sz("W", 12, 3)], narrow: [sz("M", 4, 6), sz("T", 4, 8)] }, body: () => <KeepCard orgId={org.id} slug={summary.slug} canKeep={canWrite} /> },
-    { id: "needs", title: "Needs you", group: "urgent", when: true, counts: cnt(pressing, Math.max(0, n - pressing)),
+    { id: "needs", title: "Needs you", group: "todo", when: true, counts: cnt(pressing, Math.max(0, n - pressing)),
       sizes: { wide: [sz("M", 6, 7), sz("S", 3, 4), sz("L", 6, 11), sz("W", 12, 7)], narrow: [sz("M", 4, 9), sz("S", 2, 5), sz("L", 4, 14)] }, body: (v) => needsYou(v) },
-    { id: "late", title: "Overdue and blocked", group: "urgent", when: !prospect && glance.length > 0,
+    { id: "late", title: "Overdue and blocked", group: "todo", when: true,
       counts: cnt(late.reduce((t, g) => t + g.overdue, 0), late.reduce((t, g) => t + g.blocked, 0)),
       sizes: { wide: [sz("S", 3, 4), sz("M", 6, 5), sz("T", 4, 8)], narrow: [sz("S", 2, 5), sz("M", 4, 6), sz("T", 4, 9)] }, body: (v) => overdue(v) },
-    { id: "coming", title: "Coming up", group: "general", when: true, counts: calCounts,
+    { id: "coming", title: "Coming up", group: "movement", when: true, counts: calCounts,
       sizes: { wide: [sz("L", 6, 13), sz("W", 12, 13)], narrow: [sz("L", 4, 18)] }, body: () => <ComingUp tid={org.id} base={base} /> },
-    { id: "face", title: "Where can I see your business?", group: "suggested", when: admin && !me.operator && !org.place && !org.link, counts: cnt(0, 1),
+    { id: "face", title: "Where can I see your business?", group: "todo", when: admin && !me.operator && !org.place && !org.link, counts: cnt(0, 1),
       shown: !faceSkipped, toggle: (show) => { setFaceAsk(org.id, show); setFaceSkipped(!show); },
       sizes: { wide: [sz("M", 6, 8), sz("W", 12, 6)], narrow: [sz("M", 4, 11)] }, body: () => <FaceForm ask onDone={() => setFaceSkipped(true)} /> },
-    { id: "links", title: "Add your links", group: "suggested", when: !me.user.linkedin && !me.user.businessLinkedin && !me.user.website, counts: cnt(0, 1),
+    { id: "links", title: "Add your links", group: "todo", when: !me.user.linkedin && !me.user.businessLinkedin && !me.user.website, counts: cnt(0, 1),
       shown: wantsLinks(me), toggle: flag("linksCard"),
       sizes: { wide: [sz("S", 3, 4), sz("M", 6, 3)], narrow: [sz("S", 2, 6), sz("M", 4, 4)] }, body: () => <LinksCard me={me} /> },
-    { id: "setup", title: "Get started", group: "suggested", when: setupLeft > 0, counts: cnt(0, setupLeft),
+    { id: "setup", title: "Get started", group: "todo", when: setupLeft > 0, counts: cnt(0, setupLeft),
       sizes: { wide: [sz("M", 6, 5), sz("T", 4, 6), sz("W", 12, 3)], narrow: [sz("M", 4, 7)] }, body: () => getStarted() },
-    { id: "guide", title: "Get to know 1NEON", group: "general", when: !me.operator, counts: none,
+    { id: "guide", title: "Get to know 1NEON", group: "shortcuts", when: !me.operator, counts: none,
       shown: me.user.guide !== "hidden", toggle: flag("guide"),
       sizes: { wide: [sz("M", 6, 8), sz("T", 4, 10), sz("W", 12, 5)], narrow: [sz("M", 4, 11)] }, body: () => <GuideCard me={me} prospect={prospect} /> },
-    { id: "glance", title: "Projects at a glance", group: "general", when: glance.length > 0 && !prospect, counts: cnt(health("off_track"), health("at_risk")),
+    { id: "glance", title: "Projects at a glance", group: "visuals", when: true, counts: cnt(health("off_track"), health("at_risk")),
       sizes: { wide: [sz("M", 6, 7), sz("T", 4, 8), sz("L", 6, 11), sz("W", 12, 7)], narrow: [sz("T", 4, 9), sz("L", 4, 14)] }, body: (v) => atGlance(v) },
-    { id: "layers", title: "Projects by layer", group: "general", when: glance.length > 0, counts: none,
+    { id: "layers", title: "Projects by layer", group: "visuals", when: true, counts: none,
       sizes: { wide: [sz("S", 3, 4), sz("M", 6, 4), sz("B", 12, 3)], narrow: [sz("S", 2, 5), sz("M", 4, 4)] }, body: (v) => byLayer(v) },
-    { id: "stats", title: "Numbers", group: "general", when: true, counts: none,
+    { id: "stats", title: "Numbers", group: "visuals", when: true, counts: none,
       sizes: { wide: [sz("B", 12, 2), sz("M", 6, 4), sz("S", 3, 6)], narrow: [sz("M", 4, 6), sz("S", 2, 8)] }, body: (v) => numbers(v) },
-    { id: "quick", title: "Quick links", group: "general", when: true, counts: none,
+    { id: "quick", title: "Quick links", group: "shortcuts", when: true, counts: none,
       sizes: { wide: [sz("S", 3, 6), sz("M", 6, 5), sz("B", 12, 2), sz("L", 6, 9)], narrow: [sz("S", 2, 8), sz("M", 4, 7), sz("L", 4, 12)] }, body: (v) => quickLinks(v) },
-    { id: "away", title: "Away this week", group: "general", when: (ws.data?.away?.length ?? 0) > 0, counts: cnt(0, 0, ws.data?.away?.length ?? 0),
+    { id: "away", title: "Away this week", group: "movement", when: true, counts: cnt(0, 0, ws.data?.away?.length ?? 0),
       sizes: { wide: [sz("S", 3, 4), sz("M", 6, 4)], narrow: [sz("S", 2, 5), sz("M", 4, 5)] }, body: () => awayWeek() },
-    { id: "updates", title: "Project updates", group: "general", when: (ws.data?.updates?.length ?? 0) > 0, counts: cnt(0, 0, ws.data?.updates?.length ?? 0),
+    { id: "updates", title: "Project updates", group: "movement", when: true, counts: cnt(0, 0, ws.data?.updates?.length ?? 0),
       sizes: { wide: [sz("M", 6, 7), sz("T", 4, 9), sz("L", 6, 11)], narrow: [sz("T", 4, 9), sz("L", 4, 13)] }, body: (v) => projectUpdates(v) },
-    { id: "activity", title: "Recent activity", group: "general", when: true, counts: cnt(0, 0, recentActs),
+    { id: "activity", title: "Recent activity", group: "movement", when: true, counts: cnt(0, 0, recentActs),
       sizes: { wide: [sz("M", 6, 8), sz("T", 4, 12), sz("L", 6, 12)], narrow: [sz("M", 4, 10), sz("T", 4, 12), sz("L", 4, 15)] }, body: (v) => recent(v) },
+    { id: "pace", title: "Finished per week", group: "visuals", when: true, counts: none,
+      sizes: { wide: [sz("M", 6, 6), sz("W", 12, 6)], narrow: [sz("L", 4, 8)] }, body: () => pace() },
+    { id: "health", title: "Project health", group: "visuals", when: true, off: true, counts: cnt(health("off_track"), health("at_risk")),
+      sizes: { wide: [sz("M", 6, 4), sz("S", 3, 5)], narrow: [sz("M", 4, 5)] }, body: () => healthBar() },
+    { id: "delivery", title: "Delivery", group: "visuals", when: true, off: true, counts: cnt(charts.data?.work.overdue ?? 0),
+      sizes: { wide: [sz("M", 6, 4), sz("B", 12, 2)], narrow: [sz("M", 4, 6)] }, body: (v) => delivery(v) },
   ];
   const offered = cards.filter((x) => x.when);
-  const isShown = (x: Card) => x.shown ?? !layout.hidden.includes(x.id);
+  const isShown = (x: Card) => x.shown ?? (x.off ? (layout.shown ?? []).includes(x.id) : !layout.hidden.includes(x.id));
   const visible = offered.filter(isShown);
   // Each card is at least as tall as its content: a card the person hasn't placed takes exactly that
   // height (at its first preset's width); a placed one keeps its size unless the content outgrows it
@@ -202,18 +233,20 @@ export function WorkspacePage() {
   const setShown = (id: string, show: boolean) => {
     const x = offered.find((y) => y.id === id);
     if (x?.toggle) x.toggle(show);
+    else if (x?.off) change((l) => ({ ...l, shown: show ? [...new Set([...(l.shown ?? []), id])] : (l.shown ?? []).filter((h) => h !== id) }));
     else change((l) => ({ ...l, hidden: show ? l.hidden.filter((h) => h !== id) : [...new Set([...l.hidden, id])] }));
   };
   // A link to a hidden card (#next-step from a notification) shows it again
   const { hash } = useLocation();
   useEffect(() => {
-    const id = ({ "#next-step": "next", "#coming-up": "coming", "#activity": "activity" } as Record<string, string>)[hash];
+    const id = ({ "#next-step": "next", "#coming-up": "coming", "#activity": "activity", "#insights": "pace" } as Record<string, string>)[hash];
     const x = id ? offered.find((y) => y.id === id) : undefined;
     if (x && !isShown(x)) setShown(x.id, true);
   }, [hash]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Counts show once every read behind them has answered, so no badge flashes a wrong number first
-  const ready = ws.isSuccess && cal.isSuccess && (!(canWrite && !me.operator) || asked.isSuccess) && (!(prospect && !me.operator) || keep.isSuccess);
+  // (answered either way: a read that failed shows its card's own empty or problem line, never an endless wait)
+  const ready = !ws.isPending && !cal.isPending && !charts.isPending && (!(canWrite && !me.operator) || !asked.isPending) && (!(prospect && !me.operator) || !keep.isPending);
   const rows: ViewRow[] = offered.map((x) => ({ id: x.id, title: x.title, group: x.group, shown: isShown(x), counts: x.counts ?? none }));
   // Tidy up: urgent cards first, then suggested, then the rest; cards holding urgent items lead their group
   const rank = (id: string) => { const x = offered.find((y) => y.id === id); return x ? RANK[x.group] * 2 - ((x.counts?.urgent ?? 0) > 0 ? 1 : 0) : 9; };
@@ -299,6 +332,7 @@ export function WorkspacePage() {
     return (
       <section className={`card glance v-${view}`} data-tour="glance">
         <h2 className="section-h">Projects at a glance <small><Link to={`${base}/projects`}>All projects</Link></small></h2>
+        {glance.length === 0 && <p className="muted small">No projects yet.{canWrite && <> <Link to={`${base}/projects/new`}>Start one</Link></>}</p>}
         <ul>
           {glance.map((g) => {
             const pct = g.total ? Math.round((g.done / g.total) * 100) : 0;
@@ -369,7 +403,6 @@ export function WorkspacePage() {
       { key: "chat", icon: MessageSquare, label: "Message me", note: "Ask anything, right here", act: () => dispatchEvent(new Event("1neon:chat")), when: !me.operator },
       { key: "board", icon: Kanban, label: "Board", note: "Every item by stage", to: `${base}/workflow`, when: true },
       { key: "projects", icon: Folder, label: "All projects", note: "Status and history", to: `${base}/projects`, when: true },
-      { key: "insights", icon: ChartColumn, label: "Insights", note: "Progress and spend", to: `${base}/insights`, when: !prospect },
       { key: "settings", icon: SlidersHorizontal, label: "Settings", note: "Your organization", to: `${base}/settings`, when: admin },
       { key: "faqs", icon: CircleHelp, label: "FAQs", note: "Short answers", to: "/faqs", when: true },
     ].filter((q) => q.when);
@@ -402,7 +435,8 @@ export function WorkspacePage() {
       <section className="card away">
         <h2 className="section-h">Away this week</h2>
         <ul className="updates">
-          {ws.data!.away!.map((a, i) => (
+          {(ws.data?.away ?? []).length === 0 && <li className="muted small">Nobody's away this week.</li>}
+          {(ws.data?.away ?? []).map((a, i) => (
             <li key={i}><b>{a.name}</b> <span className="muted small">{dateLabel(a.date)}{a.endDate ? ` to ${dateLabel(a.endDate)}` : ""}{a.title && a.title !== a.name ? ` · ${a.title}` : ""}</span></li>
           ))}
         </ul>
@@ -416,7 +450,8 @@ export function WorkspacePage() {
       <section className="card">
         <h2 className="section-h">Project updates</h2>
         <ul className="updates">
-          {ws.data!.updates!.map((u) => (
+          {(ws.data?.updates ?? []).length === 0 && <li className="muted small">No updates yet.</li>}
+          {(ws.data?.updates ?? []).map((u) => (
             <li key={u.projectKey}>
               <Link to={`${base}/projects/${u.projectKey}`}><span className="s">{u.projectKey}</span> {u.projectName}</Link>
               <span className="u-line"><Health value={u.health as HealthT} /> <time>{ago(u.at)}</time></span>
@@ -445,13 +480,79 @@ export function WorkspacePage() {
     );
   }
 
+  // A chart's read failed: say so in the card, the rest of Home carries on
+  const noCharts = <p className="muted small">Couldn't load these numbers. They'll appear on the next refresh.</p>;
+
+  // Items finished per week for eight weeks, as columns with their counts
+  function pace() {
+    const d = charts.data;
+    const weeks = d?.weeks ?? [];
+    const max = Math.max(1, ...weeks.map((w) => w.done));
+    const total = weeks.reduce((a, w) => a + w.done, 0);
+    const unknown = d?.work.doneUnknown ?? 0;
+    return (
+      <section className="card chart" id="insights" data-tour="weekly" title="By the week each item was marked done; reopened and finished again counts the latest finish">
+        <h2 className="section-h">Finished per week {d && <small>{total} in 8 weeks</small>}</h2>
+        {!d ? noCharts : (
+          <div className="cols" role="img" aria-label={weeks.map((w) => `Week of ${w.week}: ${w.done}`).join(", ")}>
+            {weeks.map((w, i) => (
+              <div key={w.week} className="wk">
+                <span className="v">{w.done || ""}</span>
+                <span className={`bar${i === weeks.length - 1 ? " now" : ""}`} style={{ height: `${(w.done / max) * 100}%` }} />
+                <span className="x">{i % 2 === 1 ? new Date(w.week + "T12:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "\u00a0"}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {unknown > 0 && <p className="muted small">{unknown} finished before finish dates were kept, so not counted here.</p>}
+      </section>
+    );
+  }
+
+  // Project health as one split bar, with words and counts
+  function healthBar() {
+    const d = charts.data;
+    return (
+      <section className="card chart" title="What the team last set on each active project">
+        <h2 className="section-h">Project health</h2>
+        {!d ? noCharts : (
+          <>
+            <div className="split" role="img" aria-label={HEALTH.map(([k, w]) => `${w}: ${d.byHealth[k] ?? 0}`).join(", ")}>
+              {HEALTH.map(([k, , c]) => (d.byHealth[k] ?? 0) > 0 && <span key={k} style={{ flex: d.byHealth[k], background: c }} />)}
+              {d.projects === 0 && <span className="empty-bar" />}
+            </div>
+            <ul className="keys">{HEALTH.map(([k, w, c]) => <li key={k}><i style={{ background: c }} />{w} <b>{d.byHealth[k] ?? 0}</b></li>)}</ul>
+          </>
+        )}
+      </section>
+    );
+  }
+
+  // How delivery is going: open and overdue work, the on-time rate, days to a decision, measures at target
+  function delivery(view: string) {
+    const d = charts.data;
+    if (!d) return <section className="card"><h2 className="section-h">Delivery</h2>{noCharts}</section>;
+    const due = d.work.onTime + d.work.late;
+    const rate = due ? Math.round((d.work.onTime / due) * 100) : undefined;
+    const strip = (
+      <div className="stats delivery" aria-label="Delivery">
+        <span title="Items not done, not approved options, and not status updates"><b>{d.work.open}</b> open{d.work.overdue > 0 && <small className="warn">{d.work.overdue} overdue</small>}</span>
+        <span title={due ? `${d.work.onTime} of ${due} finished on or before their due date` : "Nothing with a due date has finished yet"}><b>{rate === undefined ? "–" : `${rate}%`}</b> on time</span>
+        <span title={`Average over ${d.decisions.count} decided`}><b>{d.decisions.avgDays ?? "–"}</b> days to decide</span>
+        <span title="Measures at or past their target"><b>{d.measures.reached}/{d.measures.count}</b> at target</span>
+      </div>
+    );
+    if (view === "B") return strip;
+    return <section className="card numbers"><h2 className="section-h">Delivery</h2>{strip}</section>;
+  }
+
   return (
     <>
       {/* The greeting wraps in its own column; the View menu holds the end of the row, level with the greeting's last line */}
       <div className="home-head">
         <h1 className="page-title">{first ? `Hi, ${first}` : "Home"}</h1>
         <HomeViews rows={rows} ready={ready} arranging={arranging} onToggle={(id) => { const r = rows.find((x) => x.id === id); if (r) setShown(id, !r.shown); }}
-          onArrange={() => setArranging(!arranging)} onReset={() => change(() => ({ hidden: [] }))}
+          onArrange={() => setArranging(!arranging)} onReset={() => change(() => ({ hidden: [], shown: [] }))}
           onTidy={() => change((l) => ({ ...l, [bp]: tidy(cells, rank, COLS[bp]) }))} />
       </div>
       {prospect && <ProspectNote />}

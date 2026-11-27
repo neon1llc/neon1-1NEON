@@ -178,7 +178,7 @@ export const Tour = z.enum(["new", "later", "done"]);
 
 // One card's place on Home's grid, in cells (apps/web/src/lib/homeGrid.ts)
 const HomeCell = z.object({ id: z.string().max(32), x: z.number().int().min(0).max(11), y: z.number().int().min(0).max(400), w: z.number().int().min(1).max(12), h: z.number().int().min(1).max(40) });
-export const HomeLayout = z.object({ hidden: z.array(z.string().max(32)).max(40).default([]), wide: z.array(HomeCell).max(40).optional(), narrow: z.array(HomeCell).max(40).optional() });
+export const HomeLayout = z.object({ hidden: z.array(z.string().max(32)).max(40).default([]), shown: z.array(z.string().max(32)).max(40).optional(), wide: z.array(HomeCell).max(40).optional(), narrow: z.array(HomeCell).max(40).optional() });
 export type HomeLayout = z.infer<typeof HomeLayout>;
 // Keyed by organization id; bounded so one profile can't grow without end
 export const HomeLayouts = z.record(z.string().max(40), HomeLayout).refine((r) => Object.keys(r).length <= 60, "Too many saved layouts.");
