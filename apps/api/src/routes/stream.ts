@@ -25,7 +25,8 @@ export type StreamEntry =
   | { type: "event"; id: string; at: string; by: string; summary: string; action: string; target: string };
 
 // Changes that already appear as their own entries, or that say nothing about the work
-const QUIET = new Set(["comment.created", "message.created", "update.created", "member.signedin"]);
+const QUIET = new Set(["message.created", "update.created", "member.signedin"]);
+const quiet = (action: string) => QUIET.has(action) || action.startsWith("comment.");
 
 
 /** Everything said and changed on one project, newest first, at most `limit` entries */
@@ -44,7 +45,7 @@ export async function projectStream(repo: Repo, p: Project, limit = 80): Promise
     ...thread.map((c): StreamEntry => ({ type: "message", id: c.id, at: c.at, by: c.authorName, authorId: c.authorId, body: c.body, ...(c.via ? { via: c.via } : {}) })),
     ...live.filter((i) => i.kind === "update").map((i): StreamEntry => ({ type: "update", id: i.id, at: i.createdAt, by: name(i.updatedBy) || "Someone", title: i.title, body: i.body, health: i.fields.health ? String(i.fields.health) : undefined })),
     ...onItems.map((c): StreamEntry => ({ type: "comment", id: c.id, at: c.at, by: c.authorName, body: c.body, itemId: c.itemId, itemTitle: byId.get(c.itemId)?.title ?? "", itemKind: byId.get(c.itemId)?.kind ?? "" })),
-    ...audit.filter((e: AuditEvent) => !QUIET.has(e.action) && (e.summary.startsWith(prefix) || ids.has(e.target) || e.target === p.id))
+    ...audit.filter((e: AuditEvent) => !quiet(e.action) && (e.summary.startsWith(prefix) || ids.has(e.target) || e.target === p.id))
       .map((e): StreamEntry => ({ type: "event", id: e.id, at: e.at, by: name(e.actorId), summary: e.summary.startsWith(prefix) ? e.summary.slice(prefix.length) : e.summary, action: e.action, target: e.target })),
   ];
   return out.sort((a, b) => b.at.localeCompare(a.at)).slice(0, limit);
@@ -92,6 +93,14 @@ export function streamRoutes(app: App, k: Kit) {
 }
 
 
+/** Whether a reply's sender is the person's own mailbox: their address, or it without a "+tag" (mail to
+ * name+tag@ lands in name@, so someone who signed up with a tagged address replies from the plain one) */
+export function sameMailbox(account: string, from: string) {
+  const a = account.trim().toLowerCase(), f = from.trim().toLowerCase();
+  return a === f || a.replace(/\+[^@]*@/, "@") === f;
+}
+
+
 /** A reply to a project message's email, passed on by neon1-notify once its signature and the mail's
  * authentication checked out. It posts only as the person the address was made for, from their own
  * address, while they can still comment there */
@@ -100,7 +109,7 @@ export async function projectReplyByEmail(k: Pick<Kit, "repo">, token: string, t
   const t = await readToken(repo, token);
   if (!t) return { posted: false as const, reason: "unknown_token" };
   const [user, tenant, project, members] = await Promise.all([repo.getUser(t.userId), repo.getTenant(t.tenantId), repo.getProject(t.tenantId, t.projectId), repo.listMembers(t.tenantId)]);
-  if (!user || user.email.toLowerCase() !== from.toLowerCase()) return { posted: false as const, reason: "not_sender" };
+  if (!user || !sameMailbox(user.email, from)) return { posted: false as const, reason: "not_sender" };
   const member = members.find((m) => m.userId === user.id && m.status === "joined");
   if (!tenant || !project || project.deletedAt || project.archived) return { posted: false as const, reason: "no_project" };
   if (!member || !can({ operator: false, strongSession: false } as Parameters<typeof can>[0], "comment", member.access).ok) return { posted: false as const, reason: "not_allowed" };

@@ -4,7 +4,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "./app.ts";
 import { readToken, sign, tokenFor } from "./lib/reply.ts";
-import { projectReplyByEmail, type StreamEntry } from "./routes/stream.ts";
+import { projectReplyByEmail, sameMailbox, type StreamEntry } from "./routes/stream.ts";
 import { seed } from "./seed.ts";
 import { MemoryDirectory, MemoryMailer, MemoryStorage } from "./services.ts";
 import { MemoryTable } from "./store/memory.ts";
@@ -83,6 +83,14 @@ describe("replies by email", () => {
     const { p, token } = await tokenOf();
     expect(await projectReplyByEmail({ repo }, token, "Answered.", TOMAS.toUpperCase())).toEqual({ posted: true });
     expect((await stream(p.id))[0]).toMatchObject({ type: "message", by: "Tomas Greer", body: "Answered.", via: "email" });
+  });
+
+  it("takes a reply from the plain mailbox behind a tagged address, and nothing looser", () => {
+    expect(sameMailbox("ops+felicity@example.com", "OPS@example.com")).toBe(true);
+    expect(sameMailbox("ops@example.com", "ops@example.com")).toBe(true);
+    expect(sameMailbox("ops@example.com", "ops+x@example.com")).toBe(false);
+    expect(sameMailbox("ops+felicity@example.com", "other@example.com")).toBe(false);
+    expect(sameMailbox("ops+felicity@example.com", "ops@example.org")).toBe(false);
   });
 
   it("refuses another sender, an unknown token, and someone no longer in the organization", async () => {
