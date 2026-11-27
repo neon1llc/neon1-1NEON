@@ -203,9 +203,9 @@ async function auditKeyboardAndTargets(page, meta) {
     .map((el) => {
       const target = el.closest("label") ?? el;
       const box = target.getBoundingClientRect();
-      return { name: el.getAttribute("aria-label") || el.innerText || el.getAttribute("title") || "", selector: el.id ? `#${el.id}` : `${el.tagName.toLowerCase()}${el.className && typeof el.className === "string" ? `.${el.className.trim().replace(/\s+/g, ".")}` : ""}`, html: el.outerHTML.slice(0, 240), width: Math.round(box.width), height: Math.round(box.height), inlineLink: el.matches("a[href]") && Boolean(el.closest("p,li,td,dd")) };
+      return { name: el.getAttribute("aria-label") || el.innerText || el.getAttribute("title") || "", selector: el.id ? `#${el.id}` : `${el.tagName.toLowerCase()}${el.className && typeof el.className === "string" ? `.${el.className.trim().replace(/\s+/g, ".")}` : ""}`, html: el.outerHTML.slice(0, 240), width: Math.round(box.width), height: Math.round(box.height), inlineLink: el.matches("a[href]") && Boolean(el.closest("p,li,td,dd")), ignored: style.pointerEvents === "none" || Boolean(el.closest('[aria-hidden="true"]')) };
     })
-    .filter((target) => !target.inlineLink));
+    .filter((target) => !target.inlineLink && !target.ignored));
   if (smallTargets.length) failures.push({ type: "target-size-under-24", ...meta, targets: smallTargets.slice(0, 20) });
   return { expected: expected.length, visited: found.length, smallTargets: smallTargets.length };
 }

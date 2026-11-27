@@ -56,6 +56,13 @@
       "impact": "serious",
       "selector": "p:nth-child(9) > .linkish:nth-child(1)",
       "reason": "Existing project action targets measure below 24 CSS px. Resizing them requires changes to protected app.css or page layout, beyond this lane’s no-redesign scope. Keep these known findings visible and fail on new rule/selector pairs."
+    },
+    {
+      "key": "target-size|.chip[type=\"button\"]:nth-child(4)",
+      "id": "target-size",
+      "impact": "serious",
+      "selector": ".chip[type=\"button\"]:nth-child(4)",
+      "reason": "The starter chip has only 19.6 CSS px of safe spacing from its nearest neighbor. Correcting the spacing requires a visual change to protected app.css, outside this lane's no-redesign scope; retain this known issue and fail on new rule/selector pairs."
     }
   ],
   "manualFindings": [
