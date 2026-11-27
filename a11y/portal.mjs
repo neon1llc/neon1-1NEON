@@ -35,6 +35,8 @@ const THEMES = {
 };
 const VIEWPORTS = { desktop: { width: 1280, height: 900 }, phone: { width: 390, height: 844 } };
 const ARG = (name, fallback) => {
+  const inline = process.argv.find((arg) => arg.startsWith(`--${name}=`));
+  if (inline) return inline.slice(name.length + 3);
   const i = process.argv.indexOf(`--${name}`);
   return i > 0 ? process.argv[i + 1] : fallback;
 };
@@ -50,11 +52,13 @@ const EVIDENCE_DIR = process.env.A11Y_EVIDENCE_DIR ?? join(tmpdir(), "1neon-a11y
 const ROLES_SELECTED = selected(ROLES, ARG("roles", Object.keys(ROLES).join(",")));
 const THEMES_SELECTED = selected(THEMES, ARG("themes", Object.keys(THEMES).join(",")));
 const VIEWPORTS_SELECTED = selected(VIEWPORTS, ARG("viewports", Object.keys(VIEWPORTS).join(",")));
+const REQUESTED_ROUTES = ARG("routes", "").split(",").filter(Boolean);
 const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".mjs": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".json": "application/json", ".woff2": "font/woff2", ".ico": "image/x-icon", ".webp": "image/webp" };
 const POLICY = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: https://neon1.tech; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
 const SPACING_CSS = "* { letter-spacing: .12em !important; word-spacing: .16em !important; line-height: 1.5 !important; } p { margin-block-end: 2em !important; }";
 const failures = [];
 const routeErrors = [];
+const observedStates = [];
 const findings = new Map();
 const results = [];
 const fetched = new Map();
@@ -112,7 +116,8 @@ async function linkedRoutes(page) {
   return page.locator("a[href]").evaluateAll((links) => links.map((link) => {
     try {
       const url = new URL(link.href, location.href);
-      return url.origin === location.origin && url.pathname.startsWith("/1NEON/demo/") ? url.pathname : "";
+      const portal = /^\/1NEON\/demo\/(?:o\/[^/]+\/|all\/|me(?:\/|$))/.test(url.pathname);
+      return url.origin === location.origin && portal ? url.pathname : "";
     } catch { return ""; }
   }).filter(Boolean));
 }
@@ -123,8 +128,12 @@ async function auditAxe(page, meta, state) {
   const report = await page.evaluate(async () => window.axe.run(document, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"] } }));
   for (const item of report.violations) for (const node of item.nodes) {
     const selector = node.target.join(" ").slice(0, 500);
-    const key = `${item.id}|${selector}`;
-    findings.set(key, { id: item.id, impact: item.impact ?? "unknown", selector, html: node.html.slice(0, 320), failureSummary: node.failureSummary, summary: item.help, helpUrl: item.helpUrl, route: meta.route, role: meta.role, theme: meta.theme, viewport: meta.viewport, state, reason: "" });
+    const stableSelector = selector.replace(/#item-[A-Za-z0-9_-]+/g, "#item-*");
+    const key = `${item.id}|${stableSelector}`;
+    const context = { route: meta.route, role: meta.role, theme: meta.theme, viewport: meta.viewport, state };
+    const previous = findings.get(key);
+    if (previous) previous.contexts.push(context);
+    else findings.set(key, { id: item.id, impact: item.impact ?? "unknown", selector, stableSelector, html: node.html.slice(0, 320), failureSummary: node.failureSummary, summary: item.help, helpUrl: item.helpUrl, ...context, contexts: [context], reason: "" });
   }
   return report.violations.length;
 }
@@ -133,6 +142,9 @@ async function auditAxe(page, meta, state) {
 async function openRoute(page, meta, route) {
   await page.goto(`${BASE}${route}`, { waitUntil: "domcontentloaded" });
   await page.locator("#root").waitFor({ state: "visible", timeout: 15000 });
+  await page.waitForTimeout(50);
+  const loading = await page.locator('[aria-busy="true"], [role="progressbar"]').count();
+  if (loading) observedStates.push({ ...meta, state: "loading", indicators: loading });
   await page.waitForTimeout(800);
   const welcome = page.getByRole("dialog", { name: /welcome to 1neon/i });
   if (await welcome.isVisible().catch(() => false)) {
@@ -172,7 +184,8 @@ async function auditKeyboardAndTargets(page, meta) {
         const style = getComputedStyle(node);
         if (style.outlineStyle !== "none" && parseFloat(style.outlineWidth) > 0 || style.boxShadow !== "none") ring = true;
       }
-      return { tag: el.tagName, name: el.getAttribute("aria-label") || el.innerText || el.getAttribute("title") || el.getAttribute("name") || "", id: el.id, order, visible: box.bottom > 0 && box.top < innerHeight && box.right > 0 && box.left < innerWidth, ring };
+      const style = getComputedStyle(el);
+      return { tag: el.tagName, name: el.getAttribute("aria-label") || el.innerText || el.getAttribute("title") || el.getAttribute("name") || "", id: el.id, className: String(el.className), html: el.outerHTML.slice(0, 240), order, visible: box.bottom > 0 && box.top < innerHeight && box.right > 0 && box.left < innerWidth, ring, focusVisible: el.matches(":focus-visible"), outlineStyle: style.outlineStyle, outlineWidth: style.outlineWidth, borderColor: style.borderColor, boxShadow: style.boxShadow };
     });
     if (!active) break;
     found.push(active);
@@ -186,7 +199,7 @@ async function auditKeyboardAndTargets(page, meta) {
 
   const smallTargets = await page.evaluate(() => [...document.querySelectorAll("button,a[href],input,select,textarea,[role=button],[role=tab],[role=menuitem]")]
     .filter((el) => !el.classList.contains("sr") && !el.closest(".sr"))
-    .filter((el) => { const box = el.getBoundingClientRect(); const style = getComputedStyle(el); return box.width > 0 && box.height > 0 && style.visibility !== "hidden" && style.display !== "none" && (box.width < 24 || box.height < 24); })
+    .filter((el) => { const target = el.closest("label") ?? el; const box = target.getBoundingClientRect(); const style = getComputedStyle(target); return box.width > 0 && box.height > 0 && style.visibility !== "hidden" && style.display !== "none" && (box.width < 24 || box.height < 24); })
     .map((el) => {
       const target = el.closest("label") ?? el;
       const box = target.getBoundingClientRect();
@@ -199,12 +212,25 @@ async function auditKeyboardAndTargets(page, meta) {
 
 // Exercise menu and command-palette dialog patterns with Escape, focus containment, and focus return.
 async function auditOpenControls(page, meta) {
+  const orgChooser = page.locator("button.org[aria-controls='org-list']:visible").first();
+  if (await orgChooser.count()) {
+    await orgChooser.click();
+    const popover = page.locator("#org-list:visible");
+    if (await popover.count()) {
+      await auditAxe(page, meta, "organization-popover-open");
+      await page.keyboard.press("Escape");
+      await popover.waitFor({ state: "hidden" });
+      if (await popover.count()) failures.push({ type: "escape-popover", ...meta });
+      if (!await orgChooser.evaluate((el) => document.activeElement === el).catch(() => false)) failures.push({ type: "popover-focus-return", ...meta });
+    }
+  }
+
   const menu = page.getByRole("button", { name: "Menu", exact: true }).first();
   if (await menu.isVisible().catch(() => false)) {
     await menu.click();
     await auditAxe(page, meta, "menu-open");
     await page.keyboard.press("Escape");
-    await page.waitForTimeout(250);
+    await page.waitForTimeout(500);
     if (await page.locator(".side.open").count()) failures.push({ type: "escape-menu", ...meta });
     if (!await menu.evaluate((el) => document.activeElement === el).catch(() => false)) failures.push({ type: "menu-focus-return", ...meta });
   }
@@ -260,7 +286,10 @@ async function auditReflow(page, meta) {
 async function auditFormError(page, meta) {
   if (!meta.route.endsWith("/projects/new")) return;
   await page.locator("#n").fill("Accessibility fixture");
+  await page.getByText("More about it", { exact: true }).click();
+  await page.locator("#mb0").fill("not-a-number");
   await page.getByRole("button", { name: "Create project" }).click();
+  await page.waitForTimeout(50);
   const alert = page.getByRole("alert").filter({ hasText: "A measure needs fixing." });
   if (!await alert.isVisible().catch(() => false)) failures.push({ type: "form-error-not-announced", ...meta });
   else await auditAxe(page, meta, "form-error");
@@ -297,12 +326,14 @@ async function runVariant(browser, roleName, role, themeName, theme, viewportNam
   await page.locator(".shell").waitFor({ state: "visible", timeout: 20000 });
   const welcome = page.getByRole("dialog", { name: /welcome to 1neon/i });
   await welcome.waitFor({ state: "visible", timeout: 3000 });
+  const reducedMotion = await page.evaluate(() => matchMedia("(prefers-reduced-motion: reduce)").matches && localStorage.getItem("neon1.motion") === "off");
+  if (!reducedMotion) failures.push({ type: "reduced-motion-setting", role: roleName, theme: themeName, viewport: viewportName });
   await auditAxe(page, { route: "/1NEON/demo/ (welcome dialog)", role: roleName, theme: themeName, viewport: viewportName }, "welcome-dialog");
   await page.keyboard.press("Escape");
   if (await welcome.isVisible().catch(() => false)) failures.push({ type: "escape-dialog", route: "/1NEON/demo/ (welcome dialog)", role: roleName, theme: themeName, viewport: viewportName });
 
-  const routes = new Set(seedRoutes(role));
-  routes.add("/1NEON/demo/route-that-does-not-exist");
+  const routes = new Set(REQUESTED_ROUTES.length ? REQUESTED_ROUTES : seedRoutes(role));
+  if (!REQUESTED_ROUTES.length) routes.add("/1NEON/demo/route-that-does-not-exist");
   const visited = new Set();
   const queue = [...routes];
   let audited = 0;
@@ -313,7 +344,10 @@ async function runVariant(browser, roleName, role, themeName, theme, viewportNam
     visited.add(route);
     const meta = { route, role: roleName, theme: themeName, viewport: viewportName };
     const view = await openRoute(page, meta, route);
-    if (!view.shell) continue;
+    if (!view.shell) {
+      if (route.endsWith("/route-that-does-not-exist")) await auditAxe(page, meta, "route-not-found");
+      continue;
+    }
     const count = await auditAxe(page, meta, "route");
     audited++;
     const keyboard = await auditKeyboardAndTargets(page, meta);
@@ -322,7 +356,7 @@ async function runVariant(browser, roleName, role, themeName, theme, viewportNam
     await auditEmptyState(page, meta);
     if (roleName === "priya" && themeName === "sentinel-light" && viewportName === "desktop") await auditReflow(page, meta);
     results.push({ ...meta, title: view.title, axeRules: count, keyboardTargets: keyboard });
-    for (const linked of await linkedRoutes(page)) if (!visited.has(linked) && !routes.has(linked)) {
+    for (const linked of REQUESTED_ROUTES.length ? [] : await linkedRoutes(page)) if (!visited.has(linked) && !routes.has(linked)) {
       routes.add(linked);
       queue.push(linked);
     }
@@ -341,11 +375,23 @@ for (const [roleName, role] of ROLES_SELECTED) for (const [themeName, theme] of 
 await browser.close();
 server.close();
 
+function manualKey(item) {
+  const route = (item.route ?? "").replace(/\/o\/[^/]+/g, "/o/:org").replace(/\/projects\/(?!new(?:\/|$))[^/]+/g, "/projects/:project").replace(/\/invoices\/[^/]+/g, "/invoices/:invoice");
+  if (item.type === "target-size-under-24") return `${item.type}|${route}|${(item.targets ?? []).map((target) => target.selector.replace(/#item-[A-Za-z0-9_-]+/g, "#item-*")).sort().join(",")}`;
+  if (item.type === "focus-indicator") return `${item.type}|${route}|${(item.elements ?? []).map((element) => element.id || element.name || element.tag).join(",")}`;
+  return `${item.type}|${route}`;
+}
 const baseline = new Map(BASELINE.findings.map((entry) => [entry.key, entry]));
 const current = [...findings.entries()].map(([key, item]) => ({ key, ...item, reason: baseline.get(key)?.reason ?? "" }));
 const newFindings = current.filter((item) => !baseline.has(item.key));
+const manualBaseline = new Map((BASELINE.manualFindings ?? []).map((entry) => [entry.key, entry]));
+const currentManual = failures.map((item) => {
+  const key = manualKey(item);
+  return { key, ...item, reason: manualBaseline.get(key)?.reason ?? "" };
+});
+const newManualFailures = currentManual.filter((item) => !manualBaseline.has(item.key));
 const resolved = [...baseline.keys()].filter((key) => !findings.has(key));
-const evidence = { generatedAt: new Date().toISOString(), routes: results, axeFindings: current, newAxeFindings: newFindings, resolvedBaselineKeys: resolved, manualFailures: failures, routeErrors };
+const evidence = { generatedAt: new Date().toISOString(), routes: results, observedStates, axeFindings: current, newAxeFindings: newFindings, manualFailures: currentManual, newManualFailures, resolvedBaselineKeys: resolved, routeErrors };
 await import("node:fs/promises").then(({ mkdir, writeFile }) => mkdir(EVIDENCE_DIR, { recursive: true }).then(() => writeFile(join(EVIDENCE_DIR, "portal.json"), `${JSON.stringify(evidence, null, 2)}\n`)));
-console.log(`Axe: ${current.length} finding instances, ${newFindings.length} new; manual failures: ${failures.length}; route errors: ${routeErrors.length}`);
-if (newFindings.length || failures.length || routeErrors.length) process.exitCode = 1;
+console.log(`Axe: ${current.length} finding instances, ${newFindings.length} new; manual: ${currentManual.length} instances, ${newManualFailures.length} new; route errors: ${routeErrors.length}`);
+if (newFindings.length || newManualFailures.length || routeErrors.length) process.exitCode = 1;

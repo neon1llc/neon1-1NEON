@@ -75,6 +75,12 @@ jobs:
   # Audit every signed-in demo route, role, theme, and viewport with axe and keyboard probes
   a11y:
     name: ci-a11y
+    strategy:
+      max-parallel: 8
+      matrix:
+        role: [priya, tomas, pradeep]
+        theme: [sentinel-light, sentinel-dark, matrix-light, matrix-dark]
+        viewport: [desktop, phone]
     runs-on: ubuntu-latest
     timeout-minutes: 40
     container:
@@ -91,13 +97,13 @@ jobs:
       - run: npm ci
       - run: npm run build --workspace @1neon/web
       - name: Check portal accessibility
-        run: node a11y/portal.mjs
+        run: node a11y/portal.mjs --roles "${{ matrix.role }}" --themes "${{ matrix.theme }}" --viewports "${{ matrix.viewport }}"
         env:
           A11Y_EVIDENCE_DIR: ${{ runner.temp }}/neon1-a11y
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: portal-accessibility
+          name: portal-accessibility-${{ matrix.role }}-${{ matrix.theme }}-${{ matrix.viewport }}
           path: ${{ runner.temp }}/neon1-a11y/portal.json
           if-no-files-found: ignore
           retention-days: 14
