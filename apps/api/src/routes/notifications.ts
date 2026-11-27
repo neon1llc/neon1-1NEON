@@ -36,7 +36,8 @@ export function notificationRoutes(app: App, k: Kit) {
   };
 
   // Notifications: what others did here lately, each with its group, importance, where it leads, and
-  // whether the caller has read it. Info-level events (sign-ins) show in the list but never count as new
+  // whether the caller has read it. Info-level events (sign-ins) stay out: they're in the organization's activity,
+  // not something to act on
   app.get("/t/:tid/notifications", async (c) => {
     need(c, "read");
     const t = c.get("tenant");
@@ -47,7 +48,7 @@ export function notificationRoutes(app: App, k: Kit) {
     // Others' events, plus the caller's own signed records (a copy of what they agreed to, so signing
     // shows in the bell); in neon1's own organization, its billing too
     const own = isOwnOrg(t.slug);
-    const mine = events.filter((e) => (e.actorId !== me || actorHears(e.action, own)) && (op || !neon1Only(e.action))).slice(0, 40);
+    const mine = events.filter((e) => (e.actorId !== me || actorHears(e.action, own)) && (op || !neon1Only(e.action)) && groupOf(e.action).level !== "info").slice(0, 40);
     const links = await eventLinks(repo, t.id, mine, op);
     // A quick fix's client reads a quote, so notices about its proposal revisions say "Quote" (the
     // stored record keeps its number as issued). Projects are read only when such a notice is listed

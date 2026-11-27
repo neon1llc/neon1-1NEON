@@ -1,6 +1,6 @@
 // apps/web/src/components/Bell.tsx - Notifications: a bell in the top bar that breathes while
 // something is unread, and one list, newest first, of what others did lately (and copies of what you
-// signed), each a link to exactly what it's about. Unread ones are bold with a filled dot. Opening one
+// signed), each a link to exactly what it's about and tagged with its kind (Files, Billing, Comments). Unread ones are bold with a filled dot. Opening one
 // reads that one only; "Mark all read" reads the rest. Choices for email and text live in the profile.
 
 
@@ -8,7 +8,7 @@ import { BellIcon, CheckCheck } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
-import type { AuditEvent, Layer, Level } from "@1neon/domain";
+import { NOTIFY_GROUPS, type AuditEvent, type Layer, type Level } from "@1neon/domain";
 import { api } from "../lib/api.ts";
 import { read } from "../lib/reads.ts";
 import { gate, Stale } from "./Reads.tsx";
@@ -36,6 +36,8 @@ export function hrefOf(slug: string, link: NoteLink | undefined) {
   return `/o/${slug}/projects/${link.project}${link.layer ? `/${layerSlug(link.layer)}` : ""}${link.item ? `#item-${link.item}` : hash}`;
 }
 interface Notes { unread: number; events: Note[] }
+// Each row says what kind of change it is, the kind you chose to hear about (GitHub names a notification's reason the same way)
+const GROUP_LABEL = new Map(NOTIFY_GROUPS.map((g) => [g.id, g.label]));
 
 
 /** The bell and its list for one organization; checks every 20 seconds and when the tab returns */
@@ -111,7 +113,7 @@ export function Bell({ tid, slug }: { tid: string; slug: string }) {
                   <span className="dot" aria-hidden="true" />
                   <span className="what">
                     <span className="sum">{e.unread && <span className="sr-only">Unread: </span>}{e.summary}</span>
-                    <span className="muted small">{e.actorId === "stripe" ? "The payment page" : e.actorId === myId ? "You, a copy for your records" : names.get(e.actorId) ?? "Someone"} · {ago(e.at)}{e.level === "critical" && <span className="tag imp">important</span>}</span>
+                    <span className="muted small">{e.actorId === "stripe" ? "The payment page" : e.actorId === myId ? "You, a copy for your records" : names.get(e.actorId) ?? "Someone"} · {ago(e.at)}<span className={`tag why${e.level === "critical" ? " imp" : ""}`} title="Why it reached you: you follow this kind of change under Notifications on your profile">{GROUP_LABEL.get(e.group) ?? "Update"}</span></span>
                   </span>
                 </>
               );

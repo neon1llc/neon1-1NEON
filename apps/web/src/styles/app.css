@@ -1389,7 +1389,7 @@ body:has(.n1neo) .n1chat-portal { display: none !important; }
 .bell-list button.note { width: 100%; background: none; border: 0; font: inherit; text-align: left; cursor: pointer; }
 .bell-list button.note:hover, .bell-list button.note:focus-visible { background: var(--accent-soft); }
 .bell-foot { margin: 0; padding: var(--sp-2) var(--sp-3); border-top: 1px solid var(--line); }
-.bell-list .tag.imp { margin-left: var(--sp-1); font-size: var(--fs-xs); padding: 0 var(--sp-1); }
+.bell-list .tag.why { margin-left: var(--sp-1); font-size: var(--fs-xs); padding: 0 var(--sp-1); }
 /* Read by screen readers, not drawn */
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 /* An edit's changes under its activity line, when there were more than the line could say */
