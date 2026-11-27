@@ -5,6 +5,10 @@
 ## Unreleased
 
 ### Added
+- New project is one screen: a name, a sentence, and how you want to see the work. The kind of work, what done looks like, an example, a target date, and measures sit under More about it. Quick fix is one of the kinds. Clients start on Page and neon1 on Steps.
+- Five views of one project's work: Page, Updates, Board, Timeline, and Steps. Each person's choice is remembered on their device.
+- Shared pages, opened from the pen in the top bar or a project's Page view: several people write at once, and a page can be saved to Files.
+- Trin, a tab in the Neo panel, answers from the organization's own projects, pages, and files, with links to its sources, within daily and monthly limits. It's off until a model is configured.
 - Updates, a project's conversation: write to everyone on it, and see messages, status updates, comments on its items, and what changed in one stream, newest first. Everyone else gets each message by email and can answer by replying to that email; the answer posts as them, marked by email, only from their own address while they're still in the organization.
 - MATRIS, Inc., a made-up returning client on dev that holds every state the portal knows: projects at the start, middle, and end of each way of working, overdue decisions, disputed invoices, files in every state, chat flags, and a suspended account. `npx tsx src/scripts/matris.ts --yes` puts it on dev or resets it; docs/matris.md maps each feature to where it lives.
 - Suspensions. super can suspend an organization or one person's account, with an optional message for their banner. A suspended person can still sign in, read everything, edit their profile, and (unless suspended for abuse) write in the chat; every other change is refused. Nothing is deleted.
@@ -27,7 +31,6 @@
 - Home is a grid of cards you can arrange. View, beside the greeting, shows or hides any card and counts what hidden cards hold: red for things that need action, plain for suggestions. Arrange moves cards by their grip and resizes them from the corner, settling on each card's preset sizes, with the cells it will take highlighted. A card shows more as it grows. The layout is saved to your profile, for each organization, wide and on a phone.
 - New Home cards: Overdue and blocked, Projects by layer, and Shortcuts.
 - Workbench: a project can run as one shared page for notes, to-dos, and files, open until someone marks it done, instead of on NEON's stages. Switch either way from the Overview, or choose it when approving an option. It shows on the Board in Build, tagged Workbench.
-- New project asks how the work runs first (Workbench, Quick fix, Build a proposal, NEON), then for a proposal or NEON what kind of work it is. Clients start on Workbench and neon1 on NEON. A proposal starts at Propose and opens on its options.
 
 ### Changed
 - A dropdown someone can't change (read-only for them) no longer shows its arrow, so it never promises a list that won't open.
@@ -38,7 +41,6 @@
 - Every arrow that opens or closes something is now one short, bold arrow in two sizes, including questions, dropdowns, and Safari and iPhone dropdowns.
 - neon1's role is named super everywhere it shows: People, your profile, and the emails it receives.
 - A suspended free account can now sign in and read, as other suspensions do, instead of being turned away.
-- New project's choices run from lightest to most involved, each with four boxes for how involved it is and the path it follows.
 - On a desktop, a project's layer tabs and your profile spread over two balanced columns.
 - Opening a notification marks only that one read; opening the list marks nothing. Unread ones are bold with a dot.
 - Each notification, and its email, opens the exact thing: the person, file, calendar day, invoice, setting, or item, scrolled into view and highlighted.
@@ -48,6 +50,7 @@
 - The privacy policy and terms describe the chat with neon1, and the legal pages show when they were last updated.
 
 ### Fixed
+- Deleting a quiet free account now also removes its pending file checks, its reply-by-email addresses, and Trin's index of its work.
 - On a phone, the organization list and Home's View menu end on screen, above the tab bar or keyboard, and scroll inside themselves. A tap outside closes them and a swipe scrolls the page. View is narrower on phones, and opening the organization list on touch no longer opens the keyboard.
 - On phones the footer keeps the backslashes between its links.
 - Home's cards keep their padding below the last line, and "Not now" on the business question can be undone from View.
