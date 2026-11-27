@@ -3,7 +3,8 @@
 
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
+import { useMenuFit, useTapOutside } from "../lib/menufit.ts";
 import { Link, NavLink, Navigate, Outlet, useLocation, useNavigate, useNavigationType, useParams } from "react-router";
 import { menuOf, PROSPECT_FINAL_DAYS, PROSPECT_GRACE_DAYS, PROSPECT_LIMITS } from "@1neon/domain";
 import { api, DEMO as IN_DEMO, LIVE as IN_LIVE, devUser, HttpError, pickPerson, resetDemo, Unconfirmed } from "../lib/api.ts";
@@ -973,7 +974,7 @@ function FrameBody({ org, all, reads = [], banner, pen, children }: { org?: OrgS
         {/* Edge to edge, exactly on the top bar's bottom edge: the mark row above is the top bar's own height */}
         <div className="edge edge-top" aria-hidden="true" />
         {/* Organization: the full chooser when there's room for labels, its initials otherwise */}
-        <div className="org-full"><OrgChooser current={org} all={all} /></div>
+        <div className="org-full"><OrgChooser current={org} all={all} shown={open} /></div>
         <button className="org-mini" type="button" onClick={() => setOpen(true)} title={all ? "All clients" : navOrg?.name ?? "Choose an organization"}>
           <span className="ico">{all ? "All" : navOrg ? initials(navOrg.name) : "?"}</span>
           <span className="lbl">{all ? "All clients" : navOrg?.name ?? "Organizations"}</span>
@@ -1098,23 +1099,30 @@ function FrameBody({ org, all, reads = [], banner, pen, children }: { org?: OrgS
 /** The organization switcher at the top of the sidebar: a button that shows a short list of links.
  * Tab and Enter work as everywhere; arrow keys move through the list, Escape closes it and returns
  * focus to the button, and focus leaving the chooser closes it */
-function OrgChooser({ current, all }: { current?: OrgSummary; all?: boolean }) {
+function OrgChooser({ current, all, shown }: { current?: OrgSummary; all?: boolean; shown: boolean }) {
   const me = useSession();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const ref = useRef<HTMLDivElement>(null);
   const toggle = useRef<HTMLButtonElement>(null);
-  // Close the menu on any click outside it
-  useEffect(() => {
-    const close = (e: MouseEvent) => ref.current && !ref.current.contains(e.target as Node) && setOpen(false);
-    addEventListener("mousedown", close);
-    return () => removeEventListener("mousedown", close);
-  }, []);
-  // Opening puts focus on the search box, or the current organization, or the first entry
+  const menu = useRef<HTMLDivElement>(null);
+  useMenuFit(menu, open);
+  useTapOutside(ref, open, useCallback(() => setOpen(false), []));
+  // The list closes with the side menu, and each opening starts with an empty search
+  useEffect(() => { if (!shown) setOpen(false); }, [shown]);
+  useEffect(() => { if (!open) setQ(""); }, [open]);
+  // With a mouse, opening puts focus on the search box, or the current organization, or the first
+  // entry. On touch nothing takes focus, so no keyboard rises; the current organization is scrolled to
   useEffect(() => {
     if (!open) return;
-    const list = ref.current?.querySelector(".menu");
-    (list?.querySelector<HTMLElement>("input") ?? list?.querySelector<HTMLElement>("[aria-current='true']") ?? list?.querySelector<HTMLElement>("a"))?.focus();
+    const list = menu.current;
+    const here = list?.querySelector<HTMLElement>("[aria-current='true']");
+    if (!matchMedia("(hover: hover) and (pointer: fine)").matches) {
+      const scroller = list?.querySelector<HTMLElement>(".menu-scroll");
+      if (here && scroller) scroller.scrollTop += here.getBoundingClientRect().top - scroller.getBoundingClientRect().top - (scroller.clientHeight - here.offsetHeight) / 2;
+      return;
+    }
+    (list?.querySelector<HTMLElement>("input") ?? here ?? list?.querySelector<HTMLElement>("a"))?.focus();
   }, [open]);
   // Arrow keys step through the entries; Escape closes without leaving the frame's menu
   const keys = (e: ReactKeyboardEvent) => {
@@ -1150,8 +1158,10 @@ function OrgChooser({ current, all }: { current?: OrgSummary; all?: boolean }) {
         </button>
       )}
       {open && (
-        <div className="menu" id="org-list" style={{ top: "calc(100% + 6px)", left: 0, right: 0 }}>
+        <div ref={menu} className="menu menu-fit" id="org-list" style={{ top: "calc(100% + 6px)", left: 0, right: 0 }}>
           {me.orgs.length > 6 && <input aria-label="Search organizations" placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} style={{ marginBottom: 6 }} />}
+          {/* Search stays put; the entries scroll under it */}
+          <div className="menu-scroll">
           {/* The operator can always jump to All clients */}
           {me.operator && (
             <>
@@ -1167,6 +1177,7 @@ function OrgChooser({ current, all }: { current?: OrgSummary; all?: boolean }) {
               {o.name} <small>{o.clientId}</small>
             </Link>
           ))}
+          </div>
         </div>
       )}
     </div>

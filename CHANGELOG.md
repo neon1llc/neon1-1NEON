@@ -42,6 +42,7 @@
 - The privacy policy and terms describe the chat with neon1, and the legal pages show when they were last updated.
 
 ### Fixed
+- On a phone, the organization list and Home's View menu end on screen, above the tab bar or keyboard, and scroll inside themselves. A tap outside closes them and a swipe scrolls the page. View is narrower on phones, and opening the organization list on touch no longer opens the keyboard.
 - On phones the footer keeps the backslashes between its links.
 - Home's cards keep their padding below the last line, and "Not now" on the business question can be undone from View.
 - Booking links go to calendly.com/book-neon1/initial. The old link stopped working.

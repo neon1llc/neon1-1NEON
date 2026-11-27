@@ -188,6 +188,10 @@ a.org { text-decoration: none; }
 .menu button:hover, .menu a:hover, .menu [aria-selected="true"], .menu [aria-current="true"] { background: var(--accent-soft); }
 .menu small { font: var(--fs-xs) var(--mono); color: var(--muted); }
 .menu hr { border: 0; border-top: 1px solid var(--line); margin: var(--sp-1) var(--sp-1); }
+/* A menu that ends on screen (--fit, lib/menufit.ts) and scrolls inside itself without moving what's behind */
+.menu-fit { display: flex; flex-direction: column; max-height: var(--fit, 70dvh); }
+.menu-fit > input { flex: none; }
+.menu-scroll { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); display: inline-block; }
 .dot.warn { background: var(--amber); }
 
@@ -2679,8 +2683,10 @@ h1[tabindex="-1"]:focus-visible, .page-title:focus-visible { outline: none; }
 /* The arrow leans left on hover, as an outbound arrow leans out, and turns down while the menu is open */
 .vm-btn:hover .arr { translate: -2px 0; }
 .vm[data-open] .vm-btn .arr { transform: rotate(-90deg); translate: none; }
-.vm-panel { position: absolute; right: 0; top: calc(100% + var(--sp-1)); z-index: 30; width: min(320px, calc(100vw - 2 * var(--sp-4))); max-height: min(70vh, 560px); overflow: auto; padding: var(--sp-2) 0; border: 1px solid var(--line-strong); border-radius: var(--r); background: var(--panel); box-shadow: var(--shadow-pop); animation: pop var(--t-base) var(--ease) backwards; transform-origin: top right; }
+.vm-panel { position: absolute; right: 0; top: calc(100% + var(--sp-1)); z-index: 30; width: min(320px, calc(100vw - 2 * var(--sp-4))); max-height: min(var(--fit, 70dvh), 560px); overflow: auto; overscroll-behavior: contain; padding: var(--sp-2) 0; border: 1px solid var(--line-strong); border-radius: var(--r); background: var(--panel); box-shadow: var(--shadow-pop); animation: pop var(--t-base) var(--ease) backwards; transform-origin: top right; }
 .vm-panel[hidden] { display: none; }
+/* On phones the panel leaves a strip of page beside it to scroll by */
+@media (max-width: 640px) { .vm-panel { width: min(288px, calc(100vw - 6 * var(--sp-4))); } }
 .vm-group + .vm-group { margin-top: var(--sp-1); }
 /* Group names sit in a rule, as the menu's group names do */
 .vm-h { display: flex; align-items: center; gap: 10px; margin: 0; padding: var(--sp-1) var(--sp-3); font: var(--fs-xs) var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }

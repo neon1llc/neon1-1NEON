@@ -5,7 +5,8 @@
 
 
 import { Check, LayoutGrid, RotateCcw, Sparkles } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useMenuFit, useTapOutside } from "../lib/menufit.ts";
 import { CountPills, type Counts } from "./HomeGrid.tsx";
 
 
@@ -50,15 +51,16 @@ export function HomeViews({ rows, ready = true, arranging, onToggle, onArrange, 
   const box = useRef<HTMLDivElement>(null);
   const btn = useRef<HTMLButtonElement>(null);
   const panelId = useId();
+  const panel = useRef<HTMLDivElement>(null);
+  useMenuFit(panel, open);
+  useTapOutside(box, open, useCallback(() => setOpen(false), []));
 
-  // Esc or a press outside closes it; Esc gives focus back to the button
+  // Esc closes it and gives focus back to the button
   useEffect(() => {
     if (!open) return;
-    const down = (e: PointerEvent) => { if (!box.current?.contains(e.target as Node)) setOpen(false); };
     const esc = (e: KeyboardEvent) => { if (e.key === "Escape") { setOpen(false); btn.current?.focus(); } };
-    addEventListener("pointerdown", down);
     addEventListener("keydown", esc);
-    return () => { removeEventListener("pointerdown", down); removeEventListener("keydown", esc); };
+    return () => removeEventListener("keydown", esc);
   }, [open]);
 
   return (
@@ -69,7 +71,7 @@ export function HomeViews({ rows, ready = true, arranging, onToggle, onArrange, 
         {/* Totals wait until every count has loaded, so they never show a wrong number first */}
         {ready && <Totals rows={rows} />}
       </button>
-      <div className="vm-panel" id={panelId} role="group" aria-label="Cards on Home" hidden={!open}>
+      <div ref={panel} className="vm-panel" id={panelId} role="group" aria-label="Cards on Home" hidden={!open}>
         {/* What the badges count, once, at the top */}
         <p className="vm-key"><span><i className="kdot urgent" aria-hidden="true" />Urgent</span><span><i className="kdot suggested" aria-hidden="true" />Suggested</span><span><i className="kdot general" aria-hidden="true" />To know</span></p>
         {GROUPS.map((g) => {
