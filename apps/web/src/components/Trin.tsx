@@ -61,7 +61,7 @@ export function TrinChat({ org }: { org: { id: string; slug: string; name: strin
     <>
       <div ref={log} className="n1chat-log" role="log" aria-live="polite">
         <div className="n1chat-msg n1chat-bot">
-          <p>I'm Trin. I read {org.name}'s projects, pages, and tasks, and help you see what's there, what's stuck, and what's next.{inView ? ` I'll lean on ${inView.key}.` : ""}</p>
+          <p>I'm Trin, Neo's partner inside 1NEON. I read {org.name}'s projects, pages, and tasks, and help you see what's there, what's stuck, and what's next.{inView ? ` I'll lean on ${inView.key}.` : ""}</p>
         </div>
         {!lines.length && (
           <div className="n1chat-chips">
