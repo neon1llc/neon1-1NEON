@@ -5,11 +5,13 @@
 import { benchStage, isBench, isQuickFix, QUICK_FIX_HOURS, QUICK_FIX_MAX_HOURS, quoteFields, priceLine, type QuoteInput, balanceOf, billedOn, depositLines, hoursLogged, hoursText, lineage, lineCents, dollars as wholeDollars, failedOn, invoiceState, InvoiceFields, money as dollars, payableOn, paymentPlan, priceMeaning, priceOf, betterWhen, canApprove, changedSince, currentDecision, todayIn, isClosed, isOwnOrg, KIND_LAYER, metricProgress, MetricFields, OptionFields, priceCheckDue, ProjectRole, proposalRef, PurchaseFields, HandoffFields, optionHistory, revisions, type DocumentRecord, type Item, type ItemKind, type Layer, type Project, type Stage } from "@1neon/domain";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Archive, ArchiveRestore, ExternalLink, Pencil, Plus, Shuffle, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
+import { useMenuFit, useTapOutside } from "../lib/menufit.ts";
 import { FileList, UploadButton } from "../components/Files.tsx";
 import { GUIDE, Pick, RequestBuilder, Starters } from "../components/Guide.tsx";
 import { BoardLens, LensBar, lensFor, PageLens, TimelineLens, type Lens } from "./Lenses.tsx";
 import { UpdatesLens } from "../components/Updates.tsx";
+import { useItemRoute } from "../lib/itemRoute.ts";
 import { ItemPanel, STATUS_WORDS, statusWord, useDeleteItem, useMayDelete } from "../components/ItemPanel.tsx";
 import { downloadDocx, FICTIONAL } from "../lib/docx.ts";
 import { MarkupList } from "../components/Markup.tsx";
@@ -136,7 +138,8 @@ export function ProjectPage() {
       {/* Shown data that a refresh couldn't update is marked, so nobody acts on it unknowingly */}
       <Stale reads={[projects, detail]} />
       {/* Key, current stage with its age, then the name with where it stands (health, or closed and when) and archive state */}
-      <p className="mono small muted" style={{ margin: 0 }}>{p.key} · {bench ? (isClosed(org.stages, p.stageId) ? "Done" : "Open") : org.stages[stageAt]?.name} {inStageFor(p.stageEnteredAt)}</p>
+      {/* Key, then the stage as one control that lists every stage (it used to be a row of chips under the lenses) */}
+      <div className="proj-meta mono small muted">{p.key} · <StagePill stages={bench ? [{ id: "open", name: "Open" }, { id: "done", name: "Done" }] : org.stages.filter((s) => !s.hidden || s.id === p.stageId)} current={bench ? (isClosed(org.stages, p.stageId) ? "done" : "open") : p.stageId} since={inStageFor(p.stageEnteredAt)} /></div>
       <h1 className="page-title" style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
         {p.name} <Standing health={p.health} closed={isClosed(org.stages, p.stageId)} since={p.stageEnteredAt} />
         <OnionProgress progress={prog} size={44} />
@@ -151,15 +154,6 @@ export function ProjectPage() {
       {lens === "board" && <BoardLens project={p} items={items} kindLabel={kindLabel} />}
       {lens === "timeline" && <TimelineLens project={p} items={items} kindLabel={kindLabel} />}
       {lens === "steps" && <>
-      {/* Visible stages plus the project's own even if hidden; "done" counts by position among all stages */}
-      <div className="steps" aria-label="Stage" data-tour="stage">
-        {bench ? ["Open", "Done"].map((w, i) => {
-          const on = (i === 1) === isClosed(org.stages, p.stageId);
-          return <span key={w} className={on ? "on" : i === 0 ? "done" : ""} aria-current={on ? "step" : undefined}>{w}</span>;
-        }) : org.stages.map((s, i) => (!s.hidden || s.id === p.stageId) && (
-          <span key={s.id} className={s.id === p.stageId ? "on" : i < stageAt ? "done" : ""} aria-current={s.id === p.stageId ? "step" : undefined}>{s.name}</span>
-        ))}
-      </div>
       {/* What to do now, worked out from the stage and the items */}
       <NextStep project={p} items={items} stage={org.stages[stageAt]} base={base} />
       {/* Overview, then one tab per layer with its item count; at is the open tab's position */}
@@ -175,6 +169,34 @@ export function ProjectPage() {
       </div>
       </>}
     </>
+  );
+}
+
+
+/** The project's stage and how long it has been there; pressed, every stage in order, done ones ticked and
+ * the current one lit. Linear's project status menu, in the meta line instead of a row of its own */
+function StagePill({ stages, current, since }: { stages: { id: string; name: string }[]; current: string; since: string }) {
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLSpanElement>(null);
+  const panel = useRef<HTMLOListElement>(null);
+  useMenuFit(panel, open);
+  useTapOutside(box, open, useCallback(() => setOpen(false), []));
+  useEffect(() => {
+    if (!open) return;
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") { setOpen(false); box.current?.querySelector("button")?.focus(); } };
+    addEventListener("keydown", esc);
+    return () => removeEventListener("keydown", esc);
+  }, [open]);
+  const at = stages.findIndex((x) => x.id === current);
+  return (
+    <span className="stage-pill" ref={box} data-open={open || undefined} data-tour="stage">
+      <button type="button" aria-expanded={open} onClick={() => setOpen(!open)}>
+        <span>{stages[at]?.name ?? "Stage"} {since}</span><span className="arr arr-mixed" aria-hidden="true" />
+      </button>
+      <ol ref={panel} className="stage-list" aria-label="Stages" hidden={!open}>
+        {stages.map((x, i) => <li key={x.id} className={i === at ? "on" : i < at ? "done" : ""} aria-current={i === at ? "step" : undefined}>{x.name}</li>)}
+      </ol>
+    </span>
   );
 }
 
@@ -715,7 +737,7 @@ function MetricCard({ item, path, onReading }: { item: Item; path: string; onRea
   const [value, setValue] = useState("");
   const [readingError, setReadingError] = useState<string>();
   const [savingReading, setSavingReading] = useState(false);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useItemRoute(item.id);
   return (
     <div className="card metric" id={`item-${item.id}`}>
       <div className="card-head">
@@ -867,7 +889,7 @@ function ItemRow({ item, path, marker, onToggle, locked, extra }: { item: Item; 
   const { org } = useOrg();
   const me = useSession();
   const members = useMembers(org.id);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useItemRoute(item.id);
   // Someone else's live marker on this item, if any
   const otherEditing = marker && marker.userId !== me.user.id ? marker : undefined;
   const owner = members.data?.find((m) => m.userId === item.assigneeId);

@@ -3000,6 +3000,26 @@ dialog.write-sheet section .section-h { margin: var(--sp-4) 0 var(--sp-2); }
 .lens-bar a { display: inline-flex; align-items: center; gap: var(--sp-1); padding: var(--sp-1) var(--sp-3); border-radius: calc(var(--r-sm) - 2px); color: var(--muted); font-size: var(--fs-sm); text-decoration: none; white-space: nowrap; min-height: 32px; }
 .lens-bar a:hover, .lens-bar a:focus-visible { color: var(--accent); }
 .lens-bar a.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+/* Phones: the four lenses that aren't open show their icon only (the name stays for screen readers), so all
+   five fit without scrolling */
+@media (max-width: 520px) {
+  .lens-bar { width: 100%; justify-content: space-between; }
+  .lens-bar a:not(.on) span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .lens-bar a { padding: var(--sp-1) var(--sp-2); }
+}
+/* The stage in the meta line: a quiet control that lists every stage */
+.proj-meta { margin: 0; display: flex; align-items: center; gap: var(--sp-1); flex-wrap: wrap; }
+.stage-pill { position: relative; display: inline-flex; }
+.stage-pill > button { display: inline-flex; align-items: center; gap: var(--sp-2); min-height: 32px; padding: 0 var(--sp-2); border: 1px solid var(--line); border-radius: 99px; background: transparent; color: var(--muted); font: inherit; cursor: pointer; }
+.stage-pill > button:hover, .stage-pill > button:focus-visible, .stage-pill[data-open] > button { border-color: var(--accent); color: var(--accent); }
+.stage-pill .arr { transition: transform var(--t-open) var(--ease-open); }
+.stage-pill[data-open] .arr { transform: rotate(-90deg); }
+.stage-list { position: absolute; z-index: 30; top: calc(100% + var(--sp-1)); left: 0; min-width: 200px; margin: 0; padding: var(--sp-1); list-style: none; border: 1px solid var(--line-strong); border-radius: var(--r-sm); background: var(--panel); box-shadow: var(--shadow-pop); counter-reset: stage; }
+.stage-list li { padding: var(--sp-1) var(--sp-2); border-radius: calc(var(--r-sm) - 2px); color: var(--muted); counter-increment: stage; }
+.stage-list li::before { content: counter(stage) ". "; }
+.stage-list li.done { color: var(--text); }
+.stage-list li.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+@media (pointer: coarse) { .stage-pill > button { min-height: 44px; } }
 /* Updates: the box to write in, then the stream, newest first. Messages, status updates, and comments are
    rows with an avatar; changes are single muted lines between them, as in GitHub's timeline */
 .lens-updates { max-width: 760px; }

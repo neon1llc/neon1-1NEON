@@ -10,6 +10,7 @@ import { RECORD_KINDS, todayIn, type Item, type ItemKind, type Project } from "@
 import { CalendarDays, Check, FileText, Kanban, ListChecks, MessagesSquare, Play, Plus } from "lucide-react";
 import { useState, type DragEvent } from "react";
 import { NavLink } from "react-router";
+import { useItemRoute } from "../lib/itemRoute.ts";
 import { ItemPanel, STATUS_WORDS } from "../components/ItemPanel.tsx";
 import { PageEditor } from "../components/PageEditor.tsx";
 import { pagesPath } from "../components/Write.tsx";
@@ -120,7 +121,7 @@ function useItems(p: Project) {
 function Card({ item, path, kindLabel, onDrag }: { item: Item; path: string; kindLabel: string; onDrag?: (e: DragEvent) => void }) {
   const { org } = useOrg();
   const members = useMembers(org.id);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useItemRoute(item.id);
   const owner = members.data?.find((m) => m.userId === item.assigneeId);
   const late = item.dueDate && item.status !== "done" && item.dueDate < todayIn(org.timeZone);
   return (
