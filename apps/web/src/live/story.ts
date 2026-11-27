@@ -515,6 +515,10 @@ export const STORY: Section[] = [
       await s.scroll(1600, 1200);
       await s.think("Anonymous write-ups are fine. Our name, ask us first.");
       await s.hover(".sign-card .agree-choices", 1400);
+      await s.click({ sel: ".agree-choices label.agree-opt", text: "Decide later" }, 500);
+      await s.click({ sel: ".agree-choices label.agree-opt", text: "Ask us first" }, 500);
+      await s.type("#agreement-address", "100 Example Street, Springfield, NY 12000");
+      await s.click(".agree-fields > label.sign-consent input", 400);
       await s.type("#agreement-sign-name", S.owner.name);
       await s.click("#agreement-sign-name ~ .sign-consent input", 400);
       await s.click({ sel: ".sign-card button", text: /^Sign for/ }, 1400);
