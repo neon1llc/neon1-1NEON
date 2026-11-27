@@ -1,11 +1,10 @@
 // apps/web/src/pages/Workspace.tsx - Home inside an organization: the greeting with the View menu, and
-// the cards on an arrangeable grid, in four groups. To do: what needs you, overdue and blocked work, and
-// the setup and suggestion cards until they're done or put away. Movement: the calendar, project updates,
-// recent activity, who's away. Visuals: every project at a glance, projects by layer, the headline
-// numbers, and the charts (finished per week, project health, delivery). Shortcuts: quick links and the
-// guide. Every organization offers the same cards, each with its own empty state, so Home reads the same
-// everywhere; only setup and suggestion cards come and go. Each card has its own preset sizes and shows
-// more as it grows (components/HomeGrid.tsx).
+// the cards on an arrangeable grid. By default Home shows three things: what needs you, what's coming up,
+// and each project's latest update, plus the setup and suggestion cards while they apply. Everything else
+// (overdue and blocked, projects at a glance, by layer, numbers, quick links, who's away, recent
+// activity, the charts, the guide) is offered under View, in four groups: To do, Movement, Visuals,
+// Shortcuts. Every organization offers the same cards, each with its own empty state. Each card has its
+// own preset sizes and shows more as it grows (components/HomeGrid.tsx).
 
 
 import { GuideCard, KeepCard, NextStep, ProspectNote } from "../components/Prospect.tsx";
@@ -80,6 +79,8 @@ interface Card extends Omit<Tile, "sizes"> {
   when: boolean;
   // Offered in View but off until someone turns it on
   off?: boolean;
+  // Repeats what another card already shows, so its counts don't make the View button say "!"
+  mirror?: boolean;
   // A card put away somewhere of its own (the profile, or this browser) says whether it shows and how to toggle
   shown?: boolean;
   toggle?: (show: boolean) => void;
@@ -136,6 +137,9 @@ export function WorkspacePage() {
     ...(canAdmin ? [{ done: Boolean(me.factors?.any), label: "Add a second step for admin actions", act: <Link to="/me#security">Add</Link> }] : []),
   ];
   const setupLeft = steps.filter((s) => !s.done).length;
+  // Setup is for a new organization: once the tour, a project, and the team are done, a missing second
+  // step alone doesn't keep the card (the profile's Security asks for it)
+  const settingUp = steps.some((s) => !s.done && !s.label.startsWith("Add a second step"));
   // The true count of waiting actions; the list may be a preview of it (older APIs sent no total)
   const n = ws.data?.waitingTotal ?? ws.data?.waiting.length ?? 0;
   const shown = ws.data?.waiting.length ?? 0;
@@ -173,15 +177,15 @@ export function WorkspacePage() {
 
   // Every card this person could have here, in default reading order
   const cards: Card[] = [
+    { id: "needs", title: "Needs you", group: "todo", when: true, counts: cnt(pressing, Math.max(0, n - pressing)),
+      sizes: { wide: [sz("M", 6, 7), sz("S", 3, 4), sz("L", 6, 11), sz("W", 12, 7)], narrow: [sz("M", 4, 9), sz("S", 2, 5), sz("L", 4, 14)] }, body: (v) => needsYou(v) },
     { id: "next", title: "Next step", group: "todo", when: canWrite && !me.operator && (prospect || nextList.length > 0 || Boolean(asked.data?.assessment)),
       counts: cnt(0, nextList.length ? outlineTips : 1, asked.data?.assessment ? 1 : 0),
       sizes: { wide: [sz("L", 6, 11), sz("M", 6, 8), sz("W", 12, 8)], narrow: [sz("M", 4, 13), sz("L", 4, 18)] }, body: () => <NextStep orgId={org.id} slug={summary.slug} prospect={prospect} /> },
     { id: "keep", title: "Your account", group: "todo", when: prospect && !me.operator && Boolean(k?.free && !k.held && k.deleteOn),
       counts: daysLeft !== undefined && daysLeft <= 7 ? cnt(1) : cnt(0, 0, 1),
       sizes: { wide: [sz("M", 6, 5), sz("T", 4, 7), sz("W", 12, 3)], narrow: [sz("M", 4, 6), sz("T", 4, 8)] }, body: () => <KeepCard orgId={org.id} slug={summary.slug} canKeep={canWrite} /> },
-    { id: "needs", title: "Needs you", group: "todo", when: true, counts: cnt(pressing, Math.max(0, n - pressing)),
-      sizes: { wide: [sz("M", 6, 7), sz("S", 3, 4), sz("L", 6, 11), sz("W", 12, 7)], narrow: [sz("M", 4, 9), sz("S", 2, 5), sz("L", 4, 14)] }, body: (v) => needsYou(v) },
-    { id: "late", title: "Overdue and blocked", group: "todo", when: true,
+    { id: "late", title: "Overdue and blocked", group: "todo", when: true, off: true, mirror: true,
       counts: cnt(late.reduce((t, g) => t + g.overdue, 0), late.reduce((t, g) => t + g.blocked, 0)),
       sizes: { wide: [sz("S", 3, 4), sz("M", 6, 5), sz("T", 4, 8)], narrow: [sz("S", 2, 5), sz("M", 4, 6), sz("T", 4, 9)] }, body: (v) => overdue(v) },
     { id: "coming", title: "Coming up", group: "movement", when: true, counts: calCounts,
@@ -192,30 +196,31 @@ export function WorkspacePage() {
     { id: "links", title: "Add your links", group: "todo", when: !me.user.linkedin && !me.user.businessLinkedin && !me.user.website, counts: cnt(0, 1),
       shown: wantsLinks(me), toggle: flag("linksCard"),
       sizes: { wide: [sz("S", 3, 4), sz("M", 6, 3)], narrow: [sz("S", 2, 6), sz("M", 4, 4)] }, body: () => <LinksCard me={me} /> },
-    { id: "setup", title: "Get started", group: "todo", when: setupLeft > 0, counts: cnt(0, setupLeft),
+    { id: "setup", title: "Get started", group: "todo", when: settingUp, counts: cnt(0, setupLeft),
       sizes: { wide: [sz("M", 6, 5), sz("T", 4, 6), sz("W", 12, 3)], narrow: [sz("M", 4, 7)] }, body: () => getStarted() },
     { id: "guide", title: "Get to know 1NEON", group: "shortcuts", when: !me.operator, counts: none,
-      shown: me.user.guide !== "hidden", toggle: flag("guide"),
+      // On for a new account until hidden; for everyone else, off until turned on
+      shown: prospect ? me.user.guide !== "hidden" : me.user.guide === "shown", toggle: flag("guide"),
       sizes: { wide: [sz("M", 6, 8), sz("T", 4, 10), sz("W", 12, 5)], narrow: [sz("M", 4, 11)] }, body: () => <GuideCard me={me} prospect={prospect} /> },
-    { id: "glance", title: "Projects at a glance", group: "visuals", when: true, counts: cnt(health("off_track"), health("at_risk")),
+    { id: "glance", title: "Projects at a glance", group: "visuals", when: true, off: true, mirror: true, counts: cnt(health("off_track"), health("at_risk")),
       sizes: { wide: [sz("M", 6, 7), sz("T", 4, 8), sz("L", 6, 11), sz("W", 12, 7)], narrow: [sz("T", 4, 9), sz("L", 4, 14)] }, body: (v) => atGlance(v) },
-    { id: "layers", title: "Projects by layer", group: "visuals", when: true, counts: none,
+    { id: "layers", title: "Projects by layer", group: "visuals", when: true, off: true, counts: none,
       sizes: { wide: [sz("S", 3, 4), sz("M", 6, 4), sz("B", 12, 3)], narrow: [sz("S", 2, 5), sz("M", 4, 4)] }, body: (v) => byLayer(v) },
-    { id: "stats", title: "Numbers", group: "visuals", when: true, counts: none,
+    { id: "stats", title: "Numbers", group: "visuals", when: true, off: true, counts: none,
       sizes: { wide: [sz("B", 12, 2), sz("M", 6, 4), sz("S", 3, 6)], narrow: [sz("M", 4, 6), sz("S", 2, 8)] }, body: (v) => numbers(v) },
-    { id: "quick", title: "Quick links", group: "shortcuts", when: true, counts: none,
+    { id: "quick", title: "Quick links", group: "shortcuts", when: true, off: true, counts: none,
       sizes: { wide: [sz("S", 3, 6), sz("M", 6, 5), sz("B", 12, 2), sz("L", 6, 9)], narrow: [sz("S", 2, 8), sz("M", 4, 7), sz("L", 4, 12)] }, body: (v) => quickLinks(v) },
-    { id: "away", title: "Away this week", group: "movement", when: true, counts: cnt(0, 0, ws.data?.away?.length ?? 0),
+    { id: "away", title: "Away this week", group: "movement", when: true, off: true, counts: cnt(0, 0, ws.data?.away?.length ?? 0),
       sizes: { wide: [sz("S", 3, 4), sz("M", 6, 4)], narrow: [sz("S", 2, 5), sz("M", 4, 5)] }, body: () => awayWeek() },
     { id: "updates", title: "Project updates", group: "movement", when: true, counts: cnt(0, 0, ws.data?.updates?.length ?? 0),
       sizes: { wide: [sz("M", 6, 7), sz("T", 4, 9), sz("L", 6, 11)], narrow: [sz("T", 4, 9), sz("L", 4, 13)] }, body: (v) => projectUpdates(v) },
-    { id: "activity", title: "Recent activity", group: "movement", when: true, counts: cnt(0, 0, recentActs),
+    { id: "activity", title: "Recent activity", group: "movement", when: true, off: true, counts: cnt(0, 0, recentActs),
       sizes: { wide: [sz("M", 6, 8), sz("T", 4, 12), sz("L", 6, 12)], narrow: [sz("M", 4, 10), sz("T", 4, 12), sz("L", 4, 15)] }, body: (v) => recent(v) },
-    { id: "pace", title: "Finished per week", group: "visuals", when: true, counts: none,
+    { id: "pace", title: "Finished per week", group: "visuals", when: true, off: true, counts: none,
       sizes: { wide: [sz("M", 6, 6), sz("W", 12, 6)], narrow: [sz("L", 4, 8)] }, body: () => pace() },
-    { id: "health", title: "Project health", group: "visuals", when: true, off: true, counts: cnt(health("off_track"), health("at_risk")),
+    { id: "health", title: "Project health", group: "visuals", when: true, off: true, mirror: true, counts: cnt(health("off_track"), health("at_risk")),
       sizes: { wide: [sz("M", 6, 4), sz("S", 3, 5)], narrow: [sz("M", 4, 5)] }, body: () => healthBar() },
-    { id: "delivery", title: "Delivery", group: "visuals", when: true, off: true, counts: cnt(charts.data?.work.overdue ?? 0),
+    { id: "delivery", title: "Delivery", group: "visuals", when: true, off: true, mirror: true, counts: cnt(charts.data?.work.overdue ?? 0),
       sizes: { wide: [sz("M", 6, 4), sz("B", 12, 2)], narrow: [sz("M", 4, 6)] }, body: (v) => delivery(v) },
   ];
   const offered = cards.filter((x) => x.when);
@@ -247,7 +252,7 @@ export function WorkspacePage() {
   // Counts show once every read behind them has answered, so no badge flashes a wrong number first
   // (answered either way: a read that failed shows its card's own empty or problem line, never an endless wait)
   const ready = !ws.isPending && !cal.isPending && !charts.isPending && (!(canWrite && !me.operator) || !asked.isPending) && (!(prospect && !me.operator) || !keep.isPending);
-  const rows: ViewRow[] = offered.map((x) => ({ id: x.id, title: x.title, group: x.group, shown: isShown(x), counts: x.counts ?? none }));
+  const rows: ViewRow[] = offered.map((x) => ({ id: x.id, title: x.title, group: x.group, shown: isShown(x), counts: x.counts ?? none, mirror: x.mirror }));
   // Tidy up: urgent cards first, then suggested, then the rest; cards holding urgent items lead their group
   const rank = (id: string) => { const x = offered.find((y) => y.id === id); return x ? RANK[x.group] * 2 - ((x.counts?.urgent ?? 0) > 0 ? 1 : 0) : 9; };
 
@@ -537,7 +542,7 @@ export function WorkspacePage() {
     const strip = (
       <div className="stats delivery" aria-label="Delivery">
         <span title="Items not done, not approved options, and not status updates"><b>{d.work.open}</b> open{d.work.overdue > 0 && <small className="warn">{d.work.overdue} overdue</small>}</span>
-        <span title={due ? `${d.work.onTime} of ${due} finished on or before their due date` : "Nothing with a due date has finished yet"}><b>{rate === undefined ? "–" : `${rate}%`}</b> on time</span>
+        <span title={due ? `${d.work.onTime} of ${due} finished on or before their due date` : "Nothing with a due date has finished yet"}><b>{rate === undefined ? "–" : `${rate}%`}</b> finished on time</span>
         <span title={`Average over ${d.decisions.count} decided`}><b>{d.decisions.avgDays ?? "–"}</b> days to decide</span>
         <span title="Measures at or past their target"><b>{d.measures.reached}/{d.measures.count}</b> at target</span>
       </div>

@@ -1,6 +1,7 @@
 // apps/web/src/components/HomeViews.tsx - Home's View menu, at the end of the greeting row: which cards
 // show, grouped by kind like Jira's gadget picker and Grafana's panel rows (To do, Movement, Visuals,
-// Shortcuts), each with its urgent, suggested, and general counts. The button totals each kind, as shown out of total once a card holding some is hidden. Arrange
+// Shortcuts), each with its urgent, suggested, and general counts. The button counts only what hidden cards
+// hold. Arrange
 // turns on moving and resizing; Tidy up repacks the cards. A drop-down with neon1's drawn arrow.
 
 
@@ -8,10 +9,12 @@ import { Check, LayoutGrid, RotateCcw, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useMenuFit, useTapOutside } from "../lib/menufit.ts";
 import { CountPills, type Counts } from "./HomeGrid.tsx";
+import { hiddenHeld } from "../lib/homeCounts.ts";
 
 
 export type Group = "todo" | "movement" | "visuals" | "shortcuts";
-export interface ViewRow { id: string; title: string; group: Group; shown: boolean; counts: Counts }
+// mirror: repeats items another card shows, so it never adds to the button
+export interface ViewRow { id: string; title: string; group: Group; shown: boolean; counts: Counts; mirror?: boolean }
 // Grouped by what a card is, not how urgent: urgency is each card's own badges
 const GROUPS: { key: Group; label: string }[] = [
   { key: "todo", label: "To do" },
@@ -19,23 +22,19 @@ const GROUPS: { key: Group; label: string }[] = [
   { key: "visuals", label: "Visuals" },
   { key: "shortcuts", label: "Shortcuts" },
 ];
-const KINDS: (keyof Counts)[] = ["urgent", "suggested", "general"];
 
 
-/** The button's counts: each kind's total, or shown out of total when some are in hidden cards; a hidden
- * urgent one adds "!" */
+/** The button says only what Home isn't showing: what's waiting in hidden cards (urgent first, with
+ * "!"), counted once. Cards that repeat another card's items don't count, and what's on screen speaks
+ * for itself through its own badges */
 function Totals({ rows }: { rows: ViewRow[] }) {
-  const parts = KINDS.map((k) => {
-    const total = rows.reduce((n, r) => n + r.counts[k], 0);
-    const seen = rows.filter((r) => r.shown).reduce((n, r) => n + r.counts[k], 0);
-    return { k, total, seen };
-  }).filter((p) => p.total > 0);
-  if (!parts.length) return null;
-  const said = parts.map((p) => `${p.seen < p.total ? `${p.seen} of ${p.total}` : p.total} ${p.k === "general" ? "to know" : p.k}`).join(", ");
+  const held = hiddenHeld(rows);
+  if (!held) return null;
+  const said = `${held.n} ${held.kind} in hidden cards`;
   return (
     <span className="cpills">
       <span className="sr-only">{said}</span>
-      {parts.map((p) => <span key={p.k} className={`cpill ${p.k}${p.seen < p.total ? " part" : ""}`} aria-hidden="true" title={`${p.seen < p.total ? `${p.seen} of ${p.total} shown` : p.total}: ${p.k === "general" ? "to know" : p.k}${p.seen < p.total ? ", the rest in hidden cards" : ""}`}>{p.seen < p.total ? `${p.seen}/${p.total}` : p.total}{p.k === "urgent" && p.seen < p.total ? " !" : ""}</span>)}
+      <span className={`cpill ${held.kind}`} aria-hidden="true" title={said}>{held.n}{held.kind === "urgent" ? " !" : ""}</span>
     </span>
   );
 }

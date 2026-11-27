@@ -29,6 +29,10 @@
 - New project asks how the work runs first (Workbench, Quick fix, Build a proposal, NEON), then for a proposal or NEON what kind of work it is. Clients start on Workbench and neon1 on NEON. A proposal starts at Propose and opens on its options.
 
 ### Changed
+- Home starts with three cards: Needs you, Coming up, and Project updates, plus Next step, setup, and suggestions while they apply. The rest (overdue and blocked, projects at a glance, by layer, numbers, quick links, who's away, recent activity, the charts, Get to know 1NEON) wait under View. Reset under View returns to these three.
+- The View button counts only what hidden cards hold, once, so it no longer adds up the same item from several cards. Cards that repeat another card's items don't count.
+- Get started goes once the tour, a first project, and inviting the team are done; a missing second sign-in step alone no longer keeps it (Security on your profile still asks).
+- Delivery says "finished on time", the share of finished work that met its date.
 - Every arrow that opens or closes something is now one short, bold arrow in two sizes, including questions, dropdowns, and Safari and iPhone dropdowns.
 - neon1's role is named super everywhere it shows: People, your profile, and the emails it receives.
 - A suspended free account can now sign in and read, as other suspensions do, instead of being turned away.
