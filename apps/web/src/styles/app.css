@@ -647,6 +647,8 @@ dialog.palette .dlg { padding: 0; }
   padding: var(--pad-card, var(--sp-4)) var(--pad-card, var(--sp-4)) var(--sp-3); border-bottom: 1px solid var(--line); }
 .card-top > :is(h2, h3, .card-h, .section-h) { margin: 0; }
 .card-top > p { margin: var(--sp-1) 0 0; color: var(--muted); }
+/* A list right under the head starts on the head's rule, not a second one of its own */
+.card > :is(.card-top, .card-head, .section-h, .card-h, .cal-head):first-child + :is(ul, ol, .factors, .rows, .feed, .updates, .todo) > :first-child { border-top: 0; }
 /* A linked part of a page (#security, #options) lands clear of the sticky top bar */
 .card[id], section[id], .item[id], .decision[id] { scroll-margin-top: 90px; }
 .todo, .checklist, .feed { list-style: none; margin: 0; padding: 0; }
