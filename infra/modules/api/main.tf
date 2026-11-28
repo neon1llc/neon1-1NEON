@@ -388,6 +388,16 @@ resource "aws_ssm_parameter" "origin_secret" {
 }
 
 
+# --- Held numbers ---
+
+
+# Keys the identifier a deleted account's number is held as for 30 days. Replacing it frees current holds
+resource "random_password" "phone_hold" {
+  length  = 48
+  special = false
+}
+
+
 # --- Functions ---
 
 
@@ -453,6 +463,7 @@ resource "aws_lambda_function" "api" {
       REPLY_DOMAIN                        = var.reply_domain
       REPLY_SECRET_PARAM                  = var.reply_secret_parameter
       ORIGIN_SECRET                       = random_password.origin_secret.result
+      PHONE_HOLD_KEY                      = random_password.phone_hold.result
       ORIGIN_LOCK                         = var.origin_lock ? "on" : "off"
       NODE_OPTIONS                        = "--enable-source-maps"
       AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"

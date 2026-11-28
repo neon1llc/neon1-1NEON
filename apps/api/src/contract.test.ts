@@ -51,7 +51,7 @@ async function approvedWithDeposit() {
 }
 
 /** Move a project's recorded event back in time, as if it happened `days` ago */
-async function age(field: "waiting" | "handover", days: number) {
+async function age(field: "waiting" | "handover" | "endNotice" | "payNotice", days: number) {
   const { p } = await flow();
   const ev = p[field]!;
   const at = new Date(Date.parse(ev.at) - days * 864e5).toISOString();
@@ -100,10 +100,34 @@ describe("waiting on the client, pausing, and ending", () => {
     expect((await call(OP, "POST", `${path}/pause`, { version: await v(), reason: "waiting" })).status).toBe(200);
     expect((await call(OP, "POST", `${path}/end`, { version: await v(), reason: "waiting", note: "No access after notice" })).json.error).toBe("not_allowed");
     await age("waiting", 20);
+    // 35 days on, but no notice of the ending yet
+    expect((await call(OP, "POST", `${path}/end`, { version: await v(), reason: "waiting", note: "No access after notice" })).json.error).toBe("not_allowed");
+    expect((await call(OP, "POST", `${path}/end-notice`, { version: await v() })).status).toBe(200);
+    expect((await call(OP, "POST", `${path}/end`, { version: await v(), reason: "waiting", note: "No access after notice" })).json.error).toBe("not_allowed");
+    await age("endNotice", 14);
     expect((await call(OP, "POST", `${path}/end`, { version: await v(), reason: "waiting", note: "No access after notice" })).status).toBe(200);
     const actions = (await repo.listAudit(s.acme.id)).map((e) => e.action);
     expect(actions).toEqual(expect.arrayContaining(["project.waiting", "project.paused", "project.ended"]));
     expect((await call(s.raj.email, "POST", `${path}/waiting`, { version: await v(), need: "anything" })).status).toBe(403);
+  });
+});
+
+
+describe("pausing over an unpaid invoice", () => {
+  it("needs an undisputed amount over 7 days overdue and 2 business days' notice to pay, and a deposit is due on issue", async () => {
+    const { path, deposit } = await approvedWithDeposit();
+    expect(deposit.fields.termsDays).toBe(0);
+    const v = async () => (await flow()).p.version;
+    const pause = async () => (await call(OP, "POST", `${path}/pause`, { version: await v(), reason: "overdue" })).json.error;
+    expect((await call(OP, "POST", `${path}/pay-notice`, { version: await v() })).json.error).toBe("not_allowed");
+    const inv = (await flow()).items.find((i) => i.id === deposit.id)!;
+    await repo.table.write([repo.itemOp({ ...inv, fields: { ...inv.fields, dueDate: "2026-01-05" }, version: inv.version + 1 }, { version: inv.version })]);
+    expect(await pause()).toBe("not_allowed");
+    expect((await call(OP, "POST", `${path}/pay-notice`, { version: await v() })).status).toBe(200);
+    expect(await pause()).toBe("not_allowed");
+    await age("payNotice", 5);
+    expect(await pause()).toBeUndefined();
+    expect((await repo.listAudit(s.acme.id)).map((e) => e.action)).toEqual(expect.arrayContaining(["project.pay_notice", "project.paused"]));
   });
 });
 

@@ -32,6 +32,8 @@ export const keys = {
   smsChallenge: (uid: string, purpose: "confirm" | "verify") => ({ PK: `USER#${uid}`, SK: purpose === "confirm" ? "SMSCONFIRM" : "SMSVERIFY" }),
   // One account owns each number while it has consented, preventing duplicate setup texts across accounts
   smsOwner: (phone: string) => ({ PK: `SMSPHONE#${phone}`, SK: "OWNER" }),
+  // A deleted account's confirmed number, kept only as a keyed identifier until its hold ends
+  phoneHold: (digest: string) => ({ PK: "PHONEHOLD", SK: digest }),
   // Duplicate SNS deliveries must not confirm a number or queue another acknowledgment
   smsInbound: (id: string) => ({ PK: "SMSINBOUND", SK: id }),
   // A reply-by-email token: which person, organization, and project an emailed reply posts as (lib/reply.ts)

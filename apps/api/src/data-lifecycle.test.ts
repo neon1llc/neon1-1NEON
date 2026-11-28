@@ -16,7 +16,7 @@ import { readToken, replyAddress } from "./lib/reply.ts";
 // A new family fails here until someone decides what the free-account purge does with it.
 const REVIEWED = [
   "tenant", "slug", "clientCounter", "proposalCounter", "user", "email", "subject", "session", "totp",
-  "totpPending", "assurance", "smsChallenge", "smsOwner", "smsInbound", "sessionRef", "subjectRef", "replyToken", "replyPointer", "smsSent", "security", "member", "bell",
+  "totpPending", "assurance", "smsChallenge", "smsOwner", "phoneHold", "smsInbound", "sessionRef", "subjectRef", "replyToken", "replyPointer", "smsSent", "security", "member", "bell",
   "project", "projectCounter", "membershipRev", "idempotency", "item", "doc", "page", "edit", "comment", "audit",
   "calEvent", "chat", "chatMessage", "chatSeen", "chatBlock", "chatLast",
 ];

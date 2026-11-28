@@ -45,6 +45,8 @@ export async function handleInboundSms(repo: Repo, cfg: Config, message: Inbound
     ? { ...user, smsPhone: from, smsPendingPhone: undefined, smsVerifiedAt: at, version: user.version + 1, updatedAt: at, updatedBy: user.id }
     : { ...user, smsConsentAt: undefined, smsPendingPhone: undefined, smsPhone: undefined, smsVerifiedAt: undefined, smsFactorAt: undefined, smsOptedOutAt: at, version: user.version + 1, updatedAt: at, updatedBy: user.id };
   const ops = [repo.userOp(next, user.version), { put: marker, guard: { create: true as const } }];
+  // A STOP releases the number, so no row keeps it after consent ends
+  if (body !== "YES") ops.push({ delete: ownerKey, guard: { version: Number(owner!.version) } } as never);
   if (body === "YES") ops.push(outboxOp(`S#${user.id}#ACK#${id}`, { kind: "sms-confirmed", userId: user.id, to: from, verifiedAt: at }));
   try {
     await repo.table.write(ops);

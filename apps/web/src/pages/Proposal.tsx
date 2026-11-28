@@ -248,6 +248,7 @@ function Proposal({ snapshot: s, rev, latestRev, decided, inForce, timeZone, slu
                 {f.timeline && <span><b>Timeline:</b> {f.timeline}</span>}
                 {f.cost && <span><b>Price:</b> {f.cost}</span>}
                 {f.outsideCosts && <span><b>Paid directly by you:</b> {f.outsideCosts}</span>}
+                {f.ifEndedEarly && <span><b>If it ends early:</b> {f.ifEndedEarly}</span>}
               </p>
               {f.why && <p><b>{f.recommended ? "Why I recommend it" : "When to pick it"}:</b> {f.why}</p>}
               {/* The price, opened up: what kind it is, the work behind the hours, and when it's paid */}

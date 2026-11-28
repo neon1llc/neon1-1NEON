@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+### Changed
+- Service agreement edition 2.5: deposits are due before work begins, a pause over an overdue amount needs 2 business days' notice to pay, an ending for a delay needs 14 days' notice, and one confidentiality clause. Earlier signers sign 2.5 before a new approval.
+- A fixed-price option can state what's due if it ends early. Changing case-study or naming choices asks the admin to confirm they're authorized.
+- A deleted account's confirmed number is held 30 days as a keyed identifier, not the number, and a STOP reply releases the number.
+
 ### Added
 - super can delete a client organization when it asks, from its Settings, by typing its name and recording who asked. Locked copies of its signatures and records are written first, and nothing is removed if they can't be.
 - New project is one screen: a name, a sentence, and how you want to see the work. The kind of work, what done looks like, an example, a target date, and measures sit under More about it. Quick fix is one of the kinds. Clients start on Page and neon1 on Steps.

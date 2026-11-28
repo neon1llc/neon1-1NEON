@@ -336,6 +336,9 @@ export const Project = z.object({
   handover: ContractEvent.optional(),
   waiting: ContractEvent.extend({ need: z.string().trim().min(3).max(500) }).optional(),
   paused: ContractEvent.extend({ reason: z.enum(["waiting", "overdue", "other"]) }).optional(),
+  // Written notice to pay (before a pause for an overdue amount) and of an intended ending for a delay
+  payNotice: ContractEvent.extend({ invoices: z.array(id).max(100) }).optional(),
+  endNotice: ContractEvent.optional(),
   ended: ContractEvent.extend({ reason: z.enum(["notice", "waiting", "other"]) }).optional(),
   ...versioned,
 });
@@ -510,6 +513,8 @@ const priceFields = {
   depositPercent: z.number().int().min(0).max(100).optional(),
   // Where the hours go, piece by piece, so the price can be checked against the work
   basis: z.array(BasisLine).max(40).optional(),
+  // A fixed price's milestone or partial-work values, used if it ends before it's finished
+  ifEndedEarly: z.string().max(600).optional(),
 };
 
 export const OptionFields = z.object({

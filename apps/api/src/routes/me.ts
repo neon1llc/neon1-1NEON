@@ -2,6 +2,7 @@
 // profile edits, and proving the mobile number that text notices go to.
 
 
+import { keys } from "../store/repo.ts";
 import { cleanName, nameProblem, UpdateMeInput, type Member, type Tenant, type User } from "@1neon/domain";
 import { z } from "zod";
 import { failFields } from "../lib/vet.ts";
@@ -9,7 +10,7 @@ import { assurance } from "../lib/assurance.ts";
 import { body, defined, fail, now, who } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
 import { outboxOp } from "../outbox.ts";
-import { codeText, e164, hashCode, smsAfterSave, smsDestinationAllowedByConfig, smsFactorOn, smsState } from "../sms.ts";
+import { codeText, e164, hashCode, smsAfterSave, smsDestinationAllowedByConfig, smsFactorOn, smsState, phoneDigest } from "../sms.ts";
 import { ConflictError } from "../store/types.ts";
 
 
@@ -90,9 +91,12 @@ export function meRoutes(app: App, k: Kit) {
     if (startConsent) {
       const ownerKey = { PK: `SMSPHONE#${newPhone}`, SK: "OWNER" };
       const owner = await repo.table.get(ownerKey.PK, ownerKey.SK);
-      // A deleted account's number stays taken until its hold ends (the table may remove the row a little late)
-      const lapsed = Boolean(owner?.heldAt) && Number(owner!.ttl) * 1000 <= Date.now();
-      if (owner && !lapsed && owner.userId !== user.id) fail(409, "phone_in_use", "This number is already connected to another 1NEON account. Remove it there first or use another number.");
+      // A deleted account's confirmed number stays taken until its hold ends (the sweep or the table's own expiry removes it a little late)
+      const key = d.cfg.phoneHoldKey;
+      const held = key ? keys.phoneHold(await phoneDigest(key, newPhone!)) : undefined;
+      const hold = held ? await repo.table.get(held.PK, held.SK) : undefined;
+      if (hold && Number(hold.ttl) * 1000 > Date.now()) fail(409, "phone_held", "This number can't be used yet. Use another number, or try again later.");
+      if (owner && owner.userId !== user.id) fail(409, "phone_in_use", "This number is already connected to another 1NEON account. Remove it there first or use another number.");
       ops.push({ put: { ...ownerKey, type: "sms-owner", userId: user.id, version: Number(owner?.version ?? 0) + 1 }, guard: owner ? { version: Number(owner.version) } : { create: true } });
       ops.push(outboxOp(`S#${user.id}#SETUP#${next.smsConsentAt}`, { kind: "sms-confirmation", userId: user.id, to: newPhone!, consentAt: next.smsConsentAt! }));
     }

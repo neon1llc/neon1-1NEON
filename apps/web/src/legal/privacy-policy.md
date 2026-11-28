@@ -1,6 +1,6 @@
 # Privacy and data policy
 
-*Last updated November 27, 2026.* This edition adds the chat with neon1 in 1NEON, says how anonymized case studies fit the no-marketing rule, and states which records are kept for seven years and why.
+*Last updated November 27, 2026.* This edition adds the chat with neon1 in 1NEON, says how anonymized case studies fit the no-marketing rule, states which records are kept for seven years, and says what deleting an account removes and keeps.
 
 neon1 LLC ("neon1", "I", "me") runs the website neon1.tech, Neo (the assistant on the website), and the 1NEON client portal at neon1.tech/1NEON, and does technology work for clients. This policy covers all of them. The [cookie and browser storage notice](https://neon1.tech/1NEON/cookies) is part of it. [How neon1 is built](https://neon1.tech/knowledge/company/architecture/) describes the systems.
 
@@ -45,7 +45,7 @@ The portal is available to people invited by me or by an administrator of their 
 - **Activity records:** who changed what and when, kept as an audit trail so both sides have a reliable history of the work, including handovers, review requests, invoice disputes, reminders, pauses, and endings.
 - **Chat with neon1:** messages you send me in 1NEON's chat. Everyone in your organization can read its ordinary messages. A message marked private can be read only by its author and me, and I can read every message in your organization's chat; private doesn't mean encrypted end to end. If you edit a message, I keep its earlier versions with it. Chat messages are part of your organization's project records and are kept and deleted like them. To limit abuse, the chat counts messages per person and per network address, using a one-way code of the address, not the address itself. I may flag, mute, or ban someone from chat, and the chat mutes someone automatically for a day after repeated refused messages. Your browser keeps an unsent draft on your device.
 
-**Emails and texts.** The portal emails you what you need (invitations, sign-in codes, security notices, and invoices) and notices about the kinds of changes you choose, each of which you can turn off in your profile. If you add a mobile number and agree to texts, 1NEON first texts a 6-digit code to confirm the number is yours (only a one-way code of it is stored, and it expires in 10 minutes). After that, it texts you about the kinds of changes you choose. Each text says only that something new is waiting, with a link to sign in; it doesn't name your organization, project, or files. Changing your number turns texts off until the new number is confirmed. Frequency varies with your projects, up to 10 notices a day. Message and data rates may apply. Reply STOP to opt out or HELP for help, or turn texts off in your profile at any time. A STOP reply is recorded, and turning texts back on needs a new code. Your number and your agreement are used only to send these notices. I never sell or share mobile numbers or text consent with third parties or affiliates for their marketing.
+**Emails and texts.** The portal emails you what you need (invitations, sign-in codes, security notices, and invoices) and notices about the kinds of changes you choose, each of which you can turn off in your profile. If you add a mobile number and agree to texts, 1NEON first texts a 6-digit code to confirm the number is yours (only a one-way code of it is stored, and it expires in 10 minutes). After that, it texts you about the kinds of changes you choose. Each text says only that something new is waiting, with a link to sign in; it doesn't name your organization, project, or files. Changing your number turns texts off until the new number is confirmed. Frequency varies with your projects, up to 10 notices a day. Message and data rates may apply. Reply STOP to opt out or HELP for help, or turn texts off in your profile at any time. A STOP reply is recorded, and turning texts back on needs a new code. I use your mobile number and text-message consent to send the notices you choose, manage opt-outs, and prevent misuse. I keep the limited records described in the retention schedule below. I never sell or share mobile numbers or text consent for another party's marketing.
 
 **Neo inside the portal.** A signed-in version of Neo can help inside 1NEON, but it's turned off today. If I turn it on, I'll update this policy first. When it's on and you ask it a question, it sends your question and what it reads in 1NEON as you, such as the projects, items, options, file names, and comments you can already see, to an Anthropic model that Amazon runs in Bedrock in the United States, so it can answer. It sends nothing about organizations you can't see, nothing when you aren't asking, and it can't change anything until you approve it.
 
@@ -117,15 +117,16 @@ Clients' projects and files are never deleted on a schedule, and I never sell, r
 | Projects, items, comments, uploaded files, and projects moved to the trash | Until your organization asks me to delete them, including after our work ends. Trashed projects are hidden from everyone but kept |
 | Files you delete | Removed right away, and earlier copies of deleted or replaced files are erased after 90 days |
 | Database backups | 35 days |
-| Signatures, issued invoices, and payments | Write-protected for seven years from the day they're made, as my business practice: it covers New York's six-year period for contract claims and the records tax law asks for. Only an administrator with a special permission can shorten that |
-| Audit records of sign-ins and changes | Up to 3 years, then deleted |
+| Signatures, issued invoices, and payments | Write-protected for seven years from the day they're made, as my business practice, subject to applicable obligations and legal holds. Only an administrator with a special permission can shorten that |
+| Audit records of sign-ins and changes | Up to 3 years, then deleted. Removed sooner when the account or organization is deleted |
 | Records that an email or text was delivered, or failed | 30 days |
 | Portal server logs (request time, route, IP address, status, and errors, never what you sent) | 90 days |
 | Neo's logs (timing, length, and errors, never the text) | 14 days |
 | Contact form counters | A day after their first count |
 | Free accounts (everything in them, including files, trashed projects too) | Deleted 30 days after the last change anyone in the account made, unless we're working together or I've told you I'm keeping it. Home shows the date, and **Keep it** adds 30 days to it, once. A suspended account waits for my review instead. You can ask me to delete one sooner. Check-ins come after 7 and 14 days and a final notice after 21 |
-| A deleted account's sign-in records, queued notices, and requests still waiting to be sent | Deleted with the account |
-| The confirmed mobile number of a deleted account | Reserved for 30 days so it can't be reused right away |
+| A deleted account's sign-in details, security and audit records, queued notices, and unsent requests | Removed when the account is deleted. Delivery records, server logs, and backups follow their own periods |
+| A protected identifier made from a deleted account's confirmed mobile number | Kept for 30 days to prevent immediate reuse in 1NEON, then deleted. It cannot be used to send messages |
+| A record that a deletion happened: when, how much was removed, and who asked | Kept |
 | An unconfirmed sign-up, and sign-up counters (one-way fingerprints of addresses and emails) | One day, and two days |
 | Neo's question fingerprints | Ten minutes |
 | An unfinished authenticator app setup | 10 minutes |
@@ -140,7 +141,13 @@ An administrator of your organization can download all of its data at any time f
 
 ## Deleting your data
 
-Your organization can ask me to delete its data, or you can ask me to delete your account, at any time. I'll delete it from the portal, and backups, earlier file copies, and the records of sent and failed messages age out on the schedule above. Signatures, issued invoices, and payments stay write-protected until their seven years end, and so does anything else the law requires me to keep. I'll tell you in writing what was deleted, what remains, and when each remaining record expires.
+Your organization can ask me to delete its data, and you can ask me to delete your account.
+
+I remove the requested information from active use, except records I need to keep for the reasons and periods listed above. Backups, earlier file copies, delivery records, and reserved mobile-number identifiers expire on their listed schedules.
+
+I keep signatures, issued invoices, and payment records for seven years as a business practice, and retain other information only where needed for a stated purpose, an actual or reasonably expected dispute, or a legal obligation.
+
+I'll explain what was deleted, what remains, why, and when it is expected to expire.
 
 ## If something goes wrong
 

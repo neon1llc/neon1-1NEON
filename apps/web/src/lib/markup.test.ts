@@ -16,14 +16,14 @@ const printed: Printed[] = [
   { text: "0039-r1-A  AWS tooling  (recommended)", opt: "0039-r1-A", field: "title" },
   { text: "Centralize site in AWS with chatbot", opt: "0039-r1-A", field: "body" },
   { text: "neon1's time: 10 to 20 hours · Timeline: 2 weeks · Price: $1,000 to $2,000 estimate", opt: "0039-r1-A", field: "meta" },
-  { text: "When you pay: $500.00 when you approve (50% of the low end, as a deposit); The rest when you accept the handover: the hours worked, less the deposit.", opt: "0039-r1-A", field: "pay" },
+  { text: "When you pay: $500.00 deposit (50% of the low end), due before work begins and credited to later invoices; The rest when you accept the handover: the hours worked, less the deposit.", opt: "0039-r1-A", field: "pay" },
   { text: "Neither of us adds work or cost without a written change, which becomes the next revision." },
 ];
 const option = { code: "0039-r1-A", title: "AWS tooling", body: "Centralize site in AWS with chatbot", fields: { pricing: "estimate", recommended: true } };
 
 describe("an edited proposal", () => {
   it("finds a changed deposit and suggests the option's deposit share", () => {
-    const edited = printed.map((p) => p.text.replace("$500.00 when you approve (50% of the low end", "$200.00 when you approve (20% of the low end").replace("’", "'"));
+    const edited = printed.map((p) => p.text.replace("$500.00 deposit (50% of the low end", "$200.00 deposit (20% of the low end").replace("’", "'"));
     const changes = compare(printed, edited);
     expect(changes).toEqual([expect.objectContaining({ kind: "changed", field: "pay", opt: "0039-r1-A" })]);
     const { updates, manual } = suggest(changes, [option]);
@@ -91,7 +91,7 @@ describe("Word mark-up mapping: suggest only, and nothing lost", () => {
   it("suggests a changed deposit, timeline, and price for an approved option, as data only, leaving its inputs exactly as they were", () => {
     const options = [opt()];
     const was = structuredClone(options);
-    const edited = edit((t) => t.replace("Timeline: 4 weeks", "Timeline: 6 weeks").replace("(50% deposit)", "(20% deposit)").replace("Price: $4,500 fixed", "Price: $4,000 fixed"));
+    const edited = edit((t) => t.replace("Timeline: 4 weeks", "Timeline: 6 weeks").replace("deposit (50%)", "deposit (20%)").replace("Price: $4,500 fixed", "Price: $4,000 fixed"));
     const changes = compare(printedParas, edited);
     const { updates, manual } = suggest(changes, options);
     // Suggestions name the fields and values; nothing was written anywhere

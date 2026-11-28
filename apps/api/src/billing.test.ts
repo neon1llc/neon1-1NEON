@@ -73,7 +73,7 @@ describe("the service agreement", () => {
     const t = (await repo.getTenant(s.acme.id))!;
     await repo.saveTenant({ ...t, agreements: [], choices: [], version: t.version + 1 }, t.version);
     const path = `/t/${s.acme.id}/agreement`;
-    const no = { caseStudies: "no", naming: "no" };
+    const no = { caseStudies: "no", naming: "no", authorized: true };
     expect((await call(s.raj.email, "PUT", `${path}/choices`, no)).json.error).toBe("agreement_needed");
     const got = (await call(s.raj.email, "GET", path)).json;
     const base = { edition: got.edition, hash: got.hash, typedName: "Priya Raman", consent: true, legalName: "Harborline Freight LLC", address: "12 Harbor Road, Portland, ME 04101", authority: true };
@@ -88,12 +88,12 @@ describe("the service agreement", () => {
     expect((await call(s.raj.email, "GET", path)).json.history.at(-1).text).toBe(AGREEMENT_TEXT);
     expect((await call(s.dana.email, "PUT", `${path}/choices`, no)).status).toBe(403);
     expect((await call(OP, "PUT", `${path}/choices`, no)).status).toBe(403);
-    expect((await call(s.raj.email, "PUT", `${path}/choices`, no)).json).toMatchObject(no);
+    expect((await call(s.raj.email, "PUT", `${path}/choices`, no)).json).toMatchObject({ caseStudies: "no", naming: "no" });
     await call(s.raj.email, "PUT", `${path}/choices`, no);
     expect((await repo.getTenant(s.acme.id))!.choices).toHaveLength(2);
   });
 
-  it("asks a 2.1 or 2.3 signer to sign 2.4 before the next approval, keeping case studies at decide later", async () => {
+  it("asks an earlier signer to sign the current edition before the next approval, keeping case studies at decide later", async () => {
     const t = (await repo.getTenant(s.acme.id))!;
     for (const ref of ["2.1", "2.3"]) {
       const now = (await repo.getTenant(s.acme.id))!;
@@ -103,14 +103,15 @@ describe("the service agreement", () => {
       expect(got.history.at(-1).ref).toBe(ref);
       expect(got.choices).toEqual([]);
       // An earlier signer can still change the choices, which start at decide later and ask first
-      expect((await call(s.raj.email, "PUT", `/t/${s.acme.id}/agreement/choices`, { caseStudies: "no", naming: "ask" })).status).toBe(200);
+      expect((await call(s.raj.email, "PUT", `/t/${s.acme.id}/agreement/choices`, { caseStudies: "no", naming: "ask" })).status).toBe(400);
+      expect((await call(s.raj.email, "PUT", `/t/${s.acme.id}/agreement/choices`, { caseStudies: "no", naming: "ask", authorized: true })).status).toBe(200);
     }
     const { opt, path } = await flow();
     const b = opt("B");
     expect((await call(s.raj.email, "POST", `${path}/items/${b.id}/approve`, { version: b.version, signature: SIGN })).json.error).toBe("agreement_needed");
     const got = (await call(s.raj.email, "GET", `/t/${s.acme.id}/agreement`)).json;
     const again = await call(s.raj.email, "POST", `/t/${s.acme.id}/agreement/sign`, { edition: got.edition, hash: got.hash, typedName: "Priya Raman", consent: true, ...PARTY });
-    expect(again.json.ref).toBe("2.4");
+    expect(again.json.ref).toBe(AGREEMENT_EDITION);
     expect((await call(s.raj.email, "POST", `${path}/items/${b.id}/approve`, { version: b.version, signature: SIGN })).status).toBe(201);
   });
 

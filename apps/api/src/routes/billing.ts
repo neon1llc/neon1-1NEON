@@ -5,7 +5,7 @@
 
 
 import {
-  AGREEMENT_ACCEPTED, AGREEMENT_EDITION, AGREEMENT_TEXT, EARLIER_AGREEMENTS, AgreementChoicesInput, SIGN_AUTHORITY, agreementSigned, choiceLabel, CreateInvoiceInput, IssueInvoiceInput, Item, InvoiceFields, PaymentFields, RecordPaymentInput, SignAgreementInput, UpdateInvoiceInput, VoidInvoiceInput,
+  AGREEMENT_ACCEPTED, AGREEMENT_EDITION, AGREEMENT_TEXT, EARLIER_AGREEMENTS, ChangeChoicesInput, SIGN_AUTHORITY, agreementSigned, choiceLabel, CreateInvoiceInput, IssueInvoiceInput, Item, InvoiceFields, PaymentFields, RecordPaymentInput, SignAgreementInput, UpdateInvoiceInput, VoidInvoiceInput,
   balanceOf, canonical, creditRoomOn, signedNameProblem, clearingOn, depositLines, finalLines, priceOf, type PriceTerms, invoiceNumber, invoiceTotal, isOwnOrg, money, payableOn, plusDays, proposalNumber, reimbursementLines, revisions, sha256Hex, signature, todayIn,
   type Project, type Tenant,
 } from "@1neon/domain";
@@ -158,7 +158,7 @@ export function billingRoutes(app: App, k: Kit, pay: ReturnType<typeof stripeWeb
     const t = c.get("tenant");
     const { actor } = who(c);
     if (actor.operator || c.get("access") !== "admin") fail(403, "admin_only", "An admin of your organization makes these choices for it.");
-    const input = await body(c, AgreementChoicesInput);
+    const { authorized: _, ...input } = await body(c, ChangeChoicesInput);
     if (!agreementSigned(t.agreements)) fail(409, "agreement_needed", "Sign the service agreement first. You make these choices as you sign.");
     const was = t.choices?.at(-1);
     if (was && was.caseStudies === input.caseStudies && was.naming === input.naming) return c.json(was);

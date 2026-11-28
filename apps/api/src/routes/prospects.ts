@@ -12,6 +12,7 @@ import { z } from "zod";
 import { body, check, fail, need, now, who, type Env } from "../lib/http.ts";
 import type { App, Kit } from "../lib/kit.ts";
 import { sentAt, type SenderKind } from "../mail.ts";
+import { phoneDigest } from "../sms.ts";
 import { factMail, subjectOf } from "../lib/factmail.ts";
 import { keys } from "../store/repo.ts";
 import type { WriteOp } from "../store/types.ts";
@@ -314,16 +315,26 @@ export async function finishPurge(k: PurgeKit, tid: string, at = new Date()): Pr
     for (const p of leaving) if (await repo.table.get(`EMAIL#${p.email.toLowerCase()}`, "USER")) out.push({ PK: `EMAIL#${p.email.toLowerCase()}`, SK: "USER" });
     return out;
   };
-  // A leaving person's confirmed number is held, not freed, for PHONE_HOLD_DAYS
+  // A leaving person's confirmed number is held for PHONE_HOLD_DAYS as a keyed identifier. Every row
+  // that carries the readable number (its owner row and send counters) is removed, confirmed or not
+  const numberRows: { PK: string; SK: string }[] = [];
   for (const p of leaving) {
     const u = await repo.getUser(p.uid);
+    const confirmed = u?.smsVerifiedAt ? u.smsPhone : undefined;
     for (const phone of new Set([u?.smsPhone, u?.smsPendingPhone].filter(Boolean) as string[])) {
       const key = keys.smsOwner(phone);
       const owner = await repo.table.get(key.PK, key.SK);
-      if (owner?.userId !== p.uid) continue;
-      await repo.table.write([{ put: { ...key, type: "sms-owner", userId: "deleted", heldAt: at.toISOString(), ttl: Math.floor(at.getTime() / 1000) + PHONE_HOLD_DAYS * 86_400, version: Number(owner.version ?? 0) + 1 }, guard: { version: Number(owner.version) } }]);
+      if (owner && owner.userId !== p.uid) continue;
+      if (phone === confirmed) {
+        // Without the key nothing is removed, so a number is never freed early or kept readable
+        if (!k.cfg.phoneHoldKey) throw new PurgeIncomplete(tid, ["phone hold key"]);
+        const hold = keys.phoneHold(await phoneDigest(k.cfg.phoneHoldKey, phone));
+        await repo.table.write([{ put: { ...hold, type: "phone-hold", heldAt: at.toISOString(), ttl: Math.floor(at.getTime() / 1000) + PHONE_HOLD_DAYS * 86_400 }, guard: { always: true } }]);
+      }
+      numberRows.push(...(await repo.table.query(key.PK)).map((r) => ({ PK: String(r.PK), SK: String(r.SK) })));
     }
   }
+  for (let i = 0; i < numberRows.length; i += 25) await repo.table.write(numberRows.slice(i, i + 25).map((r): WriteOp => ({ delete: r })));
   const rows = [...(await rowsOf()), ...(await extra())];
   for (let i = 0; i < rows.length; i += 25) await repo.table.write(rows.slice(i, i + 25).map((r): WriteOp => ({ delete: r })));
 
@@ -360,8 +371,17 @@ export async function purgeProspect(k: PurgeKit, tid: string, opts: { quiet?: bo
 }
 
 
+/** Holds whose time is up. The table's own expiry can run days late, so the minute pass removes them */
+export async function dropExpiredPhoneHolds(k: Pick<Kit, "repo">, at = new Date()) {
+  const due = (await k.repo.table.query("PHONEHOLD")).filter((r) => Number(r.ttl) * 1000 <= at.getTime());
+  for (let i = 0; i < due.length; i += 25) await k.repo.table.write(due.slice(i, i + 25).map((r): WriteOp => ({ delete: { PK: "PHONEHOLD", SK: String(r.SK) } })));
+  return due.length;
+}
+
+
 /** Every deletion under way, carried on by the once-a-minute pass until each is done */
 export async function finishPurges(k: PurgeKit, opts: { at?: Date; deadline?: number } = {}) {
+  await dropExpiredPhoneHolds(k, opts.at);
   let deleted = 0, waiting = 0, failed = 0, cancelled = 0;
   for (const row of await k.repo.table.query(PURGE_PK)) {
     if (opts.deadline && Date.now() > opts.deadline) break;

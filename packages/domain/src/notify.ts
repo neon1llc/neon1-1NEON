@@ -10,7 +10,7 @@ export type Level = "critical" | "normal" | "info";
 
 
 /** The service agreement's written notices on a project (contract.ts): always sent, as the agreement promises */
-export const CONTRACT_NOTICES: ReadonlySet<string> = new Set(["project.handed_over", "project.waiting", "project.waiting_cleared", "project.paused", "project.resumed", "project.ended", "invoice.reminded"]);
+export const CONTRACT_NOTICES: ReadonlySet<string> = new Set(["project.handed_over", "project.waiting", "project.waiting_cleared", "project.paused", "project.pay_notice", "project.end_notice", "project.resumed", "project.ended", "invoice.reminded"]);
 
 
 /** One kind of notification, the audit actions it covers, and its defaults */
@@ -32,7 +32,7 @@ export const NOTIFY_GROUPS: NotifyGroup[] = [
   { id: "files", label: "Files", hint: "A file is uploaded or removed", level: "critical", email: true, match: (a) => a.startsWith("doc.") },
   { id: "access", label: "People and access", hint: "Someone is invited, joins, signs up, gets a different access level, or is suspended or recommissioned", level: "critical", email: true, match: (a) => a === "member.invited" || a === "member.joined" || a === "member.updated" || a.startsWith("prospect.") || a.startsWith("access.") || a.startsWith("account.") || a.startsWith("recommission.") || a === "org.kept" || a === "org.unkept" },
   { id: "decisions", label: "Decisions and options", hint: "A proposal is issued, an option is approved or changed to another, a refresh is asked for, or a decision is waiting on you", level: "critical", email: true, match: (a) => a === "decision.approved" || a === "decision.changed" || a.startsWith("option.") || a === "proposal.issued" || a === "proposal.refresh_asked" || a === "purchase.agreed" || a === "handoff.accepted" },
-  { id: "billing", label: "Agreements, invoices, and payments", hint: "The service agreement is signed or its choices change, work is handed over, paused, or ended, neon1 is waiting on you, an invoice is issued, voided, disputed, or overdue, or a payment starts, arrives, or fails", level: "critical", email: true, match: (a) => a === "agreement.signed" || a === "agreement.choices" || a === "invoice.issued" || a === "invoice.voided" || a === "invoice.disputed" || a === "invoice.dispute_resolved" || a === "invoice.reminded" || a.startsWith("payment.") || CONTRACT_NOTICES.has(a) },
+  { id: "billing", label: "Agreements, invoices, and payments", hint: "The service agreement is signed or its choices change, work is handed over, paused, or ended, notice to pay or of an ending is sent, neon1 is waiting on you, an invoice is issued, voided, disputed, or overdue, or a payment starts, arrives, or fails", level: "critical", email: true, match: (a) => a === "agreement.signed" || a === "agreement.choices" || a === "invoice.issued" || a === "invoice.voided" || a === "invoice.disputed" || a === "invoice.dispute_resolved" || a === "invoice.reminded" || a.startsWith("payment.") || CONTRACT_NOTICES.has(a) },
   { id: "workflow", label: "Workflow and stages", hint: "A project moves stage, or the board's stages change", level: "critical", email: true, match: (a) => a === "project.moved" || a === "org.stages" || a === "project.created" || a === "project.trashed" },
   // A message in a project's Updates is written to everyone on the project, so it emails by default; reply to the email to answer
   { id: "messages", label: "Project messages", hint: "Someone writes in a project's Updates", level: "normal", email: true, match: (a) => a === "message.created" },

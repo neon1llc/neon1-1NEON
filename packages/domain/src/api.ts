@@ -225,6 +225,8 @@ export const SignAgreementInput = SignInput.extend({
 });
 // An admin changes the choices any time after signing
 export const AgreementChoicesInput = ChoiceFields;
+// A later change also records that the admin may make these choices for the organization
+export const ChangeChoicesInput = ChoiceFields.extend({ authorized: z.literal(true) });
 
 // neon1 drafts an invoice; without lines, 1NEON suggests them from the decision or the purchases
 export const CreateInvoiceInput = z.object({

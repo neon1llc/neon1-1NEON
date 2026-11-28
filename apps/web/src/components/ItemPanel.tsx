@@ -76,7 +76,7 @@ const draftOf = (i: Item): Draft => ({ title: i.title, body: i.body, status: i.s
 function kindFields(i: Item): Record<string, string> {
   if (i.kind === "option") {
     const o = OptionFields.parse(i.fields);
-    return { cost: o.cost, timeline: o.timeline, hours: o.hours, outsideCosts: o.outsideCosts, result: o.result, costScore: String(o.costScore), qualityScore: String(o.qualityScore), effortScore: String(o.effortScore), recommended: o.recommended ? "yes" : "", purchases: linesOf(o.purchases),
+    return { cost: o.cost, timeline: o.timeline, hours: o.hours, outsideCosts: o.outsideCosts, result: o.result, ifEndedEarly: o.ifEndedEarly ?? "", costScore: String(o.costScore), qualityScore: String(o.qualityScore), effortScore: String(o.effortScore), recommended: o.recommended ? "yes" : "", purchases: linesOf(o.purchases),
       // How it's priced: an hourly estimate with its rate and range of hours (the default for a new option), fixed for a small job, or as written
       pricing: o.pricing ?? (o.cost ? "" : "estimate"), rateCents: o.rateCents === undefined ? "" : String(o.rateCents / 100), hoursLow: o.hoursLow === undefined ? "" : String(o.hoursLow), hoursHigh: o.hoursHigh === undefined ? "" : String(o.hoursHigh), depositPercent: o.depositPercent === undefined ? "" : String(o.depositPercent), basis: basisOf(o.basis), why: o.why };
   }
@@ -452,6 +452,7 @@ function KindFields({ kind, f, onChange }: { kind: ItemKind; f: Record<string, s
           <label>Cost<input value={f.cost ?? ""} onChange={(e) => set("cost", e.target.value)} placeholder="e.g. $4,800 fixed" maxLength={80} /></label>
           {/* neon1's own working time */}
           <label>Hours<input value={f.hours ?? ""} onChange={(e) => set("hours", e.target.value)} placeholder="e.g. about 10 hours" maxLength={80} /></label>
+          <label style={{ gridColumn: "1 / -1" }}>If it ends early<textarea rows={2} value={f.ifEndedEarly ?? ""} onChange={(e) => set("ifEndedEarly", e.target.value)} maxLength={600} placeholder="Milestone or partial-work values, e.g. assessment $600, build $2,400, handover $400" /></label>
         </>
       )}
       <label>Timeline<input value={f.timeline ?? ""} onChange={(e) => set("timeline", e.target.value)} placeholder="e.g. 3 weeks" maxLength={80} /></label>

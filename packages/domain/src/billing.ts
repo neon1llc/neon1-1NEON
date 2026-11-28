@@ -309,10 +309,10 @@ export function paymentPlan(p: Price, percent = p.depositPercent ?? DEPOSIT_PERC
   if (percent <= 0) return p.kind === "fixed" ? [`Nothing up front, then ${money(p.totalCents)} when you accept the handover`] : ["Nothing up front, then the hours worked when you accept the handover"];
   if (p.kind === "fixed") {
     const first = Math.round((p.totalCents * percent) / 100);
-    return [`${money(first)} when you approve (${percent}% deposit)`, `${money(p.totalCents - first)} by the agreed milestones or on delivery`];
+    return [`${money(first)} deposit (${percent}%), due before work begins and credited to later invoices`, `${money(p.totalCents - first)} by the agreed milestones or on delivery`];
   }
   const first = Math.round((p.lowCents * percent) / 100);
-  return [`${money(first)} when you approve (${percent}% of the low end, as a deposit)`, "Then the hours worked, every two weeks, less the deposit"];
+  return [`${money(first)} deposit (${percent}% of the low end), due before work begins and credited to later invoices`, "Then the hours worked, every two weeks, less the deposit"];
 }
 
 /** Every hour logged on the project */

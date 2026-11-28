@@ -5,7 +5,7 @@
 // and invoices stay with the billing routes: nothing here accepts work or holds up an invoice.
 
 
-import { ContractEvent, InvoiceFields, REVIEW_BUSINESS_DAYS, contractStates, plusBusinessDays, disputeOpen, endProblem, money, pauseProblem, payableOn, todayIn, type Item, type Project } from "@1neon/domain";
+import { ContractEvent, END_NOTICE_DAYS, InvoiceFields, PAY_NOTICE_BUSINESS_DAYS, REVIEW_BUSINESS_DAYS, contractStates, plusBusinessDays, plusDays, disputeOpen, endProblem, money, pauseProblem, payableOn, todayIn, type Item, type Project } from "@1neon/domain";
 import type { Context } from "hono";
 import { z } from "zod";
 import { actorId, body, fail, need, now, who, type Env } from "../lib/http.ts";
@@ -95,7 +95,35 @@ export function contractRoutes(app: App, k: Kit) {
     const p = await project(c);
     const input = await body(c, ClearInput);
     if (!p.waiting) fail(409, "not_waiting", "Nothing is waiting on the client.");
-    return c.json(await save(c, p, input.version, { waiting: undefined }, "project.waiting_cleared", `no longer waiting on you${input.note ? `: ${input.note}` : ""}`));
+    return c.json(await save(c, p, input.version, { waiting: undefined, endNotice: undefined }, "project.waiting_cleared", `no longer waiting on you${input.note ? `: ${input.note}` : ""}`));
+  });
+
+  /** Written notice to pay, before a pause for an undisputed amount more than 7 days overdue */
+  app.post("/t/:tid/projects/:pid/pay-notice", async (c) => {
+    neon1(c);
+    const p = await project(c);
+    const input = await body(c, ClearInput);
+    const { s, today } = await states(c, p);
+    if (p.ended) fail(409, "ended", "This project has ended.");
+    if (!s.overdue.length) fail(409, "not_allowed", "No undisputed amount is more than 7 days overdue.");
+    if (s.payNotice) fail(409, "already_noticed", "Notice to pay is already sent.");
+    const from = dateLabelOf(plusBusinessDays(today, PAY_NOTICE_BUSINESS_DAYS));
+    return c.json(await save(c, p, input.version, { payNotice: { ...event(c, input.note), invoices: s.overdue } }, "project.pay_notice",
+      `please pay the overdue undisputed amount. If it stays unpaid, the affected work may pause from ${from}${input.note ? `. ${input.note}` : ""}`));
+  });
+
+  /** Written notice of an intended ending for a delay, at least 14 days ahead */
+  app.post("/t/:tid/projects/:pid/end-notice", async (c) => {
+    neon1(c);
+    const p = await project(c);
+    const input = await body(c, ClearInput);
+    const { s, today } = await states(c, p);
+    if (p.ended) fail(409, "ended", "This project has ended.");
+    if (!p.waiting) fail(409, "not_allowed", "Record what you're waiting on first, with Waiting on you.");
+    if (s.endNotice) fail(409, "already_noticed", "Notice of the ending is already sent.");
+    const earliest = [s.mayEndForDelayFrom!, plusDays(today, END_NOTICE_DAYS)].sort().at(-1)!;
+    return c.json(await save(c, p, input.version, { endNotice: event(c, input.note) }, "project.end_notice",
+      `this project may end on or after ${dateLabelOf(earliest)} unless the delay is resolved: ${p.waiting!.need}${input.note ? `. ${input.note}` : ""}`));
   });
 
   /** neon1 pauses the work, only when the agreement allows: a delay past 10 business days, or an undisputed amount more than 7 days overdue */
@@ -106,7 +134,7 @@ export function contractRoutes(app: App, k: Kit) {
     const { s, today } = await states(c, p);
     const problem = pauseProblem(input.reason, s, today);
     if (problem) fail(409, "not_allowed", problem);
-    const why = { waiting: `still waiting on you: ${p.waiting?.need ?? ""}`, overdue: "an undisputed amount is more than 7 days overdue", other: "" }[input.reason];
+    const why = { waiting: `still waiting on you: ${p.waiting?.need ?? ""}`, overdue: "an undisputed amount is more than 7 days overdue after notice to pay", other: "" }[input.reason];
     return c.json(await save(c, p, input.version, { paused: { ...event(c, input.note), reason: input.reason } }, "project.paused", `work paused${why ? `, ${why}` : ""}${input.note ? `. ${input.note}` : ""}. Your systems, data, and access are untouched`));
   });
   app.post("/t/:tid/projects/:pid/resume", async (c) => {
@@ -125,7 +153,7 @@ export function contractRoutes(app: App, k: Kit) {
     const { s, today } = await states(c, p);
     const problem = endProblem(input.reason, s, today);
     if (problem) fail(409, "not_allowed", problem);
-    return c.json(await save(c, p, input.version, { ended: { ...event(c, input.note), reason: input.reason } }, "project.ended", `project ended: ${input.note}. You pay for work properly performed and purchases you approved up to now, any unearned deposit is refunded, and your access and the work so far are handed over`));
+    return c.json(await save(c, p, input.version, { ended: { ...event(c, input.note), reason: input.reason } }, "project.ended", `project ended: ${input.note}. You pay for work properly performed and approved purchases that can't be canceled or refunded. A final statement follows, any unearned balance is refunded, and your access and the work so far are handed over`));
   });
 
   // --- Invoice disputes ------------------------------------------------------------------------

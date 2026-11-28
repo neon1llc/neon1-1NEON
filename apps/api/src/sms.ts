@@ -24,6 +24,16 @@ export const DESTINATION_HOURLY = 3;
 export const DESTINATION_DAILY = 6;
 
 
+/** The keyed identifier a deleted account's number is held as: it matches a number without storing it,
+ * and can't be used to send anything. A plain hash would be guessable from the small set of numbers */
+export async function phoneDigest(key: string, phone: string) {
+  // Web Crypto, so the in-browser demo can run the API too
+  const bytes = new TextEncoder();
+  const k = await crypto.subtle.importKey("raw", bytes.encode(key), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  return [...new Uint8Array(await crypto.subtle.sign("HMAC", k, bytes.encode(phone)))].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+
 /** A phone number as E.164 (+15551234567), or undefined if it doesn't read as a US or full international number */
 export function e164(phone: string | undefined) {
   const raw = (phone ?? "").trim();

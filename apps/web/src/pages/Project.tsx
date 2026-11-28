@@ -1478,6 +1478,7 @@ function Options({ items, all, docs, path, project }: { items: Item[]; all: Item
             {a.timeline && <><dt>Timeline</dt><dd>{a.timeline}</dd></>}
             {a.hours && <><dt>neon1's time</dt><dd>{a.hours}</dd></>}
             {a.outsideCosts && <><dt>Paid directly by you</dt><dd>{a.outsideCosts}</dd></>}
+            {a.ifEndedEarly && <><dt>If it ends early</dt><dd>{a.ifEndedEarly}</dd></>}
             {a.purchases.length > 0 && <><dt>To buy</dt><dd>{a.purchases.map((x, i) => <div key={i}>{x.name}{x.estimate ? `, ${x.estimate}` : ""}: {x.buyer === "neon1" ? "neon1 buys it, paid back at cost" : "you buy it"}</div>)}</dd></>}
             {a.result && <><dt>Result to check</dt><dd>{a.result}</dd></>}
           </dl>
@@ -1555,6 +1556,7 @@ function termChanges(was: OptionFieldsT, now: OptionFieldsT, wasItem: Item, nowI
   say("neon1's time", was.hours, now.hours);
   if (!DEMO && was.rateCents !== now.rateCents) say("Hourly rate", was.rateCents === undefined ? undefined : wholeDollars(was.rateCents), now.rateCents === undefined ? undefined : wholeDollars(now.rateCents));
   say("Paid directly", was.outsideCosts, now.outsideCosts);
+  say("If it ends early", was.ifEndedEarly, now.ifEndedEarly);
   say("Target result", was.result, now.result);
   const buys = (f: OptionFieldsT) => f.purchases.map((x) => `${x.name}${x.estimate ? ` (${x.estimate})` : ""}`).join("; ");
   say("To buy", buys(was) || undefined, buys(now) || undefined);

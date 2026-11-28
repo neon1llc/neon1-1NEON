@@ -66,6 +66,8 @@ export interface Config {
   /** Reply-by-email for project messages: neon1-notify's reply domain and the SSM SecureString with its signing secret */
   replyDomain?: string;
   replySecretParam?: string;
+  /** The key a deleted account's held number is identified with (Terraform PHONE_HOLD_KEY) */
+  phoneHoldKey?: string;
   /** The neon1-notify function that sends neon1's own alerts; unset means they are sent directly */
   notifyFunction?: string;
   /** The secret CloudFront adds to every request (x-origin-verify), and whether requests without it are refused */
@@ -120,6 +122,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     pushoverUserParam: env.PUSHOVER_USER_PARAM || undefined,
     replyDomain: env.REPLY_DOMAIN || undefined,
     replySecretParam: env.REPLY_SECRET_PARAM || undefined,
+    // Local runs have no secret store, and hold only made-up numbers
+    phoneHoldKey: env.PHONE_HOLD_KEY || ((env.APP_ENV ?? "local") === "local" ? "local-phone-hold" : undefined),
     notifyFunction: env.NOTIFY_FUNCTION || undefined,
     originSecret: env.ORIGIN_SECRET || undefined,
     originLock: env.ORIGIN_LOCK?.trim().toLowerCase() === "on",

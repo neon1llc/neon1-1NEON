@@ -19,7 +19,7 @@ import type { Mailer, Notifier, Pusher, Texter } from "./services.ts";
 import { alertNeon1 } from "./lib/alert.ts";
 import { chatAlertMail, chatFlagMail, chatReplyMail } from "./lib/chatmail.ts";
 import { smsReady, smsSendAllowed, textNotice, welcomeText, confirmedText, isOptOut } from "./sms.ts";
-import type { Repo } from "./store/repo.ts";
+import { keys, type Repo } from "./store/repo.ts";
 import { ConflictError, type Row, type WriteOp } from "./store/types.ts";
 import { optionsEmail } from "./routes/reminders.ts";
 
@@ -453,11 +453,16 @@ async function settleInvite(d: OutboxDeps, row: Row, state: "sent" | "failed", c
 }
 
 
-/** A STOP from the person's number: consent ends until they agree again */
+/** A STOP from the person's number: consent ends until they agree again, and the number is released */
 async function markOptedOut(repo: Repo, u: User) {
   const cur = await repo.getUser(u.id);
   if (!cur) return;
   await repo.saveUser({ ...cur, smsConsentAt: undefined, smsPendingPhone: undefined, smsPhone: undefined, smsVerifiedAt: undefined, smsFactorAt: undefined, smsOptedOutAt: new Date().toISOString(), version: cur.version + 1 }, cur.version).catch(ignoreConflict);
+  for (const phone of new Set([cur.smsPhone, cur.smsPendingPhone].filter(Boolean) as string[])) {
+    const key = keys.smsOwner(phone);
+    const owner = await repo.table.get(key.PK, key.SK);
+    if (owner?.userId === u.id) await repo.table.write([{ delete: key, guard: { version: Number(owner.version) } }]).catch(ignoreConflict);
+  }
 }
 
 

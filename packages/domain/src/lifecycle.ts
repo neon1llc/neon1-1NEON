@@ -20,6 +20,10 @@ export const DELAY_PAUSE_BUSINESS_DAYS = 10;
 export const DELAY_END_DAYS = 30;
 /** Days an undisputed amount must be overdue before work may pause, after written notice */
 export const OVERDUE_PAUSE_DAYS = 7;
+/** Business days of written notice to pay before that pause */
+export const PAY_NOTICE_BUSINESS_DAYS = 2;
+/** Calendar days of written notice before a project ends for a delay */
+export const END_NOTICE_DAYS = 14;
 
 
 /** The date `n` business days after `from` (weekdays; holidays count as weekdays) */
@@ -50,10 +54,16 @@ export function overdueForPause(items: Item[], today: string): Item[] {
 
 
 /** Every contract state on a project at once, each on its own, for the page and the API's checks */
-export function contractStates(p: Pick<Project, "handover" | "waiting" | "paused" | "ended">, items: Item[], today: string, timeZone?: string) {
+export function contractStates(p: Pick<Project, "handover" | "waiting" | "paused" | "ended" | "payNotice" | "endNotice">, items: Item[], today: string, timeZone?: string) {
   const handed = p.handover ? dateIn(p.handover.at, timeZone) : undefined;
   const waitingSince = p.waiting ? dateIn(p.waiting.at, timeZone) : undefined;
   const acceptance = acceptanceOf(items);
+  const overdue = overdueForPause(items, today).map((i) => i.id);
+  // A notice counts only for what it named that is still overdue, and an ending notice only for the delay it followed
+  const payNotice = p.payNotice?.invoices.some((i) => overdue.includes(i)) ? p.payNotice : undefined;
+  const endNotice = p.waiting && p.endNotice && p.endNotice.at >= p.waiting.at ? p.endNotice : undefined;
+  const afterDelay = waitingSince ? plusDays(waitingSince, DELAY_END_DAYS) : undefined;
+  const afterNotice = endNotice ? plusDays(dateIn(endNotice.at, timeZone), END_NOTICE_DAYS) : undefined;
   return {
     handover: p.handover,
     // The review request runs from handover; it ends at acceptance, never by silence
@@ -63,8 +73,11 @@ export function contractStates(p: Pick<Project, "handover" | "waiting" | "paused
     defectsUntil: handed ? plusDays(handed, DEFECT_DAYS) : undefined,
     waiting: p.waiting,
     mayPauseForDelayFrom: waitingSince ? plusBusinessDays(waitingSince, DELAY_PAUSE_BUSINESS_DAYS) : undefined,
-    mayEndForDelayFrom: waitingSince ? plusDays(waitingSince, DELAY_END_DAYS) : undefined,
-    overdue: overdueForPause(items, today).map((i) => i.id),
+    mayEndForDelayFrom: afterDelay && afterNotice && afterNotice > afterDelay ? afterNotice : afterDelay,
+    endNotice,
+    overdue,
+    payNotice,
+    mayPauseForPaymentFrom: payNotice ? plusBusinessDays(dateIn(payNotice.at, timeZone), PAY_NOTICE_BUSINESS_DAYS) : undefined,
     disputes: items.filter((i) => i.kind === "invoice" && disputeOpen(i)).map((i) => i.id),
     paused: p.paused,
     ended: p.ended,
@@ -81,7 +94,11 @@ export function pauseProblem(reason: "waiting" | "overdue" | "other", s: Contrac
     if (!s.waiting) return "Record what you're waiting on first, with Waiting on you.";
     if (today < s.mayPauseForDelayFrom!) return `The agreement allows a pause for this delay from ${s.mayPauseForDelayFrom}, 10 business days after the notice.`;
   }
-  if (reason === "overdue" && !s.overdue.length) return `No undisputed amount is more than ${OVERDUE_PAUSE_DAYS} days overdue.`;
+  if (reason === "overdue") {
+    if (!s.overdue.length) return `No undisputed amount is more than ${OVERDUE_PAUSE_DAYS} days overdue.`;
+    if (!s.payNotice) return "Send notice to pay first.";
+    if (today < s.mayPauseForPaymentFrom!) return `The agreement allows this pause from ${s.mayPauseForPaymentFrom}, ${PAY_NOTICE_BUSINESS_DAYS} business days after the notice to pay.`;
+  }
   return undefined;
 }
 
@@ -91,7 +108,8 @@ export function endProblem(reason: "notice" | "waiting" | "other", s: ContractSt
   if (s.ended) return "This project has already ended.";
   if (reason === "waiting") {
     if (!s.waiting) return "Record what you're waiting on first, with Waiting on you.";
-    if (today < s.mayEndForDelayFrom!) return `The agreement allows ending for this delay from ${s.mayEndForDelayFrom}, 30 days after the notice.`;
+    if (!s.endNotice) return "Send notice of the intended ending first.";
+    if (today < s.mayEndForDelayFrom!) return `The agreement allows ending for this delay from ${s.mayEndForDelayFrom}: ${DELAY_END_DAYS} days after the delay notice, with ${END_NOTICE_DAYS} days' notice of the ending.`;
   }
   return undefined;
 }

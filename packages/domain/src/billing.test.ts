@@ -106,7 +106,7 @@ describe("suggested lines", () => {
     expect(priceMeaning(p)).toContain("$175 an hour");
     expect(priceMeaning(p, false)).not.toMatch(/an hour|\$175/);
     expect(priceMeaning(p, false)).toContain("can't pass $4,200");
-    expect(paymentPlan(p)[0]).toBe("$1,750.00 when you approve (50% of the low end, as a deposit)");
+    expect(paymentPlan(p)[0]).toBe("$1,750.00 deposit (50% of the low end), due before work begins and credited to later invoices");
     // The written cost and hours follow the numbers, whatever was typed
     expect(alignPrice({ ...est, cost: "about four grand", hours: "a while" })).toMatchObject({ cost: "$3,500 to $4,200 estimate", hours: "20 to 24 hours" });
     // A fixed price keeps its own words, and an estimate missing its rate has no numbers to bill from
@@ -132,7 +132,7 @@ describe("suggested lines", () => {
   it("asks the deposit share the client agreed: 20% of the low end, or nothing up front", () => {
     const twenty = rec("d4", "decision", "approved", { code: "0039-r1-A", terms: { ...est, depositPercent: 20 } });
     expect(depositLines(twenty)).toEqual([{ text: "Deposit on 0039-r1-A B. Solid setup: 20% of the estimate's low end ($3,500)", qty: 1, unitCents: 70_000, ref: "d4" }]);
-    expect(paymentPlan(priceOf({ ...est, depositPercent: 20 })!)[0]).toBe("$700.00 when you approve (20% of the low end, as a deposit)");
+    expect(paymentPlan(priceOf({ ...est, depositPercent: 20 })!)[0]).toBe("$700.00 deposit (20% of the low end), due before work begins and credited to later invoices");
     const none = rec("d5", "decision", "approved", { terms: { cost: "$1,700 fixed", pricing: "fixed", depositPercent: 0 } });
     expect(depositLines(none)).toEqual([]);
     expect(paymentPlan(priceOf({ cost: "$1,700 fixed", depositPercent: 0 })!)).toEqual(["Nothing up front, then $1,700.00 when you accept the handover"]);

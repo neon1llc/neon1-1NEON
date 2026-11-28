@@ -4,13 +4,15 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "./app.ts";
 import { seed } from "./seed.ts";
-import { PURGE_DRAIN_MS, finishPurge, startPurge } from "./routes/prospects.ts";
+import { PURGE_DRAIN_MS, dropExpiredPhoneHolds, finishPurge, startPurge } from "./routes/prospects.ts";
 import { MemoryDirectory, MemoryMailer, MemoryStorage } from "./services.ts";
 import { MemoryTable } from "./store/memory.ts";
 import { keys, Repo } from "./store/repo.ts";
 import { outboxOp } from "./outbox.ts";
+import { phoneDigest } from "./sms.ts";
 
 
+const KEY = "test-hold-key";
 const OP = "pradeep@neon1.tech";
 const ADMIN = "priya@harborlineoutfitters.example";
 let table: MemoryTable;
@@ -30,18 +32,21 @@ beforeEach(async () => {
 
 
 const records = { put: async (key: string, record: unknown) => { if (broken) throw new Error("down"); copies.push({ key, record }); } };
-const kit = () => ({ repo, d: { storage: new MemoryStorage(), directory: new MemoryDirectory(), records }, cfg: { env: "local", operatorEmails: [OP] } }) as never;
+const kit = () => ({ repo, d: { storage: new MemoryStorage(), directory: new MemoryDirectory(), records }, cfg: { env: "local", operatorEmails: [OP], phoneHoldKey: KEY } }) as never;
 const later = (at: Date) => new Date(at.getTime() + PURGE_DRAIN_MS + 1);
 
 
 describe("deleting a free account", () => {
-  it("removes sign-in rows and queued notices, and holds the confirmed number for 30 days", async () => {
+  it("removes sign-in rows and queued notices, and holds the confirmed number for 30 days as a keyed identifier", async () => {
     const tid = s.calder.id;
     const uid = s.noor.id;
     await repo.linkSubject("sub-noor", uid);
     await repo.saveSession("jti-noor", uid, false);
     const user = (await repo.getUser(uid))!;
-    await table.write([repo.userOp({ ...user, smsPhone: "+12125550100", version: user.version + 1 }, user.version)]);
+    await table.write([repo.userOp({ ...user, smsPhone: "+12125550100", smsVerifiedAt: new Date().toISOString(), smsPendingPhone: "+12125550111", version: user.version + 1 }, user.version)]);
+    await table.write([{ put: { ...keys.smsOwner("+12125550111"), type: "sms-owner", userId: uid, version: 1 }, guard: { create: true } }]);
+    await table.increment("SMSPHONE#+12125550100", "HOUR#1", 1, Math.floor(Date.now() / 1000) + 3600);
+    await repo.securityEvent(uid, "passkey.added", "A passkey was added");
     await table.write([{ put: { ...keys.smsOwner("+12125550100"), type: "sms-owner", userId: uid, version: 1 }, guard: { create: true } }]);
     await table.write([outboxOp("S#test#1", { kind: "sms-confirmed", userId: uid, to: "+12125550100", verifiedAt: new Date().toISOString() })]);
     await table.write([{ put: { PK: "REQUEST#PENDING", SK: tid, dueAt: new Date().toISOString() }, guard: { always: true } }]);
@@ -52,9 +57,17 @@ describe("deleting a free account", () => {
     expect(await repo.getSession("jti-noor")).toBeFalsy();
     expect((await table.query("OUTBOX")).filter((r) => (r.payload as { userId?: string }).userId === uid)).toEqual([]);
     expect(await table.get("REQUEST#PENDING", tid)).toBeUndefined();
-    const held = await table.get(keys.smsOwner("+12125550100").PK, "OWNER");
-    expect(held).toMatchObject({ userId: "deleted" });
-    expect(Number(held!.ttl)).toBe(Math.floor(later(at).getTime() / 1000) + 30 * 86_400);
+    // No row keeps either number: the confirmed one is held only as a keyed identifier, the unconfirmed one not at all
+    expect(await table.query("SMSPHONE#+12125550100")).toEqual([]);
+    expect(await table.query("SMSPHONE#+12125550111")).toEqual([]);
+    const holds = await table.query("PHONEHOLD");
+    expect(holds.map((h) => h.SK)).toEqual([await phoneDigest(KEY, "+12125550100")]);
+    expect(JSON.stringify(holds)).not.toContain("2125550100");
+    expect(Number(holds[0]!.ttl)).toBe(Math.floor(later(at).getTime() / 1000) + 30 * 86_400);
+    expect(await repo.listSecurityEvents(uid)).toEqual([]);
+    expect(await dropExpiredPhoneHolds({ repo }, new Date(later(at).getTime() + 29 * 86_400_000))).toBe(0);
+    expect(await dropExpiredPhoneHolds({ repo }, new Date(later(at).getTime() + 31 * 86_400_000))).toBe(1);
+    expect(await table.query("PHONEHOLD")).toEqual([]);
   });
 });
 

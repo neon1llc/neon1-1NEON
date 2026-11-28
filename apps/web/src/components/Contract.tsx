@@ -60,6 +60,8 @@ export function ContractStates({ project, items, path }: { project: Project; ite
         {s.handover && <div><dt>Review</dt><dd>{s.acceptance === "accepted" ? "Accepted" : <>{acceptance}. Review by {dateLabel(s.reviewDue)}{s.reviewLate ? ". The review is past its date; payment isn't affected" : ""}</>}</dd></div>}
         {s.handover && <div><dt>Defects fixed free</dt><dd>Reported by {dateLabel(s.defectsUntil)}</dd></div>}
         {s.waiting && <div><dt>Waiting on you</dt><dd>{s.waiting.need} <span className="muted">(since {dateLabel(s.waiting.at.slice(0, 10))}{op ? `; may pause from ${dateLabel(s.mayPauseForDelayFrom)}, end from ${dateLabel(s.mayEndForDelayFrom)}` : ""})</span></dd></div>}
+        {s.payNotice && <div><dt>Notice to pay</dt><dd>Sent {dateLabel(s.payNotice.at.slice(0, 10))}. Work may pause from {dateLabel(s.mayPauseForPaymentFrom)}</dd></div>}
+        {s.endNotice && <div><dt>Notice of ending</dt><dd>Sent {dateLabel(s.endNotice.at.slice(0, 10))}. The project may end from {dateLabel(s.mayEndForDelayFrom)}</dd></div>}
         {s.disputes.length > 0 && <div><dt>Invoice disputes</dt><dd>{s.disputes.length} open, answered on the invoice</dd></div>}
         {s.paused && <div><dt>Paused</dt><dd>Since {dateLabel(s.paused.at.slice(0, 10))}{s.paused.note ? `: ${s.paused.note}` : ""}</dd></div>}
         {s.ended && <div><dt>Ended</dt><dd>{dateLabel(s.ended.at.slice(0, 10))}: {s.ended.note}</dd></div>}
@@ -74,6 +76,8 @@ export function ContractStates({ project, items, path }: { project: Project; ite
           {s.paused
             ? <button type="button" className="btn btn-sm" disabled={busy} onClick={() => void send("resume", {}, "Work resumed. The client is told.")}>Resume</button>
             : <button type="button" className="btn btn-sm" onClick={() => setForm({ kind: "pause", text: "", reason: s.overdue.length ? "overdue" : "waiting" })}>Pause</button>}
+          {s.overdue.length > 0 && !s.payNotice && <button type="button" className="btn btn-sm" disabled={busy} onClick={() => void send("pay-notice", {}, "Notice to pay sent.")}>Send notice to pay</button>}
+          {s.waiting && !s.endNotice && <button type="button" className="btn btn-sm" disabled={busy} onClick={() => void send("end-notice", {}, "Notice of ending sent.")}>Send notice of ending</button>}
           <button type="button" className="btn btn-ghost btn-sm" onClick={() => setForm({ kind: "end", text: "", reason: "notice" })}>End project</button>
         </div>
       )}
@@ -83,8 +87,8 @@ export function ContractStates({ project, items, path }: { project: Project; ite
             <label>Why
               <select value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })}>
                 {form.kind === "pause"
-                  ? <><option value="waiting">Still waiting on the client (10 business days after notice)</option><option value="overdue">An undisputed amount is more than 7 days overdue</option><option value="other">Agreed with the client</option></>
-                  : <><option value="notice">Written notice, 14 days</option><option value="waiting">Still waiting on the client (30 days after notice)</option><option value="other">Agreed with the client</option></>}
+                  ? <><option value="waiting">Still waiting on the client (10 business days after notice)</option><option value="overdue">Overdue over 7 days, after 2 business days' notice to pay</option><option value="other">Agreed with the client</option></>
+                  : <><option value="notice">Written notice, 14 days</option><option value="waiting">Still waiting on the client (30 days, with 14 days' notice of ending)</option><option value="other">Agreed with the client</option></>}
               </select>
             </label>
           )}

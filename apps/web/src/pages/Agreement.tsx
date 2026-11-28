@@ -4,7 +4,7 @@
 
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { UNCHOSEN, choiceLabel, type ChoicePicks, type ChoiceValues, type Signature } from "@1neon/domain";
+import { CHOICES_AUTHORITY, UNCHOSEN, choiceLabel, type ChoicePicks, type ChoiceValues, type Signature } from "@1neon/domain";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { AgreeFields, ChoiceFields, SignBox, agreeBody, agreeReady, emptyAgree, signReady, type AgreeValue, type SignValue } from "../components/Billing.tsx";
@@ -42,6 +42,7 @@ export function AgreementPage() {
   const [agree, setAgree] = useState<AgreeValue>(() => emptyAgree(org.name));
   // After signing, an admin's edit waits here until it's saved
   const [edit, setEdit] = useState<ChoicePicks>();
+  const [confirmed, setConfirmed] = useState(false);
   // Where the reader came from (an approval waiting on this signature), so the page can lead back
   // there. Only a path inside this organization counts; anything else is ignored
   const [params] = useSearchParams();
@@ -72,7 +73,7 @@ export function AgreementPage() {
   const save = async () => {
     setBusy(true);
     try {
-      await api(`/t/${org.id}/agreement/choices`, { method: "PUT", body: edit });
+      await api(`/t/${org.id}/agreement/choices`, { method: "PUT", body: { ...edit, authorized: confirmed } });
       toast("Saved");
       await Promise.all([q.refetch(), qc.invalidateQueries({ queryKey: ["org", org.id] })]);
       setEdit(undefined);
@@ -109,7 +110,7 @@ export function AgreementPage() {
         <form className="card sign-card" id="choices" aria-labelledby="choices-h" onSubmit={(e) => { e.preventDefault(); if (changed && !busy) void save(); }}>
           <h2 id="choices-h" className="section-h">Your choices</h2>
           <ChoiceFields id="agreement-choice" value={edit ?? inForce} onChange={(v) => setEdit({ ...inForce, ...v })} />
-          {changed ? <button className="btn btn-primary" disabled={busy}>Save choices</button> : last && <p className="small muted">Chosen by {last.name}, {dateLabel(last.at.slice(0, 10))}</p>}
+          {changed ? <><label className="sign-consent"><input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} required /> {CHOICES_AUTHORITY}</label><button className="btn btn-primary" disabled={busy}>Save choices</button></> : last && <p className="small muted">Chosen by {last.name}, {dateLabel(last.at.slice(0, 10))}</p>}
         </form>
       ) : (
         <section className="kind-group" id="choices">
